@@ -238,10 +238,65 @@ pre,
 }
 
 .lead {
-  margin: 0 0 1.75rem;
+  margin: 0 0 1rem;
   font-size: 1.125rem;
   color: var(--text-dim);
   max-width: 36rem;
+}
+
+.install-block {
+  margin: 0 0 1.25rem;
+}
+
+.install-version-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.6rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+}
+
+.install-version-label .version-pill,
+.version-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(62, 207, 142, 0.4);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.install-version-label .version-pill:hover,
+.version-pill:hover {
+  color: var(--accent-hot);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.install-version-label .version-pill strong,
+.version-pill strong {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.version-assets {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-mute);
+}
+
+.version-assets:hover {
+  color: var(--accent);
 }
 
 .install-row {
@@ -249,7 +304,11 @@ pre,
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: stretch;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+.prose-block .install-version-label {
+  margin-top: 0.15rem;
 }
 
 .install-cmd {
