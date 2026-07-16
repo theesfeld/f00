@@ -112,6 +112,119 @@ impl Colorizer {
             _ => s,
         }
     }
+
+    /// Whether modern multi-column long-format theming should run.
+    ///
+    /// On for friendly (non-GNU) mode when colors are enabled; off under `--gnu`.
+    pub fn modern_long_theme(&self, gnu_mode: bool) -> bool {
+        self.enabled && !gnu_mode
+    }
+
+    /// Permission string (e.g. `-rwxr-xr-x`) with type letter + rwx tinting.
+    pub fn paint_perms(&self, perms: &str, gnu_mode: bool) -> String {
+        if !self.modern_long_theme(gnu_mode) || perms.is_empty() {
+            return perms.to_string();
+        }
+        let mut out = String::with_capacity(perms.len() * 8);
+        for (i, ch) in perms.chars().enumerate() {
+            let painted = if i == 0 {
+                match ch {
+                    'd' => Color::Blue.bold().paint(ch.to_string()).to_string(),
+                    'l' => Color::Cyan.bold().paint(ch.to_string()).to_string(),
+                    'c' | 'b' => Color::Yellow.bold().paint(ch.to_string()).to_string(),
+                    'p' | 's' => Color::Purple.paint(ch.to_string()).to_string(),
+                    _ => Color::DarkGray.paint(ch.to_string()).to_string(),
+                }
+            } else {
+                match ch {
+                    'r' => Color::Yellow.paint(ch.to_string()).to_string(),
+                    'w' => Color::Red.paint(ch.to_string()).to_string(),
+                    'x' | 's' | 't' | 'S' | 'T' => {
+                        Color::Green.bold().paint(ch.to_string()).to_string()
+                    }
+                    '-' => Color::DarkGray.paint(ch.to_string()).to_string(),
+                    _ => ch.to_string(),
+                }
+            };
+            out.push_str(&painted);
+        }
+        out
+    }
+
+    /// Dim metadata (nlink, inode, blocks, context).
+    pub fn paint_meta(&self, text: &str, gnu_mode: bool) -> String {
+        if !self.modern_long_theme(gnu_mode) {
+            return text.to_string();
+        }
+        Color::DarkGray.paint(text).to_string()
+    }
+
+    /// Owner / group / author column.
+    pub fn paint_user(&self, text: &str, gnu_mode: bool) -> String {
+        if !self.modern_long_theme(gnu_mode) {
+            return text.to_string();
+        }
+        Color::Yellow.paint(text).to_string()
+    }
+
+    /// Size column: green → yellow → red by magnitude (bytes).
+    pub fn paint_size(&self, text: &str, bytes: u64, gnu_mode: bool) -> String {
+        if !self.modern_long_theme(gnu_mode) {
+            return text.to_string();
+        }
+        let style = if bytes >= 1_073_741_824 {
+            // ≥ 1 GiB
+            Color::Red.bold()
+        } else if bytes >= 10_485_760 {
+            // ≥ 10 MiB
+            Color::Yellow.bold()
+        } else if bytes >= 1_048_576 {
+            // ≥ 1 MiB
+            Color::Green.bold()
+        } else if bytes > 0 {
+            Color::Green.normal()
+        } else {
+            Color::DarkGray.normal()
+        };
+        style.paint(text).to_string()
+    }
+
+    /// Timestamp column.
+    pub fn paint_time(&self, text: &str, gnu_mode: bool) -> String {
+        if !self.modern_long_theme(gnu_mode) {
+            return text.to_string();
+        }
+        Color::Blue.paint(text).to_string()
+    }
+
+    /// Symlink name + arrow + target (name via LS_COLORS / cyan; target dim cyan).
+    pub fn paint_symlink_name(
+        &self,
+        entry: &Entry,
+        icon_and_name: &str,
+        arrow_and_target: &str,
+        gnu_mode: bool,
+    ) -> String {
+        if !self.modern_long_theme(gnu_mode) {
+            let full = format!("{icon_and_name}{arrow_and_target}");
+            return self.paint_name(entry, &full);
+        }
+        let name = self.paint_name(entry, icon_and_name);
+        if arrow_and_target.is_empty() {
+            return name;
+        }
+        // Split " -> target" style
+        let target = if let Some(rest) = arrow_and_target.strip_prefix(" -> ") {
+            format!(
+                " {} {}",
+                Color::DarkGray.paint("→"),
+                Color::Cyan.dimmed().paint(rest)
+            )
+        } else {
+            Color::DarkGray.paint(arrow_and_target).to_string()
+        };
+        format!("{name}{target}")
+    }
 }
 
 fn paint_with_ls_style(text: &str, style: &Style) -> String {
@@ -180,5 +293,26 @@ mod tests {
         assert!(painted.contains("main.rs"), "{painted:?}");
         // Style applied → not equal plain (or equal if style empty — accept either with style present)
         let _ = c.style_for_entry(&e);
+    }
+
+    #[test]
+    fn modern_theme_off_under_gnu() {
+        let c = Colorizer::from_ls_colors(true, "");
+        assert!(!c.modern_long_theme(true));
+        assert!(c.modern_long_theme(false));
+        assert_eq!(c.paint_perms("-rwxr-xr-x", true), "-rwxr-xr-x");
+        assert_ne!(c.paint_perms("-rwxr-xr-x", false), "-rwxr-xr-x");
+    }
+
+    #[test]
+    fn modern_size_tints() {
+        let c = Colorizer::from_ls_colors(true, "");
+        let small = c.paint_size("1.0K", 1024, false);
+        let big = c.paint_size("2.0G", 2_147_483_648, false);
+        assert!(small.contains("1.0K"), "{small}");
+        assert!(big.contains("2.0G"), "{big}");
+        // Different colors → different escape sequences (or at least styled).
+        assert!(small.contains('\u{1b}') || small != "1.0K");
+        assert!(big.contains('\u{1b}') || big != "2.0G");
     }
 }

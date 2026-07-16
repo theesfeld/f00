@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.9.0] - 2026-07-16
+
+### Added
+- **Modern long-format colors** (non-GNU): tinted perms (type/rwx), owner/group, size-by-magnitude, blue timestamps; symlink name + dim `→` target
+- Disabled under `--gnu` / `F00_GNU` and when colors are off (`--color=never` / `NO_COLOR`)
+
+### Changed
+- Version **0.8.0 → 0.9.0**
+
 ## [0.8.0] - 2026-07-16
 
 ### Added
@@ -123,6 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.9.0]: https://github.com/theesfeld/f00/releases/tag/v0.9.0
 [0.8.0]: https://github.com/theesfeld/f00/releases/tag/v0.8.0
 [0.7.2]: https://github.com/theesfeld/f00/releases/tag/v0.7.2
 [0.7.1]: https://github.com/theesfeld/f00/releases/tag/v0.7.1
