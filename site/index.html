@@ -58,6 +58,16 @@
             to GNU-compatible mode when you need it.
           </p>
 
+          <p class="version-line">
+            <a class="version-pill" id="latest-version"
+               href="https://github.com/theesfeld/f00/releases/latest"
+               title="GitHub Releases">
+              Latest <strong id="latest-version-label">v0.4.1</strong>
+            </a>
+            <span class="version-sep" aria-hidden="true">·</span>
+            <a href="https://github.com/theesfeld/f00/releases">changelog / assets</a>
+          </p>
+
           <div class="install-row" id="install-hero">
             <div class="install-cmd" title="Install command">
               <span class="dollar">$</span>
@@ -75,6 +85,7 @@
             <span class="ok">listing · -la · color</span>
             <span class="ok">tree · json · icons</span>
             <span class="ok">git · recursive · --gnu</span>
+            <span class="ok">self-update · --update</span>
           </div>
         </div>
 
@@ -166,6 +177,11 @@
             <h3>Completions &amp; man</h3>
             <p><code class="mono">--generate-completions</code> and <code class="mono">--generate-man</code> for packaging and shell setup.</p>
           </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Self-update</h3>
+            <p><code class="mono">f00 --update</code> pulls the latest GitHub Release (checksum verified). <code class="mono">f00 --check-update</code> reports if you’re behind.</p>
+          </article>
         </div>
       </div>
     </section>
@@ -175,8 +191,10 @@
         <div class="section-head">
           <h2>Install in one line</h2>
           <p>
-            Detects OS/arch, downloads the latest GitHub release, verifies checksums when
-            present, and installs to <code class="mono">~/.local/bin</code> (or
+            Current release:
+            <a href="https://github.com/theesfeld/f00/releases/latest"><strong id="install-version-label">v0.4.1</strong></a>.
+            Detects OS/arch, downloads the GitHub release, verifies SHA-256 when present, and
+            installs to <code class="mono">~/.f00/bin</code> (override with
             <code class="mono">INSTALL_DIR</code>).
           </p>
         </div>
@@ -184,6 +202,8 @@
           <div class="prose-block">
             <h3>Quick install</h3>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
+            <p>Add to your <code class="mono">PATH</code> if needed:</p>
+            <pre><code>export PATH="$HOME/.f00/bin:$PATH"</code></pre>
             <p>Pin a version or choose a directory:</p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.1 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
@@ -191,20 +211,31 @@ curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
           </div>
           <div class="prose-block">
+            <h3>Update</h3>
+            <p>Once installed, upgrade from GitHub Releases (checksum verified):</p>
+            <pre><code>f00 --update
+# or
+f00 update</code></pre>
+            <p>Check without changing the binary (exit <code class="mono">1</code> if behind):</p>
+            <pre><code>f00 --check-update
+# or
+f00 check-update</code></pre>
             <h3>From source</h3>
             <pre><code>git clone https://github.com/theesfeld/f00.git
 cd f00
-cargo build --release
+cargo build --release -p f00
 ./target/release/f00 -la</code></pre>
             <p>
-              Prefer crates.io when published:
-              <code class="mono">cargo install f00</code>
+              crates.io (when published):
+              <code class="mono">cargo install f00 --locked</code>
             </p>
             <p>
-              Full docs live in the
-              <a href="https://github.com/theesfeld/f00#readme">README</a>.
-              Installer script:
-              <a href="/install.sh">f00.sh/install.sh</a>.
+              Full docs:
+              <a href="https://github.com/theesfeld/f00#readme">README</a>
+              · installer:
+              <a href="/install.sh">f00.sh/install.sh</a>
+              · releases:
+              <a href="https://github.com/theesfeld/f00/releases">GitHub</a>.
             </p>
           </div>
         </div>
@@ -401,11 +432,13 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
       <div class="copy">
         <strong style="color:var(--text-dim)">f00</strong>
         — next-generation <code class="mono">ls</code>.
+        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.4.1</a>.
         © 2026 f00 contributors.
         Licensed under MIT OR Apache-2.0.
       </div>
       <nav aria-label="Footer">
         <a href="https://f00.sh/install.sh">install.sh</a>
+        <a href="https://github.com/theesfeld/f00/releases">Releases</a>
         <a href="https://github.com/theesfeld/f00">GitHub</a>
         <a href="#install">Install</a>
         <a href="#roadmap">Roadmap</a>
@@ -415,6 +448,39 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
 
   <script>
     (function () {
+      // Fallback version embedded at ship time; refreshed from Releases API when available.
+      var FALLBACK_VERSION = "v0.4.1";
+
+      function setVersionLabels(tag) {
+        if (!tag) return;
+        var els = [
+          document.getElementById("latest-version-label"),
+          document.getElementById("install-version-label"),
+          document.getElementById("footer-version")
+        ];
+        for (var i = 0; i < els.length; i++) {
+          if (els[i]) els[i].textContent = tag;
+        }
+        var pill = document.getElementById("latest-version");
+        if (pill) {
+          pill.href = "https://github.com/theesfeld/f00/releases/tag/" + encodeURIComponent(tag);
+        }
+      }
+
+      setVersionLabels(FALLBACK_VERSION);
+
+      // Live latest tag from GitHub Releases (no auth; public API).
+      try {
+        fetch("https://api.github.com/repos/theesfeld/f00/releases/latest", {
+          headers: { Accept: "application/vnd.github+json" }
+        })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (data && data.tag_name) setVersionLabels(data.tag_name);
+          })
+          .catch(function () { /* keep fallback */ });
+      } catch (e) { /* ignore */ }
+
       var btn = document.getElementById("copy-install");
       var line = document.getElementById("install-line");
       if (!btn || !line) return;
