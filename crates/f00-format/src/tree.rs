@@ -1,4 +1,4 @@
-use f00_core::Entry;
+use f00_core::{Entry, IndicatorStyle};
 
 use crate::color::Colorizer;
 use crate::icons::icon_prefix;
@@ -11,7 +11,7 @@ pub fn format_tree(
     entries: &[Entry],
     colorizer: &Colorizer,
     icons: bool,
-    classify: bool,
+    indicator: IndicatorStyle,
 ) -> String {
     // Collect non-header entries; use depth field when available.
     let items: Vec<&Entry> = entries.iter().filter(|e| !e.is_dir_header).collect();
@@ -24,14 +24,14 @@ pub fn format_tree(
 
     let mut out = String::new();
     if use_depth {
-        format_tree_by_depth(&items, colorizer, icons, classify, &mut out);
+        format_tree_by_depth(&items, colorizer, icons, indicator, &mut out);
     } else {
         // Flat tree of a single directory
         for (i, entry) in items.iter().enumerate() {
             let last = i + 1 == items.len();
             let branch = if last { "└── " } else { "├── " };
             let icon = icon_prefix(entry, icons);
-            let suffix = classify_suffix(entry, classify);
+            let suffix = classify_suffix(entry, indicator);
             let plain = format!("{icon}{}{suffix}", entry.name);
             let name = colorizer.paint_name(entry, &plain);
             out.push_str(branch);
@@ -46,7 +46,7 @@ fn format_tree_by_depth(
     items: &[&Entry],
     colorizer: &Colorizer,
     icons: bool,
-    classify: bool,
+    indicator: IndicatorStyle,
     out: &mut String,
 ) {
     // Track which depths still have more siblings (for drawing │).
@@ -73,7 +73,7 @@ fn format_tree_by_depth(
         out.push_str(if is_last { "└── " } else { "├── " });
 
         let icon = icon_prefix(entry, icons);
-        let suffix = classify_suffix(entry, classify);
+        let suffix = classify_suffix(entry, indicator);
         let plain = format!("{icon}{}{suffix}", entry.name);
         let name = colorizer.paint_name(entry, &plain);
         out.push_str(&name);

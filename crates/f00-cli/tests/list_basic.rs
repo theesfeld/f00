@@ -29,30 +29,10 @@ fn temp_fixture() -> PathBuf {
 #[test]
 fn lists_visible_entries_sorted() {
     let dir = temp_fixture();
-    let args = Args {
-        paths: vec![dir.clone()],
-        help: None,
-        all: false,
-        almost_all: false,
-        long: false,
-        one_per_line: true,
-        human_readable: false,
-        recursive: false,
-        reverse: false,
-        sort_time: false,
-        sort_size: false,
-        sort_extension: false,
-        color: ColorArg::Never,
-        json: false,
-        tree: false,
-        gnu: false,
-        icons: false,
-        classify: false,
-        dirs_first: false,
-        max_depth: None,
-        git: false,
-        config: None,
-    };
+    let mut args = Args::test_default();
+    args.paths = vec![dir.clone()];
+    args.one_per_line = true;
+    args.color = ColorArg::Never;
     let config = build_config(&args);
     let listing = list_path(&dir, &config.list).expect("list");
     let names: Vec<_> = listing.entries.iter().map(|e| e.name.as_str()).collect();
@@ -74,30 +54,10 @@ fn lists_visible_entries_sorted() {
 #[test]
 fn json_output_is_array() {
     let dir = temp_fixture();
-    let args = Args {
-        paths: vec![dir.clone()],
-        help: None,
-        all: false,
-        almost_all: false,
-        long: false,
-        one_per_line: false,
-        human_readable: false,
-        recursive: false,
-        reverse: false,
-        sort_time: false,
-        sort_size: false,
-        sort_extension: false,
-        color: ColorArg::Never,
-        json: true,
-        tree: false,
-        gnu: false,
-        icons: false,
-        classify: false,
-        dirs_first: false,
-        max_depth: None,
-        git: false,
-        config: None,
-    };
+    let mut args = Args::test_default();
+    args.paths = vec![dir.clone()];
+    args.json = true;
+    args.color = ColorArg::Never;
     let config = build_config(&args);
     let listing = list_path(&dir, &config.list).expect("list");
     let out = format_listing(&listing, &config).expect("format");
@@ -117,30 +77,11 @@ fn json_output_is_array() {
 #[test]
 fn all_flag_includes_hidden() {
     let dir = temp_fixture();
-    let args = Args {
-        paths: vec![dir.clone()],
-        help: None,
-        all: true,
-        almost_all: false,
-        long: false,
-        one_per_line: true,
-        human_readable: false,
-        recursive: false,
-        reverse: false,
-        sort_time: false,
-        sort_size: false,
-        sort_extension: false,
-        color: ColorArg::Never,
-        json: false,
-        tree: false,
-        gnu: false,
-        icons: false,
-        classify: false,
-        dirs_first: false,
-        max_depth: None,
-        git: false,
-        config: None,
-    };
+    let mut args = Args::test_default();
+    args.paths = vec![dir.clone()];
+    args.all = true;
+    args.one_per_line = true;
+    args.color = ColorArg::Never;
     let config = build_config(&args);
     let listing = list_path(&dir, &config.list).expect("list");
     let names: Vec<_> = listing.entries.iter().map(|e| e.name.as_str()).collect();

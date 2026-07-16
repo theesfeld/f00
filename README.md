@@ -52,7 +52,25 @@ Or build from source (see [Building from source](#building-from-source)).
 | **TUI browser** | Planned | Interactive directory browser |
 | **Archives** | Planned | List inside zip/tar without extracting |
 
-MVP ships: plain listing, `-la`, color, tree, JSON, icons, git status, recursive, human-readable sizes, and a GNU mode flag. Planned items are tracked on GitHub Issues — not claimed as ready.
+MVP ships: plain listing, broad **GNU `ls` flag parity**, color, tree, JSON, icons, git status, recursive, human sizes, TOML config, and strict `--gnu` mode. Planned (TUI/archives) tracked on GitHub Issues.
+
+### GNU-compatible flags (subset)
+
+| Flag | Meaning |
+|------|---------|
+| `-a` `-A` | all / almost-all |
+| `-l` `-1` `-C` `-m` `-x` | long / one-column / columns / commas |
+| `-h` `--si` | human sizes (1024 / 1000) |
+| `-r` `-t` `-S` `-X` `-U` `-f` | reverse / time / size / extension / unsorted / `-a -U` |
+| `--sort=` `--time=` `-u` `-c` | sort key / timestamp selection |
+| `-R` `-d` | recursive / list directory itself |
+| `-F` `-p` `--file-type` | classify indicators |
+| `-B` `-I PATTERN` | ignore backups / ignore pattern |
+| `-L` | dereference symlinks |
+| `-g` `-o` `-G` `-n` | long without owner/group / numeric IDs |
+| `-i` `-s` | inode / blocks |
+| `--full-time` `--group-directories-first` `--color` `--format` | extras |
+| `--gnu` / `F00_GNU=1` | strict mode: no icons/git, classic sorting |
 
 ---
 
@@ -62,26 +80,30 @@ MVP ships: plain listing, `-la`, color, tree, JSON, icons, git status, recursive
 # List current directory
 f00
 
-# Long listing (permissions, owner, size, mtime)
+# Long listing (permissions, nlink, owner, group, size, mtime)
 f00 -la
 
 # Human-readable sizes
 f00 -lah
 
+# List the directory itself (not contents)
+f00 -ld /var/log
+
 # Recursive
 f00 -R ~/projects
 
-# Tree view
+# Tree / JSON
 f00 --tree
-
-# JSON (scripts / tooling)
 f00 --json
 
 # Icons + git status (when available)
 f00 -la --icons --git
 
-# Prefer GNU ls-shaped behavior
+# Strict GNU-shaped behavior (script-safe)
 f00 --gnu -la /tmp
+
+# Ignore patterns
+f00 -I '*.o' -B
 
 # Help
 f00 --help

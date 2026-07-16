@@ -19,7 +19,7 @@ Core listing + common GNU flags + colors + **git** + **icons** + TOML config + i
 | **M0** | Workspace & CI skeleton | **Done** | #1 #2 |
 | **M1** | Core listing | **Mostly done** | #3 #4 #5 |
 | **M2** | Format | **Mostly done** | #6 #7 #8 #9 |
-| **M3** | CLI + GNU flags | **Mostly done** | #10 #11 #12 #13 |
+| **M3** | CLI + GNU flags | **Done (parity push)** | #10 #11 #12 #13 |
 | **M4** | Git status | **Mostly done** | #14 #15 |
 | **M5** | Icons | **Mostly done** | #16 #17 |
 | **M6** | Ship path | **Mostly done** | #18 #19 #20 #21 |

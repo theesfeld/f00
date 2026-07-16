@@ -11,11 +11,11 @@ mod tree;
 
 pub use color::Colorizer;
 pub use columns::{format_columns, format_one_per_line};
-pub use human::human_size;
+pub use human::{block_display, human_size, human_size_si};
 pub use icons::{icon_for, icon_prefix};
 pub use json::format_json;
-pub use long::{format_long, format_long_line};
-pub use perms::{classify_suffix, format_permissions};
+pub use long::{format_long, format_long_line, format_long_line_simple, format_long_simple};
+pub use perms::{classify_suffix, classify_suffix_bool, format_permissions};
 pub use tree::format_tree;
 
 use f00_core::{Config, Entry, Listing, OutputMode};
@@ -48,8 +48,12 @@ pub fn format_listings(
         if i > 0 {
             out.push('\n');
         }
-        // Print path header when multiple args or when useful for dirs.
-        if (multi || listings.len() > 1) && listing.root_is_dir {
+        // Print path header when multiple args list directory contents.
+        // Skip for `-d` (single entry that is the directory itself).
+        let is_dir_self = listing.root_is_dir
+            && listing.entries.len() == 1
+            && listing.entries[0].path == listing.root;
+        if (multi || listings.len() > 1) && listing.root_is_dir && !is_dir_self {
             out.push_str(&format!("{}:\n", listing.root.display()));
         }
 
@@ -64,24 +68,39 @@ fn format_entries(
     colorizer: &Colorizer,
 ) -> std::result::Result<String, String> {
     let icons = config.icons;
-    let classify = config.classify;
+    let indicator = config.indicator_style();
     match config.effective_output() {
-        OutputMode::Long => Ok(format_long(
-            entries,
-            colorizer,
-            config.human_sizes,
-            icons,
-            classify,
-        )),
-        OutputMode::OnePerLine => Ok(format_one_per_line(entries, colorizer, icons, classify)),
+        OutputMode::Long => Ok(format_long(entries, colorizer, config)),
+        OutputMode::OnePerLine => Ok(format_one_per_line(entries, colorizer, icons, indicator)),
+        OutputMode::Commas => Ok(format_commas(entries, colorizer, icons, indicator)),
         OutputMode::Json => format_json(entries).map_err(|e| e.to_string()),
-        OutputMode::Tree => Ok(format_tree(entries, colorizer, icons, classify)),
-        OutputMode::Default => Ok(format_columns(
+        OutputMode::Tree => Ok(format_tree(entries, colorizer, icons, indicator)),
+        OutputMode::Default | OutputMode::Columns => Ok(format_columns(
             entries,
             colorizer,
             icons,
-            classify,
+            indicator,
             config.terminal_width,
         )),
     }
+}
+
+fn format_commas(
+    entries: &[Entry],
+    colorizer: &Colorizer,
+    icons: bool,
+    indicator: f00_core::IndicatorStyle,
+) -> String {
+    let mut parts = Vec::new();
+    for entry in entries.iter().filter(|e| !e.is_dir_header) {
+        let icon = icon_prefix(entry, icons);
+        let suffix = classify_suffix(entry, indicator);
+        let plain = format!("{icon}{}{suffix}", entry.name);
+        parts.push(colorizer.paint_name(entry, &plain));
+    }
+    let mut out = parts.join(", ");
+    if !out.is_empty() {
+        out.push('\n');
+    }
+    out
 }

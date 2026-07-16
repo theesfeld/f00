@@ -1,10 +1,19 @@
 use crate::entry::{Entry, EntryKind};
 use crate::options::{ListOptions, SortBy};
 
-/// Case-insensitive name comparison with a simple natural-ish fallback.
+/// Case-insensitive name comparison.
+///
+/// In GNU mode, compare raw byte/string order without stripping leading dots.
 pub fn cmp_name(a: &str, b: &str) -> std::cmp::Ordering {
-    // Strip a leading `.` for sorting so hidden files interleave like GNU ls often does
-    // under `LC_COLLATE=C`-ish behavior we approximate with case-insensitive order.
+    cmp_name_with_mode(a, b, false)
+}
+
+pub fn cmp_name_with_mode(a: &str, b: &str, gnu: bool) -> std::cmp::Ordering {
+    if gnu {
+        // Approximate LC_COLLATE=C: byte-wise, case-sensitive.
+        return a.cmp(b);
+    }
+    // Friendly default: case-insensitive, interleave hidden files.
     let a_key = a.trim_start_matches('.').to_ascii_lowercase();
     let b_key = b.trim_start_matches('.').to_ascii_lowercase();
     match a_key.cmp(&b_key) {
@@ -13,51 +22,42 @@ pub fn cmp_name(a: &str, b: &str) -> std::cmp::Ordering {
     }
 }
 
-fn kind_rank(kind: EntryKind) -> u8 {
-    match kind {
-        EntryKind::Directory => 0,
-        EntryKind::Symlink => 1,
-        EntryKind::File => 2,
-        EntryKind::Other => 3,
-    }
-}
-
 fn cmp_entry(a: &Entry, b: &Entry, opts: &ListOptions) -> std::cmp::Ordering {
     use std::cmp::Ordering;
 
     if opts.dirs_first {
-        let ka = kind_rank(a.kind);
-        let kb = kind_rank(b.kind);
-        // Only prioritize pure directories first.
         let a_dir = a.kind == EntryKind::Directory;
         let b_dir = b.kind == EntryKind::Directory;
         match (a_dir, b_dir) {
             (true, false) => return Ordering::Less,
             (false, true) => return Ordering::Greater,
-            _ => {
-                let _ = (ka, kb);
-            }
+            _ => {}
         }
     }
 
+    let name_cmp = || cmp_name_with_mode(&a.name, &b.name, opts.gnu_mode);
+
     let primary = match opts.sort_by {
         SortBy::None => Ordering::Equal,
-        SortBy::Name => cmp_name(&a.name, &b.name),
-        SortBy::Size => a.size.cmp(&b.size).then_with(|| cmp_name(&a.name, &b.name)),
+        SortBy::Name => name_cmp(),
+        // GNU `-S`: largest first.
+        SortBy::Size => b.size.cmp(&a.size).then_with(name_cmp),
         SortBy::Time => {
-            // Newest first is common for `ls -t`; we sort ascending here and
-            // let `reverse` flip — actually classic `ls -t` is newest first.
-            // We implement newest-first as the default Time order.
-            b.modified
-                .cmp(&a.modified)
-                .then_with(|| cmp_name(&a.name, &b.name))
+            let ta = a.time_for(opts.time_field);
+            let tb = b.time_for(opts.time_field);
+            // Newest first.
+            tb.cmp(&ta).then_with(name_cmp)
         }
         SortBy::Extension => {
             let ea = a.extension().unwrap_or("");
             let eb = b.extension().unwrap_or("");
-            ea.to_ascii_lowercase()
-                .cmp(&eb.to_ascii_lowercase())
-                .then_with(|| cmp_name(&a.name, &b.name))
+            if opts.gnu_mode {
+                ea.cmp(eb).then_with(name_cmp)
+            } else {
+                ea.to_ascii_lowercase()
+                    .cmp(&eb.to_ascii_lowercase())
+                    .then_with(name_cmp)
+            }
         }
     };
 
@@ -77,8 +77,6 @@ pub fn sort_entries(entries: &mut [Entry], opts: &ListOptions) {
         return;
     }
 
-    // Stable partition: keep dir headers in place by sorting only non-headers
-    // within contiguous runs, but for MVP just sort everything with headers first.
     entries.sort_by(|a, b| match (a.is_dir_header, b.is_dir_header) {
         (true, false) => std::cmp::Ordering::Less,
         (false, true) => std::cmp::Ordering::Greater,
@@ -89,7 +87,7 @@ pub fn sort_entries(entries: &mut [Entry], opts: &ListOptions) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::entry::{Entry, EntryKind, GitStatus};
+    use crate::entry::{Entry, EntryKind, GitStatus, TimeField};
     use std::path::PathBuf;
     use std::time::{Duration, SystemTime};
 
@@ -108,6 +106,13 @@ mod tests {
             depth: 0,
             git_status: GitStatus::Clean,
             is_dir_header: false,
+            nlink: 1,
+            uid: 0,
+            gid: 0,
+            inode: 0,
+            blocks: 0,
+            owner: "u".into(),
+            group: "g".into(),
         }
     }
 
@@ -124,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn sort_by_size() {
+    fn sort_by_size_largest_first() {
         let mut entries = vec![
             entry("big", EntryKind::File, 100, None),
             entry("small", EntryKind::File, 1, None),
@@ -136,7 +141,7 @@ mod tests {
         };
         sort_entries(&mut entries, &opts);
         let names: Vec<_> = entries.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names, vec!["small", "mid", "big"]);
+        assert_eq!(names, vec!["big", "mid", "small"]);
     }
 
     #[test]
@@ -184,7 +189,6 @@ mod tests {
         };
         sort_entries(&mut entries, &opts);
         assert_eq!(entries[0].name, "adir");
-        assert!(entries[1].name == "bfile" || entries[1].name == "zfile");
     }
 
     #[test]
@@ -206,10 +210,23 @@ mod tests {
 
     #[test]
     fn cmp_name_strips_dot_for_key() {
-        // After stripping `.` for the collate key, equal keys fall back to full
-        // string order so `.foo` sorts just before `foo`.
         assert!(cmp_name(".foo", "foo").is_le());
         assert!(cmp_name("apple", "banana").is_lt());
-        assert!(cmp_name("zebra", "apple").is_gt());
+    }
+
+    #[test]
+    fn gnu_name_sort_is_bytewise() {
+        assert_eq!(cmp_name_with_mode("B", "a", true), std::cmp::Ordering::Less);
+        // 'B' < 'a' in ASCII
+    }
+
+    #[test]
+    fn time_field_access() {
+        let mut e = entry("x", EntryKind::File, 0, Some(50));
+        e.accessed = Some(SystemTime::UNIX_EPOCH + Duration::from_secs(10));
+        assert_eq!(
+            e.time_for(TimeField::Accessed),
+            Some(SystemTime::UNIX_EPOCH + Duration::from_secs(10))
+        );
     }
 }

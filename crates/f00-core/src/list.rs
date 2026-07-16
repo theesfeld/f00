@@ -35,6 +35,8 @@ impl Listing {
 }
 
 /// List a single path: if file, return that entry alone; if dir, list children.
+///
+/// With `-d` / `directory`, list the path itself even when it is a directory.
 pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
     let path = if path.as_os_str().is_empty() {
         Path::new(".")
@@ -42,7 +44,12 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
         path
     };
 
-    let meta = fs::symlink_metadata(path).map_err(|source| {
+    let meta = if opts.follow_links {
+        fs::metadata(path)
+    } else {
+        fs::symlink_metadata(path)
+    }
+    .map_err(|source| {
         if source.kind() == std::io::ErrorKind::NotFound {
             Error::NotFound(path.to_path_buf())
         } else {
@@ -53,9 +60,14 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
         }
     })?;
 
-    if !meta.is_dir() {
-        let entry = Entry::from_path_and_meta(path, &meta, 0)?;
-        return Ok(Listing::new(path.to_path_buf(), false, vec![entry]));
+    // `-d`: list the directory entry itself, not its contents.
+    if opts.directory || !meta.is_dir() {
+        let entry = if opts.follow_links {
+            Entry::from_path_follow(path, 0)?
+        } else {
+            Entry::from_path_and_meta(path, &meta, 0)?
+        };
+        return Ok(Listing::new(path.to_path_buf(), meta.is_dir(), vec![entry]));
     }
 
     if opts.recursive {
@@ -100,14 +112,18 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
             source,
         })?;
         let entry_path = item.path();
-        let meta = item
-            .metadata()
-            .or_else(|_| fs::symlink_metadata(&entry_path));
-        let meta = match meta {
-            Ok(m) => m,
-            Err(_) => continue,
+        let entry = if opts.follow_links {
+            Entry::from_path_follow(&entry_path, 0)
+        } else {
+            let meta = item
+                .metadata()
+                .or_else(|_| fs::symlink_metadata(&entry_path));
+            match meta {
+                Ok(m) => Entry::from_path_and_meta(&entry_path, &m, 0),
+                Err(_) => continue,
+            }
         };
-        match Entry::from_path_and_meta(&entry_path, &meta, 0) {
+        match entry {
             Ok(e) => entries.push(e),
             Err(_) => continue,
         }

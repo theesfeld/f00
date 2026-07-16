@@ -83,6 +83,16 @@ impl GitStatus {
     }
 }
 
+/// Which timestamp is primary for display / sort (`ls --time`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum TimeField {
+    #[default]
+    Modified,
+    Accessed,
+    Changed,
+    Birth,
+}
+
 /// A single filesystem entry ready for formatting.
 #[derive(Debug, Clone)]
 pub struct Entry {
@@ -101,6 +111,17 @@ pub struct Entry {
     pub git_status: GitStatus,
     /// True when this entry is a directory listing header (for recursive mode).
     pub is_dir_header: bool,
+    /// Hard link count (`st_nlink`).
+    pub nlink: u64,
+    pub uid: u32,
+    pub gid: u32,
+    pub inode: u64,
+    /// Allocated blocks in 512-byte units (GNU `ls -s` style) when known.
+    pub blocks: u64,
+    /// Owner name (or numeric string).
+    pub owner: String,
+    /// Group name (or numeric string).
+    pub group: String,
 }
 
 impl Entry {
@@ -111,6 +132,22 @@ impl Entry {
             source,
         })?;
         Self::from_path_and_meta(path, &meta, depth)
+    }
+
+    /// Like [`from_path`] but follow the final symlink target for metadata (`-L`).
+    pub fn from_path_follow(path: impl AsRef<Path>, depth: usize) -> Result<Self> {
+        let path = path.as_ref();
+        let meta = std::fs::metadata(path).map_err(|source| Error::Metadata {
+            path: path.to_path_buf(),
+            source,
+        })?;
+        let mut entry = Self::from_path_and_meta(path, &meta, depth)?;
+        // Keep symlink name but drop "-> target" when showing dereference.
+        if entry.kind == EntryKind::Symlink {
+            entry.kind = EntryKind::from_file_type(meta.file_type());
+            entry.symlink_target = None;
+        }
+        Ok(entry)
     }
 
     pub fn from_path_and_meta(path: &Path, meta: &Metadata, depth: usize) -> Result<Self> {
@@ -128,6 +165,9 @@ impl Entry {
         };
 
         let mode = file_mode(meta);
+        let (nlink, uid, gid, inode, blocks) = meta_ids(meta);
+        let owner = resolve_owner(uid);
+        let group = resolve_group(gid);
 
         Ok(Self {
             path: path.to_path_buf(),
@@ -143,6 +183,13 @@ impl Entry {
             depth,
             git_status: GitStatus::Clean,
             is_dir_header: false,
+            nlink,
+            uid,
+            gid,
+            inode,
+            blocks,
+            owner,
+            group,
         })
     }
 
@@ -164,6 +211,13 @@ impl Entry {
             depth,
             git_status: GitStatus::Clean,
             is_dir_header: true,
+            nlink: 0,
+            uid: 0,
+            gid: 0,
+            inode: 0,
+            blocks: 0,
+            owner: String::new(),
+            group: String::new(),
         }
     }
 
@@ -179,8 +233,42 @@ impl Entry {
         self.modified.map(DateTime::<Local>::from)
     }
 
+    pub fn accessed_datetime(&self) -> Option<DateTime<Local>> {
+        self.accessed.map(DateTime::<Local>::from)
+    }
+
+    pub fn created_datetime(&self) -> Option<DateTime<Local>> {
+        self.created.map(DateTime::<Local>::from)
+    }
+
+    pub fn time_for(&self, field: TimeField) -> Option<SystemTime> {
+        match field {
+            TimeField::Modified => self.modified,
+            TimeField::Accessed => self.accessed,
+            TimeField::Changed => self.modified, // best-effort; true ctime needs platform
+            TimeField::Birth => self.created.or(self.modified),
+        }
+    }
+
     pub fn extension(&self) -> Option<&str> {
         Path::new(&self.name).extension().and_then(|e| e.to_str())
+    }
+
+    /// Owner string for display (`-n` forces numeric).
+    pub fn owner_display(&self, numeric: bool) -> String {
+        if numeric {
+            self.uid.to_string()
+        } else {
+            self.owner.clone()
+        }
+    }
+
+    pub fn group_display(&self, numeric: bool) -> String {
+        if numeric {
+            self.gid.to_string()
+        } else {
+            self.group.clone()
+        }
     }
 }
 
@@ -193,4 +281,58 @@ fn file_mode(meta: &Metadata) -> u32 {
 #[cfg(not(unix))]
 fn file_mode(_meta: &Metadata) -> u32 {
     0
+}
+
+#[cfg(unix)]
+fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64) {
+    use std::os::unix::fs::MetadataExt;
+    (
+        meta.nlink(),
+        meta.uid(),
+        meta.gid(),
+        meta.ino(),
+        meta.blocks(),
+    )
+}
+
+#[cfg(not(unix))]
+fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64) {
+    let size = meta.len();
+    let blocks = size.div_ceil(512);
+    (1, 0, 0, 0, blocks)
+}
+
+#[cfg(unix)]
+fn resolve_owner(uid: u32) -> String {
+    // SAFETY: getpwuid returns a static pointer for the duration of the call.
+    unsafe {
+        let pw = libc::getpwuid(uid);
+        if pw.is_null() {
+            return uid.to_string();
+        }
+        let name = std::ffi::CStr::from_ptr((*pw).pw_name);
+        name.to_string_lossy().into_owned()
+    }
+}
+
+#[cfg(unix)]
+fn resolve_group(gid: u32) -> String {
+    unsafe {
+        let gr = libc::getgrgid(gid);
+        if gr.is_null() {
+            return gid.to_string();
+        }
+        let name = std::ffi::CStr::from_ptr((*gr).gr_name);
+        name.to_string_lossy().into_owned()
+    }
+}
+
+#[cfg(not(unix))]
+fn resolve_owner(_uid: u32) -> String {
+    String::from("user")
+}
+
+#[cfg(not(unix))]
+fn resolve_group(_gid: u32) -> String {
+    String::from("group")
 }

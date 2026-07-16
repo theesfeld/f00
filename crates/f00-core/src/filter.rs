@@ -1,8 +1,49 @@
 use crate::entry::Entry;
 use crate::options::ListOptions;
 
+/// Simple shell-style pattern match for `--ignore` / `-I` (supports `*` and `?`).
+pub fn glob_match(pattern: &str, name: &str) -> bool {
+    glob_match_inner(pattern.as_bytes(), name.as_bytes())
+}
+
+fn glob_match_inner(pat: &[u8], name: &[u8]) -> bool {
+    let (mut pi, mut ni) = (0usize, 0usize);
+    let mut star_p = None;
+    let mut star_n = 0usize;
+    while ni < name.len() {
+        if pi < pat.len() && (pat[pi] == b'?' || pat[pi] == name[ni]) {
+            pi += 1;
+            ni += 1;
+        } else if pi < pat.len() && pat[pi] == b'*' {
+            star_p = Some(pi);
+            star_n = ni;
+            pi += 1;
+        } else if let Some(sp) = star_p {
+            pi = sp + 1;
+            star_n += 1;
+            ni = star_n;
+        } else {
+            return false;
+        }
+    }
+    while pi < pat.len() && pat[pi] == b'*' {
+        pi += 1;
+    }
+    pi == pat.len()
+}
+
 /// Return true if `entry` should be shown under `opts`.
 pub fn should_show(entry: &Entry, opts: &ListOptions) -> bool {
+    if opts.ignore_backups && entry.name.ends_with('~') {
+        return false;
+    }
+
+    for pat in &opts.ignore_patterns {
+        if glob_match(pat, &entry.name) {
+            return false;
+        }
+    }
+
     if opts.all {
         return true;
     }
@@ -45,6 +86,13 @@ mod tests {
             depth: 0,
             git_status: GitStatus::Clean,
             is_dir_header: false,
+            nlink: 1,
+            uid: 0,
+            gid: 0,
+            inode: 0,
+            blocks: 0,
+            owner: "u".into(),
+            group: "g".into(),
         }
     }
 
@@ -90,5 +138,34 @@ mod tests {
         filter_entries(&mut entries, &opts);
         let names: Vec<_> = entries.iter().map(|e| e.name.as_str()).collect();
         assert_eq!(names, vec!["a", "c"]);
+    }
+
+    #[test]
+    fn ignore_backups() {
+        let opts = ListOptions {
+            ignore_backups: true,
+            ..Default::default()
+        };
+        assert!(!should_show(&make_entry("file~"), &opts));
+        assert!(should_show(&make_entry("file"), &opts));
+    }
+
+    #[test]
+    fn ignore_patterns() {
+        let opts = ListOptions {
+            ignore_patterns: vec!["*.o".into(), "tmp*".into()],
+            ..Default::default()
+        };
+        assert!(!should_show(&make_entry("a.o"), &opts));
+        assert!(!should_show(&make_entry("tmp123"), &opts));
+        assert!(should_show(&make_entry("a.rs"), &opts));
+    }
+
+    #[test]
+    fn glob_star_and_question() {
+        assert!(glob_match("*.rs", "main.rs"));
+        assert!(!glob_match("*.rs", "main.toml"));
+        assert!(glob_match("a?c", "abc"));
+        assert!(!glob_match("a?c", "ac"));
     }
 }

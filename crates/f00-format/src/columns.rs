@@ -1,4 +1,4 @@
-use f00_core::Entry;
+use f00_core::{Entry, IndicatorStyle};
 use unicode_width::UnicodeWidthStr;
 
 use crate::color::Colorizer;
@@ -15,14 +15,14 @@ fn prepare_entries(
     entries: &[Entry],
     colorizer: &Colorizer,
     icons: bool,
-    classify: bool,
+    indicator: IndicatorStyle,
 ) -> Vec<Prepared> {
     entries
         .iter()
         .filter(|e| !e.is_dir_header)
         .map(|e| {
             let icon = icon_prefix(e, icons);
-            let suffix = classify_suffix(e, classify);
+            let suffix = classify_suffix(e, indicator);
             let plain = format!("{icon}{}{suffix}", e.name);
             let width = UnicodeWidthStr::width(plain.as_str());
             let painted = colorizer.paint_name(e, &plain);
@@ -40,7 +40,7 @@ pub fn format_one_per_line(
     entries: &[Entry],
     colorizer: &Colorizer,
     icons: bool,
-    classify: bool,
+    indicator: IndicatorStyle,
 ) -> String {
     let mut out = String::new();
     for entry in entries {
@@ -52,7 +52,7 @@ pub fn format_one_per_line(
             continue;
         }
         let icon = icon_prefix(entry, icons);
-        let suffix = classify_suffix(entry, classify);
+        let suffix = classify_suffix(entry, indicator);
         let plain = format!("{icon}{}{suffix}", entry.name);
         out.push_str(&colorizer.paint_name(entry, &plain));
         out.push('\n');
@@ -65,7 +65,7 @@ pub fn format_columns(
     entries: &[Entry],
     colorizer: &Colorizer,
     icons: bool,
-    classify: bool,
+    indicator: IndicatorStyle,
     terminal_width: usize,
 ) -> String {
     // Split into sections on dir headers for recursive mode.
@@ -81,7 +81,7 @@ pub fn format_columns(
             &owned,
             colorizer,
             icons,
-            classify,
+            indicator,
             terminal_width,
         ));
         section.clear();
@@ -106,10 +106,10 @@ fn format_columns_section(
     entries: &[Entry],
     colorizer: &Colorizer,
     icons: bool,
-    classify: bool,
+    indicator: IndicatorStyle,
     terminal_width: usize,
 ) -> String {
-    let prepared = prepare_entries(entries, colorizer, icons, classify);
+    let prepared = prepare_entries(entries, colorizer, icons, indicator);
     if prepared.is_empty() {
         return String::new();
     }

@@ -249,30 +249,10 @@ mod tests {
     use crate::cli::ColorArg;
 
     fn empty_args() -> Args {
-        Args {
-            paths: vec![],
-            help: None,
-            all: false,
-            almost_all: false,
-            long: false,
-            one_per_line: false,
-            human_readable: false,
-            recursive: false,
-            reverse: false,
-            sort_time: false,
-            sort_size: false,
-            sort_extension: false,
-            color: ColorArg::Auto,
-            json: false,
-            tree: false,
-            gnu: false,
-            icons: false,
-            classify: false,
-            dirs_first: false,
-            max_depth: None,
-            git: true,
-            config: None,
-        }
+        let mut a = Args::test_default();
+        a.git = true;
+        a.color = ColorArg::Auto;
+        a
     }
 
     #[test]

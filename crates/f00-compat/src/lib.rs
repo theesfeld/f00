@@ -11,6 +11,8 @@ pub struct GnuProfile {
     pub disable_dirs_first: bool,
     /// Use strict name sort without stripping dots for collate key.
     pub strict_name_sort: bool,
+    /// Disable icons and git decorations.
+    pub disable_decorations: bool,
 }
 
 impl GnuProfile {
@@ -19,6 +21,7 @@ impl GnuProfile {
             force_one_per_line_when_not_tty: true,
             disable_dirs_first: true,
             strict_name_sort: true,
+            disable_decorations: true,
         }
     }
 }
@@ -31,10 +34,6 @@ pub fn apply_gnu_list_options(opts: &mut ListOptions, gnu: bool) {
     opts.gnu_mode = true;
     // GNU ls does not default to directories-first.
     opts.dirs_first = false;
-    // Keep sort as-is unless caller left it default.
-    if opts.sort_by == SortBy::Name {
-        // already name
-    }
 }
 
 /// Adjust output mode for GNU-ish behavior.
@@ -48,7 +47,7 @@ pub fn apply_gnu_output(mode: OutputMode, is_tty: bool, gnu: bool) -> OutputMode
     }
 }
 
-/// Whether a flag combination is "strict GNU" enough to emit a notice in verbose mode.
+/// Whether a flag combination is "strict GNU" enough.
 pub fn gnu_mode_active(gnu_flag: bool) -> bool {
     gnu_flag
 }
@@ -69,6 +68,30 @@ pub fn prefer_ls_defaults(
     }
     if !dirs_first_from_cli {
         *dirs_first = false;
+    }
+}
+
+/// Parse GNU `--sort=WORD`.
+pub fn parse_sort_word(word: &str) -> Option<SortBy> {
+    match word.to_ascii_lowercase().as_str() {
+        "name" => Some(SortBy::Name),
+        "size" => Some(SortBy::Size),
+        "time" => Some(SortBy::Time),
+        "extension" | "ext" => Some(SortBy::Extension),
+        "none" => Some(SortBy::None),
+        _ => None,
+    }
+}
+
+/// Parse GNU `--format=WORD`.
+pub fn parse_format_word(word: &str) -> Option<OutputMode> {
+    match word.to_ascii_lowercase().as_str() {
+        "across" | "horizontal" | "x" => Some(OutputMode::Columns), // approx
+        "commas" | "m" => Some(OutputMode::Commas),
+        "long" | "verbose" | "l" => Some(OutputMode::Long),
+        "single-column" | "single" | "1" => Some(OutputMode::OnePerLine),
+        "vertical" | "c" => Some(OutputMode::Columns),
+        _ => None,
     }
 }
 
@@ -114,5 +137,18 @@ mod tests {
         prefer_ls_defaults(&mut icons, &mut dirs_first, true, true);
         assert!(icons);
         assert!(dirs_first);
+    }
+
+    #[test]
+    fn parse_sort_words() {
+        assert_eq!(parse_sort_word("size"), Some(SortBy::Size));
+        assert_eq!(parse_sort_word("none"), Some(SortBy::None));
+        assert_eq!(parse_sort_word("bogus"), None);
+    }
+
+    #[test]
+    fn parse_format_words() {
+        assert_eq!(parse_format_word("long"), Some(OutputMode::Long));
+        assert_eq!(parse_format_word("commas"), Some(OutputMode::Commas));
     }
 }
