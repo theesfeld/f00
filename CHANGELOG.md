@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **`--color=WHEN` GNU synonyms:** accept `tty` / `if-tty` (auto), plus `yes`/`force` (always) and `no`/`none` (never), matching coreutils so distro `ls` aliases work (NixOS injects `--color=tty`)
+- **`--classify[=WHEN]`** / `-F`: accept optional WHEN (same vocabulary as `--color`); bare `-F` / `--classify` still means always
+- **`--hyperlink[=WHEN]`**: strict WHEN enum with the same GNU synonyms (unknown values rejected)
 - Config `color = "tty"` / `"if-tty"` parsed the same way as the CLI
 
 ### Changed

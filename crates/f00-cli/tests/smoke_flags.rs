@@ -400,16 +400,16 @@ fn recursive_unreadable_subdir_exits_1_continues() {
     let _ = fs::remove_dir_all(&dir);
 }
 
-/// GNU coreutils accepts several WHEN synonyms for `--color`.
+/// GNU coreutils WHEN vocabulary for `--color` / `--classify` / `--hyperlink`.
 /// Distros (notably NixOS) inject `ls --color=tty` via shell aliases.
+const GNU_WHEN: &[&str] = &[
+    "auto", "always", "never", "tty", "if-tty", "yes", "no", "force", "none",
+];
+
 #[test]
 fn smoke_color_gnu_synonyms_accepted() {
     let (dir, cfg) = smoke_fixture("color-syn");
-    // Values accepted by GNU coreutils 9.x `ls --color=WHEN`
-    let gnu_when = [
-        "auto", "always", "never", "tty", "if-tty", "yes", "no", "force", "none",
-    ];
-    for when in gnu_when {
+    for when in GNU_WHEN {
         let out = Command::new(bin())
             .env("LC_ALL", "C")
             .args([&format!("--color={when}"), "-1", "--git=false", "--config"])
@@ -429,7 +429,6 @@ fn smoke_color_gnu_synonyms_accepted() {
             "--color={when} should still list: {stdout}"
         );
     }
-    // Clap rejection for unknown WHEN must stay (not silent ignore)
     let bad = Command::new(bin())
         .env("LC_ALL", "C")
         .args(["--color=rainbow", "-1", "--git=false", "--config"])
@@ -438,5 +437,193 @@ fn smoke_color_gnu_synonyms_accepted() {
         .output()
         .unwrap();
     assert_ne!(bad.status.code(), Some(0), "unknown --color WHEN must fail");
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn smoke_classify_when_accepted() {
+    let (dir, cfg) = smoke_fixture("classify-when");
+    for flag in ["-F", "--classify"] {
+        let out = Command::new(bin())
+            .env("LC_ALL", "C")
+            .args([flag, "-1", "--git=false", "--color=never", "--config"])
+            .arg(&cfg)
+            .arg(&dir)
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "{flag} must be accepted; stderr={}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    for when in GNU_WHEN {
+        let out = Command::new(bin())
+            .env("LC_ALL", "C")
+            .args([
+                &format!("--classify={when}"),
+                "-1",
+                "--git=false",
+                "--color=never",
+                "--config",
+            ])
+            .arg(&cfg)
+            .arg(&dir)
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "--classify={when} must be accepted (GNU drop-in); stderr={}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn smoke_hyperlink_when_accepted() {
+    let (dir, cfg) = smoke_fixture("hyperlink-when");
+    let out = Command::new(bin())
+        .env("LC_ALL", "C")
+        .args([
+            "--hyperlink",
+            "-1",
+            "--git=false",
+            "--color=never",
+            "--config",
+        ])
+        .arg(&cfg)
+        .arg(&dir)
+        .output()
+        .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "bare --hyperlink must be accepted; stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    for when in GNU_WHEN {
+        let out = Command::new(bin())
+            .env("LC_ALL", "C")
+            .args([
+                &format!("--hyperlink={when}"),
+                "-1",
+                "--git=false",
+                "--color=never",
+                "--config",
+            ])
+            .arg(&cfg)
+            .arg(&dir)
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "--hyperlink={when} must be accepted; stderr={}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    let bad = Command::new(bin())
+        .env("LC_ALL", "C")
+        .args([
+            "--hyperlink=bogus",
+            "-1",
+            "--git=false",
+            "--color=never",
+            "--config",
+        ])
+        .arg(&cfg)
+        .arg(&dir)
+        .output()
+        .unwrap();
+    assert_ne!(
+        bad.status.code(),
+        Some(0),
+        "unknown --hyperlink WHEN must fail"
+    );
+    let _ = fs::remove_dir_all(&dir);
+}
+
+/// Every long option documented by GNU coreutils `ls --help` must parse.
+#[test]
+fn smoke_all_gnu_long_options_accepted() {
+    let (dir, cfg) = smoke_fixture("gnu-longs");
+    let longs: &[(&str, Option<&str>)] = &[
+        ("all", None),
+        ("almost-all", None),
+        ("author", None),
+        ("escape", None),
+        ("block-size", Some("1K")),
+        ("ignore-backups", None),
+        ("color", Some("never")),
+        ("directory", None),
+        ("dired", None),
+        ("classify", Some("always")),
+        ("file-type", None),
+        ("format", Some("long")),
+        ("full-time", None),
+        ("group-directories-first", None),
+        ("no-group", None),
+        ("human-readable", None),
+        ("si", None),
+        ("dereference-command-line", None),
+        ("dereference-command-line-symlink-to-dir", None),
+        ("hide", Some("*.o")),
+        ("hyperlink", Some("never")),
+        ("indicator-style", Some("none")),
+        ("inode", None),
+        ("ignore", Some("*.tmp")),
+        ("kibibytes", None),
+        ("dereference", None),
+        ("numeric-uid-gid", None),
+        ("literal", None),
+        ("hide-control-chars", None),
+        ("show-control-chars", None),
+        ("quote-name", None),
+        ("quoting-style", Some("literal")),
+        ("reverse", None),
+        ("recursive", None),
+        ("size", None),
+        ("sort", Some("name")),
+        ("time", Some("mtime")),
+        ("time-style", Some("locale")),
+        ("tabsize", Some("8")),
+        ("width", Some("80")),
+        ("context", None),
+        ("zero", None),
+    ];
+    for (name, val) in longs {
+        let flag = match val {
+            Some(v) => format!("--{name}={v}"),
+            None => format!("--{name}"),
+        };
+        // Avoid double `--color` when the option under test *is* color.
+        let mut cmd = Command::new(bin());
+        cmd.env("LC_ALL", "C");
+        cmd.arg(&flag);
+        cmd.args(["-1", "--git=false"]);
+        if *name != "color" {
+            cmd.arg("--color=never");
+        }
+        // `--config` must be immediately followed by its PATH.
+        cmd.arg("--config").arg(&cfg).arg(&dir);
+        let out = cmd.output().unwrap();
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(
+            !stderr.contains("unexpected argument")
+                && !stderr.contains("unexpected value")
+                && !stderr.contains("invalid value")
+                && !stderr.contains("a value is required"),
+            "GNU long option {flag} must parse; code={:?} stderr={stderr}",
+            out.status.code()
+        );
+        assert!(
+            out.status.code() == Some(0) || out.status.code() == Some(1),
+            "GNU long option {flag} should run; code={:?} stderr={stderr}",
+            out.status.code()
+        );
+    }
     let _ = fs::remove_dir_all(&dir);
 }

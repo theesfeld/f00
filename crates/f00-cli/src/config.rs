@@ -201,7 +201,7 @@ pub fn merge_config_into_args(args: &mut Args, file: &FileConfig) {
         args.human_readable = true;
     }
     if let Some(true) = d.classify {
-        args.classify = true;
+        args.classify = Some(ColorArg::Always);
     }
 
     if let Some(v) = d.icons {

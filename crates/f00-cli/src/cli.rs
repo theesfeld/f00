@@ -138,9 +138,16 @@ pub struct Args {
     )]
     pub icons: IconsArg,
 
-    /// Append indicator (one of */=@|) to entries
-    #[arg(short = 'F', long = "classify")]
-    pub classify: bool,
+    /// Append indicator (one of */=@|) to entries WHEN (GNU: `-F`, `--classify[=WHEN]`)
+    #[arg(
+        short = 'F',
+        long = "classify",
+        value_name = "WHEN",
+        num_args = 0..=1,
+        default_missing_value = "always",
+        require_equals = true
+    )]
+    pub classify: Option<ColorArg>,
 
     /// Append / indicator to directories
     #[arg(short = 'p')]
@@ -286,7 +293,7 @@ pub struct Args {
     #[arg(long = "author")]
     pub author: bool,
 
-    /// Hyperlink file names (auto/always/never)
+    /// Hyperlink file names WHEN (GNU: `--hyperlink[=WHEN]`; same synonyms as `--color`)
     #[arg(
         long = "hyperlink",
         value_name = "WHEN",
@@ -294,7 +301,7 @@ pub struct Args {
         default_missing_value = "always",
         require_equals = true
     )]
-    pub hyperlink: Option<String>,
+    pub hyperlink: Option<ColorArg>,
 
     /// Maximum recursion depth (with -R / --tree)
     #[arg(long = "max-depth", value_name = "N")]
@@ -389,7 +396,7 @@ impl Args {
             tree: false,
             gnu: false,
             icons: IconsArg::Auto,
-            classify: false,
+            classify: None,
             indicator_slash: false,
             file_type: false,
             indicator_style: None,
@@ -476,8 +483,11 @@ impl From<ColorArg> for f00_core::ColorWhen {
 #[derive(Debug, Clone, Copy, Default, ValueEnum, PartialEq, Eq)]
 pub enum IconsArg {
     #[default]
+    #[value(alias = "tty", alias = "if-tty")]
     Auto,
+    #[value(alias = "yes", alias = "force", alias = "on", alias = "true")]
     Always,
+    #[value(alias = "no", alias = "none", alias = "off", alias = "false")]
     Never,
 }
 
