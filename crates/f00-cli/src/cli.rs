@@ -448,9 +448,13 @@ impl Args {
 
 #[derive(Debug, Clone, Copy, Default, ValueEnum)]
 pub enum ColorArg {
+    /// Color when stdout is a TTY (`tty` is the GNU ls synonym used by e.g. NixOS).
     #[default]
+    #[value(alias = "tty")]
     Auto,
+    #[value(alias = "yes", alias = "force", alias = "on", alias = "true")]
     Always,
+    #[value(alias = "no", alias = "none", alias = "off", alias = "false")]
     Never,
 }
 
