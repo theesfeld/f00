@@ -1,12 +1,13 @@
 use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
+use std::time::Instant;
 
 use anyhow::{Context, Result};
 use f00_compat::{apply_gnu_list_options, apply_gnu_output, parse_format_word, parse_sort_word};
 use f00_core::{
     list_path, list_paths_with_errors, BlockSize, CliSymlinkMode, Config, ControlChars,
-    HyperlinkWhen, IndicatorStyle, ListOptions, ListOutcome, OutputMode, QuotingStyle, SortBy,
-    TimeField, TimeStyle,
+    HyperlinkWhen, IndicatorStyle, ListOptions, ListOutcome, ListTiming, OutputMode, QuotingStyle,
+    SortBy, TimeField, TimeStyle,
 };
 use f00_format::format_listings;
 
@@ -225,6 +226,10 @@ pub fn build_config(args: &Args) -> Config {
         list_archives: args.archive && !args.gnu && !args.directory,
         time_field: resolve_time_field(args),
         cli_symlink: resolve_cli_symlink(args),
+        // `--threads 1` forces serial; `0` = auto rayon; `N>1` = fixed pool.
+        parallel: args.threads != 1,
+        threads: args.threads,
+        collect_timing: args.profile,
     };
 
     apply_gnu_list_options(&mut list, args.gnu);
@@ -242,7 +247,7 @@ pub fn build_config(args: &Args) -> Config {
     let icons = if args.gnu || args.unsorted_all {
         false
     } else {
-        args.icons
+        f00_core::IconsWhen::from(args.icons).enabled(is_stdout_tty)
     };
     let show_git = args.git && !args.gnu && !args.unsorted_all;
 
@@ -312,7 +317,7 @@ pub fn prepare_args(mut args: Args, as_ls: bool) -> Result<Args> {
     // apply_gnu at build_config handles decorations. Also force git=false when --gnu.
     if args.gnu {
         args.git = false;
-        args.icons = false;
+        args.icons = crate::cli::IconsArg::Never;
         args.dirs_first = false;
     }
     Ok(args)
@@ -336,11 +341,13 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
                 .first()
                 .map(PathBuf::as_path)
                 .unwrap_or_else(|| std::path::Path::new("."));
+            let is_tty = io::stdout().is_terminal();
+            let icons = !args.gnu && f00_core::IconsWhen::from(args.icons).enabled(is_tty);
             let code = f00_tui::run_browser(
                 start,
                 f00_tui::BrowserOptions {
                     show_hidden: args.almost_all || args.all,
-                    icons: args.icons && !args.gnu,
+                    icons,
                     git: args.git && !args.gnu,
                 },
             )?;
@@ -359,7 +366,9 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
         args.paths.clone()
     };
 
+    let t_total = Instant::now();
     let outcome = list_paths_with_archives(&paths, &config.list);
+    let core_timing = outcome.total_timing();
 
     for err in &outcome.path_errors {
         eprintln!("f00: {err}");
@@ -378,8 +387,11 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
         {}
     }
 
+    let mut format_ms = 0u128;
     if !listings.is_empty() {
+        let t_fmt = Instant::now();
         let rendered = format_listings(&listings, &config).map_err(|e| anyhow::anyhow!(e))?;
+        format_ms = t_fmt.elapsed().as_millis();
 
         let mut stdout = io::stdout().lock();
         stdout
@@ -390,7 +402,18 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
         return Ok(2);
     }
 
+    if args.profile {
+        print_profile(&core_timing, format_ms, t_total.elapsed().as_millis());
+    }
+
     Ok(exit_code)
+}
+
+fn print_profile(core: &ListTiming, format_ms: u128, total_ms: u128) {
+    eprintln!(
+        "f00 profile: readdir_ms={} stat_ms={} sort_ms={} format_ms={} total_ms={}",
+        core.readdir_ms, core.stat_ms, core.sort_ms, format_ms, total_ms
+    );
 }
 
 /// Like [`list_paths_with_errors`], but expands zip/tar when `list_archives` is set.

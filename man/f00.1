@@ -1,0 +1,284 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH f00 1  "f00 0.3.0" 
+.SH NAME
+f00 \- List directory contents with a friendly default UI
+.SH SYNOPSIS
+\fBf00\fR [\fB\-\-help\fR] [\fB\-a\fR|\fB\-\-all\fR] [\fB\-A\fR|\fB\-\-almost\-all\fR] [\fB\-l \fR] [\fB\-1 \fR] [\fB\-C \fR] [\fB\-m \fR] [\fB\-h\fR|\fB\-\-human\-readable\fR] [\fB\-\-si\fR] [\fB\-R\fR|\fB\-\-recursive\fR] [\fB\-r\fR|\fB\-\-reverse\fR] [\fB\-t \fR] [\fB\-S \fR] [\fB\-X \fR] [\fB\-v \fR] [\fB\-U \fR] [\fB\-\-sort\fR] [\fB\-\-time\fR] [\fB\-u \fR] [\fB\-c \fR] [\fB\-\-color\fR] [\fB\-\-json\fR] [\fB\-\-csv\fR] [\fB\-\-tsv\fR] [\fB\-\-tree\fR] [\fB\-\-gnu\fR] [\fB\-\-icons\fR] [\fB\-F\fR|\fB\-\-classify\fR] [\fB\-p \fR] [\fB\-\-file\-type\fR] [\fB\-\-indicator\-style\fR] [\fB\-\-group\-directories\-first\fR] [\fB\-d\fR|\fB\-\-directory\fR] [\fB\-B\fR|\fB\-\-ignore\-backups\fR] [\fB\-I\fR|\fB\-\-ignore\fR] [\fB\-\-hide\fR] [\fB\-L\fR|\fB\-\-dereference\fR] [\fB\-H\fR|\fB\-\-dereference\-command\-line\fR] [\fB\-\-dereference\-command\-line\-symlink\-to\-dir\fR] [\fB\-g \fR] [\fB\-o \fR] [\fB\-G\fR|\fB\-\-no\-group\fR] [\fB\-n\fR|\fB\-\-numeric\-uid\-gid\fR] [\fB\-i\fR|\fB\-\-inode\fR] [\fB\-s\fR|\fB\-\-size\fR] [\fB\-k\fR|\fB\-\-kibibytes\fR] [\fB\-\-block\-size\fR] [\fB\-\-full\-time\fR] [\fB\-\-time\-style\fR] [\fB\-q\fR|\fB\-\-hide\-control\-chars\fR] [\fB\-\-show\-control\-chars\fR] [\fB\-b\fR|\fB\-\-escape\fR] [\fB\-Q\fR|\fB\-\-quote\-name\fR] [\fB\-N\fR|\fB\-\-literal\fR] [\fB\-\-quoting\-style\fR] [\fB\-x \fR] [\fB\-f \fR] [\fB\-\-format\fR] [\fB\-T\fR|\fB\-\-tabsize\fR] [\fB\-w\fR|\fB\-\-width\fR] [\fB\-Z\fR|\fB\-\-context\fR] [\fB\-\-zero\fR] [\fB\-D\fR|\fB\-\-dired\fR] [\fB\-\-author\fR] [\fB\-\-hyperlink\fR] [\fB\-\-max\-depth\fR] [\fB\-\-git\fR] [\fB\-\-config\fR] [\fB\-\-browse\fR] [\fB\-\-ignore\-files\fR] [\fB\-\-no\-ignore\fR] [\fB\-\-archive\fR] [\fB\-\-threads\fR] [\fB\-\-profile\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fIPATHS\fR] 
+.SH DESCRIPTION
+List directory contents with a friendly default UI
+.SH OPTIONS
+.TP
+\fB\-\-help\fR
+Print help
+.TP
+\fB\-a\fR, \fB\-\-all\fR
+Do not ignore entries starting with `.`
+.TP
+\fB\-A\fR, \fB\-\-almost\-all\fR
+Do not list implied `.` and `..` (show other hidden files)
+.TP
+\fB\-l\fR
+Use a long listing format
+.TP
+\fB\-1\fR
+List one file per line
+.TP
+\fB\-C\fR
+List entries by columns
+.TP
+\fB\-m\fR
+Fill width with a comma separated list of entries
+.TP
+\fB\-h\fR, \fB\-\-human\-readable\fR
+With \-l and \-s, print sizes like 1K 234M 2G etc
+.TP
+\fB\-\-si\fR
+Likewise, but use powers of 1000 not 1024
+.TP
+\fB\-R\fR, \fB\-\-recursive\fR
+List subdirectories recursively
+.TP
+\fB\-r\fR, \fB\-\-reverse\fR
+Reverse sort order
+.TP
+\fB\-t\fR
+Sort by time, newest first
+.TP
+\fB\-S\fR
+Sort by file size, largest first
+.TP
+\fB\-X\fR
+Sort alphabetically by entry extension
+.TP
+\fB\-v\fR
+Natural sort of (version) numbers within text (`strverscmp`)
+.TP
+\fB\-U\fR
+Do not sort; list entries in directory order
+.TP
+\fB\-\-sort\fR \fI<WORD>\fR
+Sort by WORD (name, size, time, extension, version, none)
+.TP
+\fB\-\-time\fR \fI<WORD>\fR
+Use time WORD for display/sort: mtime, atime, ctime, birth
+.TP
+\fB\-u\fR
+Sort by, and show, access time
+.TP
+\fB\-c\fR
+Sort by, and show, ctime (status change) when possible
+.TP
+\fB\-\-color\fR[=\fI<WHEN>\fR] [default: auto]
+Colorize output
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+auto
+.IP \(bu 2
+always
+.IP \(bu 2
+never
+.RE
+.TP
+\fB\-\-json\fR
+Emit structured JSON
+.TP
+\fB\-\-csv\fR
+Emit CSV
+.TP
+\fB\-\-tsv\fR
+Emit TSV
+.TP
+\fB\-\-tree\fR
+Show entries as a tree
+.TP
+\fB\-\-gnu\fR
+Stricter GNU ls\-compatible behavior
+.TP
+\fB\-\-icons\fR[=\fI<WHEN>\fR] [default: auto]
+Show file icons (auto/always/never; default: auto — TTY only, off under \-\-gnu)
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+auto
+.IP \(bu 2
+always
+.IP \(bu 2
+never
+.RE
+.TP
+\fB\-F\fR, \fB\-\-classify\fR
+Append indicator (one of */=@|) to entries
+.TP
+\fB\-p\fR
+Append / indicator to directories
+.TP
+\fB\-\-file\-type\fR
+Like \-F, except do not append \*(Aq*\*(Aq
+.TP
+\fB\-\-indicator\-style\fR \fI<WORD>\fR
+Append indicator with style WORD: none, slash, file\-type, classify
+.TP
+\fB\-\-group\-directories\-first\fR
+Group directories before files
+.TP
+\fB\-d\fR, \fB\-\-directory\fR
+List directories themselves, not their contents
+.TP
+\fB\-B\fR, \fB\-\-ignore\-backups\fR
+Do not list implied entries ending with ~
+.TP
+\fB\-I\fR, \fB\-\-ignore\fR \fI<PATTERN>\fR
+Do not list implied entries matching shell PATTERN (repeatable)
+.TP
+\fB\-\-hide\fR \fI<PATTERN>\fR
+Do not list implied entries matching shell PATTERN (unless \-a/\-A)
+.TP
+\fB\-L\fR, \fB\-\-dereference\fR
+When showing file information for a symbolic link, show info for the file it references
+.TP
+\fB\-H\fR, \fB\-\-dereference\-command\-line\fR
+Follow symbolic links listed on the command line
+.TP
+\fB\-\-dereference\-command\-line\-symlink\-to\-dir\fR
+Follow each command line symbolic link that points to a directory
+.TP
+\fB\-g\fR
+Like \-l, but do not list owner
+.TP
+\fB\-o\fR
+Like \-l, but do not list group information
+.TP
+\fB\-G\fR, \fB\-\-no\-group\fR
+In a long listing, don\*(Aqt print group names
+.TP
+\fB\-n\fR, \fB\-\-numeric\-uid\-gid\fR
+Like \-l, but list numeric user and group IDs
+.TP
+\fB\-i\fR, \fB\-\-inode\fR
+Print the index number of each file
+.TP
+\fB\-s\fR, \fB\-\-size\fR
+Print the allocated size of each file, in blocks
+.TP
+\fB\-k\fR, \fB\-\-kibibytes\fR
+Default to 1024\-byte blocks for filesystem disk usage (`\-s`)
+.TP
+\fB\-\-block\-size\fR \fI<SIZE>\fR
+Scale sizes by SIZE before printing (e.g. 1K, 1M, KB, MB)
+.TP
+\fB\-\-full\-time\fR
+Like \-l \-\-time\-style=full\-iso
+.TP
+\fB\-\-time\-style\fR \fI<TIME_STYLE>\fR
+Time/date format with \-l; also TIME_STYLE env
+.TP
+\fB\-q\fR, \fB\-\-hide\-control\-chars\fR
+Print ? instead of nongraphic characters
+.TP
+\fB\-\-show\-control\-chars\fR
+Show nongraphic characters as\-is (the default unless \-q)
+.TP
+\fB\-b\fR, \fB\-\-escape\fR
+Print C\-style escapes for nongraphic characters
+.TP
+\fB\-Q\fR, \fB\-\-quote\-name\fR
+Enclose entry names in double quotes
+.TP
+\fB\-N\fR, \fB\-\-literal\fR
+Print entry names without quoting
+.TP
+\fB\-\-quoting\-style\fR \fI<WORD>\fR
+Use quoting style WORD for entry names
+.TP
+\fB\-x\fR
+List entries by lines instead of by columns (row\-major)
+.TP
+\fB\-f\fR
+Same as \-a \-U (and disable decorations in GNU mode)
+.TP
+\fB\-\-format\fR \fI<WORD>\fR
+Across/commas/long/single\-column/vertical
+.TP
+\fB\-T\fR, \fB\-\-tabsize\fR \fI<COLS>\fR
+Assume tab stops at each COLS instead of 8 (stored for layout)
+.TP
+\fB\-w\fR, \fB\-\-width\fR \fI<COLS>\fR
+Set output width to COLS; 0 means no limit
+.TP
+\fB\-Z\fR, \fB\-\-context\fR
+Print any security context of each file (SELinux)
+.TP
+\fB\-\-zero\fR
+End each output line with NUL, not newline
+.TP
+\fB\-D\fR, \fB\-\-dired\fR
+Generate output designed for Emacs\*(Aq dired mode
+.TP
+\fB\-\-author\fR
+With \-l, print the author of each file
+.TP
+\fB\-\-hyperlink\fR[=\fI<WHEN>\fR]
+Hyperlink file names (auto/always/never)
+.TP
+\fB\-\-max\-depth\fR \fI<N>\fR
+Maximum recursion depth (with \-R / \-\-tree)
+.TP
+\fB\-\-git\fR \fI<GIT>\fR [default: true]
+Annotate with git status (requires feature `git`)
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+true
+.IP \(bu 2
+false
+.RE
+.TP
+\fB\-\-config\fR \fI<PATH>\fR
+Path to TOML config file (overrides default search path)
+.TP
+\fB\-\-browse\fR
+Interactive TUI directory browser (requires feature `tui`)
+.TP
+\fB\-\-ignore\-files\fR
+Honor `.gitignore` / `.f00ignore` when listing
+.TP
+\fB\-\-no\-ignore\fR
+Do not honor ignore files (overrides \-\-ignore\-files)
+.TP
+\fB\-\-archive\fR \fI<ARCHIVE>\fR [default: true]
+Auto\-list zip/tar archives as directories (default: true; off under \-\-gnu)
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+true
+.IP \(bu 2
+false
+.RE
+.TP
+\fB\-\-threads\fR \fI<N>\fR [default: 0]
+Parallel metadata threads: `0` = auto (rayon default), `1` = serial, `N>1` = fixed pool
+.TP
+\fB\-\-profile\fR
+Print phase timing breakdown to stderr (readdir/stat/sort/format/total)
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version
+.TP
+[\fIPATHS\fR]
+Paths to list (default: current directory)
+.SH VERSION
+v0.3.0

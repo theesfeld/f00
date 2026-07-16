@@ -44,6 +44,35 @@ impl ColorWhen {
     }
 }
 
+/// When to show file-type icons (`--icons=WHEN`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum IconsWhen {
+    #[default]
+    Auto,
+    Always,
+    Never,
+}
+
+impl IconsWhen {
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.to_ascii_lowercase().as_str() {
+            "auto" => Some(Self::Auto),
+            "always" | "yes" | "force" | "true" | "on" => Some(Self::Always),
+            "never" | "no" | "none" | "false" | "off" => Some(Self::Never),
+            _ => None,
+        }
+    }
+
+    /// Icons on for `Always`, off for `Never`, and for `Auto` only when `is_tty`.
+    pub fn enabled(self, is_tty: bool) -> bool {
+        match self {
+            Self::Always => true,
+            Self::Never => false,
+            Self::Auto => is_tty,
+        }
+    }
+}
+
 /// How to present the listing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum OutputMode {
@@ -328,6 +357,9 @@ pub enum CliSymlinkMode {
     DirOnly,
 }
 
+/// Minimum number of directory children before parallel metadata is used.
+pub const PARALLEL_STAT_THRESHOLD: usize = 32;
+
 /// Options controlling which entries appear and how they are ordered.
 #[derive(Debug, Clone)]
 pub struct ListOptions {
@@ -359,6 +391,13 @@ pub struct ListOptions {
     pub time_field: TimeField,
     /// How CLI path arguments that are symlinks are handled.
     pub cli_symlink: CliSymlinkMode,
+    /// Parallelize metadata (`stat`) for large directories (rayon).
+    /// Forced off when [`Self::threads`] is `1`.
+    pub parallel: bool,
+    /// Rayon worker count: `0` = auto, `1` = force serial, `N>1` = fixed pool size.
+    pub threads: usize,
+    /// When true, fill [`crate::Listing::timing`] with phase durations.
+    pub collect_timing: bool,
 }
 
 impl Default for ListOptions {
@@ -381,7 +420,17 @@ impl Default for ListOptions {
             list_archives: true,
             time_field: TimeField::Modified,
             cli_symlink: CliSymlinkMode::Never,
+            parallel: true,
+            threads: 0,
+            collect_timing: false,
         }
+    }
+}
+
+impl ListOptions {
+    /// Whether metadata should use rayon for this listing size.
+    pub fn use_parallel_stat(&self, entry_count: usize) -> bool {
+        self.parallel && self.threads != 1 && entry_count > PARALLEL_STAT_THRESHOLD
     }
 }
 

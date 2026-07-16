@@ -1,6 +1,6 @@
 //! GNU / POSIX `ls` compatibility helpers for **f00**.
 
-use f00_core::{ListOptions, OutputMode, SortBy};
+use f00_core::{IconsWhen, ListOptions, OutputMode, SortBy};
 
 /// Compatibility profile applied when `--gnu` is set.
 #[derive(Debug, Clone, Default)]
@@ -58,13 +58,13 @@ pub fn gnu_mode_active(gnu_flag: bool) -> bool {
 /// Config may re-enable them after this runs. Does **not** enable full `--gnu`
 /// strict mode — that remains opt-in via `--gnu` / `F00_GNU`.
 pub fn prefer_ls_defaults(
-    icons: &mut bool,
+    icons: &mut IconsWhen,
     dirs_first: &mut bool,
     icons_from_cli: bool,
     dirs_first_from_cli: bool,
 ) {
     if !icons_from_cli {
-        *icons = false;
+        *icons = IconsWhen::Never;
     }
     if !dirs_first_from_cli {
         *dirs_first = false;
@@ -124,19 +124,19 @@ mod tests {
 
     #[test]
     fn prefer_ls_clears_presentation_defaults() {
-        let mut icons = true;
+        let mut icons = IconsWhen::Auto;
         let mut dirs_first = true;
         prefer_ls_defaults(&mut icons, &mut dirs_first, false, false);
-        assert!(!icons);
+        assert_eq!(icons, IconsWhen::Never);
         assert!(!dirs_first);
     }
 
     #[test]
     fn prefer_ls_keeps_cli_overrides() {
-        let mut icons = true;
+        let mut icons = IconsWhen::Always;
         let mut dirs_first = true;
         prefer_ls_defaults(&mut icons, &mut dirs_first, true, true);
-        assert!(icons);
+        assert_eq!(icons, IconsWhen::Always);
         assert!(dirs_first);
     }
 

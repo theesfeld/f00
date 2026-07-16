@@ -41,3 +41,15 @@ jobs:
         run: cargo test --workspace
       - name: cargo build --release
         run: cargo build --release --workspace
+
+  features:
+    name: feature matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo test --workspace --all-features
+        run: cargo test --workspace --all-features
+      - name: cargo test -p f00-cli --no-default-features
+        run: cargo test -p f00-cli --no-default-features

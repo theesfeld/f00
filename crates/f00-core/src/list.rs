@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 
+use rayon::prelude::*;
 use walkdir::WalkDir;
 
 use crate::entry::Entry;
@@ -9,6 +11,26 @@ use crate::filter::filter_entries;
 use crate::ignore::{apply_ignore_set, load_ignore_set, IgnoreSet};
 use crate::options::{CliSymlinkMode, ListOptions};
 use crate::sort::sort_entries;
+
+/// Phase timings for a single listing (milliseconds).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ListTiming {
+    /// Time spent in `readdir` / collecting directory entries.
+    pub readdir_ms: u128,
+    /// Time spent stating paths and building [`Entry`] values.
+    pub stat_ms: u128,
+    /// Time spent filtering and sorting.
+    pub sort_ms: u128,
+}
+
+impl ListTiming {
+    /// Sum another timing into this one (for multi-path runs).
+    pub fn add_assign(&mut self, other: &ListTiming) {
+        self.readdir_ms = self.readdir_ms.saturating_add(other.readdir_ms);
+        self.stat_ms = self.stat_ms.saturating_add(other.stat_ms);
+        self.sort_ms = self.sort_ms.saturating_add(other.sort_ms);
+    }
+}
 
 /// A listing produced for one path argument (or recursive tree).
 #[derive(Debug, Clone)]
@@ -22,6 +44,8 @@ pub struct Listing {
     /// Recoverable problems while listing (e.g. unreadable subdirectory).
     /// Surfaces as process exit code 1 when non-zero.
     pub minor_errors: usize,
+    /// Optional phase timings when [`ListOptions::collect_timing`] is set.
+    pub timing: Option<ListTiming>,
 }
 
 impl Listing {
@@ -31,7 +55,13 @@ impl Listing {
             root_is_dir,
             entries,
             minor_errors: 0,
+            timing: None,
         }
+    }
+
+    fn with_timing(mut self, timing: Option<ListTiming>) -> Self {
+        self.timing = timing;
+        self
     }
 }
 
@@ -106,12 +136,55 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
     }
 }
 
+/// Build an [`Entry`] from a readdir item.
+fn entry_from_dir_entry(item: &fs::DirEntry, follow_links: bool) -> Option<Entry> {
+    let entry_path = item.path();
+    if follow_links {
+        Entry::from_path_follow(&entry_path, 0).ok()
+    } else {
+        let meta = item
+            .metadata()
+            .or_else(|_| fs::symlink_metadata(&entry_path));
+        match meta {
+            Ok(m) => Entry::from_path_and_meta(&entry_path, &m, 0).ok(),
+            Err(_) => None,
+        }
+    }
+}
+
+/// Stat directory children, optionally in parallel with rayon.
+fn stat_dir_entries(dir_entries: &[fs::DirEntry], opts: &ListOptions) -> Vec<Entry> {
+    let follow = opts.follow_links;
+    let map_one = |item: &fs::DirEntry| entry_from_dir_entry(item, follow);
+
+    if !opts.use_parallel_stat(dir_entries.len()) {
+        return dir_entries.iter().filter_map(map_one).collect();
+    }
+
+    let collect = || dir_entries.par_iter().filter_map(map_one).collect();
+
+    if opts.threads > 1 {
+        match rayon::ThreadPoolBuilder::new()
+            .num_threads(opts.threads)
+            .build()
+        {
+            Ok(pool) => pool.install(collect),
+            Err(_) => collect(),
+        }
+    } else {
+        collect()
+    }
+}
+
 /// Non-recursive directory listing.
 pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
+    let collect_timing = opts.collect_timing;
+    let mut timing = ListTiming::default();
+
     let mut entries = Vec::new();
 
+    // Synthesize `.` and `..` sequentially (must not race with parallel stat).
     if opts.all {
-        // Synthesize `.` and `..` like traditional ls -a.
         if let Ok(dot) = Entry::from_path(path, 0) {
             let mut e = dot;
             e.name = ".".to_string();
@@ -130,47 +203,80 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
         }
     }
 
+    let t_readdir = if collect_timing {
+        Some(Instant::now())
+    } else {
+        None
+    };
+
     let read = fs::read_dir(path).map_err(|source| Error::ReadDir {
         path: path.to_path_buf(),
         source,
     })?;
 
+    let mut dir_entries = Vec::new();
     for item in read {
         let item = item.map_err(|source| Error::ReadDir {
             path: path.to_path_buf(),
             source,
         })?;
-        let entry_path = item.path();
-        // Inside a directory, only `-L` follows; `-H` is CLI-args only.
-        let entry = if opts.follow_links {
-            Entry::from_path_follow(&entry_path, 0)
-        } else {
-            let meta = item
-                .metadata()
-                .or_else(|_| fs::symlink_metadata(&entry_path));
-            match meta {
-                Ok(m) => Entry::from_path_and_meta(&entry_path, &m, 0),
-                Err(_) => continue,
-            }
-        };
-        match entry {
-            Ok(e) => entries.push(e),
-            Err(_) => continue,
-        }
+        dir_entries.push(item);
     }
+
+    if let Some(t0) = t_readdir {
+        timing.readdir_ms = t0.elapsed().as_millis();
+    }
+
+    let t_stat = if collect_timing {
+        Some(Instant::now())
+    } else {
+        None
+    };
+
+    let children = stat_dir_entries(&dir_entries, opts);
+    entries.extend(children);
+
+    if let Some(t0) = t_stat {
+        timing.stat_ms = t0.elapsed().as_millis();
+    }
+
+    let t_sort = if collect_timing {
+        Some(Instant::now())
+    } else {
+        None
+    };
 
     filter_entries(&mut entries, opts);
     if opts.use_ignore_files {
         let set = load_ignore_set(path);
         apply_ignore_set(&mut entries, &set);
     }
+    // Deterministic order: sort always runs after parallel collect.
     sort_entries(&mut entries, opts);
 
-    Ok(Listing::new(path.to_path_buf(), true, entries))
+    if let Some(t0) = t_sort {
+        timing.sort_ms = t0.elapsed().as_millis();
+    }
+
+    Ok(
+        Listing::new(path.to_path_buf(), true, entries).with_timing(if collect_timing {
+            Some(timing)
+        } else {
+            None
+        }),
+    )
 }
 
 /// Basic recursive listing using walkdir.
 pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
+    let collect_timing = opts.collect_timing;
+    let mut timing = ListTiming::default();
+    let t_all = if collect_timing {
+        Some(Instant::now())
+    } else {
+        None
+    };
+
     let mut entries = Vec::new();
     let mut minor_errors = 0usize;
     let max_depth = opts.max_depth.unwrap_or(usize::MAX);
@@ -184,6 +290,8 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
 
     // Group by parent directory: emit header then children for each dir.
     // First, collect all walkdir results.
+    // Recursive walk stays sequential: headers and section order must be stable.
+    // (Parallelism lives in non-recursive `list_directory` where readdir is flat.)
     let walker = WalkDir::new(path)
         .follow_links(opts.follow_links)
         .max_depth(max_depth)
@@ -249,10 +357,28 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
         }
     }
 
+    if let Some(t0) = t_all {
+        // Attribute walk+stat wall time primarily to readdir/stat combined.
+        let ms = t0.elapsed().as_millis();
+        timing.readdir_ms = ms / 2;
+        timing.stat_ms = ms.saturating_sub(timing.readdir_ms);
+    }
+
+    let t_sort = if collect_timing {
+        Some(Instant::now())
+    } else {
+        None
+    };
+
     // For recursive mode, sort within sections delimited by headers.
     sort_recursive_sections(&mut entries, opts);
 
-    let mut listing = Listing::new(path.to_path_buf(), true, entries);
+    if let Some(t0) = t_sort {
+        timing.sort_ms = t0.elapsed().as_millis();
+    }
+
+    let mut listing = Listing::new(path.to_path_buf(), true, entries)
+        .with_timing(if collect_timing { Some(timing) } else { None });
     listing.minor_errors = minor_errors;
     Ok(listing)
 }
@@ -333,6 +459,17 @@ impl ListOutcome {
         } else {
             0
         }
+    }
+
+    /// Aggregate phase timings across successful listings.
+    pub fn total_timing(&self) -> ListTiming {
+        let mut total = ListTiming::default();
+        for l in &self.listings {
+            if let Some(ref t) = l.timing {
+                total.add_assign(t);
+            }
+        }
+        total
     }
 }
 
@@ -446,6 +583,81 @@ mod tests {
         let names: Vec<_> = listing.entries.iter().map(|e| e.name.as_str()).collect();
         assert!(names.contains(&"skip.o"));
 
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn parallel_list_same_names_as_sequential() {
+        let dir = temp_dir();
+        // Well above PARALLEL_STAT_THRESHOLD so parallel path is taken.
+        for i in 0..64 {
+            fs::write(dir.join(format!("file_{i:03}.txt")), b"x").unwrap();
+        }
+        fs::create_dir(dir.join("subdir")).unwrap();
+
+        let sequential = ListOptions {
+            parallel: false,
+            threads: 1,
+            ..Default::default()
+        };
+        let parallel = ListOptions {
+            parallel: true,
+            threads: 0,
+            ..Default::default()
+        };
+
+        let seq = list_directory(&dir, &sequential).unwrap();
+        let par = list_directory(&dir, &parallel).unwrap();
+
+        let mut seq_names: Vec<_> = seq.entries.iter().map(|e| e.name.clone()).collect();
+        let mut par_names: Vec<_> = par.entries.iter().map(|e| e.name.clone()).collect();
+        // Both should already be sorted the same way; compare explicitly.
+        assert_eq!(
+            seq_names, par_names,
+            "parallel and sequential must produce identical ordered names"
+        );
+
+        seq_names.sort();
+        par_names.sort();
+        assert_eq!(seq_names, par_names);
+        assert_eq!(seq_names.len(), 65); // 64 files + subdir
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn collect_timing_fills_phases() {
+        let dir = temp_dir();
+        for i in 0..8 {
+            fs::write(dir.join(format!("f{i}")), b"x").unwrap();
+        }
+        let opts = ListOptions {
+            collect_timing: true,
+            parallel: false,
+            threads: 1,
+            ..Default::default()
+        };
+        let listing = list_directory(&dir, &opts).unwrap();
+        let t = listing.timing.expect("timing present");
+        // Just ensure fields are populated (may be 0ms on very fast FS).
+        let _ = (t.readdir_ms, t.stat_ms, t.sort_ms);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn threads_one_forces_serial_path() {
+        let dir = temp_dir();
+        for i in 0..40 {
+            fs::write(dir.join(format!("n{i}")), b"x").unwrap();
+        }
+        let opts = ListOptions {
+            parallel: true,
+            threads: 1,
+            ..Default::default()
+        };
+        assert!(!opts.use_parallel_stat(40));
+        let listing = list_directory(&dir, &opts).unwrap();
+        assert_eq!(listing.entries.len(), 40);
         let _ = fs::remove_dir_all(&dir);
     }
 }

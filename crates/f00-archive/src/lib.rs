@@ -135,6 +135,7 @@ pub fn list_archive_as_listing(path: &Path) -> Result<Listing> {
         root_is_dir: false,
         entries,
         minor_errors: 0,
+        timing: None,
     })
 }
 

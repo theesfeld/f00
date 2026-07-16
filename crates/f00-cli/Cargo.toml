@@ -22,6 +22,8 @@ f00-archive = { workspace = true, optional = true }
 f00-tui = { workspace = true, optional = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
+clap_complete = { workspace = true }
+clap_mangen = { workspace = true }
 directories = { workspace = true }
 serde = { workspace = true }
 terminal_size = { workspace = true }

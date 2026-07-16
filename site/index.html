@@ -106,8 +106,8 @@
         <div class="section-head">
           <h2>Built for daily use</h2>
           <p>
-            MVP ships the essentials modern tools expect. Planned features are labeled —
-            we don’t sell vaporware as stable.
+            Core listing, TUI, archives, and ship-track DX (completions, man, icons when)
+            are shipped. Remaining work is labeled honestly — we don’t sell vaporware as stable.
           </p>
         </div>
         <div class="features">
@@ -139,7 +139,7 @@
           <article class="card">
             <span class="tag">shipped</span>
             <h3>Icons</h3>
-            <p>File-type icons when your terminal and font support them — optional, never required.</p>
+            <p><code class="mono">--icons=auto|always|never</code> — on in TTY by default, off under <code class="mono">--gnu</code>.</p>
           </article>
           <article class="card">
             <span class="tag">shipped</span>
@@ -152,14 +152,19 @@
             <p>XDG-friendly <code class="mono">config.toml</code> for colors, icons, git, and defaults.</p>
           </article>
           <article class="card">
-            <span class="tag planned">planned</span>
+            <span class="tag">shipped</span>
             <h3>TUI browser</h3>
-            <p>Interactive directory browser for when a one-shot listing isn’t enough.</p>
+            <p>Interactive directory browser: <code class="mono">f00 --browse</code> with filter, marks, and open.</p>
           </article>
           <article class="card">
-            <span class="tag planned">planned</span>
+            <span class="tag">shipped</span>
             <h3>Archives</h3>
             <p>List inside zip/tar (and friends) without extracting to disk.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Completions &amp; man</h3>
+            <p><code class="mono">--generate-completions</code> and <code class="mono">--generate-man</code> for packaging and shell setup.</p>
           </article>
         </div>
       </div>
@@ -180,7 +185,7 @@
             <h3>Quick install</h3>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.1.0 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.3.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>Optional <code class="mono">ls</code> symlink (off by default):</p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
@@ -323,36 +328,36 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
           <li>
             <span class="n">01</span>
             <div>
-              <strong>MVP solidify</strong>
-              <span>v0.2: full ls clone, TUI --browse, zip/tar, ignore files, CSV/TSV</span>
+              <strong>MVP solidify (shipped)</strong>
+              <span>v0.3: completions, man, parallel list, --profile, golden tests</span>
             </div>
           </li>
           <li>
             <span class="n">02</span>
             <div>
-              <strong>Release pipeline</strong>
+              <strong>Release pipeline (shipped)</strong>
               <span>multi-arch binaries, checksums, installer, GitHub Pages site</span>
             </div>
           </li>
           <li>
             <span class="n">03</span>
             <div>
-              <strong>Config &amp; completions</strong>
-              <span>TOML polish, shell completions, theme knobs</span>
+              <strong>Ship + trust + speed (v0.3)</strong>
+              <span>shell completions, man page, icons auto/always/never, feature CI matrix</span>
             </div>
           </li>
           <li>
             <span class="n">04</span>
             <div>
-              <strong>TUI (shipped)</strong>
-              <span><code class="mono">f00 --browse</code> — j/k, filter, marks, open files</span>
+              <strong>v0.3 polish (in progress)</strong>
+              <span>theme knobs, release train hardening, FreeBSD CI smoke</span>
             </div>
           </li>
           <li>
             <span class="n">05</span>
             <div>
-              <strong>Archives (planned)</strong>
-              <span>list zip/tar contents without extracting</span>
+              <strong>Plugins (planned)</strong>
+              <span>plugin host ABI for extensions (#27)</span>
             </div>
           </li>
         </ol>

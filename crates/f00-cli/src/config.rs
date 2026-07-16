@@ -13,7 +13,8 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use crate::cli::{Args, ColorArg};
+use crate::cli::{Args, ColorArg, IconsArg};
+use f00_core::IconsWhen;
 
 /// Optional defaults from a TOML config file.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
@@ -25,7 +26,9 @@ pub struct ConfigDefaults {
     #[serde(alias = "human")]
     pub human_readable: Option<bool>,
     pub color: Option<String>,
-    pub icons: Option<bool>,
+    /// Icons when: bool (`true`/`false`) or string (`auto`/`always`/`never`).
+    #[serde(default, deserialize_with = "deserialize_opt_icons")]
+    pub icons: Option<IconsArg>,
     pub dirs_first: Option<bool>,
     pub git: Option<bool>,
     pub classify: Option<bool>,
@@ -44,7 +47,8 @@ pub struct FileConfig {
     #[serde(alias = "human")]
     pub human_readable: Option<bool>,
     pub color: Option<String>,
-    pub icons: Option<bool>,
+    #[serde(default, deserialize_with = "deserialize_opt_icons")]
+    pub icons: Option<IconsArg>,
     pub dirs_first: Option<bool>,
     pub git: Option<bool>,
     pub classify: Option<bool>,
@@ -121,6 +125,53 @@ fn parse_color_arg(s: &str) -> Option<ColorArg> {
     }
 }
 
+fn parse_icons_arg(s: &str) -> Option<IconsArg> {
+    IconsWhen::parse(s).map(IconsArg::from)
+}
+
+/// Accept bool or string for `icons` in TOML (`true`/`false`/`"auto"`/`"always"`/`"never"`).
+fn deserialize_opt_icons<'de, D>(deserializer: D) -> Result<Option<IconsArg>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::{self, Visitor};
+    use std::fmt;
+
+    struct IconsVisitor;
+
+    impl<'de> Visitor<'de> for IconsVisitor {
+        type Value = Option<IconsArg>;
+
+        fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            f.write_str("a bool or icons when string (auto/always/never)")
+        }
+
+        fn visit_none<E: de::Error>(self) -> Result<Self::Value, E> {
+            Ok(None)
+        }
+
+        fn visit_unit<E: de::Error>(self) -> Result<Self::Value, E> {
+            Ok(None)
+        }
+
+        fn visit_bool<E: de::Error>(self, v: bool) -> Result<Self::Value, E> {
+            Ok(Some(if v { IconsArg::Always } else { IconsArg::Never }))
+        }
+
+        fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
+            parse_icons_arg(v)
+                .map(Some)
+                .ok_or_else(|| de::Error::custom(format!("invalid icons value: {v}")))
+        }
+
+        fn visit_string<E: de::Error>(self, v: String) -> Result<Self::Value, E> {
+            self.visit_str(&v)
+        }
+    }
+
+    deserializer.deserialize_any(IconsVisitor)
+}
+
 /// Whether `flag` (e.g. `--icons` or `--git`) appears in process args.
 pub fn cli_has_long(flag: &str) -> bool {
     let eq = format!("{flag}=");
@@ -132,7 +183,7 @@ pub fn cli_has_long(flag: &str) -> bool {
 /// Precedence: built-in defaults < config < CLI flags (when set / non-default).
 /// For false-default bools, config `true` enables.
 /// For `git` (CLI default true), config applies unless `--git` was on the command line.
-/// For `color`, config applies when no explicit `--color` on the command line.
+/// For `color` / `icons`, config applies when no explicit `--color` / `--icons` on the CLI.
 pub fn merge_config_into_args(args: &mut Args, file: &FileConfig) {
     let d = file.resolved_defaults();
 
@@ -153,10 +204,8 @@ pub fn merge_config_into_args(args: &mut Args, file: &FileConfig) {
     }
 
     if let Some(v) = d.icons {
-        if v {
-            args.icons = true;
-        } else if !cli_has_long("--icons") {
-            args.icons = false;
+        if !cli_has_long("--icons") {
+            args.icons = v;
         }
     }
     if let Some(v) = d.dirs_first {
@@ -230,12 +279,14 @@ pub fn invoked_as_ls_from(argv0: Option<std::ffi::OsString>) -> bool {
 pub fn resolve_args(args: &mut Args, file: Option<&FileConfig>, as_ls: bool) {
     if as_ls {
         // Icons / dirs_first off unless the user passed the flags (config may re-enable).
+        let mut icons = IconsWhen::from(args.icons);
         f00_compat::prefer_ls_defaults(
-            &mut args.icons,
+            &mut icons,
             &mut args.dirs_first,
             cli_has_long("--icons"),
             cli_has_long("--dirs-first"),
         );
+        args.icons = IconsArg::from(icons);
     }
     if let Some(file) = file {
         merge_config_into_args(args, file);
@@ -246,7 +297,7 @@ pub fn resolve_args(args: &mut Args, file: Option<&FileConfig>, as_ls: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cli::ColorArg;
+    use crate::cli::{ColorArg, IconsArg};
 
     fn empty_args() -> Args {
         let mut a = Args::test_default();
@@ -270,10 +321,18 @@ mod tests {
         .unwrap();
         let d = cfg.resolved_defaults();
         assert_eq!(d.all, Some(true));
-        assert_eq!(d.icons, Some(true));
+        assert_eq!(d.icons, Some(IconsArg::Always));
         assert_eq!(d.color.as_deref(), Some("never"));
         assert_eq!(d.dirs_first, Some(true));
         assert_eq!(d.git, Some(false));
+    }
+
+    #[test]
+    fn parse_icons_when_string() {
+        let cfg = parse_config_str(r#"icons = "auto""#).unwrap();
+        assert_eq!(cfg.resolved_defaults().icons, Some(IconsArg::Auto));
+        let cfg = parse_config_str(r#"icons = "never""#).unwrap();
+        assert_eq!(cfg.resolved_defaults().icons, Some(IconsArg::Never));
     }
 
     #[test]
@@ -308,7 +367,7 @@ mod tests {
         merge_config_into_args(&mut args, &cfg);
         assert!(args.all);
         assert!(args.long);
-        assert!(args.icons);
+        assert_eq!(args.icons, IconsArg::Always);
         assert!(args.human_readable);
     }
 
@@ -358,6 +417,10 @@ mod tests {
         let cfg = parse_config_str(r#"icons = true"#).unwrap();
         let mut args = empty_args();
         resolve_args(&mut args, Some(&cfg), true);
-        assert!(args.icons, "config should re-enable icons under argv0 ls");
+        assert_eq!(
+            args.icons,
+            IconsArg::Always,
+            "config should re-enable icons under argv0 ls"
+        );
     }
 }

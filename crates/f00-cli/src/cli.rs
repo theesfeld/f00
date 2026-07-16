@@ -127,9 +127,16 @@ pub struct Args {
     #[arg(long = "gnu")]
     pub gnu: bool,
 
-    /// Show file icons
-    #[arg(long = "icons")]
-    pub icons: bool,
+    /// Show file icons (auto/always/never; default: auto — TTY only, off under --gnu)
+    #[arg(
+        long = "icons",
+        value_name = "WHEN",
+        default_value = "auto",
+        num_args = 0..=1,
+        default_missing_value = "always",
+        require_equals = true
+    )]
+    pub icons: IconsArg,
 
     /// Append indicator (one of */=@|) to entries
     #[arg(short = 'F', long = "classify")]
@@ -316,6 +323,22 @@ pub struct Args {
     /// Auto-list zip/tar archives as directories (default: true; off under --gnu)
     #[arg(long = "archive", default_value_t = true, action = clap::ArgAction::Set)]
     pub archive: bool,
+
+    /// Parallel metadata threads: `0` = auto (rayon default), `1` = serial, `N>1` = fixed pool
+    #[arg(long = "threads", value_name = "N", default_value_t = 0)]
+    pub threads: usize,
+
+    /// Print phase timing breakdown to stderr (readdir/stat/sort/format/total)
+    #[arg(long = "profile")]
+    pub profile: bool,
+
+    /// Generate shell completions to stdout and exit (`bash`, `zsh`, `fish`, `powershell`, `elvish`)
+    #[arg(long = "generate-completions", value_name = "SHELL", hide = true)]
+    pub generate_completions: Option<clap_complete::Shell>,
+
+    /// Generate a man page to stdout and exit
+    #[arg(long = "generate-man", hide = true, action = ArgAction::SetTrue)]
+    pub generate_man: bool,
 }
 
 impl Args {
@@ -349,7 +372,7 @@ impl Args {
             tsv: false,
             tree: false,
             gnu: false,
-            icons: false,
+            icons: IconsArg::Auto,
             classify: false,
             indicator_slash: false,
             file_type: false,
@@ -395,6 +418,10 @@ impl Args {
             ignore_files: false,
             no_ignore: false,
             archive: true,
+            threads: 0,
+            profile: false,
+            generate_completions: None,
+            generate_man: false,
         }
     }
 }
@@ -413,6 +440,35 @@ impl From<ColorArg> for f00_core::ColorWhen {
             ColorArg::Auto => Self::Auto,
             ColorArg::Always => Self::Always,
             ColorArg::Never => Self::Never,
+        }
+    }
+}
+
+/// When to show file-type icons (mirrors [`f00_core::IconsWhen`]).
+#[derive(Debug, Clone, Copy, Default, ValueEnum, PartialEq, Eq)]
+pub enum IconsArg {
+    #[default]
+    Auto,
+    Always,
+    Never,
+}
+
+impl From<IconsArg> for f00_core::IconsWhen {
+    fn from(value: IconsArg) -> Self {
+        match value {
+            IconsArg::Auto => Self::Auto,
+            IconsArg::Always => Self::Always,
+            IconsArg::Never => Self::Never,
+        }
+    }
+}
+
+impl From<f00_core::IconsWhen> for IconsArg {
+    fn from(value: f00_core::IconsWhen) -> Self {
+        match value {
+            f00_core::IconsWhen::Auto => Self::Auto,
+            f00_core::IconsWhen::Always => Self::Always,
+            f00_core::IconsWhen::Never => Self::Never,
         }
     }
 }

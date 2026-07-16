@@ -8,7 +8,7 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.2.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.3.0
 
 ---
 
@@ -19,7 +19,7 @@ curl -fsSL https://f00.sh/install.sh | bash
 ```
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.2.0 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.3.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash   # optional ls symlink
 ```
@@ -33,12 +33,14 @@ curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash   # optional ls sym
 | **GNU coreutils `ls`** | Shipped | Full flag surface + `--gnu` strict mode |
 | **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` + `QUOTING_STYLE` |
 | **LS_COLORS** | Shipped | Via `lscolors` / env |
-| **Speed** | Shipped | Rust, layered crates, optional features |
+| **Speed** | Shipped | Parallel `stat` (rayon), `--threads`, `--profile` |
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |
-| **Icons** | Shipped | `--icons` |
+| **Icons** | Shipped | `--icons[=auto\|always\|never]` (default: auto on TTY) |
 | **JSON / CSV / TSV / tree** | Shipped | Machine formats |
 | **TOML config** | Shipped | XDG / AppData |
+| **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
+| **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
 | **TUI browser** | Shipped | `f00 --browse` (feature `tui`, default on) |
 | **Archives** | Shipped | zip / tar / tar.gz as virtual dirs |
 | **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
@@ -83,8 +85,53 @@ f00 --ignore-files
 f00 --browse
 f00 --tui ~/src
 
-# Icons + git (modern defaults)
-f00 -la --icons --git
+# Icons (auto on TTY; force on/off)
+f00 -la --icons              # same as --icons=always
+f00 -la --icons=auto
+f00 -la --icons=never
+f00 -la --icons=always --git
+
+# Speed / profiling
+f00 --threads 0 -1 /large/dir   # parallel metadata (default; 0 = auto rayon)
+f00 --threads 1 -1 /large/dir   # force serial stats
+f00 --threads 8 -1 /large/dir   # fixed rayon pool size
+f00 --profile -la /large/dir    # stderr: readdir_ms stat_ms sort_ms format_ms total_ms
+```
+
+Large directories (**>32** entries) parallelize metadata collection with rayon. Sort order is unchanged. Benchmark:
+
+```bash
+cargo bench -p f00-core --bench list_bench
+./scripts/bench-list.sh          # quick wall-clock + --profile
+```
+
+### Shell completions
+
+```bash
+# bash
+f00 --generate-completions bash > ~/.local/share/bash-completion/completions/f00
+
+# zsh (ensure fpath includes the directory)
+f00 --generate-completions zsh > ~/.zsh/completions/_f00
+
+# fish
+f00 --generate-completions fish > ~/.config/fish/completions/f00.fish
+
+# powershell / elvish
+f00 --generate-completions powershell
+f00 --generate-completions elvish
+```
+
+### Man page
+
+```bash
+# View generated man page
+f00 --generate-man | man -l -
+
+# Or install the committed page (packagers)
+# man/f00.1  →  $(mandir)/man1/f00.1
+# Regenerate after CLI changes:
+./scripts/gen-man.sh
 ```
 
 ### TUI keys (`--browse`)
@@ -133,7 +180,7 @@ Unix: `~/.config/f00/config.toml` (or `$F00_CONFIG` / `--config`)
 all = false
 long = false
 human = true
-icons = true
+icons = "auto"    # auto | always | never  (bool true/false also accepted)
 color = "auto"
 git = true
 dirs_first = true
