@@ -160,8 +160,14 @@ f00 --io-uring=false -1 /large  # Linux: disable io_uring batch statx (default: 
 Large directories (**>32** entries) parallelize metadata collection with rayon. Sort order is unchanged. Benchmark:
 
 ```bash
-cargo bench -p f00-core --bench list_bench
-./scripts/bench-list.sh          # quick wall-clock + --profile
+# Comparative: GNU ls vs eza vs f00 (wall + CPU)
+./scripts/bench-compare.sh           # synthetic 2000 files
+./scripts/bench-compare.sh 5000
+./scripts/bench-compare.sh --dir ~   # real directory
+# Uses hyperfine when available; GNU time for user/sys CPU
+
+./scripts/bench-list.sh              # f00-only sequential vs parallel + --profile
+cargo bench -p f00-core --bench list_bench   # Criterion microbench
 ```
 
 ### Shell completions
