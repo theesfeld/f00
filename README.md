@@ -12,10 +12,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.9.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.0
 
 <!-- agents:status:begin -->
-> **Status:** v0.9 modern long-format colors · Latest: `v0.9.0` · 0.x minors may include breaking changes
+> **Status:** v0.10 Nerd Font special-dir + file-type icons · Latest: `v0.10.0` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -91,7 +91,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **Speed** | Shipped | Parallel `stat` (rayon), cheap short path, uid cache, Linux `statx` + **io_uring** batch, `--threads`, `--profile` |
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |
-| **Icons** | Shipped | `--icons[=auto\|always\|never]` (default: auto on TTY) |
+| **Icons** | Shipped | Nerd Font glyphs (eza-style special dirs + file types); `--icons[=auto\|always\|never]` (default: auto on TTY) |
 | **JSON / CSV / TSV / tree** | Shipped | Machine formats |
 | **TOML config** | Shipped | XDG / AppData |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
@@ -142,11 +142,12 @@ f00 --ignore-files
 f00 --browse
 f00 --tui ~/src
 
-# Icons (auto on TTY; force on/off)
+# Icons (auto on TTY; force on/off) — needs a Nerd Font for glyphs
 f00 -la --icons              # same as --icons=always
 f00 -la --icons=auto
 f00 -la --icons=never
 f00 -la --icons=always --git
+# Special dirs (Desktop/Downloads/Music/…) + file-type icons when icons on
 
 # Speed / profiling
 f00 --threads 0 -1 /large/dir   # parallel metadata (default; 0 = auto rayon)

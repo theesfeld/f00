@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.10.0] - 2026-07-16
+
+### Added
+- **Nerd Font icons** (eza-style): special directory glyphs for Desktop, Downloads, Music, Pictures, Videos, Documents, Projects, nixos, `.git`, `.config`, and more (case-insensitive)
+- **Richer file-type icons** by extension (rs/py/js/ts/media/archives/…) and basename (Cargo.toml, Dockerfile, README, flake.nix, …)
+
+### Changed
+- Icons use **Nerd Font** code points instead of emoji (install a Nerd Font in the terminal for correct glyphs; disable with `--icons=never` / `--gnu`)
+- Version **0.9.0 → 0.10.0**
+
 ## [0.9.0] - 2026-07-16
 
 ### Added
@@ -132,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.10.0]: https://github.com/theesfeld/f00/releases/tag/v0.10.0
 [0.9.0]: https://github.com/theesfeld/f00/releases/tag/v0.9.0
 [0.8.0]: https://github.com/theesfeld/f00/releases/tag/v0.8.0
 [0.7.2]: https://github.com/theesfeld/f00/releases/tag/v0.7.2
