@@ -103,6 +103,8 @@ pub struct Entry {
     pub modified: Option<SystemTime>,
     pub created: Option<SystemTime>,
     pub accessed: Option<SystemTime>,
+    /// Status-change time (`st_ctime`) when available.
+    pub changed: Option<SystemTime>,
     /// Permission mode bits (unix) or 0 on platforms without them.
     pub mode: u32,
     pub readonly: bool,
@@ -122,6 +124,10 @@ pub struct Entry {
     pub owner: String,
     /// Group name (or numeric string).
     pub group: String,
+    /// Author (GNU `--author`); typically same as owner on Linux.
+    pub author: String,
+    /// SELinux security context (`-Z`); empty if unavailable.
+    pub context: String,
 }
 
 impl Entry {
@@ -168,6 +174,8 @@ impl Entry {
         let (nlink, uid, gid, inode, blocks) = meta_ids(meta);
         let owner = resolve_owner(uid);
         let group = resolve_group(gid);
+        let changed = ctime_of(meta);
+        let context = read_selinux_context(path);
 
         Ok(Self {
             path: path.to_path_buf(),
@@ -177,6 +185,7 @@ impl Entry {
             modified: meta.modified().ok(),
             created: meta.created().ok(),
             accessed: meta.accessed().ok(),
+            changed,
             mode,
             readonly: meta.permissions().readonly(),
             symlink_target,
@@ -188,8 +197,10 @@ impl Entry {
             gid,
             inode,
             blocks,
+            author: owner.clone(),
             owner,
             group,
+            context,
         })
     }
 
@@ -205,6 +216,7 @@ impl Entry {
             modified: None,
             created: None,
             accessed: None,
+            changed: None,
             mode: 0,
             readonly: false,
             symlink_target: None,
@@ -218,6 +230,8 @@ impl Entry {
             blocks: 0,
             owner: String::new(),
             group: String::new(),
+            author: String::new(),
+            context: String::new(),
         }
     }
 
@@ -241,13 +255,21 @@ impl Entry {
         self.created.map(DateTime::<Local>::from)
     }
 
+    pub fn changed_datetime(&self) -> Option<DateTime<Local>> {
+        self.changed.map(DateTime::<Local>::from)
+    }
+
     pub fn time_for(&self, field: TimeField) -> Option<SystemTime> {
         match field {
             TimeField::Modified => self.modified,
             TimeField::Accessed => self.accessed,
-            TimeField::Changed => self.modified, // best-effort; true ctime needs platform
+            TimeField::Changed => self.changed.or(self.modified),
             TimeField::Birth => self.created.or(self.modified),
         }
+    }
+
+    pub fn datetime_for(&self, field: TimeField) -> Option<DateTime<Local>> {
+        self.time_for(field).map(DateTime::<Local>::from)
     }
 
     pub fn extension(&self) -> Option<&str> {
@@ -268,6 +290,16 @@ impl Entry {
             self.gid.to_string()
         } else {
             self.group.clone()
+        }
+    }
+
+    pub fn author_display(&self, numeric: bool) -> String {
+        if numeric {
+            self.uid.to_string()
+        } else if !self.author.is_empty() {
+            self.author.clone()
+        } else {
+            self.owner_display(numeric)
         }
     }
 }
@@ -300,6 +332,75 @@ fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64) {
     let size = meta.len();
     let blocks = size.div_ceil(512);
     (1, 0, 0, 0, blocks)
+}
+
+#[cfg(unix)]
+fn ctime_of(meta: &Metadata) -> Option<SystemTime> {
+    use std::os::unix::fs::MetadataExt;
+    use std::time::Duration;
+    // st_ctime is seconds since epoch; st_ctime_nsec for subsecond.
+    let secs = meta.ctime();
+    if secs < 0 {
+        return None;
+    }
+    let nsec = meta.ctime_nsec();
+    let nsec = if (0..1_000_000_000).contains(&nsec) {
+        nsec as u32
+    } else {
+        0
+    };
+    Some(SystemTime::UNIX_EPOCH + Duration::new(secs as u64, nsec))
+}
+
+#[cfg(not(unix))]
+fn ctime_of(meta: &Metadata) -> Option<SystemTime> {
+    // Windows has no ctime-as-status-change; fall back to modified.
+    meta.modified().ok()
+}
+
+/// Best-effort SELinux context via `security.selinux` xattr.
+fn read_selinux_context(path: &Path) -> String {
+    #[cfg(unix)]
+    {
+        read_selinux_context_unix(path).unwrap_or_default()
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+        String::new()
+    }
+}
+
+#[cfg(unix)]
+fn read_selinux_context_unix(path: &Path) -> Option<String> {
+    use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt;
+
+    let c_path = CString::new(path.as_os_str().as_bytes()).ok()?;
+    let name = CString::new("security.selinux").ok()?;
+    // First call: size query.
+    let size = unsafe { libc::getxattr(c_path.as_ptr(), name.as_ptr(), std::ptr::null_mut(), 0) };
+    if size <= 0 {
+        return None;
+    }
+    let mut buf = vec![0u8; size as usize];
+    let n = unsafe {
+        libc::getxattr(
+            c_path.as_ptr(),
+            name.as_ptr(),
+            buf.as_mut_ptr().cast(),
+            buf.len(),
+        )
+    };
+    if n <= 0 {
+        return None;
+    }
+    buf.truncate(n as usize);
+    // Context is typically NUL-terminated.
+    while buf.last() == Some(&0) {
+        buf.pop();
+    }
+    String::from_utf8(buf).ok()
 }
 
 #[cfg(unix)]

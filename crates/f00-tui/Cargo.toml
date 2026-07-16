@@ -1,0 +1,23 @@
+[package]
+name = "f00-tui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+description = "Interactive TUI directory browser for f00"
+rust-version.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+chrono = { workspace = true }
+crossterm = { workspace = true }
+f00-core = { workspace = true }
+f00-format = { workspace = true }
+f00-git = { workspace = true, optional = true }
+ratatui = { workspace = true }
+
+[features]
+default = []
+git = ["dep:f00-git"]

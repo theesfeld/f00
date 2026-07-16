@@ -72,11 +72,15 @@ pub struct Args {
     #[arg(short = 'X')]
     pub sort_extension: bool,
 
+    /// Natural sort of (version) numbers within text (`strverscmp`)
+    #[arg(short = 'v')]
+    pub sort_version: bool,
+
     /// Do not sort; list entries in directory order
     #[arg(short = 'U')]
     pub sort_none: bool,
 
-    /// Sort by WORD (name, size, time, extension, none)
+    /// Sort by WORD (name, size, time, extension, version, none)
     #[arg(long = "sort", value_name = "WORD")]
     pub sort: Option<String>,
 
@@ -107,8 +111,16 @@ pub struct Args {
     #[arg(long = "json")]
     pub json: bool,
 
+    /// Emit CSV
+    #[arg(long = "csv")]
+    pub csv: bool,
+
+    /// Emit TSV
+    #[arg(long = "tsv")]
+    pub tsv: bool,
+
     /// Show entries as a tree
-    #[arg(long = "tree", visible_alias = "T")]
+    #[arg(long = "tree")]
     pub tree: bool,
 
     /// Stricter GNU ls-compatible behavior
@@ -131,6 +143,10 @@ pub struct Args {
     #[arg(long = "file-type")]
     pub file_type: bool,
 
+    /// Append indicator with style WORD: none, slash, file-type, classify
+    #[arg(long = "indicator-style", value_name = "WORD")]
+    pub indicator_style: Option<String>,
+
     /// Group directories before files
     #[arg(long = "group-directories-first", alias = "dirs-first")]
     pub dirs_first: bool,
@@ -147,9 +163,21 @@ pub struct Args {
     #[arg(short = 'I', long = "ignore", value_name = "PATTERN", action = ArgAction::Append)]
     pub ignore: Vec<String>,
 
+    /// Do not list implied entries matching shell PATTERN (unless -a/-A)
+    #[arg(long = "hide", value_name = "PATTERN", action = ArgAction::Append)]
+    pub hide: Vec<String>,
+
     /// When showing file information for a symbolic link, show info for the file it references
     #[arg(short = 'L', long = "dereference")]
     pub dereference: bool,
+
+    /// Follow symbolic links listed on the command line
+    #[arg(short = 'H', long = "dereference-command-line")]
+    pub dereference_command_line: bool,
+
+    /// Follow each command line symbolic link that points to a directory
+    #[arg(long = "dereference-command-line-symlink-to-dir")]
+    pub dereference_command_line_symlink_to_dir: bool,
 
     /// Like -l, but do not list owner
     #[arg(short = 'g')]
@@ -175,11 +203,47 @@ pub struct Args {
     #[arg(short = 's', long = "size")]
     pub size_blocks: bool,
 
+    /// Default to 1024-byte blocks for filesystem disk usage (`-s`)
+    #[arg(short = 'k', long = "kibibytes")]
+    pub kibibytes: bool,
+
+    /// Scale sizes by SIZE before printing (e.g. 1K, 1M, KB, MB)
+    #[arg(long = "block-size", value_name = "SIZE")]
+    pub block_size: Option<String>,
+
     /// Like -l --time-style=full-iso
     #[arg(long = "full-time")]
     pub full_time: bool,
 
-    /// Across format (row-major columns); treated as multi-column
+    /// Time/date format with -l; also TIME_STYLE env
+    #[arg(long = "time-style", value_name = "TIME_STYLE")]
+    pub time_style: Option<String>,
+
+    /// Print ? instead of nongraphic characters
+    #[arg(short = 'q', long = "hide-control-chars")]
+    pub hide_control_chars: bool,
+
+    /// Show nongraphic characters as-is (the default unless -q)
+    #[arg(long = "show-control-chars")]
+    pub show_control_chars: bool,
+
+    /// Print C-style escapes for nongraphic characters
+    #[arg(short = 'b', long = "escape")]
+    pub escape: bool,
+
+    /// Enclose entry names in double quotes
+    #[arg(short = 'Q', long = "quote-name")]
+    pub quote_name: bool,
+
+    /// Print entry names without quoting
+    #[arg(short = 'N', long = "literal")]
+    pub literal: bool,
+
+    /// Use quoting style WORD for entry names
+    #[arg(long = "quoting-style", value_name = "WORD")]
+    pub quoting_style: Option<String>,
+
+    /// List entries by lines instead of by columns (row-major)
     #[arg(short = 'x')]
     pub across: bool,
 
@@ -190,6 +254,40 @@ pub struct Args {
     /// Across/commas/long/single-column/vertical
     #[arg(long = "format", value_name = "WORD")]
     pub format: Option<String>,
+
+    /// Assume tab stops at each COLS instead of 8 (stored for layout)
+    #[arg(short = 'T', long = "tabsize", value_name = "COLS")]
+    pub tabsize: Option<usize>,
+
+    /// Set output width to COLS; 0 means no limit
+    #[arg(short = 'w', long = "width", value_name = "COLS")]
+    pub width: Option<usize>,
+
+    /// Print any security context of each file (SELinux)
+    #[arg(short = 'Z', long = "context")]
+    pub context: bool,
+
+    /// End each output line with NUL, not newline
+    #[arg(long = "zero")]
+    pub zero: bool,
+
+    /// Generate output designed for Emacs' dired mode
+    #[arg(short = 'D', long = "dired")]
+    pub dired: bool,
+
+    /// With -l, print the author of each file
+    #[arg(long = "author")]
+    pub author: bool,
+
+    /// Hyperlink file names (auto/always/never)
+    #[arg(
+        long = "hyperlink",
+        value_name = "WHEN",
+        num_args = 0..=1,
+        default_missing_value = "always",
+        require_equals = true
+    )]
+    pub hyperlink: Option<String>,
 
     /// Maximum recursion depth (with -R / --tree)
     #[arg(long = "max-depth", value_name = "N")]
@@ -202,6 +300,22 @@ pub struct Args {
     /// Path to TOML config file (overrides default search path)
     #[arg(long = "config", value_name = "PATH")]
     pub config: Option<PathBuf>,
+
+    /// Interactive TUI directory browser (requires feature `tui`)
+    #[arg(long = "browse", visible_alias = "tui")]
+    pub browse: bool,
+
+    /// Honor `.gitignore` / `.f00ignore` when listing
+    #[arg(long = "ignore-files")]
+    pub ignore_files: bool,
+
+    /// Do not honor ignore files (overrides --ignore-files)
+    #[arg(long = "no-ignore")]
+    pub no_ignore: bool,
+
+    /// Auto-list zip/tar archives as directories (default: true; off under --gnu)
+    #[arg(long = "archive", default_value_t = true, action = clap::ArgAction::Set)]
+    pub archive: bool,
 }
 
 impl Args {
@@ -223,6 +337,7 @@ impl Args {
             sort_time: false,
             sort_size: false,
             sort_extension: false,
+            sort_version: false,
             sort_none: false,
             sort: None,
             time: None,
@@ -230,30 +345,56 @@ impl Args {
             change_time: false,
             color: ColorArg::Auto,
             json: false,
+            csv: false,
+            tsv: false,
             tree: false,
             gnu: false,
             icons: false,
             classify: false,
             indicator_slash: false,
             file_type: false,
+            indicator_style: None,
             dirs_first: false,
             directory: false,
             ignore_backups: false,
             ignore: vec![],
+            hide: vec![],
             dereference: false,
+            dereference_command_line: false,
+            dereference_command_line_symlink_to_dir: false,
             no_owner: false,
             no_group_long: false,
             no_group: false,
             numeric_uid_gid: false,
             inode: false,
             size_blocks: false,
+            kibibytes: false,
+            block_size: None,
             full_time: false,
+            time_style: None,
+            hide_control_chars: false,
+            show_control_chars: false,
+            escape: false,
+            quote_name: false,
+            literal: false,
+            quoting_style: None,
             across: false,
             unsorted_all: false,
             format: None,
+            tabsize: None,
+            width: None,
+            context: false,
+            zero: false,
+            dired: false,
+            author: false,
+            hyperlink: None,
             max_depth: None,
             git: false,
             config: None,
+            browse: false,
+            ignore_files: false,
+            no_ignore: false,
+            archive: true,
         }
     }
 }

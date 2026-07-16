@@ -5,11 +5,13 @@ members = [
     "crates/f00-format",
     "crates/f00-compat",
     "crates/f00-git",
+    "crates/f00-archive",
+    "crates/f00-tui",
     "crates/f00-cli",
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/theesfeld/f00"
@@ -19,17 +21,21 @@ description = "f00 — a modern, friendly directory lister"
 rust-version = "1.74"
 
 [workspace.dependencies]
-f00-core = { path = "crates/f00-core", version = "0.1.0" }
-f00-format = { path = "crates/f00-format", version = "0.1.0" }
-f00-compat = { path = "crates/f00-compat", version = "0.1.0" }
-f00-git = { path = "crates/f00-git", version = "0.1.0" }
+f00-core = { path = "crates/f00-core", version = "0.2.0" }
+f00-format = { path = "crates/f00-format", version = "0.2.0" }
+f00-compat = { path = "crates/f00-compat", version = "0.2.0" }
+f00-git = { path = "crates/f00-git", version = "0.2.0" }
+f00-archive = { path = "crates/f00-archive", version = "0.2.0" }
+f00-tui = { path = "crates/f00-tui", version = "0.2.0" }
 
 anyhow = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 clap = { version = "4", features = ["derive", "env", "wrap_help"] }
+crossterm = "0.28"
 directories = "5"
 lscolors = { version = "0.20", default-features = false, features = ["nu-ansi-term"] }
 nu-ansi-term = "0.50"
+ratatui = "0.29"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 terminal_size = "0.4"

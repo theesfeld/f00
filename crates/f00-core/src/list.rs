@@ -6,7 +6,8 @@ use walkdir::WalkDir;
 use crate::entry::Entry;
 use crate::error::{Error, Result};
 use crate::filter::filter_entries;
-use crate::options::ListOptions;
+use crate::ignore::{apply_ignore_set, load_ignore_set, IgnoreSet};
+use crate::options::{CliSymlinkMode, ListOptions};
 use crate::sort::sort_entries;
 
 /// A listing produced for one path argument (or recursive tree).
@@ -34,6 +35,32 @@ impl Listing {
     }
 }
 
+/// Decide whether to follow a CLI path argument that is a symlink.
+fn follow_cli_path(path: &Path, opts: &ListOptions) -> bool {
+    if opts.follow_links {
+        return true;
+    }
+    match opts.cli_symlink {
+        CliSymlinkMode::Never => false,
+        CliSymlinkMode::Always => {
+            // `-H`: follow command-line symlinks.
+            fs::symlink_metadata(path)
+                .map(|m| m.file_type().is_symlink())
+                .unwrap_or(false)
+        }
+        CliSymlinkMode::DirOnly => {
+            // Follow only when the symlink resolves to a directory.
+            let is_link = fs::symlink_metadata(path)
+                .map(|m| m.file_type().is_symlink())
+                .unwrap_or(false);
+            if !is_link {
+                return false;
+            }
+            fs::metadata(path).map(|m| m.is_dir()).unwrap_or(false)
+        }
+    }
+}
+
 /// List a single path: if file, return that entry alone; if dir, list children.
 ///
 /// With `-d` / `directory`, list the path itself even when it is a directory.
@@ -44,7 +71,9 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
         path
     };
 
-    let meta = if opts.follow_links {
+    let follow = follow_cli_path(path, opts);
+
+    let meta = if follow {
         fs::metadata(path)
     } else {
         fs::symlink_metadata(path)
@@ -62,7 +91,7 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
 
     // `-d`: list the directory entry itself, not its contents.
     if opts.directory || !meta.is_dir() {
-        let entry = if opts.follow_links {
+        let entry = if follow {
             Entry::from_path_follow(path, 0)?
         } else {
             Entry::from_path_and_meta(path, &meta, 0)?
@@ -112,6 +141,7 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
             source,
         })?;
         let entry_path = item.path();
+        // Inside a directory, only `-L` follows; `-H` is CLI-args only.
         let entry = if opts.follow_links {
             Entry::from_path_follow(&entry_path, 0)
         } else {
@@ -130,6 +160,10 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
     }
 
     filter_entries(&mut entries, opts);
+    if opts.use_ignore_files {
+        let set = load_ignore_set(path);
+        apply_ignore_set(&mut entries, &set);
+    }
     sort_entries(&mut entries, opts);
 
     Ok(Listing::new(path.to_path_buf(), true, entries))
@@ -140,6 +174,13 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     let mut entries = Vec::new();
     let mut minor_errors = 0usize;
     let max_depth = opts.max_depth.unwrap_or(usize::MAX);
+
+    let root_ignore = if opts.use_ignore_files {
+        Some(load_ignore_set(path))
+    } else {
+        None
+    };
+    let mut ignore_by_dir: Vec<(PathBuf, IgnoreSet)> = Vec::new();
 
     // Group by parent directory: emit header then children for each dir.
     // First, collect all walkdir results.
@@ -176,27 +217,21 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
             if current_dir.as_ref() != Some(p) {
                 // New directory section
                 current_dir = Some(p.clone());
-                // Only emit header if not already the one we just opened from depth==0 handling
-                // and this is a directory we're entering... walkdir visits dir before children.
             }
         }
 
         // When we visit a directory (depth > 0), emit a header before its children.
         // Walkdir yields the directory node first.
         if item.file_type().is_dir() && depth > 0 {
-            // Directory as an entry under parent listing, AND as a future header.
             if let Ok(meta) = item.metadata() {
                 if let Ok(e) = Entry::from_path_and_meta(entry_path, &meta, depth) {
-                    // Will be filtered/sorted later per-section; collect flat for now.
-                    let show = crate::filter::should_show(&e, opts);
+                    let show = crate::filter::should_show(&e, opts)
+                        && !ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir);
                     if show {
                         entries.push(e);
                     }
                 }
             }
-            // Header for this dir's children (walkdir will visit them next)
-            // Insert header after the dir entry itself so tree-ish recursive ls looks right.
-            // Classic `ls -R` prints `\n./subdir:\n` then contents.
             entries.push(Entry::dir_header(entry_path, depth));
             continue;
         }
@@ -206,7 +241,9 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
             Err(_) => continue,
         };
         if let Ok(e) = Entry::from_path_and_meta(entry_path, &meta, depth) {
-            if crate::filter::should_show(&e, opts) {
+            if crate::filter::should_show(&e, opts)
+                && !ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir)
+            {
                 entries.push(e);
             }
         }
@@ -218,6 +255,38 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     let mut listing = Listing::new(path.to_path_buf(), true, entries);
     listing.minor_errors = minor_errors;
     Ok(listing)
+}
+
+/// Check root ignore set and the ignore file in the entry's parent directory.
+fn ignored_by_sets(
+    entry: &Entry,
+    opts: &ListOptions,
+    root_ignore: Option<&IgnoreSet>,
+    cache: &mut Vec<(PathBuf, IgnoreSet)>,
+) -> bool {
+    if !opts.use_ignore_files {
+        return false;
+    }
+    if let Some(root) = root_ignore {
+        if root.ignores(entry) {
+            return true;
+        }
+    }
+    let Some(parent) = entry.path.parent() else {
+        return false;
+    };
+    if let Some(root) = root_ignore {
+        if parent == root.base {
+            return false;
+        }
+    }
+    if let Some((_, set)) = cache.iter().find(|(p, _)| p == parent) {
+        return set.ignores(entry);
+    }
+    let set = load_ignore_set(parent);
+    let ignored = set.ignores(entry);
+    cache.push((parent.to_path_buf(), set));
+    ignored
 }
 
 fn sort_recursive_sections(entries: &mut [Entry], opts: &ListOptions) {
@@ -350,6 +419,33 @@ mod tests {
         let outcome = list_paths_with_errors(std::slice::from_ref(&dir), &opts);
         assert!(outcome.path_errors.is_empty());
         assert_eq!(outcome.exit_code(), 0);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn list_directory_honors_ignore_files() {
+        let dir = temp_dir();
+        fs::write(dir.join("keep.txt"), b"k").unwrap();
+        fs::write(dir.join("skip.o"), b"o").unwrap();
+        fs::write(dir.join(".gitignore"), "*.o\n").unwrap();
+
+        let opts = ListOptions {
+            use_ignore_files: true,
+            ..Default::default()
+        };
+        let listing = list_directory(&dir, &opts).unwrap();
+        let names: Vec<_> = listing.entries.iter().map(|e| e.name.as_str()).collect();
+        assert!(names.contains(&"keep.txt"));
+        assert!(!names.contains(&"skip.o"));
+
+        let opts_off = ListOptions {
+            use_ignore_files: false,
+            ..Default::default()
+        };
+        let listing = list_directory(&dir, &opts_off).unwrap();
+        let names: Vec<_> = listing.entries.iter().map(|e| e.name.as_str()).collect();
+        assert!(names.contains(&"skip.o"));
+
         let _ = fs::remove_dir_all(&dir);
     }
 }

@@ -18,6 +18,8 @@ f00-core = { workspace = true }
 f00-format = { workspace = true }
 f00-compat = { workspace = true }
 f00-git = { workspace = true, optional = true }
+f00-archive = { workspace = true, optional = true }
+f00-tui = { workspace = true, optional = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 directories = { workspace = true }
@@ -26,8 +28,10 @@ terminal_size = { workspace = true }
 toml = { workspace = true }
 
 [features]
-default = ["git"]
+default = ["git", "archives", "tui"]
 git = ["dep:f00-git"]
+archives = ["dep:f00-archive"]
+tui = ["dep:f00-tui"]
 
 [dev-dependencies]
 serde_json = { workspace = true }

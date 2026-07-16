@@ -1,0 +1,21 @@
+[package]
+name = "f00-archive"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+description = "List zip/tar archive contents without extracting (for f00)"
+rust-version.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+chrono = { workspace = true }
+f00-core = { workspace = true }
+flate2 = "1"
+tar = "0.4"
+# Headers-only listing; avoid extra crypto defaults we do not need.
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]

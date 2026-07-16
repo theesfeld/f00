@@ -1,9 +1,12 @@
-use f00_core::{Entry, IndicatorStyle};
+use f00_core::{Config, Entry, IndicatorStyle};
 use unicode_width::UnicodeWidthStr;
 
 use crate::color::Colorizer;
+use crate::human::block_display_with_unit;
+use crate::hyperlink::hyperlink_name;
 use crate::icons::icon_prefix;
 use crate::perms::classify_suffix;
+use crate::quoting::display_name;
 
 struct Prepared {
     plain: String,
@@ -11,21 +14,38 @@ struct Prepared {
     width: usize,
 }
 
-fn prepare_entries(
-    entries: &[Entry],
-    colorizer: &Colorizer,
-    icons: bool,
-    indicator: IndicatorStyle,
-) -> Vec<Prepared> {
+fn prepare_entries(entries: &[Entry], colorizer: &Colorizer, config: &Config) -> Vec<Prepared> {
+    let icons = config.icons;
+    let indicator = config.indicator_style();
+    let hide_ctrl = config.hide_control_chars();
+    let hyper = config.hyperlink_enabled();
+
     entries
         .iter()
         .filter(|e| !e.is_dir_header)
         .map(|e| {
             let icon = icon_prefix(e, icons);
             let suffix = classify_suffix(e, indicator);
-            let plain = format!("{icon}{}{suffix}", e.name);
+            let quoted = display_name(&e.name, config.quoting_style, hide_ctrl);
+            let mut plain = format!("{icon}{quoted}{suffix}");
+            if config.show_inode {
+                plain = format!("{} {plain}", e.inode);
+            }
+            if config.show_blocks {
+                let b = block_display_with_unit(e.blocks, config.blocks_unit());
+                plain = format!("{b} {plain}");
+            }
+            if config.show_context {
+                let ctx = if e.context.is_empty() {
+                    "?"
+                } else {
+                    e.context.as_str()
+                };
+                plain = format!("{ctx} {plain}");
+            }
             let width = UnicodeWidthStr::width(plain.as_str());
             let painted = colorizer.paint_name(e, &plain);
+            let painted = hyperlink_name(&e.path, &painted, hyper);
             Prepared {
                 plain,
                 painted,
@@ -42,25 +62,62 @@ pub fn format_one_per_line(
     icons: bool,
     indicator: IndicatorStyle,
 ) -> String {
+    // Backward-compatible path without full Config.
+    let mut config = Config {
+        icons,
+        indicator,
+        classify: matches!(indicator, IndicatorStyle::Classify),
+        ..Config::default()
+    };
+    if matches!(indicator, IndicatorStyle::Classify) {
+        config.classify = true;
+    }
+    format_one_per_line_cfg(entries, colorizer, &config)
+}
+
+/// One entry per line with full config (quoting, zero, inode, etc.).
+pub fn format_one_per_line_cfg(
+    entries: &[Entry],
+    colorizer: &Colorizer,
+    config: &Config,
+) -> String {
+    let ending = config.line_ending();
     let mut out = String::new();
+    let mut dired: Vec<(usize, usize)> = Vec::new();
+
     for entry in entries {
         if entry.is_dir_header {
-            if !out.is_empty() {
+            if !out.is_empty() && !config.zero {
                 out.push('\n');
             }
-            out.push_str(&format!("{}:\n", entry.path.display()));
+            out.push_str(&format!("{}:", entry.path.display()));
+            out.push_str(ending);
             continue;
         }
-        let icon = icon_prefix(entry, icons);
-        let suffix = classify_suffix(entry, indicator);
-        let plain = format!("{icon}{}{suffix}", entry.name);
-        out.push_str(&colorizer.paint_name(entry, &plain));
+        let prepared = prepare_entries(std::slice::from_ref(entry), colorizer, config);
+        let p = &prepared[0];
+        if config.dired {
+            let start = out.len();
+            out.push_str(&p.painted);
+            let end = out.len();
+            dired.push((start, end));
+        } else {
+            out.push_str(&p.painted);
+        }
+        out.push_str(ending);
+    }
+
+    if config.dired && !config.zero {
+        out.push_str("//DIRED//");
+        for (s, e) in &dired {
+            out.push_str(&format!(" {s} {e}"));
+        }
         out.push('\n');
     }
     out
 }
 
-/// Multi-column layout similar to `ls` default.
+/// Multi-column layout similar to `ls` default (column-major).
 pub fn format_columns(
     entries: &[Entry],
     colorizer: &Colorizer,
@@ -68,32 +125,47 @@ pub fn format_columns(
     indicator: IndicatorStyle,
     terminal_width: usize,
 ) -> String {
-    // Split into sections on dir headers for recursive mode.
+    let mut config = Config {
+        icons,
+        indicator,
+        terminal_width,
+        classify: matches!(indicator, IndicatorStyle::Classify),
+        ..Config::default()
+    };
+    if matches!(indicator, IndicatorStyle::Classify) {
+        config.classify = true;
+    }
+    format_columns_cfg(entries, colorizer, &config, false)
+}
+
+/// Multi-column with full config. `across` selects row-major (`-x`).
+pub fn format_columns_cfg(
+    entries: &[Entry],
+    colorizer: &Colorizer,
+    config: &Config,
+    across: bool,
+) -> String {
     let mut out = String::new();
     let mut section: Vec<&Entry> = Vec::new();
+    let ending = config.line_ending();
 
     let flush = |section: &mut Vec<&Entry>, out: &mut String| {
         if section.is_empty() {
             return;
         }
         let owned: Vec<Entry> = section.iter().map(|e| (*e).clone()).collect();
-        out.push_str(&format_columns_section(
-            &owned,
-            colorizer,
-            icons,
-            indicator,
-            terminal_width,
-        ));
+        out.push_str(&format_columns_section(&owned, colorizer, config, across));
         section.clear();
     };
 
     for entry in entries {
         if entry.is_dir_header {
             flush(&mut section, &mut out);
-            if !out.is_empty() {
+            if !out.is_empty() && !config.zero {
                 out.push('\n');
             }
-            out.push_str(&format!("{}:\n", entry.path.display()));
+            out.push_str(&format!("{}:", entry.path.display()));
+            out.push_str(ending);
         } else {
             section.push(entry);
         }
@@ -105,21 +177,35 @@ pub fn format_columns(
 fn format_columns_section(
     entries: &[Entry],
     colorizer: &Colorizer,
-    icons: bool,
-    indicator: IndicatorStyle,
-    terminal_width: usize,
+    config: &Config,
+    across: bool,
 ) -> String {
-    let prepared = prepare_entries(entries, colorizer, icons, indicator);
+    let prepared = prepare_entries(entries, colorizer, config);
     if prepared.is_empty() {
         return String::new();
     }
 
-    let term_w = terminal_width.max(1);
+    // Width 0 ⇒ unlimited (use a huge value).
+    let term_w = if config.terminal_width == 0 {
+        usize::MAX / 4
+    } else {
+        config.terminal_width.max(1)
+    };
     let n = prepared.len();
     let max_w = prepared.iter().map(|p| p.width).max().unwrap_or(1);
     let col_gap = 2;
+    let ending = config.line_ending();
 
-    // Try from max columns down to 1; column-major like classic ls.
+    // With --zero, GNU falls back to one-per-line-ish; keep simple.
+    if config.zero {
+        let mut out = String::new();
+        for p in &prepared {
+            out.push_str(&p.painted);
+            out.push_str(ending);
+        }
+        return out;
+    }
+
     let max_cols = ((term_w + col_gap) / (1 + col_gap)).max(1).min(n);
 
     let mut best_cols = 1;
@@ -130,7 +216,7 @@ fn format_columns_section(
         let rows = n.div_ceil(cols);
         let mut widths = vec![0usize; cols];
         for (i, p) in prepared.iter().enumerate() {
-            let col = i / rows;
+            let col = if across { i % cols } else { i / rows };
             if col < cols {
                 widths[col] = widths[col].max(p.width);
             }
@@ -147,23 +233,30 @@ fn format_columns_section(
     let mut out = String::new();
     for row in 0..best_rows {
         for (col, col_width) in col_widths.iter().copied().enumerate().take(best_cols) {
-            let idx = col * best_rows + row;
+            let idx = if across {
+                row * best_cols + col
+            } else {
+                col * best_rows + row
+            };
             if idx >= n {
                 continue;
             }
             let p = &prepared[idx];
             out.push_str(&p.painted);
             if col + 1 < best_cols {
-                let next_idx = (col + 1) * best_rows + row;
+                let next_idx = if across {
+                    row * best_cols + col + 1
+                } else {
+                    (col + 1) * best_rows + row
+                };
                 if next_idx < n {
                     let pad = col_width + col_gap - p.width;
                     out.push_str(&" ".repeat(pad));
                 }
             }
         }
-        out.push('\n');
+        out.push_str(ending);
     }
-    // silence unused plain field warning by referencing in debug assert
-    debug_assert!(prepared.iter().all(|p| !p.plain.is_empty() || true));
+    let _ = &prepared.iter().map(|p| &p.plain);
     out
 }

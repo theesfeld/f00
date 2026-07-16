@@ -1,7 +1,7 @@
 use crate::entry::Entry;
 use crate::options::ListOptions;
 
-/// Simple shell-style pattern match for `--ignore` / `-I` (supports `*` and `?`).
+/// Simple shell-style pattern match for `--ignore` / `-I` / `--hide` (supports `*` and `?`).
 pub fn glob_match(pattern: &str, name: &str) -> bool {
     glob_match_inner(pattern.as_bytes(), name.as_bytes())
 }
@@ -38,9 +38,19 @@ pub fn should_show(entry: &Entry, opts: &ListOptions) -> bool {
         return false;
     }
 
+    // `-I` / `--ignore`: always suppressed, even with `-a`/`-A`.
     for pat in &opts.ignore_patterns {
         if glob_match(pat, &entry.name) {
             return false;
+        }
+    }
+
+    // `--hide`: suppressed unless `-a` or `-A`.
+    if !opts.all && !opts.almost_all {
+        for pat in &opts.hide_patterns {
+            if glob_match(pat, &entry.name) {
+                return false;
+            }
         }
     }
 
@@ -80,6 +90,7 @@ mod tests {
             modified: None,
             created: None,
             accessed: None,
+            changed: None,
             mode: 0,
             readonly: false,
             symlink_target: None,
@@ -93,6 +104,8 @@ mod tests {
             blocks: 0,
             owner: "u".into(),
             group: "g".into(),
+            author: "u".into(),
+            context: String::new(),
         }
     }
 
@@ -159,6 +172,48 @@ mod tests {
         assert!(!should_show(&make_entry("a.o"), &opts));
         assert!(!should_show(&make_entry("tmp123"), &opts));
         assert!(should_show(&make_entry("a.rs"), &opts));
+    }
+
+    #[test]
+    fn hide_patterns_overridden_by_all() {
+        let opts = ListOptions {
+            hide_patterns: vec!["*.tmp".into()],
+            ..Default::default()
+        };
+        assert!(!should_show(&make_entry("x.tmp"), &opts));
+        assert!(should_show(&make_entry("x.rs"), &opts));
+
+        let with_a = ListOptions {
+            all: true,
+            hide_patterns: vec!["*.tmp".into()],
+            ..Default::default()
+        };
+        assert!(
+            should_show(&make_entry("x.tmp"), &with_a),
+            "--hide is overridden by -a"
+        );
+
+        let with_a_ignore = ListOptions {
+            all: true,
+            hide_patterns: vec!["*.tmp".into()],
+            ignore_patterns: vec!["*.o".into()],
+            ..Default::default()
+        };
+        assert!(should_show(&make_entry("x.tmp"), &with_a_ignore));
+        assert!(
+            !should_show(&make_entry("x.o"), &with_a_ignore),
+            "-I still hides with -a"
+        );
+    }
+
+    #[test]
+    fn hide_patterns_overridden_by_almost_all() {
+        let opts = ListOptions {
+            almost_all: true,
+            hide_patterns: vec!["secret*".into()],
+            ..Default::default()
+        };
+        assert!(should_show(&make_entry("secret.txt"), &opts));
     }
 
     #[test]

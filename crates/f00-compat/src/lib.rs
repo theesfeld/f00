@@ -78,6 +78,7 @@ pub fn parse_sort_word(word: &str) -> Option<SortBy> {
         "size" => Some(SortBy::Size),
         "time" => Some(SortBy::Time),
         "extension" | "ext" => Some(SortBy::Extension),
+        "version" | "v" => Some(SortBy::Version),
         "none" => Some(SortBy::None),
         _ => None,
     }
@@ -86,7 +87,7 @@ pub fn parse_sort_word(word: &str) -> Option<SortBy> {
 /// Parse GNU `--format=WORD`.
 pub fn parse_format_word(word: &str) -> Option<OutputMode> {
     match word.to_ascii_lowercase().as_str() {
-        "across" | "horizontal" | "x" => Some(OutputMode::Columns), // approx
+        "across" | "horizontal" | "x" => Some(OutputMode::Across),
         "commas" | "m" => Some(OutputMode::Commas),
         "long" | "verbose" | "l" => Some(OutputMode::Long),
         "single-column" | "single" | "1" => Some(OutputMode::OnePerLine),
@@ -143,6 +144,7 @@ mod tests {
     fn parse_sort_words() {
         assert_eq!(parse_sort_word("size"), Some(SortBy::Size));
         assert_eq!(parse_sort_word("none"), Some(SortBy::None));
+        assert_eq!(parse_sort_word("version"), Some(SortBy::Version));
         assert_eq!(parse_sort_word("bogus"), None);
     }
 
@@ -150,5 +152,6 @@ mod tests {
     fn parse_format_words() {
         assert_eq!(parse_format_word("long"), Some(OutputMode::Long));
         assert_eq!(parse_format_word("commas"), Some(OutputMode::Commas));
+        assert_eq!(parse_format_word("across"), Some(OutputMode::Across));
     }
 }

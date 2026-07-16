@@ -22,6 +22,108 @@ pub fn cmp_name_with_mode(a: &str, b: &str, gnu: bool) -> std::cmp::Ordering {
     }
 }
 
+/// strverscmp-like natural / version comparison (`ls -v`).
+///
+/// Digit runs compare numerically (with leading-zero special-case similar to glibc);
+/// non-digit runs compare byte-wise.
+pub fn cmp_version(a: &str, b: &str) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    let ab = a.as_bytes();
+    let bb = b.as_bytes();
+    let mut i = 0usize;
+    let mut j = 0usize;
+
+    while i < ab.len() || j < bb.len() {
+        if i >= ab.len() {
+            return Ordering::Less;
+        }
+        if j >= bb.len() {
+            return Ordering::Greater;
+        }
+
+        let a_digit = ab[i].is_ascii_digit();
+        let b_digit = bb[j].is_ascii_digit();
+
+        if a_digit && b_digit {
+            // Leading zeros: all-zero prefix is "fractional" in glibc strverscmp.
+            let a_zeros = count_leading(ab, i, b'0');
+            let b_zeros = count_leading(bb, j, b'0');
+            let i0 = i + a_zeros;
+            let j0 = j + b_zeros;
+            let a_digits = count_digits(ab, i0);
+            let b_digits = count_digits(bb, j0);
+
+            // If one side has more leading zeros, it compares as smaller when
+            // the remaining numeric parts are equal length / equal value (glibc).
+            match (a_zeros > 0, b_zeros > 0) {
+                (true, false) => {
+                    // a has leading zeros → treat as fractional / smaller if equal digits after.
+                    // Fall through to numeric compare of remaining digits first.
+                }
+                (false, true) => {}
+                _ => {}
+            }
+
+            // Compare digit values first by length then lexicographically.
+            match a_digits.cmp(&b_digits) {
+                Ordering::Equal => {
+                    let acmp = ab[i0..i0 + a_digits].cmp(&bb[j0..j0 + b_digits]);
+                    if acmp != Ordering::Equal {
+                        return acmp;
+                    }
+                    // Equal numbers: more leading zeros → less (glibc).
+                    if a_zeros != b_zeros {
+                        return b_zeros.cmp(&a_zeros);
+                    }
+                }
+                ord => return ord,
+            }
+            i = i0 + a_digits;
+            j = j0 + b_digits;
+            continue;
+        }
+
+        if a_digit != b_digit {
+            // Non-digit vs digit: compare bytes.
+            return ab[i].cmp(&bb[j]);
+        }
+
+        // Both non-digit: compare until digit or end.
+        while i < ab.len() && j < bb.len() && !ab[i].is_ascii_digit() && !bb[j].is_ascii_digit() {
+            match ab[i].cmp(&bb[j]) {
+                Ordering::Equal => {
+                    i += 1;
+                    j += 1;
+                }
+                ord => return ord,
+            }
+        }
+        if i < ab.len() && j < bb.len() {
+            // One hit a digit boundary.
+            if ab[i].is_ascii_digit() != bb[j].is_ascii_digit() {
+                return ab[i].cmp(&bb[j]);
+            }
+        }
+    }
+    Ordering::Equal
+}
+
+fn count_leading(bytes: &[u8], start: usize, ch: u8) -> usize {
+    let mut n = 0;
+    while start + n < bytes.len() && bytes[start + n] == ch {
+        n += 1;
+    }
+    n
+}
+
+fn count_digits(bytes: &[u8], start: usize) -> usize {
+    let mut n = 0;
+    while start + n < bytes.len() && bytes[start + n].is_ascii_digit() {
+        n += 1;
+    }
+    n
+}
+
 fn cmp_entry(a: &Entry, b: &Entry, opts: &ListOptions) -> std::cmp::Ordering {
     use std::cmp::Ordering;
 
@@ -59,6 +161,7 @@ fn cmp_entry(a: &Entry, b: &Entry, opts: &ListOptions) -> std::cmp::Ordering {
                     .then_with(name_cmp)
             }
         }
+        SortBy::Version => cmp_version(&a.name, &b.name).then_with(name_cmp),
     };
 
     if opts.reverse {
@@ -100,6 +203,7 @@ mod tests {
             modified: secs.map(|s| SystemTime::UNIX_EPOCH + Duration::from_secs(s)),
             created: None,
             accessed: None,
+            changed: secs.map(|s| SystemTime::UNIX_EPOCH + Duration::from_secs(s)),
             mode: 0,
             readonly: false,
             symlink_target: None,
@@ -113,6 +217,8 @@ mod tests {
             blocks: 0,
             owner: "u".into(),
             group: "g".into(),
+            author: "u".into(),
+            context: String::new(),
         }
     }
 
@@ -209,6 +315,33 @@ mod tests {
     }
 
     #[test]
+    fn sort_by_version() {
+        let mut entries = vec![
+            entry("file10.txt", EntryKind::File, 0, None),
+            entry("file2.txt", EntryKind::File, 0, None),
+            entry("file1.txt", EntryKind::File, 0, None),
+        ];
+        let opts = ListOptions {
+            sort_by: SortBy::Version,
+            ..Default::default()
+        };
+        sort_entries(&mut entries, &opts);
+        let names: Vec<_> = entries.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, vec!["file1.txt", "file2.txt", "file10.txt"]);
+    }
+
+    #[test]
+    fn cmp_version_basic() {
+        use std::cmp::Ordering;
+        assert_eq!(cmp_version("a2", "a10"), Ordering::Less);
+        assert_eq!(cmp_version("a10", "a2"), Ordering::Greater);
+        assert_eq!(cmp_version("abc", "abc"), Ordering::Equal);
+        assert_eq!(cmp_version("file1", "file01"), Ordering::Greater); // fewer leading zeros wins? glibc: more leading zeros is less
+                                                                       // file01 has leading zero → smaller than file1 when numbers equal
+        assert_eq!(cmp_version("file01", "file1"), Ordering::Less);
+    }
+
+    #[test]
     fn cmp_name_strips_dot_for_key() {
         assert!(cmp_name(".foo", "foo").is_le());
         assert!(cmp_name("apple", "banana").is_lt());
@@ -227,6 +360,16 @@ mod tests {
         assert_eq!(
             e.time_for(TimeField::Accessed),
             Some(SystemTime::UNIX_EPOCH + Duration::from_secs(10))
+        );
+    }
+
+    #[test]
+    fn time_field_changed_uses_ctime() {
+        let mut e = entry("x", EntryKind::File, 0, Some(50));
+        e.changed = Some(SystemTime::UNIX_EPOCH + Duration::from_secs(7));
+        assert_eq!(
+            e.time_for(TimeField::Changed),
+            Some(SystemTime::UNIX_EPOCH + Duration::from_secs(7))
         );
     }
 }

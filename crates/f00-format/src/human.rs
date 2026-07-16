@@ -1,3 +1,5 @@
+use f00_core::BlockSize;
+
 /// Format a byte size with binary units (1024) like GNU `ls -h`.
 pub fn human_size(bytes: u64) -> String {
     human_size_base(bytes, 1024)
@@ -29,11 +31,43 @@ fn human_size_base(bytes: u64, base: u64) -> String {
     }
 }
 
-/// Disk blocks for `ls -s` (usually 1024-byte "kibibytes" display of 512-unit st_blocks/2).
-/// GNU `ls -s` prints allocated size in 1024-byte blocks by default (or 512 with `POSIXLY_CORRECT`).
+/// Disk blocks for `ls -s`.
+///
+/// `blocks_512` is `st_blocks` (512-byte units). `unit_bytes` is the display
+/// unit size (default 1024 for kibibytes; 512 with POSIXLY_CORRECT / custom
+/// `--block-size`).
 pub fn block_display(blocks_512: u64) -> u64 {
-    // Convert 512-byte units to 1K blocks, rounding up.
-    blocks_512.div_ceil(2)
+    block_display_with_unit(blocks_512, 1024)
+}
+
+/// Convert 512-byte units to `unit_bytes`-sized blocks, rounding up.
+pub fn block_display_with_unit(blocks_512: u64, unit_bytes: u64) -> u64 {
+    let unit = unit_bytes.max(1);
+    let bytes = blocks_512.saturating_mul(512);
+    bytes.div_ceil(unit)
+}
+
+/// Format a size field according to block-size / human flags.
+pub fn format_size_bytes(bytes: u64, block_size: BlockSize, human: bool, si: bool) -> String {
+    if human || matches!(block_size, BlockSize::HumanBinary) {
+        return if si || matches!(block_size, BlockSize::HumanSi) {
+            human_size_si(bytes)
+        } else {
+            human_size(bytes)
+        };
+    }
+    if si || matches!(block_size, BlockSize::HumanSi) {
+        return human_size_si(bytes);
+    }
+    match block_size {
+        BlockSize::Bytes(1) | BlockSize::Bytes(0) => bytes.to_string(),
+        BlockSize::Bytes(unit) => {
+            let n = bytes.div_ceil(unit.max(1));
+            n.to_string()
+        }
+        BlockSize::HumanBinary => human_size(bytes),
+        BlockSize::HumanSi => human_size_si(bytes),
+    }
 }
 
 #[cfg(test)]
@@ -64,5 +98,13 @@ mod tests {
         assert_eq!(block_display(1), 1);
         assert_eq!(block_display(2), 1);
         assert_eq!(block_display(3), 2);
+    }
+
+    #[test]
+    fn block_display_custom_unit() {
+        // 2 * 512 = 1024 bytes → 2 blocks of 512
+        assert_eq!(block_display_with_unit(2, 512), 2);
+        // 2 * 512 = 1024 → 1 block of 1024
+        assert_eq!(block_display_with_unit(2, 1024), 1);
     }
 }

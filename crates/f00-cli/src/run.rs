@@ -4,7 +4,9 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use f00_compat::{apply_gnu_list_options, apply_gnu_output, parse_format_word, parse_sort_word};
 use f00_core::{
-    list_paths_with_errors, Config, IndicatorStyle, ListOptions, OutputMode, SortBy, TimeField,
+    list_path, list_paths_with_errors, BlockSize, CliSymlinkMode, Config, ControlChars,
+    HyperlinkWhen, IndicatorStyle, ListOptions, ListOutcome, OutputMode, QuotingStyle, SortBy,
+    TimeField, TimeStyle,
 };
 use f00_format::format_listings;
 
@@ -29,6 +31,8 @@ fn resolve_sort(args: &Args) -> SortBy {
     }
     if args.sort_none || args.unsorted_all {
         SortBy::None
+    } else if args.sort_version {
+        SortBy::Version
     } else if args.sort_time || args.access_time || args.change_time {
         SortBy::Time
     } else if args.sort_size {
@@ -64,18 +68,30 @@ fn resolve_output(args: &Args) -> OutputMode {
             return m;
         }
     }
-    if args.json {
+    if args.csv {
+        OutputMode::Csv
+    } else if args.tsv {
+        OutputMode::Tsv
+    } else if args.json {
         OutputMode::Json
     } else if args.tree {
         OutputMode::Tree
-    } else if args.long || args.no_owner || args.no_group_long || args.numeric_uid_gid {
-        // -g/-o/-n imply long format in GNU ls
+    } else if args.long
+        || args.no_owner
+        || args.no_group_long
+        || args.numeric_uid_gid
+        || args.author
+    {
+        // -g/-o/-n/--author imply long format in GNU ls
         OutputMode::Long
-    } else if args.one_per_line {
+    } else if args.one_per_line || args.zero {
+        // --zero implies -1 in GNU ls
         OutputMode::OnePerLine
     } else if args.commas {
         OutputMode::Commas
-    } else if args.columns || args.across {
+    } else if args.across {
+        OutputMode::Across
+    } else if args.columns {
         OutputMode::Columns
     } else {
         OutputMode::Default
@@ -83,6 +99,11 @@ fn resolve_output(args: &Args) -> OutputMode {
 }
 
 fn resolve_indicator(args: &Args) -> IndicatorStyle {
+    if let Some(ref word) = args.indicator_style {
+        if let Some(s) = IndicatorStyle::parse(word) {
+            return s;
+        }
+    }
     if args.classify {
         IndicatorStyle::Classify
     } else if args.file_type {
@@ -92,6 +113,89 @@ fn resolve_indicator(args: &Args) -> IndicatorStyle {
     } else {
         IndicatorStyle::None
     }
+}
+
+fn resolve_quoting(args: &Args) -> QuotingStyle {
+    if args.literal {
+        return QuotingStyle::Literal;
+    }
+    if args.escape {
+        return QuotingStyle::Escape;
+    }
+    if args.quote_name {
+        return QuotingStyle::C;
+    }
+    if let Some(ref word) = args.quoting_style {
+        if let Some(s) = QuotingStyle::parse(word) {
+            return s;
+        }
+    }
+    QuotingStyle::from_env().unwrap_or(QuotingStyle::Literal)
+}
+
+fn resolve_control_chars(args: &Args) -> ControlChars {
+    if args.hide_control_chars {
+        ControlChars::Hide
+    } else if args.show_control_chars {
+        ControlChars::Show
+    } else {
+        ControlChars::Auto
+    }
+}
+
+fn resolve_time_style(args: &Args) -> TimeStyle {
+    if args.full_time {
+        return TimeStyle::FullIso;
+    }
+    if let Some(ref s) = args.time_style {
+        if let Some(ts) = TimeStyle::parse(s) {
+            return ts;
+        }
+    }
+    TimeStyle::from_env().unwrap_or(TimeStyle::Locale)
+}
+
+fn resolve_block_size(args: &Args) -> BlockSize {
+    if let Some(ref s) = args.block_size {
+        if let Some(bs) = BlockSize::parse(s) {
+            return bs;
+        }
+    }
+    if args.human_readable {
+        BlockSize::HumanBinary
+    } else if args.si {
+        BlockSize::HumanSi
+    } else {
+        BlockSize::Bytes(1)
+    }
+}
+
+fn resolve_hyperlink(args: &Args) -> HyperlinkWhen {
+    match args.hyperlink.as_deref() {
+        None => HyperlinkWhen::Never,
+        Some(s) => HyperlinkWhen::parse(s).unwrap_or(HyperlinkWhen::Always),
+    }
+}
+
+fn resolve_cli_symlink(args: &Args) -> CliSymlinkMode {
+    if args.dereference {
+        // -L supersedes -H
+        return CliSymlinkMode::Never; // handled via follow_links
+    }
+    if args.dereference_command_line {
+        CliSymlinkMode::Always
+    } else if args.dereference_command_line_symlink_to_dir {
+        CliSymlinkMode::DirOnly
+    } else {
+        CliSymlinkMode::Never
+    }
+}
+
+fn resolve_width(args: &Args) -> usize {
+    if let Some(w) = args.width {
+        return w;
+    }
+    terminal_width()
 }
 
 pub fn build_config(args: &Args) -> Config {
@@ -116,7 +220,11 @@ pub fn build_config(args: &Args) -> Config {
         directory: args.directory,
         ignore_backups: args.ignore_backups,
         ignore_patterns: args.ignore.clone(),
+        hide_patterns: args.hide.clone(),
+        use_ignore_files: args.ignore_files && !args.no_ignore && !args.gnu,
+        list_archives: args.archive && !args.gnu && !args.directory,
         time_field: resolve_time_field(args),
+        cli_symlink: resolve_cli_symlink(args),
     };
 
     apply_gnu_list_options(&mut list, args.gnu);
@@ -142,33 +250,38 @@ pub fn build_config(args: &Args) -> Config {
     let show_owner = !args.no_owner;
     let show_group = !(args.no_group || args.no_group_long);
 
-    // -l is implied by several flags; ensure long mode when only -i/-s with -l-like need?
-    // GNU: -i and -s work with any format; we support them primarily in long mode but
-    // also prefix one-per-line when set.
-    if (args.inode || args.size_blocks || args.full_time) && matches!(output, OutputMode::Default) {
-        // keep default; fields appear when long
-    }
     if args.full_time && !matches!(output, OutputMode::Long) {
         output = OutputMode::Long;
+    }
+    // -Z alone often implies long in some ls builds; we show context in all modes.
+    if args.dired && !matches!(output, OutputMode::Long | OutputMode::OnePerLine) {
+        // dired is most useful with long; keep chosen mode otherwise.
     }
 
     let _ = (&mut all, &mut almost_all);
 
+    // --zero disables color and hyperlinks in GNU ls.
+    let color = if args.zero {
+        f00_core::ColorWhen::Never
+    } else {
+        args.color.into()
+    };
+
+    let mut hyperlink = resolve_hyperlink(args);
+    if args.zero {
+        hyperlink = HyperlinkWhen::Never;
+    }
+
     Config {
         list,
         output,
-        color: if args.unsorted_all && !args.gnu {
-            // GNU -f disables color; honor that unless user forced --color=
-            args.color.into()
-        } else {
-            args.color.into()
-        },
+        color,
         human_sizes: args.human_readable || args.si,
         si_sizes: args.si,
         icons,
         classify: args.classify,
         indicator: resolve_indicator(args),
-        terminal_width: terminal_width(),
+        terminal_width: resolve_width(args),
         is_stdout_tty,
         show_owner,
         show_group,
@@ -177,6 +290,17 @@ pub fn build_config(args: &Args) -> Config {
         show_blocks: args.size_blocks,
         full_time: args.full_time,
         show_git,
+        quoting_style: resolve_quoting(args),
+        control_chars: resolve_control_chars(args),
+        show_author: args.author,
+        block_size: resolve_block_size(args),
+        kibibytes: args.kibibytes,
+        tabsize: args.tabsize.unwrap_or(8),
+        hyperlink,
+        show_context: args.context,
+        zero: args.zero,
+        dired: args.dired,
+        time_style: resolve_time_style(args),
     }
 }
 
@@ -202,6 +326,32 @@ pub fn run(args: Args) -> Result<i32> {
 /// Run with explicit argv0-as-ls mode (for tests / main).
 pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
     let args = prepare_args(args, as_ls)?;
+
+    // Interactive browser (feature-gated).
+    if args.browse {
+        #[cfg(feature = "tui")]
+        {
+            let start = args
+                .paths
+                .first()
+                .map(PathBuf::as_path)
+                .unwrap_or_else(|| std::path::Path::new("."));
+            let code = f00_tui::run_browser(
+                start,
+                f00_tui::BrowserOptions {
+                    show_hidden: args.almost_all || args.all,
+                    icons: args.icons && !args.gnu,
+                    git: args.git && !args.gnu,
+                },
+            )?;
+            return Ok(code);
+        }
+        #[cfg(not(feature = "tui"))]
+        {
+            anyhow::bail!("TUI browser requires building with --features tui");
+        }
+    }
+
     let config = build_config(&args);
     let paths: Vec<PathBuf> = if args.paths.is_empty() {
         vec![PathBuf::from(".")]
@@ -209,7 +359,7 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
         args.paths.clone()
     };
 
-    let outcome = list_paths_with_errors(&paths, &config.list);
+    let outcome = list_paths_with_archives(&paths, &config.list);
 
     for err in &outcome.path_errors {
         eprintln!("f00: {err}");
@@ -241,4 +391,44 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
     }
 
     Ok(exit_code)
+}
+
+/// Like [`list_paths_with_errors`], but expands zip/tar when `list_archives` is set.
+fn list_paths_with_archives(paths: &[PathBuf], opts: &ListOptions) -> ListOutcome {
+    #[cfg(feature = "archives")]
+    {
+        if opts.list_archives {
+            let mut listings = Vec::new();
+            let mut path_errors = Vec::new();
+            let mut minor = 0usize;
+            for p in paths {
+                if f00_archive::is_archive(p) {
+                    match f00_archive::list_archive_as_listing(p) {
+                        Ok(l) => {
+                            minor += l.minor_errors;
+                            listings.push(l);
+                        }
+                        Err(e) => path_errors.push(f00_core::Error::Io(std::io::Error::other(
+                            format!("{}: {e}", p.display()),
+                        ))),
+                    }
+                } else {
+                    match list_path(p, opts) {
+                        Ok(l) => {
+                            minor += l.minor_errors;
+                            listings.push(l);
+                        }
+                        Err(e) => path_errors.push(e),
+                    }
+                }
+            }
+            return ListOutcome {
+                listings,
+                path_errors,
+                minor_errors: minor,
+            };
+        }
+    }
+    let _ = opts.list_archives;
+    list_paths_with_errors(paths, opts)
 }
