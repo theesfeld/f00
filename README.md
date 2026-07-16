@@ -12,10 +12,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.8.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.9.0
 
 <!-- agents:status:begin -->
-> **Status:** v0.8 speed train (git cache, jwalk, io_uring recursive) + TUI syntax previews · Latest: `v0.8.0` · 0.x minors may include breaking changes
+> **Status:** v0.9 modern long-format colors · Latest: `v0.9.0` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---

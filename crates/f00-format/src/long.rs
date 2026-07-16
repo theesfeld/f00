@@ -48,6 +48,7 @@ pub fn format_long_line_dired(
         String::new()
     };
 
+    let gnu = config.list.gnu_mode;
     let size = format_size_field(entry, config);
     let mtime = format_entry_time(entry, config);
     let icon = icon_prefix(entry, config.icons);
@@ -58,16 +59,22 @@ pub fn format_long_line_dired(
         config.quoting_style,
         config.hide_control_chars(),
     );
-    let mut name_plain = format!("{icon}{quoted}{suffix}");
-    if let Some(target) = &entry.symlink_target {
+    let name_core = format!("{icon}{quoted}{suffix}");
+    let arrow_target = if let Some(target) = &entry.symlink_target {
         let tq = display_name(
             &target.display().to_string(),
             config.quoting_style,
             config.hide_control_chars(),
         );
-        name_plain = format!("{name_plain} -> {tq}");
-    }
-    let name_colored = colorizer.paint_name(entry, &name_plain);
+        format!(" -> {tq}")
+    } else {
+        String::new()
+    };
+    let name_colored = if entry.symlink_target.is_some() {
+        colorizer.paint_symlink_name(entry, &name_core, &arrow_target, gnu)
+    } else {
+        colorizer.paint_name(entry, &name_core)
+    };
     let name = hyperlink_name(&entry.path, &name_colored, config.hyperlink_enabled());
 
     let git = if config.show_git {
@@ -80,16 +87,19 @@ pub fn format_long_line_dired(
         String::new()
     };
 
+    // Build metadata columns; apply modern theme colors when not --gnu.
     let mut parts = Vec::new();
     if config.show_inode {
-        parts.push(format!("{:>w$}", entry.inode, w = widths.inode));
+        let s = format!("{:>w$}", entry.inode, w = widths.inode);
+        parts.push(colorizer.paint_meta(&s, gnu));
     }
     if config.show_blocks {
-        parts.push(format!(
+        let s = format!(
             "{:>w$}",
             block_display_with_unit(entry.blocks, config.blocks_unit()),
             w = widths.blocks
-        ));
+        );
+        parts.push(colorizer.paint_meta(&s, gnu));
     }
     if config.show_context {
         let ctx = if entry.context.is_empty() {
@@ -97,21 +107,31 @@ pub fn format_long_line_dired(
         } else {
             entry.context.as_str()
         };
-        parts.push(format!("{:<w$}", ctx, w = widths.context));
+        let s = format!("{:<w$}", ctx, w = widths.context);
+        parts.push(colorizer.paint_meta(&s, gnu));
     }
-    parts.push(perms);
-    parts.push(format!("{:>w$}", nlink, w = widths.nlink));
+    parts.push(colorizer.paint_perms(&perms, gnu));
+    {
+        let s = format!("{:>w$}", nlink, w = widths.nlink);
+        parts.push(colorizer.paint_meta(&s, gnu));
+    }
     if config.show_owner {
-        parts.push(format!("{:<w$}", owner, w = widths.owner));
+        let s = format!("{:<w$}", owner, w = widths.owner);
+        parts.push(colorizer.paint_user(&s, gnu));
     }
     if config.show_group {
-        parts.push(format!("{:<w$}", group, w = widths.group));
+        let s = format!("{:<w$}", group, w = widths.group);
+        parts.push(colorizer.paint_user(&s, gnu));
     }
     if config.show_author {
-        parts.push(format!("{:<w$}", author, w = widths.author));
+        let s = format!("{:<w$}", author, w = widths.author);
+        parts.push(colorizer.paint_user(&s, gnu));
     }
-    parts.push(format!("{:>w$}", size, w = widths.size));
-    parts.push(mtime);
+    {
+        let s = format!("{:>w$}", size, w = widths.size);
+        parts.push(colorizer.paint_size(&s, entry.size, gnu));
+    }
+    parts.push(colorizer.paint_time(&mtime, gnu));
     let prefix = parts.join(" ");
     // prefix + git + " " + name
     let line_without_name = format!("{prefix}{git} ");
