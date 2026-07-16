@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.7.2] - 2026-07-16
+
+### Fixed
+- **`--tree` connectors:** correct vertical bars / last-sibling detection (O(n) precompute; large trees no longer mis-nest)
+
+### Changed
+- **`--tree` performance:** parallel metadata after WalkDir, skip dir-section headers for tree mode; much faster format + stat phases on large trees
+- Version **0.7.1 → 0.7.2**
+
 ## [0.7.1] - 2026-07-16
 
 ### Fixed
@@ -100,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.7.2]: https://github.com/theesfeld/f00/releases/tag/v0.7.2
 [0.7.1]: https://github.com/theesfeld/f00/releases/tag/v0.7.1
 [0.7.0]: https://github.com/theesfeld/f00/releases/tag/v0.7.0
 [0.6.0]: https://github.com/theesfeld/f00/releases/tag/v0.6.0

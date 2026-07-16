@@ -237,6 +237,8 @@ pub fn build_config(args: &Args) -> Config {
         read_selinux: false,
         linux_statx: true,
         io_uring: cfg!(feature = "io-uring"),
+        // Adjusted below for `--tree` (headers not needed).
+        emit_dir_headers: true,
     };
 
     apply_gnu_list_options(&mut list, args.gnu);
@@ -280,6 +282,8 @@ pub fn build_config(args: &Args) -> Config {
     list.read_selinux = args.context;
     list.linux_statx = true;
     list.io_uring = args.io_uring && cfg!(feature = "io-uring");
+    // Tree does not use section headers; skip them for less work and cleaner depths.
+    list.emit_dir_headers = !matches!(output, OutputMode::Tree);
 
     let _ = (&mut all, &mut almost_all);
 

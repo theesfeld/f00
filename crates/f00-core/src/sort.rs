@@ -124,7 +124,7 @@ fn count_digits(bytes: &[u8], start: usize) -> usize {
     n
 }
 
-fn cmp_entry(a: &Entry, b: &Entry, opts: &ListOptions) -> std::cmp::Ordering {
+pub(crate) fn cmp_entry(a: &Entry, b: &Entry, opts: &ListOptions) -> std::cmp::Ordering {
     use std::cmp::Ordering;
 
     if opts.dirs_first {
