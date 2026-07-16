@@ -176,12 +176,31 @@ fn entry_from_dir_entry(
     }
 }
 
-/// Stat directory children, optionally in parallel with rayon.
+/// Stat directory children, optionally in parallel with rayon (or io_uring).
 fn stat_dir_entries(dir_entries: &[fs::DirEntry], opts: &ListOptions) -> Vec<Entry> {
     let follow = opts.follow_links;
     let fill = meta_fill_from(opts);
     let prefer_statx = opts.linux_statx;
     let map_one = |item: &fs::DirEntry| entry_from_dir_entry(item, follow, fill, prefer_statx);
+
+    // Linux + feature: batch statx via io_uring for large dirs (no follow).
+    #[cfg(all(target_os = "linux", feature = "io-uring"))]
+    {
+        if opts.io_uring
+            && !follow
+            && dir_entries.len() >= crate::io_uring_stat::IO_URING_THRESHOLD
+            && !fill.resolve_names
+            && !fill.read_context
+        {
+            let paths: Vec<_> = dir_entries.iter().map(|d| d.path()).collect();
+            if let Some(entries) = crate::io_uring_stat::entries_from_paths_uring(&paths, fill) {
+                // Preserve "same count roughly" — if many failures, fall back.
+                if entries.len() * 10 >= paths.len() * 8 {
+                    return entries;
+                }
+            }
+        }
+    }
 
     if !opts.use_parallel_stat(dir_entries.len()) {
         return dir_entries.iter().filter_map(map_one).collect();

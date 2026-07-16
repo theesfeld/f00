@@ -404,6 +404,9 @@ pub struct ListOptions {
     pub read_selinux: bool,
     /// Prefer Linux `statx` for metadata when available (ignored on other OSes).
     pub linux_statx: bool,
+    /// Prefer io_uring batch `statx` for large directories when the `io-uring`
+    /// cargo feature is enabled (Linux only; ignored otherwise).
+    pub io_uring: bool,
 }
 
 impl Default for ListOptions {
@@ -433,6 +436,8 @@ impl Default for ListOptions {
             resolve_owner_group: false,
             read_selinux: false,
             linux_statx: true,
+            // Default on when the feature is compiled; runtime still falls back.
+            io_uring: cfg!(feature = "io-uring"),
         }
     }
 }

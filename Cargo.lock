@@ -526,7 +526,7 @@ dependencies = [
 
 [[package]]
 name = "f00"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -553,7 +553,7 @@ dependencies = [
 
 [[package]]
 name = "f00-archive"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "f00-compat"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "f00-core",
  "f00-format",
@@ -573,10 +573,11 @@ dependencies = [
 
 [[package]]
 name = "f00-core"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "chrono",
  "criterion",
+ "io-uring",
  "libc",
  "rayon",
  "thiserror 2.0.18",
@@ -585,7 +586,7 @@ dependencies = [
 
 [[package]]
 name = "f00-format"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "chrono",
  "f00-core",
@@ -598,14 +599,14 @@ dependencies = [
 
 [[package]]
 name = "f00-git"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "f00-core",
 ]
 
 [[package]]
 name = "f00-plugin"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "directories",
  "libloading",
@@ -616,14 +617,14 @@ dependencies = [
 
 [[package]]
 name = "f00-plugin-hello"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "f00-plugin",
 ]
 
 [[package]]
 name = "f00-tui"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -923,6 +924,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "io-uring"
+version = "0.7.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9080b15e63775b9a2ac7dca720f7050a8b955e092ea0f6020a4a80f69998cdc0"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "libc",
 ]
 
 [[package]]

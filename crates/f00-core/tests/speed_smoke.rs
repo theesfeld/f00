@@ -54,5 +54,26 @@ fn list_200_files_serial_and_parallel() {
     let names_b: Vec<_> = b.entries.iter().map(|e| e.name.as_str()).collect();
     assert_eq!(names_a, names_b);
 
+    // Linux + io-uring feature: batch path must return the same count (fallback ok).
+    #[cfg(all(target_os = "linux", feature = "io-uring"))]
+    {
+        let uring = ListOptions {
+            parallel: true,
+            threads: 0,
+            io_uring: true,
+            linux_statx: true,
+            resolve_owner_group: false,
+            read_selinux: false,
+            ..Default::default()
+        };
+        let c = list_directory(&dir, &uring).unwrap();
+        assert_eq!(c.entries.len(), 200);
+        let mut names_c: Vec<_> = c.entries.iter().map(|e| e.name.clone()).collect();
+        let mut names_a_owned: Vec<_> = a.entries.iter().map(|e| e.name.clone()).collect();
+        names_c.sort();
+        names_a_owned.sort();
+        assert_eq!(names_a_owned, names_c);
+    }
+
     let _ = fs::remove_dir_all(&dir);
 }

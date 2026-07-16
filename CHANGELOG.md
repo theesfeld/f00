@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.6.0] - 2026-07-16
+
+### Added
+- **Linux io_uring:** optional batch `statx` for large directories (cargo feature `io-uring`, default on; `--io-uring=false` to disable). Falls back to rayon/`statx`/std when unavailable.
+- **Dual-pane TUI FM:** `f00 --browse` dual panes (on by default when terminal ≥ 80 cols); `Tab` switch; `\`/`|` toggle; `c` copy / `m` move / `d` delete with confirmation between panes
+- **Locale goldens:** integration tests under `LC_ALL=C` and UTF-8 locales when present (`locale_goldens`)
+- Linux `statx` via raw `SYS_statx` syscall (avoids hard-linking glibc `statx` for cross toolchains)
+
+### Changed
+- Version **0.5.0 → 0.6.0**
+
 ## [0.5.0] - 2026-07-16
 
 ### Added
@@ -69,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.6.0]: https://github.com/theesfeld/f00/releases/tag/v0.6.0
+[0.5.0]: https://github.com/theesfeld/f00/releases/tag/v0.5.0
 [0.4.0]: https://github.com/theesfeld/f00/releases/tag/v0.4.0
 [0.3.0]: https://github.com/theesfeld/f00/releases/tag/v0.3.0
 [0.2.0]: https://github.com/theesfeld/f00/releases/tag/v0.2.0

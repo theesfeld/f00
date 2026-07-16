@@ -332,6 +332,10 @@ pub struct Args {
     #[arg(long = "profile")]
     pub profile: bool,
 
+    /// Use io_uring batch metadata when built with `--features io-uring` (Linux)
+    #[arg(long = "io-uring", action = ArgAction::Set, default_value_t = true)]
+    pub io_uring: bool,
+
     /// Generate shell completions to stdout and exit (`bash`, `zsh`, `fish`, `powershell`, `elvish`)
     #[arg(long = "generate-completions", value_name = "SHELL", hide = true)]
     pub generate_completions: Option<clap_complete::Shell>,
@@ -432,6 +436,7 @@ impl Args {
             archive: true,
             threads: 0,
             profile: false,
+            io_uring: true,
             generate_completions: None,
             generate_man: false,
             update: false,

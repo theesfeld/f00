@@ -8,10 +8,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.5.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.6.0
 
 <!-- agents:status:begin -->
-> **Status:** v0.5 snappy listing + TUI · Phase: [#44](https://github.com/theesfeld/f00/issues/44) · Latest: `v0.5.0` · 0.x minors may include breaking changes
+> **Status:** v0.6 io_uring + dual-pane FM + locale goldens · Phase: [#47](https://github.com/theesfeld/f00/issues/47) · Latest: `v0.6.0` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -54,7 +54,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **GNU coreutils `ls`** | Shipped | Full flag surface + `--gnu` strict mode |
 | **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` + `QUOTING_STYLE` |
 | **LS_COLORS** | Shipped | Via `lscolors` / env |
-| **Speed** | Shipped | Parallel `stat` (rayon), cheap short path, uid cache, Linux `statx`, `--threads`, `--profile` |
+| **Speed** | Shipped | Parallel `stat` (rayon), cheap short path, uid cache, Linux `statx` + **io_uring** batch, `--threads`, `--profile` |
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |
 | **Icons** | Shipped | `--icons[=auto\|always\|never]` (default: auto on TTY) |
@@ -62,7 +62,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **TOML config** | Shipped | XDG / AppData |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
 | **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
-| **TUI browser** | Shipped | `f00 --browse` — preview, sort, `$EDITOR`/`$PAGER` |
+| **TUI browser** | Shipped | `f00 --browse` — dual-pane FM, preview, sort, `$EDITOR`/`$PAGER` |
 | **Archives** | Shipped | zip / tar / tar.gz as virtual dirs |
 | **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
 | **Self-update** | Shipped | `--update` / `--check-update` via GitHub Releases |
@@ -103,7 +103,7 @@ f00 --archive=false project.zip   # treat as plain file
 # Ignore files
 f00 --ignore-files
 
-# Interactive browser
+# Interactive browser (dual-pane when wide enough)
 f00 --browse
 f00 --tui ~/src
 
@@ -118,6 +118,7 @@ f00 --threads 0 -1 /large/dir   # parallel metadata (default; 0 = auto rayon)
 f00 --threads 1 -1 /large/dir   # force serial stats
 f00 --threads 8 -1 /large/dir   # fixed rayon pool size
 f00 --profile -la /large/dir    # stderr: readdir_ms stat_ms sort_ms format_ms total_ms
+f00 --io-uring=false -1 /large  # Linux: disable io_uring batch statx (default: on)
 ```
 
 Large directories (**>32** entries) parallelize metadata collection with rayon. Sort order is unchanged. Benchmark:
@@ -160,13 +161,16 @@ f00 --generate-man | man -l -
 
 | Key | Action |
 |-----|--------|
-| `j`/`k` · arrows | Move |
+| `j`/`k` · arrows | Move (active pane) |
 | Enter | Open dir / print file path & quit |
 | `h`/`l` · Backspace | Parent / enter |
-| Space | Mark · `y` print marks & quit |
-| `/` | Filter · `Esc` clear |
+| `Tab` | Switch active pane |
+| `\` / `\|` | Toggle dual-pane layout |
+| `c` / `m` / `d` | Copy / move / delete (marked or cursor) → other pane; confirm overlay |
+| Space | Mark · `y` print marks & quit (or confirm when overlay open) |
+| `/` | Filter · `Esc` clear / cancel confirm |
 | `s` / `S` | Cycle sort (name/size/mtime/ext) · reverse |
-| `p` | Toggle preview pane |
+| `p` | Toggle preview pane (single-pane only) |
 | `e` / `v` | Open in `$EDITOR` · view in `$PAGER` |
 | `.` | Toggle hidden · `r` refresh · `H` help · `q` quit |
 
@@ -187,12 +191,13 @@ Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-saf
 | `git` | yes | Git status column |
 | `archives` | yes | zip/tar listing |
 | `tui` | yes | `--browse` / `--tui` |
+| `io-uring` | yes | Linux batch metadata via io_uring (no-op off Linux) |
 | `plugins` | no | Dynamic plugin host (`--list-plugins`) |
 
 ```bash
 cargo build -p f00 --release
 cargo build -p f00 --no-default-features   # minimal
-cargo build -p f00 --features "git,archives,tui,plugins"
+cargo build -p f00 --features "git,archives,tui,io-uring,plugins"
 ```
 
 ---

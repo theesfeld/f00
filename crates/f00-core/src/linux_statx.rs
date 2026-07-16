@@ -36,8 +36,11 @@ pub fn entry_from_statx(path: &Path, depth: usize, fill: MetaFill) -> Result<Ent
         | libc::STATX_BTIME
         | libc::STATX_INO;
 
+    // Raw syscall avoids hard-linking the `statx` glibc symbol (breaks some
+    // cross/old-glibc toolchains, e.g. aarch64 via cross).
     let rc = unsafe {
-        libc::statx(
+        libc::syscall(
+            libc::SYS_statx,
             libc::AT_FDCWD,
             c_path.as_ptr(),
             libc::AT_SYMLINK_NOFOLLOW,
@@ -50,6 +53,21 @@ pub fn entry_from_statx(path: &Path, depth: usize, fill: MetaFill) -> Result<Ent
             path: path.to_path_buf(),
             source: std::io::Error::last_os_error(),
         });
+    }
+
+    entry_from_statx_buf(path, depth, &buf, fill)
+}
+
+/// Convert a filled `statx` buffer (from `statx(2)` or io_uring) into an [`Entry`].
+pub fn entry_from_statx_buf(
+    path: &Path,
+    depth: usize,
+    buf: &libc::statx,
+    fill: MetaFill,
+) -> Result<Entry> {
+    // For name resolution / SELinux, reuse the std-based builder.
+    if fill.resolve_names || fill.read_context {
+        return Entry::from_path_with(path, depth, fill);
     }
 
     // stx_mode is u16; promote for bitwise ops with S_IF* (u32 on Linux).
@@ -73,15 +91,6 @@ pub fn entry_from_statx(path: &Path, depth: usize, fill: MetaFill) -> Result<Ent
         None
     };
 
-    let uid = buf.stx_uid;
-    let gid = buf.stx_gid;
-
-    // For name resolution / SELinux, reuse the std-based builder (still cheaper
-    // when those flags are off — the common short-list path).
-    if fill.resolve_names || fill.read_context {
-        return Entry::from_path_with(path, depth, fill);
-    }
-
     Ok(Entry {
         path: path.to_path_buf(),
         name,
@@ -102,8 +111,8 @@ pub fn entry_from_statx(path: &Path, depth: usize, fill: MetaFill) -> Result<Ent
         git_status: GitStatus::Clean,
         is_dir_header: false,
         nlink: u64::from(buf.stx_nlink),
-        uid,
-        gid,
+        uid: buf.stx_uid,
+        gid: buf.stx_gid,
         inode: buf.stx_ino,
         blocks: buf.stx_blocks,
         owner: String::new(),

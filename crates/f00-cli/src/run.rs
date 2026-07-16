@@ -236,6 +236,7 @@ pub fn build_config(args: &Args) -> Config {
         resolve_owner_group: false,
         read_selinux: false,
         linux_statx: true,
+        io_uring: cfg!(feature = "io-uring"),
     };
 
     apply_gnu_list_options(&mut list, args.gnu);
@@ -275,6 +276,7 @@ pub fn build_config(args: &Args) -> Config {
     list.resolve_owner_group = needs_names || args.author;
     list.read_selinux = args.context;
     list.linux_statx = true;
+    list.io_uring = args.io_uring && cfg!(feature = "io-uring");
 
     let _ = (&mut all, &mut almost_all);
 

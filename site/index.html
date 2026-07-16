@@ -64,7 +64,7 @@
               <a class="version-pill" id="latest-version"
                  href="https://github.com/theesfeld/f00/releases/latest"
                  title="GitHub Releases">
-                <strong id="latest-version-label">v0.5.0</strong>
+                <strong id="latest-version-label">v0.6.0</strong>
               </a>
               <a class="version-assets" href="https://github.com/theesfeld/f00/releases">assets</a>
             </p>
@@ -165,8 +165,13 @@
           </article>
           <article class="card">
             <span class="tag">shipped</span>
-            <h3>TUI browser</h3>
-            <p>Interactive directory browser: <code class="mono">f00 --browse</code> with filter, marks, and open.</p>
+            <h3>TUI dual-pane FM</h3>
+            <p><code class="mono">f00 --browse</code> dual panes (Tab), copy/move/delete, preview, sort, editor/pager.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Linux speed</h3>
+            <p><code class="mono">statx</code> + optional <code class="mono">io_uring</code> batch metadata for large dirs (auto fallback).</p>
           </article>
           <article class="card">
             <span class="tag">shipped</span>
@@ -203,14 +208,14 @@
             <p class="install-version-label">
               Latest release
               <a class="version-pill" href="https://github.com/theesfeld/f00/releases/latest">
-                <strong id="install-version-label">v0.5.0</strong>
+                <strong id="install-version-label">v0.6.0</strong>
               </a>
             </p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Add to your <code class="mono">PATH</code> if needed:</p>
             <pre><code>export PATH="$HOME/.f00/bin:$PATH"</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.5.0 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.6.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>Optional <code class="mono">ls</code> symlink (off by default):</p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
@@ -396,6 +401,20 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
               <span>feature plugins, ABI v1, example plugin (#27)</span>
             </div>
           </li>
+          <li>
+            <span class="n">06</span>
+            <div>
+              <strong>Snappy listing + TUI (v0.5)</strong>
+              <span>cheap short path, uid cache, Linux statx, preview/sort/open</span>
+            </div>
+          </li>
+          <li>
+            <span class="n">07</span>
+            <div>
+              <strong>io_uring · dual-pane · locale (v0.6)</strong>
+              <span>batch statx, dual-pane FM, LC_COLLATE goldens (#47 / #48)</span>
+            </div>
+          </li>
         </ol>
       </div>
     </section>
@@ -437,7 +456,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
       <div class="copy">
         <strong style="color:var(--text-dim)">f00</strong>
         — next-generation <code class="mono">ls</code>.
-        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.5.0</a>.
+        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.6.0</a>.
         © 2026 f00 contributors.
         Licensed under MIT OR Apache-2.0.
       </div>
@@ -454,7 +473,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
   <script>
     (function () {
       // Fallback version embedded at ship time; refreshed from Releases API when available.
-      var FALLBACK_VERSION = "v0.5.0";
+      var FALLBACK_VERSION = "v0.6.0";
 
       function setVersionLabels(tag) {
         if (!tag) return;
