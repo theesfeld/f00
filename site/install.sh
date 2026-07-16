@@ -2,11 +2,11 @@
 # f00 installer — https://f00.sh
 # Usage:
 #   curl -fsSL https://f00.sh/install.sh | bash
-#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.0 INSTALL_DIR=$HOME/bin bash
+#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.1 INSTALL_DIR=$HOME/bin bash
 #   curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash
 #
 # Env:
-#   F00_VERSION      Pin a release tag (e.g. v0.4.0). Default: latest
+#   F00_VERSION      Pin a release tag (e.g. v0.4.1). Default: latest
 #   INSTALL_DIR      Override install directory (default: ~/.f00/bin)
 #   F00_INSTALL_LS   If set to 1, also symlink ls -> f00
 #   F00_NO_COLOR     If set, disable ANSI colors
@@ -164,9 +164,15 @@ pick_install_dir() {
     echo "$INSTALL_DIR"
     return
   fi
-  # Prefer ~/.local/bin (XDG / no root). Fall back to /usr/local/bin if writable.
+  # Canonical product path: ~/.f00/bin (see AGENTS CLI install standard).
+  # Fall back to ~/.local/bin then /usr/local/bin if needed.
+  local f00_bin="${HOME}/.f00/bin"
   local home_bin="${HOME}/.local/bin"
   local system_bin="/usr/local/bin"
+  if mkdir -p "$f00_bin" 2>/dev/null && [[ -w "$f00_bin" ]]; then
+    echo "$f00_bin"
+    return
+  fi
   if [[ -d "$home_bin" ]] || mkdir -p "$home_bin" 2>/dev/null; then
     if [[ -w "$home_bin" ]]; then
       echo "$home_bin"
@@ -177,9 +183,8 @@ pick_install_dir() {
     echo "$system_bin"
     return
   fi
-  # last resort: create ~/.local/bin
-  mkdir -p "$home_bin" || die "cannot create $home_bin"
-  echo "$home_bin"
+  mkdir -p "$f00_bin" || die "cannot create $f00_bin"
+  echo "$f00_bin"
 }
 
 is_in_path() {

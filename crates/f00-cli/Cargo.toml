@@ -1,16 +1,22 @@
 [package]
-name = "f00-cli"
+# Published on crates.io as `f00` (binary package). Path remains crates/f00-cli.
+name = "f00"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 authors.workspace = true
-description = "f00 command-line interface"
+description = "f00 — a modern, friendly directory lister (ls rewrite)"
 rust-version.workspace = true
 readme = "../../README.md"
-keywords = ["ls", "cli", "filesystem"]
-categories = ["command-line-utilities"]
+keywords = ["ls", "cli", "filesystem", "coreutils"]
+categories = ["command-line-utilities", "filesystem"]
+exclude = ["/target", "/**/target"]
+
+[lib]
+name = "f00_cli"
+path = "src/lib.rs"
 
 [[bin]]
 name = "f00"

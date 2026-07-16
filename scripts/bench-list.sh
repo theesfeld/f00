@@ -15,7 +15,7 @@ for i in $(seq 1 "$N"); do
 done
 
 echo "Building f00 (release)..."
-cargo build -q -p f00-cli --release
+cargo build -q -p f00 --release
 
 BIN="$ROOT/target/release/f00"
 

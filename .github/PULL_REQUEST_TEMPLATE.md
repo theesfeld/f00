@@ -6,7 +6,7 @@
 
 User-facing changes must keep README, site, roadmap, and install scripts aligned. See [`docs/SYNC.md`](../docs/SYNC.md).
 
-- [ ] README claims match what `cargo run -p f00-cli -- --help` shows
+- [ ] README claims match what `cargo run -p f00 -- --help` shows
 - [ ] Site does not advertise unshipped features as done
 - [ ] ROADMAP status bits match open/closed milestones
 - [ ] `install.sh` and `site/install.sh` are byte-identical (or intentionally generated from one source)
@@ -24,4 +24,4 @@ User-facing changes must keep README, site, roadmap, and install scripts aligned
 ## Test plan
 
 - [ ] `cargo test` (workspace)
-- [ ] Manual smoke: `cargo run -p f00-cli -- -la`
+- [ ] Manual smoke: `cargo run -p f00 -- -la`

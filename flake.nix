@@ -14,10 +14,10 @@
       in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
           pname = "f00";
-          version = "0.4.0";
+          version = "0.4.1";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
-          # Binary package lives in the workspace member f00-cli.
+          # Binary package lives in the workspace package f00 (path crates/f00-cli).
           buildAndTestSubdir = "crates/f00-cli";
           meta = with pkgs.lib; {
             description = "Modern, friendly directory lister (ls rewrite)";

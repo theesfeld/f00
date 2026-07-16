@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.4.1] - 2026-07-16
+
+### Added
+- Plugin **decorate hooks**: with `--features plugins`, loaded plugins transform entry lists before format (JSON ABI `display_name` / `name`)
+- Example plugin `hello` injects a `· ` display prefix via decorate
+- `scripts/publish-crates.sh` for crates.io publish order
+- Homebrew formula SHA-256s for v0.4.0 multi-arch assets
+
+### Changed
+- Binary package renamed for crates.io: Cargo package name **`f00`** (path still `crates/f00-cli`, lib `f00_cli`)
+- Version **0.4.0 → 0.4.1**
+
 ## [0.4.0] - 2026-07-16
 
 ### Added
