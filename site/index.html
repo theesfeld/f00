@@ -192,8 +192,6 @@
         <div class="section-head">
           <h2>Install in one line</h2>
           <p>
-            Current release:
-            <a href="https://github.com/theesfeld/f00/releases/latest"><strong id="install-version-label">v0.4.1</strong></a>.
             Detects OS/arch, downloads the GitHub release, verifies SHA-256 when present, and
             installs to <code class="mono">~/.f00/bin</code> (override with
             <code class="mono">INSTALL_DIR</code>).
@@ -202,6 +200,12 @@
         <div class="two-col">
           <div class="prose-block">
             <h3>Quick install</h3>
+            <p class="install-version-label">
+              Latest release
+              <a class="version-pill" href="https://github.com/theesfeld/f00/releases/latest">
+                <strong id="install-version-label">v0.4.1</strong>
+              </a>
+            </p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Add to your <code class="mono">PATH</code> if needed:</p>
             <pre><code>export PATH="$HOME/.f00/bin:$PATH"</code></pre>
