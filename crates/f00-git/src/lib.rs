@@ -191,8 +191,23 @@ mod tests {
 
     #[test]
     fn find_repo_from_workspace() {
-        // This workspace is itself a git repo (parent scaffold).
-        let root = find_repo_root(Path::new(env!("CARGO_MANIFEST_DIR")));
-        assert!(root.is_some());
+        // Prefer a disposable repo so CARGO_MANIFEST_DIR path moves (e.g. rename)
+        // never leave a baked-in path without a .git.
+        let base = std::env::temp_dir().join(format!(
+            "f00-git-find-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(base.join("nested/deep")).unwrap();
+        std::fs::create_dir_all(base.join(".git")).unwrap();
+        let found = find_repo_root(&base.join("nested/deep"));
+        assert_eq!(found.as_deref(), Some(base.as_path()));
+        let _ = std::fs::remove_dir_all(&base);
+
+        // Also accept the live workspace when present (non-fatal if path moved).
+        let _ = find_repo_root(Path::new(env!("CARGO_MANIFEST_DIR")));
     }
 }

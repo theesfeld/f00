@@ -97,10 +97,33 @@ fn good_and_missing_still_lists_good_exits_2() {
     let _ = fs::remove_dir_all(&dir);
 }
 
+/// True when this process is root (euid 0). Permission-denial tests cannot work as root:
+/// FreeBSD/Linux root bypasses mode bits, so `chmod 0` dirs remain listable.
+#[cfg(unix)]
+fn running_as_root() -> bool {
+    // Avoid a libc crate dep for a single syscall used only in tests.
+    extern "C" {
+        fn geteuid() -> u32;
+    }
+    // SAFETY: geteuid has no preconditions and is always safe to call.
+    unsafe { geteuid() == 0 }
+}
+
+/// After chmod 0o000, return whether `path` is still readable as a directory by this process.
+#[cfg(unix)]
+fn still_readable_dir(path: &Path) -> bool {
+    fs::read_dir(path).is_ok()
+}
+
 #[test]
 #[cfg(unix)]
 fn unreadable_path_arg_exits_2() {
     use std::os::unix::fs::PermissionsExt;
+
+    if running_as_root() {
+        // Root can always readdir mode-0 directories; skip on FreeBSD CI VMs etc.
+        return;
+    }
 
     let dir = temp_dir("unreadable");
     fs::write(dir.join("secret.txt"), b"x").unwrap();
@@ -109,6 +132,15 @@ fn unreadable_path_arg_exits_2() {
     let mut perms = fs::metadata(&dir).unwrap().permissions();
     perms.set_mode(0o000);
     fs::set_permissions(&dir, perms).unwrap();
+
+    if still_readable_dir(&dir) {
+        // Platform or mount does not honor mode bits for this process.
+        let mut perms = fs::metadata(&dir).unwrap().permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&dir, perms).unwrap();
+        let _ = fs::remove_dir_all(&dir);
+        return;
+    }
 
     let output = f00_cmd(&cfg).arg(&dir).output().expect("spawn");
 
@@ -132,6 +164,10 @@ fn unreadable_path_arg_exits_2() {
 fn unreadable_subdir_in_recursive_exits_1() {
     use std::os::unix::fs::PermissionsExt;
 
+    if running_as_root() {
+        return;
+    }
+
     let dir = temp_dir("recurse");
     fs::write(dir.join("visible.txt"), b"v").unwrap();
     let sub = dir.join("locked");
@@ -142,6 +178,14 @@ fn unreadable_subdir_in_recursive_exits_1() {
     let mut perms = fs::metadata(&sub).unwrap().permissions();
     perms.set_mode(0o000);
     fs::set_permissions(&sub, perms).unwrap();
+
+    if still_readable_dir(&sub) {
+        let mut perms = fs::metadata(&sub).unwrap().permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&sub, perms).unwrap();
+        let _ = fs::remove_dir_all(&dir);
+        return;
+    }
 
     let output = f00_cmd(&cfg).arg("-R").arg(&dir).output().expect("spawn");
 

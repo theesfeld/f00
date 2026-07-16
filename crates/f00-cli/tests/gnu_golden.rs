@@ -4,10 +4,12 @@
 //! exit codes). Not always byte-identical to system `ls` (locales, padding,
 //! timestamps). Optional name-set comparison against `ls -1` on Unix when present.
 
-use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+#[cfg(unix)]
+use std::collections::BTreeSet;
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_f00"))

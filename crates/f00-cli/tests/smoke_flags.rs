@@ -311,10 +311,24 @@ fn git_false_no_annotation_spaces() {
 // #5 recursive errors (light)
 // ---------------------------------------------------------------------------
 
+#[cfg(unix)]
+fn running_as_root() -> bool {
+    extern "C" {
+        fn geteuid() -> u32;
+    }
+    // SAFETY: geteuid has no preconditions.
+    unsafe { geteuid() == 0 }
+}
+
 #[test]
 #[cfg(unix)]
 fn recursive_unreadable_subdir_exits_1_continues() {
     use std::os::unix::fs::PermissionsExt;
+
+    // Root bypasses directory mode bits (FreeBSD CI VM runs as root).
+    if running_as_root() {
+        return;
+    }
 
     let dir = temp_dir("recurse-err");
     fs::write(dir.join("visible.txt"), b"v").unwrap();
@@ -329,6 +343,14 @@ fn recursive_unreadable_subdir_exits_1_continues() {
     let mut perms = fs::metadata(&locked).unwrap().permissions();
     perms.set_mode(0o000);
     fs::set_permissions(&locked, perms).unwrap();
+
+    if fs::read_dir(&locked).is_ok() {
+        let mut perms = fs::metadata(&locked).unwrap().permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&locked, perms).unwrap();
+        let _ = fs::remove_dir_all(&dir);
+        return;
+    }
 
     let out = f00(&cfg).args(["-R", "-1"]).arg(&dir).output().unwrap();
 
