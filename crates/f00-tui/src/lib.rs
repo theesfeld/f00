@@ -46,6 +46,7 @@
 
 mod browser;
 mod helpers;
+mod preview;
 
 use std::path::Path;
 

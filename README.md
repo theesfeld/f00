@@ -12,10 +12,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.7.2
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.8.0
 
 <!-- agents:status:begin -->
-> **Status:** v0.7.2 fast `--tree` · Latest: `v0.7.2` · 0.x minors may include breaking changes
+> **Status:** v0.8 speed train (git cache, jwalk, io_uring recursive) + TUI syntax previews · Latest: `v0.8.0` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -96,7 +96,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **TOML config** | Shipped | XDG / AppData |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
 | **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
-| **TUI browser** | Shipped | `f00 --browse` — dual-pane FM, preview, sort, `$EDITOR`/`$PAGER` |
+| **TUI browser** | Shipped | `f00 --browse` — dual-pane FM, **syntax-colored preview**, sort, `$EDITOR`/`$PAGER` |
 | **Archives** | Shipped | zip / tar / tar.gz as virtual dirs |
 | **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
 | **Self-update** | Shipped | `--update` / `--check-update` via GitHub Releases |

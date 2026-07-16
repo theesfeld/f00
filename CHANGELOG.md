@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.8.0] - 2026-07-16
+
+### Added
+- **TUI:** syntax-colored file previews (syntect) for source/text files
+- **TUI:** directory listing cache (mtime-aware) for snappier navigation
+- **Git:** process-wide porcelain cache invalidated on `.git/index` mtime
+- **Recursive walk:** parallel directory walk via **jwalk**
+- **Linux:** io_uring batch `statx` for large recursive listings (same feature as flat dirs)
+
+### Changed
+- **Git:** `-R` / `--tree` use `git status -uno` (skip untracked scan) for speed; flat listings still use `-uall`
+- **Long format:** less allocation when computing column widths
+- Version **0.7.2 → 0.8.0**
+
 ## [0.7.2] - 2026-07-16
 
 ### Fixed
@@ -109,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.8.0]: https://github.com/theesfeld/f00/releases/tag/v0.8.0
 [0.7.2]: https://github.com/theesfeld/f00/releases/tag/v0.7.2
 [0.7.1]: https://github.com/theesfeld/f00/releases/tag/v0.7.1
 [0.7.0]: https://github.com/theesfeld/f00/releases/tag/v0.7.0

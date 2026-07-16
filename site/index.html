@@ -71,7 +71,7 @@
               <a class="version-pill" id="latest-version"
                  href="https://github.com/theesfeld/f00/releases/latest"
                  title="GitHub Releases">
-                <strong id="latest-version-label">v0.7.1</strong>
+                <strong id="latest-version-label">v0.8.0</strong>
               </a>
               <a class="version-assets" href="https://github.com/theesfeld/f00/releases">assets</a>
             </p>
@@ -215,14 +215,14 @@
             <p class="install-version-label">
               Latest release
               <a class="version-pill" href="https://github.com/theesfeld/f00/releases/latest">
-                <strong id="install-version-label">v0.7.1</strong>
+                <strong id="install-version-label">v0.8.0</strong>
               </a>
             </p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Add to your <code class="mono">PATH</code> if needed:</p>
             <pre><code>export PATH="$HOME/.local/bin:$PATH"</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.7.1 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.8.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>
               <strong>We never replace system <code class="mono">/bin/ls</code> by default.</strong>
@@ -510,7 +510,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
       <div class="copy">
         <strong style="color:var(--text-dim)">f00</strong>
         — next-generation <code class="mono">ls</code>.
-        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.7.1</a>.
+        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.8.0</a>.
         © 2026 f00 contributors.
         Licensed under MIT OR Apache-2.0.
       </div>
@@ -527,7 +527,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
   <script>
     (function () {
       // Fallback version embedded at ship time; refreshed from Releases API when available.
-      var FALLBACK_VERSION = "v0.7.1";
+      var FALLBACK_VERSION = "v0.8.0";
 
       function setVersionLabels(tag) {
         if (!tag) return;

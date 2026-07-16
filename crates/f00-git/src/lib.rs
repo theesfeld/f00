@@ -1,12 +1,25 @@
 //! Optional git status integration for **f00**.
 //!
-//! Uses `git status --porcelain` as a lightweight subprocess MVP (no libgit2).
+//! Uses `git status --porcelain` as a lightweight subprocess (no libgit2).
+//! Results are cached per repo root and invalidated when `.git/index` mtimes.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
+use std::time::SystemTime;
 
 use f00_core::{Entry, GitStatus, Listing};
+
+/// How aggressively to collect untracked files.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum UntrackedMode {
+    /// `git status -uall` — every untracked path (default for flat listings).
+    #[default]
+    All,
+    /// `git status -uno` — skip untracked (faster; good for `-R` / `--tree`).
+    No,
+}
 
 /// Snapshot of git status for paths under a repository root.
 #[derive(Debug, Default, Clone)]
@@ -14,6 +27,29 @@ pub struct GitIndex {
     /// Absolute or relative paths → status. Keys are normalized relative to repo root.
     statuses: HashMap<PathBuf, GitStatus>,
     repo_root: Option<PathBuf>,
+    /// Index mtime used for cache invalidation (if available).
+    #[allow(dead_code)]
+    index_mtime: Option<SystemTime>,
+    #[allow(dead_code)]
+    untracked: UntrackedMode,
+}
+
+#[derive(Clone)]
+struct CacheEntry {
+    index: GitIndex,
+    index_mtime: Option<SystemTime>,
+    untracked: UntrackedMode,
+}
+
+fn global_cache() -> &'static Mutex<HashMap<PathBuf, CacheEntry>> {
+    use std::sync::OnceLock;
+    static CACHE: OnceLock<Mutex<HashMap<PathBuf, CacheEntry>>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn index_mtime(repo: &Path) -> Option<SystemTime> {
+    let index = repo.join(".git/index");
+    std::fs::metadata(index).and_then(|m| m.modified()).ok()
 }
 
 impl GitIndex {
@@ -26,7 +62,6 @@ impl GitIndex {
     }
 
     pub fn status_for(&self, path: &Path) -> GitStatus {
-        // Try exact, then file name relative to repo.
         if let Some(st) = self.statuses.get(path) {
             return *st;
         }
@@ -37,7 +72,7 @@ impl GitIndex {
                 }
             }
         }
-        // Basename fallback
+        // Basename fallback (only single-component keys)
         if let Some(name) = path.file_name() {
             for (k, v) in &self.statuses {
                 if k.file_name() == Some(name) && k.components().count() == 1 {
@@ -48,16 +83,56 @@ impl GitIndex {
         GitStatus::Clean
     }
 
-    /// Discover repo from `start` and load porcelain status.
+    /// Discover repo from `start` and load porcelain status (cached).
     pub fn discover(start: &Path) -> Self {
+        Self::discover_with(start, UntrackedMode::All)
+    }
+
+    /// Discover with untracked policy (uses process-wide cache).
+    pub fn discover_with(start: &Path, untracked: UntrackedMode) -> Self {
         let root = match find_repo_root(start) {
             Some(r) => r,
             None => return Self::empty(),
         };
 
+        let mtime = index_mtime(&root);
+        if let Ok(cache) = global_cache().lock() {
+            if let Some(hit) = cache.get(&root) {
+                if hit.untracked == untracked && hit.index_mtime == mtime {
+                    return hit.index.clone();
+                }
+            }
+        }
+
+        let index = Self::load_fresh(&root, mtime, untracked);
+        if let Ok(mut cache) = global_cache().lock() {
+            cache.insert(
+                root.clone(),
+                CacheEntry {
+                    index: index.clone(),
+                    index_mtime: mtime,
+                    untracked,
+                },
+            );
+            // Soft cap so long-lived CLIs don't grow unbounded across many repos.
+            if cache.len() > 32 {
+                // Drop an arbitrary old entry (HashMap iter order is fine here).
+                if let Some(k) = cache.keys().next().cloned() {
+                    cache.remove(&k);
+                }
+            }
+        }
+        index
+    }
+
+    fn load_fresh(root: &Path, mtime: Option<SystemTime>, untracked: UntrackedMode) -> Self {
+        let uflag = match untracked {
+            UntrackedMode::All => "-uall",
+            UntrackedMode::No => "-uno",
+        };
         let output = Command::new("git")
-            .args(["status", "--porcelain", "-uall"])
-            .current_dir(&root)
+            .args(["status", "--porcelain", "--ignored=no", uflag])
+            .current_dir(root)
             .output();
 
         let output = match output {
@@ -65,7 +140,9 @@ impl GitIndex {
             _ => {
                 return Self {
                     statuses: HashMap::new(),
-                    repo_root: Some(root),
+                    repo_root: Some(root.to_path_buf()),
+                    index_mtime: mtime,
+                    untracked,
                 };
             }
         };
@@ -79,13 +156,11 @@ impl GitIndex {
             }
             let code = &line[..2];
             let rest = line[3..].trim();
-            // Handle renames: `R  old -> new`
             let path_str = if let Some((left, _right)) = rest.split_once(" -> ") {
                 left.trim()
             } else {
                 rest
             };
-            // Strip optional quotes
             let path_str = path_str.trim_matches('"');
             let rel = PathBuf::from(path_str);
             let st = parse_porcelain_code(code);
@@ -95,7 +170,9 @@ impl GitIndex {
 
         Self {
             statuses,
-            repo_root: Some(root),
+            repo_root: Some(root.to_path_buf()),
+            index_mtime: mtime,
+            untracked,
         }
     }
 }
@@ -106,7 +183,6 @@ fn parse_porcelain_code(code: &str) -> GitStatus {
     let x = chars.first().copied().unwrap_or(' ');
     let y = chars.get(1).copied().unwrap_or(' ');
 
-    // Prefer worktree (Y) then index (X).
     for c in [y, x] {
         match c {
             'M' => return GitStatus::Modified,
@@ -150,25 +226,41 @@ pub fn annotate_listing(listing: &mut Listing, index: &GitIndex) {
     }
 }
 
-/// Annotate many listings; **one** porcelain map per git repo root (reused).
+/// Annotate many listings; **one** porcelain map per git repo root (reused + process cache).
+///
+/// When any listing is recursive (depth>0 entries or dir headers beyond root), use
+/// [`UntrackedMode::No`] for that repo to avoid scanning every untracked path.
 pub fn annotate_listings(listings: &mut [Listing]) {
     use std::collections::HashMap;
-    use std::path::PathBuf;
 
-    // Cache GitIndex by discovered repo root (or by listing root when not in a repo).
     let mut by_repo: HashMap<PathBuf, GitIndex> = HashMap::new();
-    for listing in listings {
+    for listing in listings.iter_mut() {
+        let recursive = listing
+            .entries
+            .iter()
+            .any(|e| e.depth > 0 || e.is_dir_header);
+        let mode = if recursive {
+            UntrackedMode::No
+        } else {
+            UntrackedMode::All
+        };
         let key = find_repo_root(&listing.root).unwrap_or_else(|| listing.root.clone());
         let index = by_repo
             .entry(key)
-            .or_insert_with(|| GitIndex::discover(&listing.root));
+            .or_insert_with(|| GitIndex::discover_with(&listing.root, mode));
         annotate_listing(listing, index);
     }
 }
 
 /// Convenience: annotate a free list of entries using a starting path for discovery.
 pub fn annotate_entries(entries: &mut [Entry], start: &Path) {
-    let index = GitIndex::discover(start);
+    let recursive = entries.iter().any(|e| e.depth > 0);
+    let mode = if recursive {
+        UntrackedMode::No
+    } else {
+        UntrackedMode::All
+    };
+    let index = GitIndex::discover_with(start, mode);
     for entry in entries {
         if !entry.is_dir_header {
             entry.git_status = index.status_for(&entry.path);
@@ -199,8 +291,6 @@ mod tests {
 
     #[test]
     fn find_repo_from_workspace() {
-        // Prefer a disposable repo so CARGO_MANIFEST_DIR path moves (e.g. rename)
-        // never leave a baked-in path without a .git.
         let base = std::env::temp_dir().join(format!(
             "f00-git-find-{}-{}",
             std::process::id(),
@@ -212,13 +302,28 @@ mod tests {
         std::fs::create_dir_all(base.join("nested/deep")).unwrap();
         std::fs::create_dir_all(base.join(".git")).unwrap();
         let found = find_repo_root(&base.join("nested/deep")).expect("repo root");
-        // canonicalize both sides: macOS /var → /private/var, Windows \\?\ prefixes.
         let found_c = std::fs::canonicalize(&found).unwrap_or(found);
         let base_c = std::fs::canonicalize(&base).unwrap_or(base.clone());
         assert_eq!(found_c, base_c);
         let _ = std::fs::remove_dir_all(&base);
-
-        // Also accept the live workspace when present (non-fatal if path moved).
         let _ = find_repo_root(Path::new(env!("CARGO_MANIFEST_DIR")));
+    }
+
+    #[test]
+    fn cache_returns_same_for_second_discover() {
+        let base = std::env::temp_dir().join(format!(
+            "f00-git-cache-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(base.join(".git")).unwrap();
+        // No real git repo — discover returns empty statuses but still caches root.
+        let a = GitIndex::discover_with(&base, UntrackedMode::No);
+        let b = GitIndex::discover_with(&base, UntrackedMode::No);
+        assert_eq!(a.repo_root(), b.repo_root());
+        let _ = std::fs::remove_dir_all(&base);
     }
 }

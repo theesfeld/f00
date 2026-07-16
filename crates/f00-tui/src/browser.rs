@@ -3,10 +3,10 @@
 //! Supports single-pane and dual-pane (file-manager) layouts with copy / move /
 //! delete between panes.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::io::{self, stdout, Write};
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
@@ -143,6 +143,17 @@ impl Pane {
     }
 }
 
+/// Max cached directory listings for snappy back-navigation.
+const LISTING_CACHE_CAP: usize = 48;
+/// Reuse a cached listing for this long (mtime-based invalidation preferred).
+const LISTING_CACHE_TTL: Duration = Duration::from_secs(30);
+
+struct CachedListing {
+    entries: Vec<Entry>,
+    loaded_at: Instant,
+    dir_mtime: Option<std::time::SystemTime>,
+}
+
 struct Browser {
     panes: [Pane; 2],
     active: usize,
@@ -157,6 +168,9 @@ struct Browser {
     status: String,
     error: Option<String>,
     confirm: Option<ConfirmOp>,
+    /// LRU-ish directory listing cache (path → entries).
+    listing_cache: HashMap<PathBuf, CachedListing>,
+    listing_lru: VecDeque<PathBuf>,
 }
 
 impl Browser {
@@ -184,6 +198,8 @@ impl Browser {
             },
             error: None,
             confirm: None,
+            listing_cache: HashMap::new(),
+            listing_lru: VecDeque::new(),
         };
         b.reload_all()?;
         Ok(b)
@@ -295,23 +311,77 @@ impl Browser {
     fn reload_pane(&mut self, idx: usize) -> Result<()> {
         let opts = self.list_options();
         let git = self.git;
-        let pane = &mut self.panes[idx];
-        match list_directory(&pane.cwd, &opts) {
-            Ok(listing) => {
-                pane.entries = listing.entries;
+        let cwd = self.panes[idx].cwd.clone();
+        let dir_mtime = std::fs::metadata(&cwd).and_then(|m| m.modified()).ok();
+
+        // Cache hit: same mtime (or recent TTL if mtime unavailable).
+        if let Some(cached) = self.listing_cache.get(&cwd) {
+            let mtime_ok = match (cached.dir_mtime, dir_mtime) {
+                (Some(a), Some(b)) => a == b,
+                _ => cached.loaded_at.elapsed() < LISTING_CACHE_TTL,
+            };
+            if mtime_ok {
+                let pane = &mut self.panes[idx];
+                pane.entries = cached.entries.clone();
                 pane.error = None;
+                pane.selected = clamp_index(pane.selected, pane.visible().len());
+                pane.sync_list_state();
+                return Ok(());
+            }
+        }
+
+        match list_directory(&cwd, &opts) {
+            Ok(listing) => {
+                let mut entries = listing.entries;
                 if git {
-                    annotate_git(&mut pane.entries, &pane.cwd);
+                    annotate_git(&mut entries, &cwd);
                 }
+                self.cache_put(cwd.clone(), entries.clone(), dir_mtime);
+                let pane = &mut self.panes[idx];
+                pane.entries = entries;
+                pane.error = None;
             }
             Err(e) => {
+                let pane = &mut self.panes[idx];
                 pane.entries.clear();
                 pane.error = Some(e.to_string());
             }
         }
+        let pane = &mut self.panes[idx];
         pane.selected = clamp_index(pane.selected, pane.visible().len());
         pane.sync_list_state();
         Ok(())
+    }
+
+    fn cache_put(
+        &mut self,
+        path: PathBuf,
+        entries: Vec<Entry>,
+        dir_mtime: Option<std::time::SystemTime>,
+    ) {
+        if self.listing_cache.contains_key(&path) {
+            self.listing_lru.retain(|p| p != &path);
+        }
+        self.listing_lru.push_back(path.clone());
+        self.listing_cache.insert(
+            path,
+            CachedListing {
+                entries,
+                loaded_at: Instant::now(),
+                dir_mtime,
+            },
+        );
+        while self.listing_lru.len() > LISTING_CACHE_CAP {
+            if let Some(old) = self.listing_lru.pop_front() {
+                self.listing_cache.remove(&old);
+            }
+        }
+    }
+
+    /// Drop cache entries (e.g. after copy/move/delete).
+    fn cache_invalidate_all(&mut self) {
+        self.listing_cache.clear();
+        self.listing_lru.clear();
     }
 
     fn reload_active(&mut self) -> Result<()> {
@@ -468,6 +538,7 @@ impl Browser {
     }
 
     fn execute_copy(&mut self, sources: &[PathBuf], dest_dir: &Path) {
+        self.cache_invalidate_all();
         let mut ok = 0usize;
         let mut err_msg = None;
         for src in sources {
@@ -499,6 +570,7 @@ impl Browser {
     }
 
     fn execute_move(&mut self, sources: &[PathBuf], dest_dir: &Path) {
+        self.cache_invalidate_all();
         let mut ok = 0usize;
         let mut err_msg = None;
         for src in sources {
@@ -530,6 +602,7 @@ impl Browser {
     }
 
     fn execute_delete(&mut self, paths: &[PathBuf]) {
+        self.cache_invalidate_all();
         let mut ok = 0usize;
         let mut err_msg = None;
         for path in paths {
@@ -962,93 +1035,19 @@ fn draw_header(frame: &mut ratatui::Frame, area: Rect, browser: &Browser) {
 }
 
 fn draw_preview(frame: &mut ratatui::Frame, area: Rect, browser: &Browser) {
-    let text = match browser.active_pane().current_entry() {
-        None => " (no selection) ".to_string(),
-        Some(entry) => preview_text(entry),
+    let lines = match browser.active_pane().current_entry() {
+        None => vec![Line::from(" (no selection) ")],
+        Some(entry) => crate::preview::preview_lines(entry),
     };
-    let widget = Paragraph::new(text)
+    let widget = Paragraph::new(lines)
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title(" preview ")
                 .border_style(Style::default().fg(Color::DarkGray)),
         )
-        .wrap(Wrap { trim: false })
-        .style(Style::default().fg(Color::Gray));
+        .wrap(Wrap { trim: false });
     frame.render_widget(widget, area);
-}
-
-fn preview_text(entry: &Entry) -> String {
-    let mut lines = Vec::new();
-    lines.push(format!(" name: {}", entry.name));
-    lines.push(format!(" path: {}", entry.path.display()));
-    lines.push(format!(" kind: {}", entry.kind.as_str()));
-    if !entry.is_dir() {
-        lines.push(format!(
-            " size: {} ({})",
-            human_size(entry.size),
-            entry.size
-        ));
-    }
-    if let Some(t) = entry.modified {
-        let dt: DateTime<Local> = t.into();
-        lines.push(format!(" mtime: {}", dt.format("%Y-%m-%d %H:%M:%S")));
-    }
-    if let Some(ref target) = entry.symlink_target {
-        lines.push(format!(" link → {}", target.display()));
-    }
-    lines.push(format!(" mode: {:o}", entry.mode));
-    if entry.git_status != f00_core::GitStatus::Clean {
-        lines.push(format!(" git: {}", entry.git_status.as_str()));
-    }
-    lines.push(String::new());
-
-    if entry.is_dir() {
-        match std::fs::read_dir(&entry.path) {
-            Ok(rd) => {
-                let mut names: Vec<String> = rd
-                    .flatten()
-                    .map(|e| e.file_name().to_string_lossy().into_owned())
-                    .take(40)
-                    .collect();
-                names.sort();
-                lines.push(format!(" children (≤40): {}", names.len()));
-                for n in names {
-                    lines.push(format!("  · {n}"));
-                }
-            }
-            Err(e) => lines.push(format!(" (unreadable: {e})")),
-        }
-    } else {
-        match std::fs::File::open(&entry.path) {
-            Ok(mut f) => {
-                use std::io::Read;
-                let mut buf = vec![0u8; 2048];
-                match f.read(&mut buf) {
-                    Ok(n) => {
-                        buf.truncate(n);
-                        let lossy = String::from_utf8_lossy(&buf);
-                        // Only show text-ish previews.
-                        let printable = lossy
-                            .chars()
-                            .filter(|c| *c == '\n' || *c == '\t' || !c.is_control())
-                            .count();
-                        if n > 0 && printable * 10 >= n * 8 {
-                            lines.push(" ── head ──".into());
-                            for line in lossy.lines().take(24) {
-                                lines.push(format!(" {line}"));
-                            }
-                        } else {
-                            lines.push(" (binary or non-text; no preview)".into());
-                        }
-                    }
-                    Err(e) => lines.push(format!(" (read error: {e})")),
-                }
-            }
-            Err(e) => lines.push(format!(" (open error: {e})")),
-        }
-    }
-    lines.join("\n")
 }
 
 fn draw_list(frame: &mut ratatui::Frame, area: Rect, browser: &mut Browser, pane_idx: usize) {
@@ -1269,7 +1268,7 @@ f00 browser — keys
   d / Delete     delete marked/cursor (confirm y/n)
 
   Long columns (perms, size, mtime) appear when the pane is wide enough.
-  Preview shows metadata + text head or directory children (hidden in dual).
+  Preview shows metadata + syntax-colored text (or dir children). Hidden in dual.
 
   Press Esc / q / H to close help.
 ";

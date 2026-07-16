@@ -17,6 +17,7 @@ f00-core = { workspace = true }
 f00-format = { workspace = true }
 f00-git = { workspace = true, optional = true }
 ratatui = { workspace = true }
+syntect = { workspace = true }
 
 [features]
 default = []
