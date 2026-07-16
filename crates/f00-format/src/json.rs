@@ -25,9 +25,7 @@ pub fn format_json(entries: &[Entry]) -> Result<String, serde_json::Error> {
             path: e.path.display().to_string(),
             kind: e.kind.as_str(),
             size: e.size,
-            modified: e
-                .modified_datetime()
-                .map(|dt| dt.to_rfc3339()),
+            modified: e.modified_datetime().map(|dt| dt.to_rfc3339()),
             mode: format!("{:o}", e.mode),
             symlink_target: e.symlink_target.as_ref().map(|p| p.display().to_string()),
             git_status: e.git_status.as_str(),

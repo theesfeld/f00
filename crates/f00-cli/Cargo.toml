@@ -20,7 +20,10 @@ f00-compat = { workspace = true }
 f00-git = { workspace = true, optional = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
+directories = { workspace = true }
+serde = { workspace = true }
 terminal_size = { workspace = true }
+toml = { workspace = true }
 
 [features]
 default = ["git"]

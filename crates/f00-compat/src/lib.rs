@@ -53,6 +53,25 @@ pub fn gnu_mode_active(gnu_flag: bool) -> bool {
     gnu_flag
 }
 
+/// Soft defaults when the binary is invoked as `ls` / `ls.exe`.
+///
+/// Turns off icons and dirs-first unless the corresponding CLI flags were set.
+/// Config may re-enable them after this runs. Does **not** enable full `--gnu`
+/// strict mode — that remains opt-in via `--gnu` / `F00_GNU`.
+pub fn prefer_ls_defaults(
+    icons: &mut bool,
+    dirs_first: &mut bool,
+    icons_from_cli: bool,
+    dirs_first_from_cli: bool,
+) {
+    if !icons_from_cli {
+        *icons = false;
+    }
+    if !dirs_first_from_cli {
+        *dirs_first = false;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -77,5 +96,23 @@ mod tests {
         apply_gnu_list_options(&mut opts, false);
         assert!(opts.dirs_first);
         assert!(!opts.gnu_mode);
+    }
+
+    #[test]
+    fn prefer_ls_clears_presentation_defaults() {
+        let mut icons = true;
+        let mut dirs_first = true;
+        prefer_ls_defaults(&mut icons, &mut dirs_first, false, false);
+        assert!(!icons);
+        assert!(!dirs_first);
+    }
+
+    #[test]
+    fn prefer_ls_keeps_cli_overrides() {
+        let mut icons = true;
+        let mut dirs_first = true;
+        prefer_ls_defaults(&mut icons, &mut dirs_first, true, true);
+        assert!(icons);
+        assert!(dirs_first);
     }
 }

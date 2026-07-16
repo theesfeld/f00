@@ -146,7 +146,7 @@ fn format_columns_section(
 
     let mut out = String::new();
     for row in 0..best_rows {
-        for col in 0..best_cols {
+        for (col, col_width) in col_widths.iter().copied().enumerate().take(best_cols) {
             let idx = col * best_rows + row;
             if idx >= n {
                 continue;
@@ -156,7 +156,7 @@ fn format_columns_section(
             if col + 1 < best_cols {
                 let next_idx = (col + 1) * best_rows + row;
                 if next_idx < n {
-                    let pad = col_widths[col] + col_gap - p.width;
+                    let pad = col_width + col_gap - p.width;
                     out.push_str(&" ".repeat(pad));
                 }
             }

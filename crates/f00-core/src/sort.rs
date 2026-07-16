@@ -79,12 +79,10 @@ pub fn sort_entries(entries: &mut [Entry], opts: &ListOptions) {
 
     // Stable partition: keep dir headers in place by sorting only non-headers
     // within contiguous runs, but for MVP just sort everything with headers first.
-    entries.sort_by(|a, b| {
-        match (a.is_dir_header, b.is_dir_header) {
-            (true, false) => std::cmp::Ordering::Less,
-            (false, true) => std::cmp::Ordering::Greater,
-            _ => cmp_entry(a, b, opts),
-        }
+    entries.sort_by(|a, b| match (a.is_dir_header, b.is_dir_header) {
+        (true, false) => std::cmp::Ordering::Less,
+        (false, true) => std::cmp::Ordering::Greater,
+        _ => cmp_entry(a, b, opts),
     });
 }
 

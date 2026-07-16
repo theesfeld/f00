@@ -180,9 +180,7 @@ impl Entry {
     }
 
     pub fn extension(&self) -> Option<&str> {
-        Path::new(&self.name)
-            .extension()
-            .and_then(|e| e.to_str())
+        Path::new(&self.name).extension().and_then(|e| e.to_str())
     }
 }
 

@@ -18,6 +18,20 @@ pub struct Listing {
     pub root_is_dir: bool,
     /// Entries to display. For recursive mode, may include dir headers.
     pub entries: Vec<Entry>,
+    /// Recoverable problems while listing (e.g. unreadable subdirectory).
+    /// Surfaces as process exit code 1 when non-zero.
+    pub minor_errors: usize,
+}
+
+impl Listing {
+    fn new(root: PathBuf, root_is_dir: bool, entries: Vec<Entry>) -> Self {
+        Self {
+            root,
+            root_is_dir,
+            entries,
+            minor_errors: 0,
+        }
+    }
 }
 
 /// List a single path: if file, return that entry alone; if dir, list children.
@@ -41,11 +55,7 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
 
     if !meta.is_dir() {
         let entry = Entry::from_path_and_meta(path, &meta, 0)?;
-        return Ok(Listing {
-            root: path.to_path_buf(),
-            root_is_dir: false,
-            entries: vec![entry],
-        });
+        return Ok(Listing::new(path.to_path_buf(), false, vec![entry]));
     }
 
     if opts.recursive {
@@ -90,7 +100,9 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
             source,
         })?;
         let entry_path = item.path();
-        let meta = item.metadata().or_else(|_| fs::symlink_metadata(&entry_path));
+        let meta = item
+            .metadata()
+            .or_else(|_| fs::symlink_metadata(&entry_path));
         let meta = match meta {
             Ok(m) => m,
             Err(_) => continue,
@@ -104,16 +116,13 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
     filter_entries(&mut entries, opts);
     sort_entries(&mut entries, opts);
 
-    Ok(Listing {
-        root: path.to_path_buf(),
-        root_is_dir: true,
-        entries,
-    })
+    Ok(Listing::new(path.to_path_buf(), true, entries))
 }
 
 /// Basic recursive listing using walkdir.
 pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     let mut entries = Vec::new();
+    let mut minor_errors = 0usize;
     let max_depth = opts.max_depth.unwrap_or(usize::MAX);
 
     // Group by parent directory: emit header then children for each dir.
@@ -129,7 +138,10 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     for item in walker {
         let item = match item {
             Ok(i) => i,
-            Err(_) => continue,
+            Err(_) => {
+                minor_errors += 1;
+                continue;
+            }
         };
 
         let depth = item.depth();
@@ -187,14 +199,12 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     // For recursive mode, sort within sections delimited by headers.
     sort_recursive_sections(&mut entries, opts);
 
-    Ok(Listing {
-        root: path.to_path_buf(),
-        root_is_dir: true,
-        entries,
-    })
+    let mut listing = Listing::new(path.to_path_buf(), true, entries);
+    listing.minor_errors = minor_errors;
+    Ok(listing)
 }
 
-fn sort_recursive_sections(entries: &mut Vec<Entry>, opts: &ListOptions) {
+fn sort_recursive_sections(entries: &mut [Entry], opts: &ListOptions) {
     let mut start = 0;
     while start < entries.len() {
         // Find next header after start
@@ -218,15 +228,112 @@ fn sort_recursive_sections(entries: &mut Vec<Entry>, opts: &ListOptions) {
     }
 }
 
-/// List multiple paths, returning one Listing per path.
+/// Outcome of listing one or more path arguments.
+#[derive(Debug)]
+pub struct ListOutcome {
+    pub listings: Vec<Listing>,
+    /// Errors for command-line path arguments that could not be listed.
+    pub path_errors: Vec<Error>,
+    /// Sum of recoverable errors inside successful listings (e.g. unreadable subdirs).
+    pub minor_errors: usize,
+}
+
+impl ListOutcome {
+    /// GNU-aligned exit status: 0 ok, 1 minor problems, 2 serious (bad path args).
+    pub fn exit_code(&self) -> i32 {
+        if !self.path_errors.is_empty() {
+            2
+        } else if self.minor_errors > 0 || self.listings.iter().any(|l| l.minor_errors > 0) {
+            1
+        } else {
+            0
+        }
+    }
+}
+
+/// List multiple paths, returning one Listing per successful path.
+///
+/// Failures on individual path arguments are collected (serious) rather than
+/// aborting the whole run, matching GNU `ls` multi-argument behavior.
 pub fn list_paths(paths: &[PathBuf], opts: &ListOptions) -> Result<Vec<Listing>> {
-    if paths.is_empty() {
-        return Ok(vec![list_path(Path::new("."), opts)?]);
+    let outcome = list_paths_with_errors(paths, opts);
+    if let Some(err) = outcome.path_errors.into_iter().next() {
+        // Preserve previous fail-fast API for callers that expect `Result`.
+        return Err(err);
+    }
+    Ok(outcome.listings)
+}
+
+/// List paths, collecting per-argument errors instead of failing fast.
+pub fn list_paths_with_errors(paths: &[PathBuf], opts: &ListOptions) -> ListOutcome {
+    let owned: Vec<PathBuf>;
+    let paths: &[PathBuf] = if paths.is_empty() {
+        owned = vec![PathBuf::from(".")];
+        &owned
+    } else {
+        paths
+    };
+
+    let mut listings = Vec::with_capacity(paths.len());
+    let mut path_errors = Vec::new();
+    let mut minor_errors = 0usize;
+
+    for p in paths {
+        match list_path(p, opts) {
+            Ok(l) => {
+                minor_errors += l.minor_errors;
+                listings.push(l);
+            }
+            Err(e) => path_errors.push(e),
+        }
     }
 
-    let mut out = Vec::with_capacity(paths.len());
-    for p in paths {
-        out.push(list_path(p, opts)?);
+    ListOutcome {
+        listings,
+        path_errors,
+        minor_errors,
     }
-    Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn temp_dir() -> PathBuf {
+        let base = std::env::temp_dir().join(format!(
+            "f00-core-list-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        fs::create_dir_all(&base).unwrap();
+        base
+    }
+
+    #[test]
+    fn list_paths_with_errors_partial_success() {
+        let dir = temp_dir();
+        fs::write(dir.join("a.txt"), b"x").unwrap();
+        let missing = dir.join("gone");
+        let opts = ListOptions::default();
+        let outcome = list_paths_with_errors(&[dir.clone(), missing], &opts);
+        assert_eq!(outcome.listings.len(), 1);
+        assert_eq!(outcome.path_errors.len(), 1);
+        assert_eq!(outcome.exit_code(), 2);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn list_paths_ok_exit_0() {
+        let dir = temp_dir();
+        fs::write(dir.join("a.txt"), b"x").unwrap();
+        let opts = ListOptions::default();
+        let outcome = list_paths_with_errors(std::slice::from_ref(&dir), &opts);
+        assert!(outcome.path_errors.is_empty());
+        assert_eq!(outcome.exit_code(), 0);
+        let _ = fs::remove_dir_all(&dir);
+    }
 }

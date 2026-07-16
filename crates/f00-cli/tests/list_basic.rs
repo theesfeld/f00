@@ -51,6 +51,7 @@ fn lists_visible_entries_sorted() {
         dirs_first: false,
         max_depth: None,
         git: false,
+        config: None,
     };
     let config = build_config(&args);
     let listing = list_path(&dir, &config.list).expect("list");
@@ -58,7 +59,10 @@ fn lists_visible_entries_sorted() {
     assert!(names.contains(&"alpha.txt"));
     assert!(names.contains(&"beta.rs"));
     assert!(names.contains(&"subdir"));
-    assert!(!names.iter().any(|n| n.starts_with('.')), "hidden: {names:?}");
+    assert!(
+        !names.iter().any(|n| n.starts_with('.')),
+        "hidden: {names:?}"
+    );
 
     let out = format_listing(&listing, &config).expect("format");
     assert!(out.contains("alpha.txt"));
@@ -92,6 +96,7 @@ fn json_output_is_array() {
         dirs_first: false,
         max_depth: None,
         git: false,
+        config: None,
     };
     let config = build_config(&args);
     let listing = list_path(&dir, &config.list).expect("list");
@@ -134,6 +139,7 @@ fn all_flag_includes_hidden() {
         dirs_first: false,
         max_depth: None,
         git: false,
+        config: None,
     };
     let config = build_config(&args);
     let listing = list_path(&dir, &config.list).expect("list");

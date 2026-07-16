@@ -102,6 +102,10 @@ pub struct Args {
     /// Annotate with git status (requires feature `git`)
     #[arg(long = "git", default_value_t = true, action = clap::ArgAction::Set)]
     pub git: bool,
+
+    /// Path to TOML config file (overrides default search path)
+    #[arg(long = "config", value_name = "PATH")]
+    pub config: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Copy, Default, ValueEnum)]

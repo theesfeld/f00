@@ -32,11 +32,7 @@ pub fn format_listings(
     config: &Config,
 ) -> std::result::Result<String, String> {
     let colorizer = Colorizer::new(config.color_enabled());
-    let multi = listings.len() > 1
-        || listings.iter().any(|l| {
-            l.root_is_dir
-                && listings.len() > 1
-        });
+    let multi = listings.len() > 1 || listings.iter().any(|l| l.root_is_dir && listings.len() > 1);
 
     // JSON: combine all entries into one array.
     if matches!(config.effective_output(), OutputMode::Json) {
@@ -53,9 +49,7 @@ pub fn format_listings(
             out.push('\n');
         }
         // Print path header when multiple args or when useful for dirs.
-        if multi && listing.root_is_dir {
-            out.push_str(&format!("{}:\n", listing.root.display()));
-        } else if listings.len() > 1 && listing.root_is_dir {
+        if (multi || listings.len() > 1) && listing.root_is_dir {
             out.push_str(&format!("{}:\n", listing.root.display()));
         }
 

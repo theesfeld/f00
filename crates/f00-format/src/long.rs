@@ -38,7 +38,10 @@ pub fn format_long_line(
         .map(|c| format!(" {} ", colorizer.paint_git_char(c)))
         .unwrap_or_else(|| "   ".to_string());
 
-    format!("{perms}{git}{size:>width$} {mtime} {name}", width = size_width)
+    format!(
+        "{perms}{git}{size:>width$} {mtime} {name}",
+        width = size_width
+    )
 }
 
 /// Format many entries in long mode with aligned size column.
