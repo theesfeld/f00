@@ -2,12 +2,14 @@
 # f00 installer — https://f00.sh
 # Usage:
 #   curl -fsSL https://f00.sh/install.sh | bash
-#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.5.0 INSTALL_DIR=$HOME/bin bash
+#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.5.1 bash
 #   curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash
 #
 # Env:
-#   F00_VERSION      Pin a release tag (e.g. v0.5.0). Default: latest
-#   INSTALL_DIR      Override install directory (default: ~/.f00/bin)
+#   F00_VERSION      Pin a release tag (e.g. v0.5.1). Default: latest
+#   INSTALL_DIR      Override install directory (default: ~/.local/bin)
+#   ADD_PATH         1 = ensure install dir on PATH via shell rc (default when missing)
+#                    0 = never edit shell rc (print snippet only)
 #   F00_INSTALL_LS   If set to 1, also symlink ls -> f00
 #   F00_NO_COLOR     If set, disable ANSI colors
 set -euo pipefail
@@ -164,27 +166,19 @@ pick_install_dir() {
     echo "$INSTALL_DIR"
     return
   fi
-  # Canonical product path: ~/.f00/bin (see AGENTS CLI install standard).
-  # Fall back to ~/.local/bin then /usr/local/bin if needed.
-  local f00_bin="${HOME}/.f00/bin"
+  # XDG user binaries — already on PATH for modern setups (Home Manager, etc.).
   local home_bin="${HOME}/.local/bin"
   local system_bin="/usr/local/bin"
-  if mkdir -p "$f00_bin" 2>/dev/null && [[ -w "$f00_bin" ]]; then
-    echo "$f00_bin"
+  if mkdir -p "$home_bin" 2>/dev/null && [[ -w "$home_bin" ]]; then
+    echo "$home_bin"
     return
-  fi
-  if [[ -d "$home_bin" ]] || mkdir -p "$home_bin" 2>/dev/null; then
-    if [[ -w "$home_bin" ]]; then
-      echo "$home_bin"
-      return
-    fi
   fi
   if [[ -w "$system_bin" ]]; then
     echo "$system_bin"
     return
   fi
-  mkdir -p "$f00_bin" || die "cannot create $f00_bin"
-  echo "$f00_bin"
+  mkdir -p "$home_bin" || die "cannot create $home_bin"
+  echo "$home_bin"
 }
 
 is_in_path() {
@@ -193,6 +187,62 @@ is_in_path() {
     *:"$dir":*) return 0 ;;
     *) return 1 ;;
   esac
+}
+
+# Idempotently ensure install_dir is on PATH for future interactive shells.
+ensure_path_rc() {
+  local dir="$1"
+  # ADD_PATH=0 → never edit rc. Default: add when dir is not currently on PATH.
+  local add="${ADD_PATH:-}"
+  if [[ "$add" == "0" ]]; then
+    return 0
+  fi
+  if is_in_path "$dir" && [[ "$add" != "1" ]]; then
+    return 0
+  fi
+  # If already on PATH and not forced, skip.
+  if is_in_path "$dir" && [[ "$add" != "1" ]]; then
+    return 0
+  fi
+
+  local marker="# f00 installer: PATH (${dir})"
+  local line="export PATH=\"${dir}:\$PATH\""
+  local shell_name rc fish_rc
+  shell_name="$(basename "${SHELL:-/bin/sh}")"
+
+  case "$shell_name" in
+    zsh)  rc="${ZDOTDIR:-$HOME}/.zshrc" ;;
+    bash) rc="${HOME}/.bashrc" ;;
+    fish)
+      fish_rc="${HOME}/.config/fish/config.fish"
+      mkdir -p "$(dirname "$fish_rc")"
+      if [[ -f "$fish_rc" ]] && grep -Fq "$marker" "$fish_rc" 2>/dev/null; then
+        ok "PATH already configured in ${fish_rc}"
+        return 0
+      fi
+      {
+        echo ""
+        echo "$marker"
+        echo "fish_add_path ${dir}"
+      } >>"$fish_rc"
+      ok "added ${dir} to PATH in ${fish_rc} (new shells)"
+      return 0
+      ;;
+    *) rc="${HOME}/.profile" ;;
+  esac
+
+  touch "$rc"
+  if grep -Fq "$marker" "$rc" 2>/dev/null; then
+    ok "PATH already configured in ${rc}"
+    return 0
+  fi
+  {
+    echo ""
+    echo "$marker"
+    echo "$line"
+  } >>"$rc"
+  ok "added ${dir} to PATH in ${rc} (new shells)"
+  printf "  ${DIM}This shell: export PATH=\"%s:\$PATH\"${RESET}\n" "$dir" >&2
 }
 
 # ── checksum ────────────────────────────────────────────────────────────────
@@ -318,14 +368,27 @@ Is ${version} published? Check ${GITHUB_RELEASES}"
 
   ok "installed ${BINARY} to ${bin_dst}"
 
-  if ! is_in_path "$install_dir"; then
-    warn "${install_dir} is not on your PATH"
-    printf "\n  Add this to your shell profile:\n\n" >&2
-    printf "    export PATH=\"%s:\$PATH\"\n\n" "$install_dir" >&2
+  # Migrate away from legacy ~/.f00/bin if present and we installed elsewhere.
+  local legacy="${HOME}/.f00/bin/${BINARY}"
+  if [[ -x "$legacy" && "$bin_dst" != "$legacy" ]]; then
+    warn "legacy install found at ${legacy} — prefer: ${bin_dst}"
+    warn "you can remove the old one: rm -f '${legacy}'"
+  fi
+
+  if is_in_path "$install_dir"; then
+    ok "${install_dir} is on PATH"
+  else
+    warn "${install_dir} is not on PATH in this shell"
+    printf "  export PATH=\"%s:\$PATH\"\n" "$install_dir" >&2
+    ensure_path_rc "$install_dir"
+  fi
+  # Even if currently on PATH, allow force ADD_PATH=1
+  if [[ "${ADD_PATH:-}" == "1" ]]; then
+    ensure_path_rc "$install_dir"
   fi
 
   # smoke check
-  if command -v "$bin_dst" >/dev/null 2>&1 || [[ -x "$bin_dst" ]]; then
+  if [[ -x "$bin_dst" ]]; then
     if "$bin_dst" --version >/dev/null 2>&1; then
       ok "$("$bin_dst" --version 2>/dev/null || echo "f00 ${version}")"
     fi

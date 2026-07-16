@@ -8,10 +8,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.7.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.7.1
 
 <!-- agents:status:begin -->
-> **Status:** v0.7 richer `--json`/`-j` · Latest: `v0.7.0` · 0.x minors may include breaking changes
+> **Status:** v0.7.1 self-update + `~/.local/bin` install · Latest: `v0.7.1` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -22,14 +22,10 @@
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-Installs to **`~/.f00/bin`** by default (override with `INSTALL_DIR`). Add to `PATH` if needed:
+Installs to **`~/.local/bin`** by default (override with `INSTALL_DIR`). The installer adds that dir to your shell rc when it is missing from `PATH` (`ADD_PATH=0` to skip).
 
 ```bash
-export PATH="$HOME/.f00/bin:$PATH"
-```
-
-```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.6.0 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.7.1 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 ```
 
