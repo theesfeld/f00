@@ -4,10 +4,12 @@ use std::time::Instant;
 
 use anyhow::{Context, Result};
 use f00_compat::{apply_gnu_list_options, apply_gnu_output, parse_format_word, parse_sort_word};
+#[cfg(feature = "archives")]
+use f00_core::list_path;
 use f00_core::{
-    list_path, list_paths_with_errors, BlockSize, CliSymlinkMode, Config, ControlChars,
-    HyperlinkWhen, IndicatorStyle, ListOptions, ListOutcome, ListTiming, OutputMode, QuotingStyle,
-    SortBy, TimeField, TimeStyle,
+    list_paths_with_errors, BlockSize, CliSymlinkMode, Config, ControlChars, HyperlinkWhen,
+    IndicatorStyle, ListOptions, ListOutcome, ListTiming, OutputMode, QuotingStyle, SortBy,
+    TimeField, TimeStyle,
 };
 use f00_format::format_listings;
 
@@ -375,17 +377,16 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
     }
 
     let exit_code = outcome.exit_code();
-    let mut listings = outcome.listings;
-
-    // Optional git annotation
-    if config.show_git && args.git {
-        #[cfg(feature = "git")]
-        {
+    #[cfg(feature = "git")]
+    let listings = {
+        let mut listings = outcome.listings;
+        if config.show_git && args.git {
             f00_git::annotate_listings(&mut listings);
         }
-        #[cfg(not(feature = "git"))]
-        {}
-    }
+        listings
+    };
+    #[cfg(not(feature = "git"))]
+    let listings = outcome.listings;
 
     let mut format_ms = 0u128;
     if !listings.is_empty() {

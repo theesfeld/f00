@@ -4,10 +4,12 @@
 //! exit codes). Not always byte-identical to system `ls` (locales, padding,
 //! timestamps). Optional name-set comparison against `ls -1` on Unix when present.
 
-use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+#[cfg(unix)]
+use std::collections::BTreeSet;
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_f00"))
@@ -306,18 +308,27 @@ fn optional_ls_name_parity() {
     let f00_out = f00(&cfg).args(["--gnu", "-1"]).arg(&dir).output().unwrap();
     assert_eq!(f00_out.status.code(), Some(0));
 
-    let ls_names: Vec<String> = String::from_utf8_lossy(&ls_out.stdout)
-        .lines()
-        .map(|s| s.to_string())
-        .filter(|s| !s.is_empty())
-        .collect();
-    let f00_names = names_from_minus_one(&f00_out);
+    // Some system `ls` builds (e.g. FreeBSD with unusual defaults / aliases) may
+    // include unexpected dotfiles; both sides filter to non-dot for structural parity.
+    let visible = |names: Vec<String>| -> Vec<String> {
+        names
+            .into_iter()
+            .filter(|s| !s.is_empty() && !s.starts_with('.'))
+            .collect()
+    };
+    let ls_names = visible(
+        String::from_utf8_lossy(&ls_out.stdout)
+            .lines()
+            .map(|s| s.to_string())
+            .collect(),
+    );
+    let f00_names = visible(names_from_minus_one(&f00_out));
 
     let ls_set: BTreeSet<_> = ls_names.iter().cloned().collect();
     let f00_set: BTreeSet<_> = f00_names.iter().cloned().collect();
     assert_eq!(
         ls_set, f00_set,
-        "name set should match ls -1; ls={ls_names:?} f00={f00_names:?}"
+        "visible name set should match ls -1; ls={ls_names:?} f00={f00_names:?}"
     );
     // Under LC_ALL=C, order should match for plain name sort.
     assert_eq!(
