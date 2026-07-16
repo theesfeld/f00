@@ -161,9 +161,7 @@ fn relative_path(base: &Path, path: &Path) -> Option<String> {
     // Windows can fail strip_prefix across different path prefixes; fall back to
     // file name when both live under the same parent.
     if path.parent() == Some(base) {
-        return path
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned());
+        return path.file_name().map(|n| n.to_string_lossy().into_owned());
     }
     None
 }
@@ -244,7 +242,7 @@ mod tests {
         );
         assert!(set.ignores(&entry_in(&dir, "tmp", true)));
         assert!(!set.ignores(&entry_in(&dir, "tmp", false))); // dir_only
-        // Negation: last matching rule wins
+                                                              // Negation: last matching rule wins
         assert!(!set.ignores(&entry_in(&dir, "keep.o", false)));
         let _ = fs::remove_dir_all(&dir);
     }
