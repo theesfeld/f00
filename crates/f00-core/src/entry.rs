@@ -371,14 +371,14 @@ fn read_selinux_context(path: &Path) -> String {
     }
 }
 
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 fn read_selinux_context_unix(path: &Path) -> Option<String> {
     use std::ffi::CString;
     use std::os::unix::ffi::OsStrExt;
 
     let c_path = CString::new(path.as_os_str().as_bytes()).ok()?;
     let name = CString::new("security.selinux").ok()?;
-    // First call: size query.
+    // Linux: getxattr(path, name, value, size)
     let size = unsafe { libc::getxattr(c_path.as_ptr(), name.as_ptr(), std::ptr::null_mut(), 0) };
     if size <= 0 {
         return None;
@@ -396,11 +396,16 @@ fn read_selinux_context_unix(path: &Path) -> Option<String> {
         return None;
     }
     buf.truncate(n as usize);
-    // Context is typically NUL-terminated.
     while buf.last() == Some(&0) {
         buf.pop();
     }
     String::from_utf8(buf).ok()
+}
+
+/// macOS/BSD: different getxattr arity; SELinux xattr is typically absent — skip.
+#[cfg(all(unix, not(target_os = "linux")))]
+fn read_selinux_context_unix(_path: &Path) -> Option<String> {
+    None
 }
 
 #[cfg(unix)]
