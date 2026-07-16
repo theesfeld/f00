@@ -13,7 +13,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.7.2"
+version = "0.8.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/theesfeld/f00"
@@ -26,13 +26,13 @@ keywords = ["ls", "cli", "filesystem", "coreutils"]
 categories = ["command-line-utilities", "filesystem"]
 
 [workspace.dependencies]
-f00-core = { path = "crates/f00-core", version = "0.7.2" }
-f00-format = { path = "crates/f00-format", version = "0.7.2" }
-f00-compat = { path = "crates/f00-compat", version = "0.7.2" }
-f00-git = { path = "crates/f00-git", version = "0.7.2" }
-f00-archive = { path = "crates/f00-archive", version = "0.7.2" }
-f00-tui = { path = "crates/f00-tui", version = "0.7.2" }
-f00-plugin = { path = "crates/f00-plugin", version = "0.7.2" }
+f00-core = { path = "crates/f00-core", version = "0.8.0" }
+f00-format = { path = "crates/f00-format", version = "0.8.0" }
+f00-compat = { path = "crates/f00-compat", version = "0.8.0" }
+f00-git = { path = "crates/f00-git", version = "0.8.0" }
+f00-archive = { path = "crates/f00-archive", version = "0.8.0" }
+f00-tui = { path = "crates/f00-tui", version = "0.8.0" }
+f00-plugin = { path = "crates/f00-plugin", version = "0.8.0" }
 
 anyhow = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
@@ -43,6 +43,8 @@ criterion = { version = "0.5", default-features = false, features = ["cargo_benc
 crossterm = "0.28"
 directories = "5"
 flate2 = "1"
+# Parallel recursive directory walk
+jwalk = "0.8"
 libloading = "0.8"
 lscolors = { version = "0.20", default-features = false, features = ["nu-ansi-term"] }
 nu-ansi-term = "0.50"
@@ -51,6 +53,13 @@ rayon = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
+# Syntax highlighting for TUI previews (default syntaxes, no oniguruma if possible)
+syntect = { version = "5", default-features = false, features = [
+    "default-fancy",
+    "regex-fancy",
+    "yaml-load",
+    "plist-load",
+] }
 tar = "0.4"
 terminal_size = "0.4"
 thiserror = "2"

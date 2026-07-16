@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use rayon::prelude::*;
-use walkdir::WalkDir;
+// jwalk for parallel recursive walks.
 
 use crate::entry::Entry;
 use crate::error::{Error, Result};
@@ -320,7 +320,7 @@ struct Walked {
     is_dir: bool,
 }
 
-/// Basic recursive listing using walkdir + optional parallel metadata.
+/// Basic recursive listing using parallel walk (jwalk) + parallel / io_uring metadata.
 pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     let collect_timing = opts.collect_timing;
     let mut timing = ListTiming::default();
@@ -340,15 +340,19 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
         None
     };
 
-    // Phase 1: sequential walk (stable preorder + name sort within dirs).
-    // Avoid calling `metadata()` here so we can stat in parallel next.
-    let walker = WalkDir::new(path)
-        .follow_links(opts.follow_links)
-        .max_depth(max_depth)
-        .sort_by_file_name();
-
+    // Phase 1: parallel directory walk (jwalk). sort(true) keeps name order per dir.
+    // We avoid metadata() during the walk so stat can be batched / parallel next.
     let mut walked: Vec<Walked> = Vec::new();
-    for item in walker {
+    // skip_hidden(false): f00 applies its own -a/-A/hide rules after the walk.
+    let mut jwalker = jwalk::WalkDir::new(path)
+        .follow_links(opts.follow_links)
+        .skip_hidden(false)
+        .sort(true);
+    if max_depth != usize::MAX {
+        jwalker = jwalker.max_depth(max_depth);
+    }
+
+    for item in jwalker {
         let item = match item {
             Ok(i) => i,
             Err(_) => {
@@ -360,11 +364,30 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
         if depth == 0 {
             continue; // root is not a listed entry
         }
+        let is_dir = item.file_type().is_dir();
         walked.push(Walked {
-            path: item.path().to_path_buf(),
+            path: item.path(),
             depth,
-            is_dir: item.file_type().is_dir(),
+            is_dir,
         });
+    }
+
+    // jwalk may not surface every unreadable-directory error on the iterator;
+    // probe dirs so `-R` still yields exit code 1 (GNU ls-compatible minor error).
+    for w in &walked {
+        if w.is_dir {
+            if let Err(err) = fs::read_dir(&w.path) {
+                let kind = err.kind();
+                if matches!(
+                    kind,
+                    std::io::ErrorKind::PermissionDenied
+                        | std::io::ErrorKind::NotFound
+                        | std::io::ErrorKind::Other
+                ) {
+                    minor_errors += 1;
+                }
+            }
+        }
     }
 
     if let Some(t0) = t_walk {
@@ -378,40 +401,110 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
         None
     };
 
-    // Phase 2: parallel metadata → Entry (order-preserving).
-    let use_parallel = opts.use_parallel_stat(walked.len().max(1));
-    let built: Vec<Option<Entry>> = if use_parallel {
+    // Phase 2: metadata → Entry.
+    // Prefer io_uring batch statx for large cheap listings (Linux + feature).
+    let built: Vec<Option<Entry>> = {
+        #[cfg(all(target_os = "linux", feature = "io-uring"))]
+        {
+            if opts.io_uring
+                && !opts.follow_links
+                && walked.len() >= crate::io_uring_stat::IO_URING_THRESHOLD
+                && !fill.resolve_names
+                && !fill.read_context
+            {
+                let paths: Vec<_> = walked.iter().map(|w| w.path.clone()).collect();
+                if let Some(mut ents) = crate::io_uring_stat::entries_from_paths_uring(&paths, fill)
+                {
+                    if ents.len() * 10 >= paths.len() * 8 {
+                        // Restore walk depths by path (uring builds depth=0).
+                        use std::collections::HashMap;
+                        let depth_by: HashMap<&Path, usize> =
+                            walked.iter().map(|w| (w.path.as_path(), w.depth)).collect();
+                        for e in &mut ents {
+                            if let Some(&d) = depth_by.get(e.path.as_path()) {
+                                e.depth = d;
+                            }
+                        }
+                        // Re-order to walk order and filter.
+                        let mut by_path: HashMap<PathBuf, Entry> =
+                            ents.into_iter().map(|e| (e.path.clone(), e)).collect();
+                        let ordered: Vec<Option<Entry>> = walked
+                            .iter()
+                            .map(|w| {
+                                by_path
+                                    .remove(&w.path)
+                                    .filter(|e| crate::filter::should_show(e, opts))
+                            })
+                            .collect();
+                        if let Some(t0) = t_stat {
+                            timing.stat_ms = t0.elapsed().as_millis();
+                        }
+                        // Jump to phase 3 with ordered.
+                        return finish_recursive(
+                            path,
+                            opts,
+                            walked,
+                            ordered,
+                            root_ignore,
+                            minor_errors,
+                            timing,
+                            collect_timing,
+                        );
+                    }
+                }
+            }
+        }
+
+        let use_parallel = opts.use_parallel_stat(walked.len().max(1));
         let map = |w: &Walked| {
             Entry::from_path_with(&w.path, w.depth, fill)
                 .ok()
                 .filter(|e| crate::filter::should_show(e, opts))
         };
-        if opts.threads > 1 {
-            match rayon::ThreadPoolBuilder::new()
-                .num_threads(opts.threads)
-                .build()
-            {
-                Ok(pool) => pool.install(|| walked.par_iter().map(map).collect()),
-                Err(_) => walked.par_iter().map(map).collect(),
+        if use_parallel {
+            if opts.threads > 1 {
+                match rayon::ThreadPoolBuilder::new()
+                    .num_threads(opts.threads)
+                    .build()
+                {
+                    Ok(pool) => pool.install(|| walked.par_iter().map(map).collect()),
+                    Err(_) => walked.par_iter().map(map).collect(),
+                }
+            } else {
+                walked.par_iter().map(map).collect()
             }
         } else {
-            walked.par_iter().map(map).collect()
+            walked.iter().map(map).collect()
         }
-    } else {
-        walked
-            .iter()
-            .map(|w| {
-                Entry::from_path_with(&w.path, w.depth, fill)
-                    .ok()
-                    .filter(|e| crate::filter::should_show(e, opts))
-            })
-            .collect()
     };
 
     if let Some(t0) = t_stat {
         timing.stat_ms = t0.elapsed().as_millis();
     }
 
+    finish_recursive(
+        path,
+        opts,
+        walked,
+        built,
+        root_ignore,
+        minor_errors,
+        timing,
+        collect_timing,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn finish_recursive(
+    path: &Path,
+    opts: &ListOptions,
+    walked: Vec<Walked>,
+    built: Vec<Option<Entry>>,
+    root_ignore: Option<IgnoreSet>,
+    minor_errors: usize,
+    mut timing: ListTiming,
+    collect_timing: bool,
+) -> Result<Listing> {
     // Phase 3: sequential ignore filter + optional dir headers (stable walk order).
     let mut ignore_by_dir: Vec<(PathBuf, IgnoreSet)> = Vec::new();
     let mut entries: Vec<Entry> = Vec::with_capacity(built.len().saturating_add(16));

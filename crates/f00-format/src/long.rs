@@ -160,12 +160,9 @@ impl LongWidths {
             size: 1,
         };
         for e in entries.iter().filter(|e| !e.is_dir_header) {
-            w.inode = w.inode.max(e.inode.to_string().len());
-            w.blocks = w.blocks.max(
-                block_display_with_unit(e.blocks, config.blocks_unit())
-                    .to_string()
-                    .len(),
-            );
+            w.inode = w.inode.max(decimal_digits(e.inode));
+            let blocks_n = block_display_with_unit(e.blocks, config.blocks_unit());
+            w.blocks = w.blocks.max(decimal_digits(blocks_n));
             if config.show_context {
                 let ctx = if e.context.is_empty() {
                     "?"
@@ -174,7 +171,7 @@ impl LongWidths {
                 };
                 w.context = w.context.max(ctx.len());
             }
-            w.nlink = w.nlink.max(e.nlink.to_string().len());
+            w.nlink = w.nlink.max(decimal_digits(e.nlink));
             if config.show_owner {
                 w.owner = w.owner.max(e.owner_display(config.numeric_uid_gid).len());
             }
@@ -190,10 +187,24 @@ impl LongWidths {
     }
 }
 
+/// Decimal digit count for u64 without allocating.
+fn decimal_digits(mut n: u64) -> usize {
+    if n == 0 {
+        return 1;
+    }
+    let mut d = 0;
+    while n > 0 {
+        n /= 10;
+        d += 1;
+    }
+    d
+}
+
 /// Format many entries in long mode with aligned columns.
 pub fn format_long(entries: &[Entry], colorizer: &Colorizer, config: &Config) -> String {
     let widths = LongWidths::compute(entries, config);
-    let mut out = String::new();
+    // Rough capacity: ~80 bytes/line for typical long rows.
+    let mut out = String::with_capacity(entries.len().saturating_mul(96));
     let mut dired_global: Vec<(usize, usize)> = Vec::new();
     let ending = config.line_ending();
 
