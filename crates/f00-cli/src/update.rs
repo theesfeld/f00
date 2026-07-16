@@ -472,10 +472,7 @@ mod tests {
     #[test]
     fn version_cmp_basic() {
         assert_eq!(cmp_version("0.3.0", "0.4.0"), std::cmp::Ordering::Less);
-        assert_eq!(
-            cmp_version("0.4.0", "0.4.0"),
-            std::cmp::Ordering::Equal
-        );
+        assert_eq!(cmp_version("0.4.0", "0.4.0"), std::cmp::Ordering::Equal);
         assert_eq!(cmp_version("0.4.1", "0.4.0"), std::cmp::Ordering::Greater);
         assert_eq!(cmp_version("v0.4.0", "0.3.9"), std::cmp::Ordering::Greater);
     }
@@ -487,10 +484,8 @@ mod tests {
 
     #[test]
     fn parse_tag_from_location() {
-        let info = tag_from_release_url(
-            "https://github.com/theesfeld/f00/releases/tag/v0.5.0",
-        )
-        .unwrap();
+        let info =
+            tag_from_release_url("https://github.com/theesfeld/f00/releases/tag/v0.5.0").unwrap();
         assert_eq!(info.tag, "v0.5.0");
         assert_eq!(info.version, "0.5.0");
     }
