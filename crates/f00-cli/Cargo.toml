@@ -46,11 +46,14 @@ ureq = { workspace = true }
 zip = { workspace = true, optional = true }
 
 [features]
-default = ["git", "archives", "tui"]
+# io-uring is a no-op off Linux (dep is target-gated in f00-core).
+default = ["git", "archives", "tui", "io-uring"]
 git = ["dep:f00-git"]
 archives = ["dep:f00-archive"]
 tui = ["dep:f00-tui"]
 plugins = ["dep:f00-plugin"]
+# Linux: enable io_uring batch metadata in f00-core
+io-uring = ["f00-core/io-uring"]
 # zip needed for self-update extract on Windows
 # always compile zip on windows via target dep below
 

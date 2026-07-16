@@ -4,6 +4,8 @@ mod entry;
 mod error;
 mod filter;
 mod ignore;
+#[cfg(all(target_os = "linux", feature = "io-uring"))]
+mod io_uring_stat;
 #[cfg(target_os = "linux")]
 mod linux_statx;
 mod list;
