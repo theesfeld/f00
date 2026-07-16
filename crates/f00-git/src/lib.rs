@@ -150,11 +150,19 @@ pub fn annotate_listing(listing: &mut Listing, index: &GitIndex) {
     }
 }
 
-/// Annotate many listings; rediscovers git context from each root.
+/// Annotate many listings; **one** porcelain map per git repo root (reused).
 pub fn annotate_listings(listings: &mut [Listing]) {
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+
+    // Cache GitIndex by discovered repo root (or by listing root when not in a repo).
+    let mut by_repo: HashMap<PathBuf, GitIndex> = HashMap::new();
     for listing in listings {
-        let index = GitIndex::discover(&listing.root);
-        annotate_listing(listing, &index);
+        let key = find_repo_root(&listing.root).unwrap_or_else(|| listing.root.clone());
+        let index = by_repo
+            .entry(key)
+            .or_insert_with(|| GitIndex::discover(&listing.root));
+        annotate_listing(listing, index);
     }
 }
 

@@ -12,7 +12,7 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use f00_core::{list_directory, Entry, EntryKind, ListOptions};
+use f00_core::{list_directory, Entry, EntryKind, ListOptions, SortBy};
 use f00_format::{format_permissions, human_size, icon_prefix};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -49,6 +49,9 @@ struct Browser {
     filter: String,
     filtering: bool,
     show_help: bool,
+    show_preview: bool,
+    sort_by: SortBy,
+    reverse: bool,
     status: String,
     error: Option<String>,
 }
@@ -72,6 +75,9 @@ impl Browser {
             filter: String::new(),
             filtering: false,
             show_help: false,
+            show_preview: true,
+            sort_by: SortBy::Name,
+            reverse: false,
             status: String::new(),
             error: None,
         };
@@ -84,7 +90,89 @@ impl Browser {
             almost_all: self.show_hidden,
             all: false,
             dirs_first: true,
+            sort_by: self.sort_by,
+            reverse: self.reverse,
+            // TUI rarely needs owner names for display columns.
+            resolve_owner_group: false,
+            read_selinux: false,
             ..ListOptions::default()
+        }
+    }
+
+    fn cycle_sort(&mut self) -> Result<()> {
+        self.sort_by = match self.sort_by {
+            SortBy::Name => SortBy::Size,
+            SortBy::Size => SortBy::Time,
+            SortBy::Time => SortBy::Extension,
+            SortBy::Extension => SortBy::Name,
+            other => other,
+        };
+        self.reload()?;
+        self.status = format!(
+            "sort: {}{}",
+            self.sort_label(),
+            if self.reverse { " rev" } else { "" }
+        );
+        Ok(())
+    }
+
+    fn sort_label(&self) -> &'static str {
+        match self.sort_by {
+            SortBy::Name => "name",
+            SortBy::Size => "size",
+            SortBy::Time => "mtime",
+            SortBy::Extension => "ext",
+            SortBy::Version => "version",
+            SortBy::None => "none",
+        }
+    }
+
+    fn open_external(&mut self, pager: bool) {
+        let Some(entry) = self.current_entry().cloned() else {
+            self.status = "nothing selected".into();
+            return;
+        };
+        if entry.is_dir() {
+            self.status = "use Enter to open directories".into();
+            return;
+        }
+        let path = entry.path;
+        // Leave raw mode while the external program runs.
+        let _ = disable_raw_mode();
+        let _ = execute!(stdout(), LeaveAlternateScreen);
+        let status = if pager {
+            let pager = std::env::var("PAGER").unwrap_or_else(|_| "less".into());
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg(format!(
+                    "{pager} {}",
+                    shell_quote(&path.display().to_string())
+                ))
+                .status()
+        } else {
+            let editor = std::env::var("EDITOR")
+                .or_else(|_| std::env::var("VISUAL"))
+                .unwrap_or_else(|_| "vi".into());
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg(format!(
+                    "{editor} {}",
+                    shell_quote(&path.display().to_string())
+                ))
+                .status()
+        };
+        let _ = execute!(stdout(), EnterAlternateScreen);
+        let _ = enable_raw_mode();
+        match status {
+            Ok(s) if s.success() => {
+                self.status = if pager {
+                    "viewed".into()
+                } else {
+                    "edited".into()
+                };
+            }
+            Ok(s) => self.status = format!("external exit {s}"),
+            Err(e) => self.status = format!("open failed: {e}"),
         }
     }
 
@@ -373,6 +461,32 @@ fn run_loop(
             KeyCode::Char('H') | KeyCode::Char('?') => {
                 browser.show_help = true;
             }
+            KeyCode::Char('s') => {
+                browser.cycle_sort()?;
+            }
+            KeyCode::Char('S') => {
+                browser.reverse = !browser.reverse;
+                browser.reload()?;
+                browser.status = if browser.reverse {
+                    "reverse on".into()
+                } else {
+                    "reverse off".into()
+                };
+            }
+            KeyCode::Char('p') => {
+                browser.show_preview = !browser.show_preview;
+                browser.status = if browser.show_preview {
+                    "preview on".into()
+                } else {
+                    "preview off".into()
+                };
+            }
+            KeyCode::Char('e') => {
+                browser.open_external(false);
+            }
+            KeyCode::Char('v') => {
+                browser.open_external(true);
+            }
             KeyCode::PageDown => {
                 let len = browser.visible().len();
                 browser.selected = move_selection(browser.selected, len, 10);
@@ -388,19 +502,35 @@ fn run_loop(
     }
 }
 
+fn shell_quote(s: &str) -> String {
+    // Minimal single-quote escaping for POSIX sh.
+    format!("'{}'", s.replace('\'', "'\"'\"'"))
+}
+
 fn draw_ui(frame: &mut ratatui::Frame, browser: &mut Browser) {
     let area = frame.area();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1), // header
-            Constraint::Min(3),    // list
+            Constraint::Length(1), // header / status
+            Constraint::Min(3),    // body
             Constraint::Length(1), // footer
         ])
         .split(area);
 
     draw_header(frame, chunks[0], browser);
-    draw_list(frame, chunks[1], browser);
+
+    if browser.show_preview && chunks[1].width >= 48 {
+        let body = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(58), Constraint::Percentage(42)])
+            .split(chunks[1]);
+        draw_list(frame, body[0], browser);
+        draw_preview(frame, body[1], browser);
+    } else {
+        draw_list(frame, chunks[1], browser);
+    }
+
     draw_footer(frame, chunks[2], browser);
 
     if browser.show_help {
@@ -411,25 +541,33 @@ fn draw_ui(frame: &mut ratatui::Frame, browser: &mut Browser) {
 fn draw_header(frame: &mut ratatui::Frame, area: Rect, browser: &Browser) {
     let vis = browser.visible().len();
     let total = browser.entries.len();
+    let marked = browser.marked.len();
     let hidden = if browser.show_hidden {
         " · hidden"
     } else {
         ""
     };
+    let rev = if browser.reverse { "↓" } else { "↑" };
     let filter = if browser.filter.is_empty() {
         String::new()
     } else {
-        format!(" · filter: /{}", browser.filter)
+        format!(" · /{}", browser.filter)
     };
     let err = browser
         .error
         .as_ref()
-        .map(|e| format!(" · error: {e}"))
+        .map(|e| format!(" · err: {e}"))
         .unwrap_or_default();
+    let marks = if marked == 0 {
+        String::new()
+    } else {
+        format!(" · {marked} marked")
+    };
 
     let title = format!(
-        " {}  ({vis}/{total} entries{hidden}{filter}{err}) ",
-        browser.cwd.display()
+        " {}  · {vis}/{total}{hidden} · sort:{}{rev}{filter}{marks}{err} ",
+        browser.cwd.display(),
+        browser.sort_label(),
     );
     let header = Paragraph::new(title).style(
         Style::default()
@@ -437,6 +575,96 @@ fn draw_header(frame: &mut ratatui::Frame, area: Rect, browser: &Browser) {
             .add_modifier(Modifier::BOLD),
     );
     frame.render_widget(header, area);
+}
+
+fn draw_preview(frame: &mut ratatui::Frame, area: Rect, browser: &Browser) {
+    let text = match browser.current_entry() {
+        None => " (no selection) ".to_string(),
+        Some(entry) => preview_text(entry),
+    };
+    let widget = Paragraph::new(text)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" preview ")
+                .border_style(Style::default().fg(Color::DarkGray)),
+        )
+        .wrap(Wrap { trim: false })
+        .style(Style::default().fg(Color::Gray));
+    frame.render_widget(widget, area);
+}
+
+fn preview_text(entry: &Entry) -> String {
+    let mut lines = Vec::new();
+    lines.push(format!(" name: {}", entry.name));
+    lines.push(format!(" path: {}", entry.path.display()));
+    lines.push(format!(" kind: {}", entry.kind.as_str()));
+    if !entry.is_dir() {
+        lines.push(format!(
+            " size: {} ({})",
+            human_size(entry.size),
+            entry.size
+        ));
+    }
+    if let Some(t) = entry.modified {
+        let dt: DateTime<Local> = t.into();
+        lines.push(format!(" mtime: {}", dt.format("%Y-%m-%d %H:%M:%S")));
+    }
+    if let Some(ref target) = entry.symlink_target {
+        lines.push(format!(" link → {}", target.display()));
+    }
+    lines.push(format!(" mode: {:o}", entry.mode));
+    if entry.git_status != f00_core::GitStatus::Clean {
+        lines.push(format!(" git: {}", entry.git_status.as_str()));
+    }
+    lines.push(String::new());
+
+    if entry.is_dir() {
+        match std::fs::read_dir(&entry.path) {
+            Ok(rd) => {
+                let mut names: Vec<String> = rd
+                    .flatten()
+                    .map(|e| e.file_name().to_string_lossy().into_owned())
+                    .take(40)
+                    .collect();
+                names.sort();
+                lines.push(format!(" children (≤40): {}", names.len()));
+                for n in names {
+                    lines.push(format!("  · {n}"));
+                }
+            }
+            Err(e) => lines.push(format!(" (unreadable: {e})")),
+        }
+    } else {
+        match std::fs::File::open(&entry.path) {
+            Ok(mut f) => {
+                use std::io::Read;
+                let mut buf = vec![0u8; 2048];
+                match f.read(&mut buf) {
+                    Ok(n) => {
+                        buf.truncate(n);
+                        let lossy = String::from_utf8_lossy(&buf);
+                        // Only show text-ish previews.
+                        let printable = lossy
+                            .chars()
+                            .filter(|c| *c == '\n' || *c == '\t' || !c.is_control())
+                            .count();
+                        if n > 0 && printable * 10 >= n * 8 {
+                            lines.push(" ── head ──".into());
+                            for line in lossy.lines().take(24) {
+                                lines.push(format!(" {line}"));
+                            }
+                        } else {
+                            lines.push(" (binary or non-text; no preview)".into());
+                        }
+                    }
+                    Err(e) => lines.push(format!(" (read error: {e})")),
+                }
+            }
+            Err(e) => lines.push(format!(" (open error: {e})")),
+        }
+    }
+    lines.join("\n")
 }
 
 fn draw_list(frame: &mut ratatui::Frame, area: Rect, browser: &mut Browser) {
@@ -545,13 +773,8 @@ fn draw_footer(frame: &mut ratatui::Frame, area: Rect, browser: &Browser) {
         } else {
             format!(" · {}", browser.status)
         };
-        let marks = if browser.marked.is_empty() {
-            String::new()
-        } else {
-            format!(" · {} marked", browser.marked.len())
-        };
         format!(
-            " j/k move · Enter open · h parent · Space mark · y yield · . hidden · / filter · H help · q quit{marks}{status} "
+            " j/k · Enter · h parent · Space mark · y yield · s sort · p preview · e edit · v view · . hidden · / · H · q{status} "
         )
     };
     let footer = Paragraph::new(hints).style(Style::default().fg(Color::DarkGray));
@@ -573,10 +796,16 @@ f00 browser — keys
   /              filter by name (Esc clears)
   .              toggle hidden (almost_all)
   r              refresh listing
+  s              cycle sort (name → size → mtime → ext)
+  S              reverse sort
+  p              toggle preview pane
+  e              open file in $EDITOR (or $VISUAL / vi)
+  v              open file in $PAGER (or less)
   H / ?          toggle this help
   q / Esc        quit (print nothing)
 
   Long columns (perms, size, mtime) appear when the terminal is wide enough.
+  Preview shows metadata + text head or directory children.
 
   Press Esc / q / H to close help.
 ";

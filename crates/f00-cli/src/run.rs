@@ -232,6 +232,10 @@ pub fn build_config(args: &Args) -> Config {
         parallel: args.threads != 1,
         threads: args.threads,
         collect_timing: args.profile,
+        // Filled after we know output mode (long / -Z need expensive fields).
+        resolve_owner_group: false,
+        read_selinux: false,
+        linux_statx: true,
     };
 
     apply_gnu_list_options(&mut list, args.gnu);
@@ -264,6 +268,13 @@ pub fn build_config(args: &Args) -> Config {
     if args.dired && !matches!(output, OutputMode::Long | OutputMode::OnePerLine) {
         // dired is most useful with long; keep chosen mode otherwise.
     }
+
+    // Expensive metadata only when the presentation needs it.
+    let needs_names = matches!(output, OutputMode::Long)
+        && ((show_owner && !args.numeric_uid_gid) || (show_group && !args.numeric_uid_gid));
+    list.resolve_owner_group = needs_names || args.author;
+    list.read_selinux = args.context;
+    list.linux_statx = true;
 
     let _ = (&mut all, &mut almost_all);
 

@@ -1,47 +1,34 @@
 # f00 Roadmap
 
 **Repo:** https://github.com/theesfeld/f00  
-**Latest:** [v0.4.1](https://github.com/theesfeld/f00/releases)  
+**Latest:** [v0.5.0](https://github.com/theesfeld/f00/releases)  
 **Domain:** https://f00.sh · DNS guide: [DNS-f00.sh.md](DNS-f00.sh.md)
 
-## v0.4.1 — Decorate hooks + crates/brew polish
+## v0.5 — Snappy listing + TUI (this release)
 
 | Track | Deliverables |
 |-------|----------------|
-| **Plugins** | Decorate hooks apply JSON transforms before format; hello plugin demo prefix |
-| **Homebrew** | `Formula/f00.rb` with live SHA-256 for v0.4.0 assets |
-| **crates.io** | Package name `f00` + publish script for library graph |
+| **A Speed P1** | Cheap short listings, uid/gid cache, git map reuse |
+| **B TUI** | Preview pane, sort, open editor/pager, status line |
+| **C Linux** | `statx` path for directory children |
 
-Issue: [#39](https://github.com/theesfeld/f00/issues/39)
+Phase: [#44](https://github.com/theesfeld/f00/issues/44) · Impl: [#45](https://github.com/theesfeld/f00/issues/45)
 
-## v0.4.0 — Packaging + update + plugins (shipped)
+## Shipped earlier
 
-| Track | Deliverables |
-|-------|----------------|
-| **Update** | `f00 --update` / `update`, `f00 --check-update` / `check-update` |
-| **Install** | Default `~/.f00/bin` |
-| **Packaging** | CHANGELOG, nix flake, Homebrew formula stub |
-| **Plugins** | Host ABI v1 scaffold |
-
-Phase: [#36](https://github.com/theesfeld/f00/issues/36) · Impl: [#37](https://github.com/theesfeld/f00/issues/37)
-
-## v0.3 — Ship + Trust + Speed (shipped)
-
-Completions, man, icons auto, parallel list, `--profile`, golden tests, FreeBSD CI, HTTPS at f00.sh.
-
-## Shipped earlier (v0.2)
-
-GNU `ls` surface, TUI `--browse`, archives, ignore files, JSON/CSV/TSV/tree, install + Pages CI.
+- **v0.4.x** — self-update, plugins ABI, `~/.f00/bin`, packaging stubs  
+- **v0.3** — completions, man, parallel list, goldens, FreeBSD CI, HTTPS  
+- **v0.2** — GNU surface, TUI base, archives, ignore, machine formats  
 
 ## Still open / later
 
 | Item | Notes |
 |------|--------|
-| Plugin ecosystem | More plugins; filter/sort hooks beyond display rename |
-| crates.io | Keep versions in lockstep; `./scripts/publish-crates.sh` |
-| Homebrew tap | Publish `theesfeld/homebrew-tap` (formula has sha256s) |
-| Performance | io_uring / getdents specialized path |
-| Locale goldens | Full LC_COLLATE parity matrix |
+| crates.io publish | Needs `CARGO_REGISTRY_TOKEN` |
+| Homebrew tap content | Push formula + v0.5 sha256s to `theesfeld/homebrew-tap` |
+| io_uring | Optional next Linux micro-opt |
+| Locale goldens | Full `LC_COLLATE` matrix |
+| Dual-pane FM | Copy/move/delete — product decision |
 
 ## Tracking
 

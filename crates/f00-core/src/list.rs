@@ -121,10 +121,11 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
 
     // `-d`: list the directory entry itself, not its contents.
     if opts.directory || !meta.is_dir() {
+        let fill = meta_fill_from(opts);
         let entry = if follow {
-            Entry::from_path_follow(path, 0)?
+            Entry::from_path_follow_with(path, 0, fill)?
         } else {
-            Entry::from_path_and_meta(path, &meta, 0)?
+            Entry::from_path_and_meta_with(path, &meta, 0, fill)?
         };
         return Ok(Listing::new(path.to_path_buf(), meta.is_dir(), vec![entry]));
     }
@@ -136,26 +137,51 @@ pub fn list_path(path: &Path, opts: &ListOptions) -> Result<Listing> {
     }
 }
 
+fn meta_fill_from(opts: &ListOptions) -> crate::entry::MetaFill {
+    crate::entry::MetaFill {
+        resolve_names: opts.resolve_owner_group,
+        read_context: opts.read_selinux,
+    }
+}
+
 /// Build an [`Entry`] from a readdir item.
-fn entry_from_dir_entry(item: &fs::DirEntry, follow_links: bool) -> Option<Entry> {
+fn entry_from_dir_entry(
+    item: &fs::DirEntry,
+    follow_links: bool,
+    fill: crate::entry::MetaFill,
+    prefer_statx: bool,
+) -> Option<Entry> {
     let entry_path = item.path();
     if follow_links {
-        Entry::from_path_follow(&entry_path, 0).ok()
-    } else {
-        let meta = item
-            .metadata()
-            .or_else(|_| fs::symlink_metadata(&entry_path));
-        match meta {
-            Ok(m) => Entry::from_path_and_meta(&entry_path, &m, 0).ok(),
-            Err(_) => None,
+        return Entry::from_path_follow_with(&entry_path, 0, fill).ok();
+    }
+    #[cfg(target_os = "linux")]
+    {
+        if prefer_statx {
+            if let Ok(e) = crate::linux_statx::entry_from_statx(&entry_path, 0, fill) {
+                return Some(e);
+            }
         }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = prefer_statx;
+    }
+    let meta = item
+        .metadata()
+        .or_else(|_| fs::symlink_metadata(&entry_path));
+    match meta {
+        Ok(m) => Entry::from_path_and_meta_with(&entry_path, &m, 0, fill).ok(),
+        Err(_) => None,
     }
 }
 
 /// Stat directory children, optionally in parallel with rayon.
 fn stat_dir_entries(dir_entries: &[fs::DirEntry], opts: &ListOptions) -> Vec<Entry> {
     let follow = opts.follow_links;
-    let map_one = |item: &fs::DirEntry| entry_from_dir_entry(item, follow);
+    let fill = meta_fill_from(opts);
+    let prefer_statx = opts.linux_statx;
+    let map_one = |item: &fs::DirEntry| entry_from_dir_entry(item, follow, fill, prefer_statx);
 
     if !opts.use_parallel_stat(dir_entries.len()) {
         return dir_entries.iter().filter_map(map_one).collect();
@@ -183,20 +209,21 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
 
     let mut entries = Vec::new();
 
+    let fill = meta_fill_from(opts);
     // Synthesize `.` and `..` sequentially (must not race with parallel stat).
     if opts.all {
-        if let Ok(dot) = Entry::from_path(path, 0) {
+        if let Ok(dot) = Entry::from_path_with(path, 0, fill) {
             let mut e = dot;
             e.name = ".".to_string();
             entries.push(e);
         }
         if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
-            if let Ok(mut e) = Entry::from_path(parent, 0) {
+            if let Ok(mut e) = Entry::from_path_with(parent, 0, fill) {
                 e.name = "..".to_string();
                 e.path = parent.to_path_buf();
                 entries.push(e);
             }
-        } else if let Ok(mut e) = Entry::from_path(path, 0) {
+        } else if let Ok(mut e) = Entry::from_path_with(path, 0, fill) {
             // path is like `.` or `/` — still emit `..` best-effort
             e.name = "..".to_string();
             entries.push(e);
@@ -288,6 +315,7 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     };
     let mut ignore_by_dir: Vec<(PathBuf, IgnoreSet)> = Vec::new();
 
+    let fill = meta_fill_from(opts);
     // Group by parent directory: emit header then children for each dir.
     // First, collect all walkdir results.
     // Recursive walk stays sequential: headers and section order must be stable.
@@ -332,7 +360,7 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
         // Walkdir yields the directory node first.
         if item.file_type().is_dir() && depth > 0 {
             if let Ok(meta) = item.metadata() {
-                if let Ok(e) = Entry::from_path_and_meta(entry_path, &meta, depth) {
+                if let Ok(e) = Entry::from_path_and_meta_with(entry_path, &meta, depth, fill) {
                     let show = crate::filter::should_show(&e, opts)
                         && !ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir);
                     if show {
@@ -348,7 +376,7 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
             Ok(m) => m,
             Err(_) => continue,
         };
-        if let Ok(e) = Entry::from_path_and_meta(entry_path, &meta, depth) {
+        if let Ok(e) = Entry::from_path_and_meta_with(entry_path, &meta, depth, fill) {
             if crate::filter::should_show(&e, opts)
                 && !ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir)
             {
