@@ -185,7 +185,7 @@
             <h3>Quick install</h3>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.3.0 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>Optional <code class="mono">ls</code> symlink (off by default):</p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
@@ -328,36 +328,36 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
           <li>
             <span class="n">01</span>
             <div>
-              <strong>MVP solidify (shipped)</strong>
-              <span>v0.3: completions, man, parallel list, --profile, golden tests</span>
+              <strong>MVP + GNU surface (shipped)</strong>
+              <span>coreutils ls clone, TUI, archives, git, icons</span>
             </div>
           </li>
           <li>
             <span class="n">02</span>
             <div>
-              <strong>Release pipeline (shipped)</strong>
-              <span>multi-arch binaries, checksums, installer, GitHub Pages site</span>
+              <strong>Ship path (shipped)</strong>
+              <span>multi-arch releases, checksums, installer, f00.sh HTTPS</span>
             </div>
           </li>
           <li>
             <span class="n">03</span>
             <div>
               <strong>Ship + trust + speed (v0.3)</strong>
-              <span>shell completions, man page, icons auto/always/never, feature CI matrix</span>
+              <span>completions, man, parallel list, --profile, golden tests</span>
             </div>
           </li>
           <li>
             <span class="n">04</span>
             <div>
-              <strong>v0.3 polish (in progress)</strong>
-              <span>theme knobs, release train hardening, FreeBSD CI smoke</span>
+              <strong>Packaging + update (v0.4)</strong>
+              <span>--update / check-update, ~/.f00/bin, CHANGELOG, nix/brew stubs</span>
             </div>
           </li>
           <li>
             <span class="n">05</span>
             <div>
-              <strong>Plugins (planned)</strong>
-              <span>plugin host ABI for extensions (#27)</span>
+              <strong>Plugin ABI scaffold (v0.4)</strong>
+              <span>feature plugins, ABI v1, example plugin (#27)</span>
             </div>
           </li>
         </ol>

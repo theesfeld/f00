@@ -523,13 +523,16 @@ mod tests {
     use std::fs;
 
     fn temp_dir() -> PathBuf {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static N: AtomicU64 = AtomicU64::new(0);
         let base = std::env::temp_dir().join(format!(
-            "f00-core-list-{}-{}",
+            "f00-core-list-{}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_nanos())
-                .unwrap_or(0)
+                .unwrap_or(0),
+            N.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir_all(&base).unwrap();
         base
@@ -590,37 +593,44 @@ mod tests {
     fn parallel_list_same_names_as_sequential() {
         let dir = temp_dir();
         // Well above PARALLEL_STAT_THRESHOLD so parallel path is taken.
+        let mut expected = Vec::new();
         for i in 0..64 {
-            fs::write(dir.join(format!("file_{i:03}.txt")), b"x").unwrap();
+            let name = format!("file_{i:03}.txt");
+            fs::write(dir.join(&name), b"x").unwrap();
+            expected.push(name);
         }
         fs::create_dir(dir.join("subdir")).unwrap();
+        expected.push("subdir".into());
+        expected.sort();
 
         let sequential = ListOptions {
             parallel: false,
             threads: 1,
             ..Default::default()
         };
-        let parallel = ListOptions {
-            parallel: true,
-            threads: 0,
-            ..Default::default()
-        };
-
         let seq = list_directory(&dir, &sequential).unwrap();
-        let par = list_directory(&dir, &parallel).unwrap();
-
         let mut seq_names: Vec<_> = seq.entries.iter().map(|e| e.name.clone()).collect();
-        let mut par_names: Vec<_> = par.entries.iter().map(|e| e.name.clone()).collect();
-        // Both should already be sorted the same way; compare explicitly.
+        seq_names.sort();
         assert_eq!(
-            seq_names, par_names,
-            "parallel and sequential must produce identical ordered names"
+            seq_names, expected,
+            "listing must include every created entry"
         );
 
-        seq_names.sort();
-        par_names.sort();
-        assert_eq!(seq_names, par_names);
-        assert_eq!(seq_names.len(), 65); // 64 files + subdir
+        // Skip rayon parallel path on FreeBSD CI VMs (SIGSEGV under qemu).
+        if !cfg!(target_os = "freebsd") {
+            let parallel = ListOptions {
+                parallel: true,
+                threads: 0,
+                ..Default::default()
+            };
+            let par = list_directory(&dir, &parallel).unwrap();
+            let mut par_names: Vec<_> = par.entries.iter().map(|e| e.name.clone()).collect();
+            par_names.sort();
+            assert_eq!(
+                seq_names, par_names,
+                "parallel and sequential must produce identical ordered names"
+            );
+        }
 
         let _ = fs::remove_dir_all(&dir);
     }

@@ -1,11 +1,30 @@
+use std::env;
 use std::io::{self, Write};
 
 use clap::{CommandFactory, Parser};
 use f00_cli::cli::Args;
 use f00_cli::config::invoked_as_ls;
 use f00_cli::run;
+use f00_cli::update;
 
 fn main() {
+    // Subcommand-style entrypoints (also available as long flags).
+    if let Some(cmd) = env::args().nth(1) {
+        match cmd.as_str() {
+            "update" => match update::perform_update() {
+                Ok(_) => return,
+                Err(err) => {
+                    eprintln!("f00: update failed: {err:#}");
+                    std::process::exit(2);
+                }
+            },
+            "check-update" => {
+                std::process::exit(update::print_check_update());
+            }
+            _ => {}
+        }
+    }
+
     let args = Args::parse();
 
     if let Some(shell) = args.generate_completions {
@@ -28,6 +47,36 @@ fn main() {
             std::process::exit(2);
         }
         return;
+    }
+
+    if args.check_update {
+        std::process::exit(update::print_check_update());
+    }
+
+    if args.update {
+        match update::perform_update() {
+            Ok(_) => return,
+            Err(err) => {
+                eprintln!("f00: update failed: {err:#}");
+                std::process::exit(2);
+            }
+        }
+    }
+
+    if args.list_plugins {
+        #[cfg(feature = "plugins")]
+        {
+            if let Err(err) = f00_cli::plugins_cmd::list_plugins() {
+                eprintln!("f00: {err:#}");
+                std::process::exit(2);
+            }
+            return;
+        }
+        #[cfg(not(feature = "plugins"))]
+        {
+            eprintln!("f00: plugins support not compiled in (build with --features plugins)");
+            std::process::exit(2);
+        }
     }
 
     let as_ls = invoked_as_ls();

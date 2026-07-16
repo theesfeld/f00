@@ -8,7 +8,11 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.3.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.4.0
+
+<!-- agents:status:begin -->
+> **Status:** v0.4 packaging + self-update + plugin ABI · Phase: [#36](https://github.com/theesfeld/f00/issues/36) · Latest: `v0.4.0` · 0.x minors may include breaking changes
+<!-- agents:status:end -->
 
 ---
 
@@ -18,10 +22,23 @@
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
+Installs to **`~/.f00/bin`** by default (override with `INSTALL_DIR`). Add to `PATH` if needed:
+
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.3.0 bash
+export PATH="$HOME/.f00/bin:$PATH"
+```
+
+```bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash   # optional ls symlink
+```
+
+### Update
+
+```bash
+f00 --update          # or: f00 update
+f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 ```
 
 ---
@@ -44,7 +61,8 @@ curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash   # optional ls sym
 | **TUI browser** | Shipped | `f00 --browse` (feature `tui`, default on) |
 | **Archives** | Shipped | zip / tar / tar.gz as virtual dirs |
 | **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
-| **Plugins** | Planned | #27 |
+| **Self-update** | Shipped | `--update` / `--check-update` via GitHub Releases |
+| **Plugins** | Scaffold | Feature `plugins` · ABI v1 · #27 |
 
 ---
 
@@ -162,11 +180,12 @@ Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-saf
 | `git` | yes | Git status column |
 | `archives` | yes | zip/tar listing |
 | `tui` | yes | `--browse` / `--tui` |
+| `plugins` | no | Dynamic plugin host (`--list-plugins`) |
 
 ```bash
 cargo build -p f00-cli --release
 cargo build -p f00-cli --no-default-features   # minimal
-cargo build -p f00-cli --features "git,archives,tui"
+cargo build -p f00-cli --features "git,archives,tui,plugins"
 ```
 
 ---
@@ -198,6 +217,8 @@ dirs_first = true
 | `f00-git` | git status |
 | `f00-archive` | zip/tar virtual listing |
 | `f00-tui` | interactive browser |
+| `f00-plugin` | plugin host ABI |
+| `f00-plugin-hello` | example cdylib plugin |
 | `f00-cli` | binary `f00` |
 
 ---

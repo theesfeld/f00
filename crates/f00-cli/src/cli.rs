@@ -339,6 +339,18 @@ pub struct Args {
     /// Generate a man page to stdout and exit
     #[arg(long = "generate-man", hide = true, action = ArgAction::SetTrue)]
     pub generate_man: bool,
+
+    /// Update f00 from the latest GitHub Release (checksum verified)
+    #[arg(long = "update", action = ArgAction::SetTrue)]
+    pub update: bool,
+
+    /// Check whether a newer release is available (no mutation); exit 1 if behind
+    #[arg(long = "check-update", action = ArgAction::SetTrue)]
+    pub check_update: bool,
+
+    /// List loaded plugins (requires feature `plugins`)
+    #[arg(long = "list-plugins", action = ArgAction::SetTrue)]
+    pub list_plugins: bool,
 }
 
 impl Args {
@@ -422,6 +434,9 @@ impl Args {
             profile: false,
             generate_completions: None,
             generate_man: false,
+            update: false,
+            check_update: false,
+            list_plugins: false,
         }
     }
 }

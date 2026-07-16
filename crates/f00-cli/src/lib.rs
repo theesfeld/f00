@@ -3,6 +3,10 @@
 pub mod cli;
 pub mod config;
 pub mod run;
+pub mod update;
+
+#[cfg(feature = "plugins")]
+pub mod plugins_cmd;
 
 pub use cli::Args;
 pub use config::{
