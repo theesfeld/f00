@@ -13,7 +13,7 @@ README, GitHub Pages (`site/`), GitHub Issues/milestones, and `docs/ROADMAP.md` 
 
 ## PR checklist
 
-- [ ] README claims match what `cargo run -p f00-cli -- --help` shows
+- [ ] README claims match what `cargo run -p f00 -- --help` shows
 - [ ] Site does not advertise unshipped features as done
 - [ ] ROADMAP status bits match open/closed milestones
 - [ ] `install.sh` and `site/install.sh` are byte-identical (or intentionally generated from one source)

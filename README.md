@@ -8,10 +8,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.4.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.4.1
 
 <!-- agents:status:begin -->
-> **Status:** v0.4 packaging + self-update + plugin ABI · Phase: [#36](https://github.com/theesfeld/f00/issues/36) · Latest: `v0.4.0` · 0.x minors may include breaking changes
+> **Status:** v0.4.1 decorate hooks + crates/brew · Issue: [#39](https://github.com/theesfeld/f00/issues/39) · Latest: `v0.4.1` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -29,9 +29,14 @@ export PATH="$HOME/.f00/bin:$PATH"
 ```
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.0 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.1 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash   # optional ls symlink
+```
+
+```bash
+cargo install f00 --locked          # from crates.io (when published)
+brew install --formula ./Formula/f00.rb   # from a clone; needs Homebrew
 ```
 
 ### Update
@@ -40,7 +45,6 @@ curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash   # optional ls sym
 f00 --update          # or: f00 update
 f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 ```
-
 ---
 
 ## Features
@@ -62,7 +66,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **Archives** | Shipped | zip / tar / tar.gz as virtual dirs |
 | **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
 | **Self-update** | Shipped | `--update` / `--check-update` via GitHub Releases |
-| **Plugins** | Scaffold | Feature `plugins` · ABI v1 · #27 |
+| **Plugins** | Shipped (opt-in) | Feature `plugins` · ABI v1 · decorate hooks · #27 |
 
 ---
 
@@ -183,9 +187,9 @@ Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-saf
 | `plugins` | no | Dynamic plugin host (`--list-plugins`) |
 
 ```bash
-cargo build -p f00-cli --release
-cargo build -p f00-cli --no-default-features   # minimal
-cargo build -p f00-cli --features "git,archives,tui,plugins"
+cargo build -p f00 --release
+cargo build -p f00 --no-default-features   # minimal
+cargo build -p f00 --features "git,archives,tui,plugins"
 ```
 
 ---
@@ -219,7 +223,7 @@ dirs_first = true
 | `f00-tui` | interactive browser |
 | `f00-plugin` | plugin host ABI |
 | `f00-plugin-hello` | example cdylib plugin |
-| `f00-cli` | binary `f00` |
+| `f00` (path `crates/f00-cli`) | binary `f00` (crates.io) |
 
 ---
 
@@ -228,7 +232,7 @@ dirs_first = true
 ```bash
 git clone https://github.com/theesfeld/f00
 cd f00
-cargo build --release -p f00-cli
+cargo build --release -p f00
 ./target/release/f00 --version
 ```
 

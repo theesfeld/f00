@@ -54,12 +54,12 @@ jobs:
 
       - name: Build (cargo)
         if: ${{ !matrix.cross }}
-        run: cargo build --release --locked --target ${{ matrix.target }} -p f00-cli
+        run: cargo build --release --locked --target ${{ matrix.target }} -p f00
         continue-on-error: false
 
       - name: Build (cross)
         if: matrix.cross
-        run: cross build --release --locked --target ${{ matrix.target }} -p f00-cli
+        run: cross build --release --locked --target ${{ matrix.target }} -p f00
 
       - name: Package (Unix)
         if: matrix.archive == 'tar.gz'

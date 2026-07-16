@@ -383,9 +383,18 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
         if config.show_git && args.git {
             f00_git::annotate_listings(&mut listings);
         }
-        listings
+        #[cfg(feature = "plugins")]
+        {
+            crate::plugins_cmd::decorate_listings(listings)
+        }
+        #[cfg(not(feature = "plugins"))]
+        {
+            listings
+        }
     };
-    #[cfg(not(feature = "git"))]
+    #[cfg(all(not(feature = "git"), feature = "plugins"))]
+    let listings = crate::plugins_cmd::decorate_listings(outcome.listings);
+    #[cfg(all(not(feature = "git"), not(feature = "plugins")))]
     let listings = outcome.listings;
 
     let mut format_ms = 0u128;

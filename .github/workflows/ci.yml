@@ -51,5 +51,5 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: cargo test --workspace --all-features
         run: cargo test --workspace --all-features
-      - name: cargo test -p f00-cli --no-default-features
-        run: cargo test -p f00-cli --no-default-features
+      - name: cargo test -p f00 --no-default-features
+        run: cargo test -p f00 --no-default-features
