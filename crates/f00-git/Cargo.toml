@@ -1,0 +1,16 @@
+[package]
+name = "f00-git"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+description = "Optional git status integration for f00"
+rust-version.workspace = true
+
+[dependencies]
+f00-core = { workspace = true }
+
+[features]
+default = []
