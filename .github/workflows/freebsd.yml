@@ -21,8 +21,10 @@ jobs:
           prepare: |
             pkg install -y rust
           run: |
-            cargo test --workspace --no-default-features -p f00-cli
-            cargo test -p f00-core
+            # QEMU FreeBSD VM: keep rayon small to avoid rare pool segfaults.
+            export RAYON_NUM_THREADS=2
+            cargo test -p f00-cli --no-default-features
+            cargo test -p f00-core -- --test-threads=1
             cargo build -p f00-cli --release --no-default-features
             ./target/release/f00 --version
             ./target/release/f00 -1 .

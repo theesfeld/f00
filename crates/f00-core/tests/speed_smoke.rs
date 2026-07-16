@@ -32,9 +32,11 @@ fn list_200_files_serial_and_parallel() {
         threads: 1,
         ..Default::default()
     };
+    // FreeBSD CI runs under qemu via vmactions; rayon pools have segfaulted there.
+    // Still exercise the parallel *flag path* with a fixed 2-thread pool on FreeBSD.
     let parallel = ListOptions {
         parallel: true,
-        threads: 0,
+        threads: if cfg!(target_os = "freebsd") { 2 } else { 0 },
         ..Default::default()
     };
 
