@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="f00 prompt logo">
+  <title>f00 — option A · prompt</title>
+  <desc>Terminal prompt dollar with f00 wordmark. Best for dark site header and press kit lockup.</desc>
+  <!-- Dark canvas (omit for transparent: delete rect) -->
+  <rect width="512" height="512" rx="96" fill="#07090c"/>
+  <!-- Soft glow -->
+  <circle cx="256" cy="256" r="180" fill="#3ecf8e" opacity="0.06"/>
+  <!-- Prompt $ -->
+  <text x="88" y="310"
+        font-family="ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace"
+        font-size="168" font-weight="600" fill="#3ecf8e">$</text>
+  <!-- Wordmark -->
+  <text x="200" y="310"
+        font-family="ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace"
+        font-size="168" font-weight="600" fill="#e8edf4" letter-spacing="-8">f00</text>
+  <!-- Cursor blink bar -->
+  <rect x="430" y="200" width="22" height="120" rx="4" fill="#5eead4" opacity="0.9"/>
+</svg>

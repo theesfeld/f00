@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="f00">
+  <title>f00</title>
+  <!-- Simplified listing mark for 16–32px favicon (option C) -->
+  <rect width="32" height="32" rx="7" fill="#07090c"/>
+  <rect x="4" y="5" width="24" height="22" rx="3" fill="#11161e" stroke="#1c2430" stroke-width="0.75"/>
+  <!-- window dots -->
+  <circle cx="7.5" cy="8.5" r="1" fill="#5c6778"/>
+  <circle cx="10.5" cy="8.5" r="1" fill="#5c6778"/>
+  <circle cx="13.5" cy="8.5" r="1" fill="#3ecf8e"/>
+  <!-- rows (thicker for small sizes) -->
+  <rect x="7" y="12" width="10" height="2.2" rx="0.6" fill="#2a3544"/>
+  <rect x="7" y="15.5" width="16" height="2.2" rx="0.6" fill="#2a3544"/>
+  <!-- active row -->
+  <rect x="6.2" y="18.2" width="17.5" height="4" rx="1" fill="#3ecf8e" opacity="0.2"/>
+  <rect x="7" y="19" width="11" height="2.2" rx="0.6" fill="#3ecf8e"/>
+  <rect x="7" y="23" width="13" height="2.2" rx="0.6" fill="#2a3544"/>
+</svg>

@@ -7,6 +7,8 @@
   <meta name="description" content="f00 is a fast, cross-platform ls rewrite in Rust. Colors, icons, tree, JSON, git status, GNU mode. Install with curl | bash." />
   <meta name="theme-color" content="#07090c" />
   <link rel="canonical" href="https://f00.sh/" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/logo.svg" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
@@ -15,11 +17,14 @@
   <meta property="og:description" content="Fast cross-platform directory listings with modern UX and an optional GNU-compatible mode." />
   <meta property="og:site_name" content="f00" />
   <meta property="og:locale" content="en_US" />
+  <meta property="og:image" content="https://f00.sh/assets/og.svg" />
+  <meta property="og:image:alt" content="f00 — next-generation ls in Rust" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="f00 — next-generation ls in Rust" />
   <meta name="twitter:description" content="Fast cross-platform directory listings. curl -fsSL https://f00.sh/install.sh | bash" />
+  <meta name="twitter:image" content="https://f00.sh/assets/og.svg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,8 +34,9 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="logo" href="/">
-        <span class="prompt">$</span> f00<span class="dot">.sh</span>
+      <a class="logo" href="/" aria-label="f00 home">
+        <img class="logo-mark" src="assets/logo.svg" width="32" height="32" alt="" />
+        <span class="logo-text"><span class="prompt">$</span> f00<span class="dot">.sh</span></span>
       </a>
       <nav class="nav" aria-label="Primary">
         <a href="#features">Features</a>
