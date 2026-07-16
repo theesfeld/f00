@@ -2,12 +2,12 @@
 # f00 installer — https://f00.sh
 # Usage:
 #   curl -fsSL https://f00.sh/install.sh | bash
-#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.1.0 INSTALL_DIR=$HOME/bin bash
+#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.0 INSTALL_DIR=$HOME/bin bash
 #   curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash
 #
 # Env:
-#   F00_VERSION      Pin a release tag (e.g. v0.1.0). Default: latest
-#   INSTALL_DIR      Override install directory
+#   F00_VERSION      Pin a release tag (e.g. v0.4.0). Default: latest
+#   INSTALL_DIR      Override install directory (default: ~/.f00/bin)
 #   F00_INSTALL_LS   If set to 1, also symlink ls -> f00
 #   F00_NO_COLOR     If set, disable ANSI colors
 set -euo pipefail

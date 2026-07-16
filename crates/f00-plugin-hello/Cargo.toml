@@ -1,0 +1,18 @@
+[package]
+name = "f00-plugin-hello"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+description = "Example f00 plugin (cdylib) — ABI smoke test"
+rust-version.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+name = "f00_plugin_hello"
+
+[dependencies]
+f00-plugin = { workspace = true }

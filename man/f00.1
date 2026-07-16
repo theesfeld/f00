@@ -1,10 +1,10 @@
 .ie \n(.g .ds Aq \(aq
 .el .ds Aq '
-.TH f00 1  "f00 0.3.0" 
+.TH f00 1  "f00 0.4.0" 
 .SH NAME
 f00 \- List directory contents with a friendly default UI
 .SH SYNOPSIS
-\fBf00\fR [\fB\-\-help\fR] [\fB\-a\fR|\fB\-\-all\fR] [\fB\-A\fR|\fB\-\-almost\-all\fR] [\fB\-l \fR] [\fB\-1 \fR] [\fB\-C \fR] [\fB\-m \fR] [\fB\-h\fR|\fB\-\-human\-readable\fR] [\fB\-\-si\fR] [\fB\-R\fR|\fB\-\-recursive\fR] [\fB\-r\fR|\fB\-\-reverse\fR] [\fB\-t \fR] [\fB\-S \fR] [\fB\-X \fR] [\fB\-v \fR] [\fB\-U \fR] [\fB\-\-sort\fR] [\fB\-\-time\fR] [\fB\-u \fR] [\fB\-c \fR] [\fB\-\-color\fR] [\fB\-\-json\fR] [\fB\-\-csv\fR] [\fB\-\-tsv\fR] [\fB\-\-tree\fR] [\fB\-\-gnu\fR] [\fB\-\-icons\fR] [\fB\-F\fR|\fB\-\-classify\fR] [\fB\-p \fR] [\fB\-\-file\-type\fR] [\fB\-\-indicator\-style\fR] [\fB\-\-group\-directories\-first\fR] [\fB\-d\fR|\fB\-\-directory\fR] [\fB\-B\fR|\fB\-\-ignore\-backups\fR] [\fB\-I\fR|\fB\-\-ignore\fR] [\fB\-\-hide\fR] [\fB\-L\fR|\fB\-\-dereference\fR] [\fB\-H\fR|\fB\-\-dereference\-command\-line\fR] [\fB\-\-dereference\-command\-line\-symlink\-to\-dir\fR] [\fB\-g \fR] [\fB\-o \fR] [\fB\-G\fR|\fB\-\-no\-group\fR] [\fB\-n\fR|\fB\-\-numeric\-uid\-gid\fR] [\fB\-i\fR|\fB\-\-inode\fR] [\fB\-s\fR|\fB\-\-size\fR] [\fB\-k\fR|\fB\-\-kibibytes\fR] [\fB\-\-block\-size\fR] [\fB\-\-full\-time\fR] [\fB\-\-time\-style\fR] [\fB\-q\fR|\fB\-\-hide\-control\-chars\fR] [\fB\-\-show\-control\-chars\fR] [\fB\-b\fR|\fB\-\-escape\fR] [\fB\-Q\fR|\fB\-\-quote\-name\fR] [\fB\-N\fR|\fB\-\-literal\fR] [\fB\-\-quoting\-style\fR] [\fB\-x \fR] [\fB\-f \fR] [\fB\-\-format\fR] [\fB\-T\fR|\fB\-\-tabsize\fR] [\fB\-w\fR|\fB\-\-width\fR] [\fB\-Z\fR|\fB\-\-context\fR] [\fB\-\-zero\fR] [\fB\-D\fR|\fB\-\-dired\fR] [\fB\-\-author\fR] [\fB\-\-hyperlink\fR] [\fB\-\-max\-depth\fR] [\fB\-\-git\fR] [\fB\-\-config\fR] [\fB\-\-browse\fR] [\fB\-\-ignore\-files\fR] [\fB\-\-no\-ignore\fR] [\fB\-\-archive\fR] [\fB\-\-threads\fR] [\fB\-\-profile\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fIPATHS\fR] 
+\fBf00\fR [\fB\-\-help\fR] [\fB\-a\fR|\fB\-\-all\fR] [\fB\-A\fR|\fB\-\-almost\-all\fR] [\fB\-l \fR] [\fB\-1 \fR] [\fB\-C \fR] [\fB\-m \fR] [\fB\-h\fR|\fB\-\-human\-readable\fR] [\fB\-\-si\fR] [\fB\-R\fR|\fB\-\-recursive\fR] [\fB\-r\fR|\fB\-\-reverse\fR] [\fB\-t \fR] [\fB\-S \fR] [\fB\-X \fR] [\fB\-v \fR] [\fB\-U \fR] [\fB\-\-sort\fR] [\fB\-\-time\fR] [\fB\-u \fR] [\fB\-c \fR] [\fB\-\-color\fR] [\fB\-\-json\fR] [\fB\-\-csv\fR] [\fB\-\-tsv\fR] [\fB\-\-tree\fR] [\fB\-\-gnu\fR] [\fB\-\-icons\fR] [\fB\-F\fR|\fB\-\-classify\fR] [\fB\-p \fR] [\fB\-\-file\-type\fR] [\fB\-\-indicator\-style\fR] [\fB\-\-group\-directories\-first\fR] [\fB\-d\fR|\fB\-\-directory\fR] [\fB\-B\fR|\fB\-\-ignore\-backups\fR] [\fB\-I\fR|\fB\-\-ignore\fR] [\fB\-\-hide\fR] [\fB\-L\fR|\fB\-\-dereference\fR] [\fB\-H\fR|\fB\-\-dereference\-command\-line\fR] [\fB\-\-dereference\-command\-line\-symlink\-to\-dir\fR] [\fB\-g \fR] [\fB\-o \fR] [\fB\-G\fR|\fB\-\-no\-group\fR] [\fB\-n\fR|\fB\-\-numeric\-uid\-gid\fR] [\fB\-i\fR|\fB\-\-inode\fR] [\fB\-s\fR|\fB\-\-size\fR] [\fB\-k\fR|\fB\-\-kibibytes\fR] [\fB\-\-block\-size\fR] [\fB\-\-full\-time\fR] [\fB\-\-time\-style\fR] [\fB\-q\fR|\fB\-\-hide\-control\-chars\fR] [\fB\-\-show\-control\-chars\fR] [\fB\-b\fR|\fB\-\-escape\fR] [\fB\-Q\fR|\fB\-\-quote\-name\fR] [\fB\-N\fR|\fB\-\-literal\fR] [\fB\-\-quoting\-style\fR] [\fB\-x \fR] [\fB\-f \fR] [\fB\-\-format\fR] [\fB\-T\fR|\fB\-\-tabsize\fR] [\fB\-w\fR|\fB\-\-width\fR] [\fB\-Z\fR|\fB\-\-context\fR] [\fB\-\-zero\fR] [\fB\-D\fR|\fB\-\-dired\fR] [\fB\-\-author\fR] [\fB\-\-hyperlink\fR] [\fB\-\-max\-depth\fR] [\fB\-\-git\fR] [\fB\-\-config\fR] [\fB\-\-browse\fR] [\fB\-\-ignore\-files\fR] [\fB\-\-no\-ignore\fR] [\fB\-\-archive\fR] [\fB\-\-threads\fR] [\fB\-\-profile\fR] [\fB\-\-update\fR] [\fB\-\-check\-update\fR] [\fB\-\-list\-plugins\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fIPATHS\fR] 
 .SH DESCRIPTION
 List directory contents with a friendly default UI
 .SH OPTIONS
@@ -275,10 +275,19 @@ Parallel metadata threads: `0` = auto (rayon default), `1` = serial, `N>1` = fix
 \fB\-\-profile\fR
 Print phase timing breakdown to stderr (readdir/stat/sort/format/total)
 .TP
+\fB\-\-update\fR
+Update f00 from the latest GitHub Release (checksum verified)
+.TP
+\fB\-\-check\-update\fR
+Check whether a newer release is available (no mutation); exit 1 if behind
+.TP
+\fB\-\-list\-plugins\fR
+List loaded plugins (requires feature `plugins`)
+.TP
 \fB\-V\fR, \fB\-\-version\fR
 Print version
 .TP
 [\fIPATHS\fR]
 Paths to list (default: current directory)
 .SH VERSION
-v0.3.0
+v0.4.0

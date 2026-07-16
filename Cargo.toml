@@ -7,11 +7,13 @@ members = [
     "crates/f00-git",
     "crates/f00-archive",
     "crates/f00-tui",
+    "crates/f00-plugin",
+    "crates/f00-plugin-hello",
     "crates/f00-cli",
 ]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/theesfeld/f00"
@@ -19,14 +21,18 @@ homepage = "https://f00.sh"
 authors = ["theesfeld"]
 description = "f00 — a modern, friendly directory lister"
 rust-version = "1.74"
+readme = "README.md"
+keywords = ["ls", "cli", "filesystem", "coreutils"]
+categories = ["command-line-utilities", "filesystem"]
 
 [workspace.dependencies]
-f00-core = { path = "crates/f00-core", version = "0.3.0" }
-f00-format = { path = "crates/f00-format", version = "0.3.0" }
-f00-compat = { path = "crates/f00-compat", version = "0.3.0" }
-f00-git = { path = "crates/f00-git", version = "0.3.0" }
-f00-archive = { path = "crates/f00-archive", version = "0.3.0" }
-f00-tui = { path = "crates/f00-tui", version = "0.3.0" }
+f00-core = { path = "crates/f00-core", version = "0.4.0" }
+f00-format = { path = "crates/f00-format", version = "0.4.0" }
+f00-compat = { path = "crates/f00-compat", version = "0.4.0" }
+f00-git = { path = "crates/f00-git", version = "0.4.0" }
+f00-archive = { path = "crates/f00-archive", version = "0.4.0" }
+f00-tui = { path = "crates/f00-tui", version = "0.4.0" }
+f00-plugin = { path = "crates/f00-plugin", version = "0.4.0" }
 
 anyhow = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
@@ -36,17 +42,23 @@ clap_mangen = "0.2"
 criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
 crossterm = "0.28"
 directories = "5"
+flate2 = "1"
+libloading = "0.8"
 lscolors = { version = "0.20", default-features = false, features = ["nu-ansi-term"] }
 nu-ansi-term = "0.50"
 ratatui = "0.29"
 rayon = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.10"
+tar = "0.4"
 terminal_size = "0.4"
 thiserror = "2"
 toml = "0.8"
 unicode-width = "0.2"
+ureq = { version = "2", default-features = true, features = ["json"] }
 walkdir = "2"
+zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [profile.release]
 lto = true
