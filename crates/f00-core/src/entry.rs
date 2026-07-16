@@ -1,10 +1,49 @@
+use std::collections::HashMap;
 use std::fs::{FileType, Metadata};
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::time::SystemTime;
 
 use chrono::{DateTime, Local};
 
 use crate::error::{Error, Result};
+
+/// Which expensive metadata fields to populate when building an [`Entry`].
+#[derive(Debug, Clone, Copy, Default)]
+pub struct MetaFill {
+    /// Resolve uid/gid via NSS (getpwuid/getgrgid). Cached process-wide.
+    pub resolve_names: bool,
+    /// Read `security.selinux` xattr (Linux).
+    pub read_context: bool,
+}
+
+impl MetaFill {
+    /// Full long-format fill (names + optional SELinux when requested separately).
+    pub fn rich(read_context: bool) -> Self {
+        Self {
+            resolve_names: true,
+            read_context,
+        }
+    }
+
+    /// Minimal fill for short listings / machine formats that only need path+size+kind.
+    pub fn cheap() -> Self {
+        Self::default()
+    }
+}
+
+/// Process-wide caches for uid/gid → name (avoids repeated NSS in long mode).
+fn owner_cache() -> &'static Mutex<HashMap<u32, String>> {
+    use std::sync::OnceLock;
+    static CACHE: OnceLock<Mutex<HashMap<u32, String>>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn group_cache() -> &'static Mutex<HashMap<u32, String>> {
+    use std::sync::OnceLock;
+    static CACHE: OnceLock<Mutex<HashMap<u32, String>>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
 
 /// High-level file kind used for display and sorting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -132,22 +171,34 @@ pub struct Entry {
 
 impl Entry {
     pub fn from_path(path: impl AsRef<Path>, depth: usize) -> Result<Self> {
+        Self::from_path_with(path, depth, MetaFill::default())
+    }
+
+    pub fn from_path_with(path: impl AsRef<Path>, depth: usize, fill: MetaFill) -> Result<Self> {
         let path = path.as_ref();
         let meta = std::fs::symlink_metadata(path).map_err(|source| Error::Metadata {
             path: path.to_path_buf(),
             source,
         })?;
-        Self::from_path_and_meta(path, &meta, depth)
+        Self::from_path_and_meta_with(path, &meta, depth, fill)
     }
 
     /// Like [`from_path`] but follow the final symlink target for metadata (`-L`).
     pub fn from_path_follow(path: impl AsRef<Path>, depth: usize) -> Result<Self> {
+        Self::from_path_follow_with(path, depth, MetaFill::default())
+    }
+
+    pub fn from_path_follow_with(
+        path: impl AsRef<Path>,
+        depth: usize,
+        fill: MetaFill,
+    ) -> Result<Self> {
         let path = path.as_ref();
         let meta = std::fs::metadata(path).map_err(|source| Error::Metadata {
             path: path.to_path_buf(),
             source,
         })?;
-        let mut entry = Self::from_path_and_meta(path, &meta, depth)?;
+        let mut entry = Self::from_path_and_meta_with(path, &meta, depth, fill)?;
         // Keep symlink name but drop "-> target" when showing dereference.
         if entry.kind == EntryKind::Symlink {
             entry.kind = EntryKind::from_file_type(meta.file_type());
@@ -157,6 +208,15 @@ impl Entry {
     }
 
     pub fn from_path_and_meta(path: &Path, meta: &Metadata, depth: usize) -> Result<Self> {
+        Self::from_path_and_meta_with(path, meta, depth, MetaFill::default())
+    }
+
+    pub fn from_path_and_meta_with(
+        path: &Path,
+        meta: &Metadata,
+        depth: usize,
+        fill: MetaFill,
+    ) -> Result<Self> {
         let file_type = meta.file_type();
         let kind = EntryKind::from_file_type(file_type);
         let name = path
@@ -172,10 +232,17 @@ impl Entry {
 
         let mode = file_mode(meta);
         let (nlink, uid, gid, inode, blocks) = meta_ids(meta);
-        let owner = resolve_owner(uid);
-        let group = resolve_group(gid);
+        let (owner, group) = if fill.resolve_names {
+            (resolve_owner_cached(uid), resolve_group_cached(gid))
+        } else {
+            (String::new(), String::new())
+        };
         let changed = ctime_of(meta);
-        let context = read_selinux_context(path);
+        let context = if fill.read_context {
+            read_selinux_context(path)
+        } else {
+            String::new()
+        };
 
         Ok(Self {
             path: path.to_path_buf(),
@@ -408,6 +475,32 @@ fn read_selinux_context_unix(_path: &Path) -> Option<String> {
     None
 }
 
+fn resolve_owner_cached(uid: u32) -> String {
+    if let Ok(cache) = owner_cache().lock() {
+        if let Some(name) = cache.get(&uid) {
+            return name.clone();
+        }
+    }
+    let name = resolve_owner(uid);
+    if let Ok(mut cache) = owner_cache().lock() {
+        cache.insert(uid, name.clone());
+    }
+    name
+}
+
+fn resolve_group_cached(gid: u32) -> String {
+    if let Ok(cache) = group_cache().lock() {
+        if let Some(name) = cache.get(&gid) {
+            return name.clone();
+        }
+    }
+    let name = resolve_group(gid);
+    if let Ok(mut cache) = group_cache().lock() {
+        cache.insert(gid, name.clone());
+    }
+    name
+}
+
 #[cfg(unix)]
 fn resolve_owner(uid: u32) -> String {
     // SAFETY: getpwuid returns a static pointer for the duration of the call.
@@ -441,4 +534,45 @@ fn resolve_owner(_uid: u32) -> String {
 #[cfg(not(unix))]
 fn resolve_group(_gid: u32) -> String {
     String::from("group")
+}
+
+#[cfg(test)]
+mod meta_fill_tests {
+    use super::*;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_file() -> std::path::PathBuf {
+        let p = std::env::temp_dir().join(format!(
+            "f00-meta-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        fs::write(&p, b"x").unwrap();
+        p
+    }
+
+    #[test]
+    fn cheap_fill_skips_owner_names() {
+        let p = temp_file();
+        let e = Entry::from_path_with(&p, 0, MetaFill::cheap()).unwrap();
+        assert!(e.owner.is_empty(), "cheap path should not resolve owner");
+        assert!(e.context.is_empty());
+        assert_eq!(e.size, 1);
+        let _ = fs::remove_file(&p);
+    }
+
+    #[test]
+    fn rich_fill_resolves_owner_on_unix() {
+        let p = temp_file();
+        let e = Entry::from_path_with(&p, 0, MetaFill::rich(false)).unwrap();
+        #[cfg(unix)]
+        {
+            assert!(!e.owner.is_empty() || e.uid > 0);
+        }
+        let _ = fs::remove_file(&p);
+    }
 }

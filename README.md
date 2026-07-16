@@ -8,10 +8,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.4.1
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.5.0
 
 <!-- agents:status:begin -->
-> **Status:** v0.4.1 decorate hooks + crates/brew · Issue: [#39](https://github.com/theesfeld/f00/issues/39) · Latest: `v0.4.1` · 0.x minors may include breaking changes
+> **Status:** v0.5 snappy listing + TUI · Phase: [#44](https://github.com/theesfeld/f00/issues/44) · Latest: `v0.5.0` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -54,7 +54,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **GNU coreutils `ls`** | Shipped | Full flag surface + `--gnu` strict mode |
 | **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` + `QUOTING_STYLE` |
 | **LS_COLORS** | Shipped | Via `lscolors` / env |
-| **Speed** | Shipped | Parallel `stat` (rayon), `--threads`, `--profile` |
+| **Speed** | Shipped | Parallel `stat` (rayon), cheap short path, uid cache, Linux `statx`, `--threads`, `--profile` |
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |
 | **Icons** | Shipped | `--icons[=auto\|always\|never]` (default: auto on TTY) |
@@ -62,7 +62,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **TOML config** | Shipped | XDG / AppData |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
 | **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
-| **TUI browser** | Shipped | `f00 --browse` (feature `tui`, default on) |
+| **TUI browser** | Shipped | `f00 --browse` — preview, sort, `$EDITOR`/`$PAGER` |
 | **Archives** | Shipped | zip / tar / tar.gz as virtual dirs |
 | **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
 | **Self-update** | Shipped | `--update` / `--check-update` via GitHub Releases |
@@ -165,6 +165,9 @@ f00 --generate-man | man -l -
 | `h`/`l` · Backspace | Parent / enter |
 | Space | Mark · `y` print marks & quit |
 | `/` | Filter · `Esc` clear |
+| `s` / `S` | Cycle sort (name/size/mtime/ext) · reverse |
+| `p` | Toggle preview pane |
+| `e` / `v` | Open in `$EDITOR` · view in `$PAGER` |
 | `.` | Toggle hidden · `r` refresh · `H` help · `q` quit |
 
 ---

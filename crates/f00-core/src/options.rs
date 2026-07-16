@@ -398,6 +398,12 @@ pub struct ListOptions {
     pub threads: usize,
     /// When true, fill [`crate::Listing::timing`] with phase durations.
     pub collect_timing: bool,
+    /// Resolve uid/gid to owner/group names (expensive NSS). Off for short listings.
+    pub resolve_owner_group: bool,
+    /// Read SELinux context xattr (`-Z`). Off unless requested.
+    pub read_selinux: bool,
+    /// Prefer Linux `statx` for metadata when available (ignored on other OSes).
+    pub linux_statx: bool,
 }
 
 impl Default for ListOptions {
@@ -423,6 +429,10 @@ impl Default for ListOptions {
             parallel: true,
             threads: 0,
             collect_timing: false,
+            // Default: cheap path — names filled when long format needs them via CLI.
+            resolve_owner_group: false,
+            read_selinux: false,
+            linux_statx: true,
         }
     }
 }

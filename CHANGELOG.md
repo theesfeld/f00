@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.5.0] - 2026-07-16
+
+### Added
+- **Speed P1:** short listings skip NSS owner/group and SELinux xattr unless long/`-Z` need them
+- Process-wide **uid/gid name cache** for long format
+- **Git:** one porcelain map per repository root (reused across path args)
+- **Linux:** `statx(2)` path for directory children when `linux_statx` is on (default)
+- **TUI:** preview pane (`p`), sort cycle (`s` / reverse `S`), open in `$EDITOR` (`e`) / `$PAGER` (`v`)
+- **TUI:** richer status line (counts, sort mode, marks)
+
+### Changed
+- Version **0.4.1 → 0.5.0**
+
 ## [0.4.1] - 2026-07-16
 
 ### Added

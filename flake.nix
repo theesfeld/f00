@@ -14,7 +14,7 @@
       in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
           pname = "f00";
-          version = "0.4.1";
+          version = "0.5.0";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
           # Binary package lives in the workspace package f00 (path crates/f00-cli).
