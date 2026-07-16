@@ -65,7 +65,7 @@
               <a class="version-pill" id="latest-version"
                  href="https://github.com/theesfeld/f00/releases/latest"
                  title="GitHub Releases">
-                <strong id="latest-version-label">v0.6.0</strong>
+                <strong id="latest-version-label">v0.7.1</strong>
               </a>
               <a class="version-assets" href="https://github.com/theesfeld/f00/releases">assets</a>
             </p>
@@ -199,7 +199,7 @@
           <h2>Install in one line</h2>
           <p>
             Detects OS/arch, downloads the GitHub release, verifies SHA-256 when present, and
-            installs to <code class="mono">~/.f00/bin</code> (override with
+            installs to <code class="mono">~/.local/bin</code> (override with
             <code class="mono">INSTALL_DIR</code>).
           </p>
         </div>
@@ -209,14 +209,14 @@
             <p class="install-version-label">
               Latest release
               <a class="version-pill" href="https://github.com/theesfeld/f00/releases/latest">
-                <strong id="install-version-label">v0.6.0</strong>
+                <strong id="install-version-label">v0.7.1</strong>
               </a>
             </p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Add to your <code class="mono">PATH</code> if needed:</p>
-            <pre><code>export PATH="$HOME/.f00/bin:$PATH"</code></pre>
+            <pre><code>export PATH="$HOME/.local/bin:$PATH"</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.6.0 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.7.1 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>
               <strong>We never replace system <code class="mono">/bin/ls</code> by default.</strong>
@@ -439,7 +439,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
             <span class="n">04</span>
             <div>
               <strong>Packaging + update (v0.4)</strong>
-              <span>--update / check-update, ~/.f00/bin, CHANGELOG, nix/brew stubs</span>
+              <span>--update / check-update, ~/.local/bin, CHANGELOG, nix/brew stubs</span>
             </div>
           </li>
           <li>
@@ -504,7 +504,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
       <div class="copy">
         <strong style="color:var(--text-dim)">f00</strong>
         — next-generation <code class="mono">ls</code>.
-        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.6.0</a>.
+        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.7.1</a>.
         © 2026 f00 contributors.
         Licensed under MIT OR Apache-2.0.
       </div>
@@ -521,7 +521,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
   <script>
     (function () {
       // Fallback version embedded at ship time; refreshed from Releases API when available.
-      var FALLBACK_VERSION = "v0.6.0";
+      var FALLBACK_VERSION = "v0.7.1";
 
       function setVersionLabels(tag) {
         if (!tag) return;

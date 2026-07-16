@@ -10,6 +10,7 @@ use sha2::{Digest, Sha256};
 
 const BINARY: &str = "f00";
 const RELEASES: &str = "https://github.com/theesfeld/f00/releases";
+const RELEASES_LATEST: &str = "https://github.com/theesfeld/f00/releases/latest";
 const API_LATEST: &str = "https://api.github.com/repos/theesfeld/f00/releases/latest";
 
 /// Current package version from Cargo.
@@ -66,20 +67,99 @@ fn agent() -> ureq::Agent {
         .build()
 }
 
+/// Agent that does **not** follow redirects (so we can read `Location`).
+fn agent_no_redirect() -> ureq::Agent {
+    ureq::AgentBuilder::new()
+        .user_agent(concat!("f00/", env!("CARGO_PKG_VERSION")))
+        .timeout(std::time::Duration::from_secs(60))
+        .redirects(0)
+        .build()
+}
+
 #[derive(Debug, Clone)]
 pub struct ReleaseInfo {
     pub tag: String,
     pub version: String,
 }
 
-/// Fetch latest stable release tag from GitHub Releases API.
-pub fn latest_release() -> Result<ReleaseInfo> {
+fn tag_from_release_url(url: &str) -> Option<ReleaseInfo> {
+    // .../releases/tag/v0.5.0 or .../tag/v0.5.0
+    let tag = url
+        .trim_end_matches('/')
+        .rsplit('/')
+        .next()
+        .filter(|s| s.starts_with('v') || s.chars().next().is_some_and(|c| c.is_ascii_digit()))?
+        .to_string();
+    if tag.is_empty() || tag == "latest" {
+        return None;
+    }
+    let version = tag.trim_start_matches('v').to_string();
+    Some(ReleaseInfo { tag, version })
+}
+
+/// Resolve latest release via GitHub **HTML** redirect (no API rate limit).
+///
+/// Same approach as `install.sh`: `GET /releases/latest` → `Location: .../tag/vX.Y.Z`.
+///
+/// ureq treats 3xx as `Error::Status` when redirects are disabled, so we handle
+/// both `Ok` and `Err(Status)`.
+fn latest_release_via_redirect() -> Result<ReleaseInfo> {
+    let agent = agent_no_redirect();
+    let resp = match agent.get(RELEASES_LATEST).call() {
+        Ok(r) => r,
+        Err(ureq::Error::Status(code, r)) if (300..400).contains(&code) => r,
+        Err(ureq::Error::Status(code, r)) => {
+            let body = r.into_string().unwrap_or_default();
+            bail!("releases/latest HTTP {code}: {body}");
+        }
+        Err(e) => return Err(e).context("fetch releases/latest redirect"),
+    };
+    let status = resp.status();
+    if !(300..400).contains(&status) {
+        // Some clients/proxies may already resolve; try final URL from body links as last resort.
+        bail!("releases/latest expected redirect, got HTTP {status}");
+    }
+    let loc = resp
+        .header("location")
+        .ok_or_else(|| anyhow!("releases/latest missing Location header"))?
+        .to_string();
+    // Location may be relative.
+    let loc = if loc.starts_with("http") {
+        loc
+    } else if loc.starts_with('/') {
+        format!("https://github.com{loc}")
+    } else {
+        format!("{RELEASES}/{loc}")
+    };
+    tag_from_release_url(&loc)
+        .ok_or_else(|| anyhow!("could not parse release tag from Location: {loc}"))
+}
+
+/// Resolve latest release via GitHub Releases **API** (rate-limited without auth).
+fn latest_release_via_api() -> Result<ReleaseInfo> {
     let agent = agent();
-    let resp = agent
+    let mut req = agent
         .get(API_LATEST)
         .set("Accept", "application/vnd.github+json")
-        .call()
-        .context("fetch latest release from GitHub")?;
+        .set("X-GitHub-Api-Version", "2022-11-28");
+    // Optional token avoids the 60 req/hr unauthenticated limit.
+    if let Ok(token) = env::var("GITHUB_TOKEN").or_else(|_| env::var("GH_TOKEN")) {
+        if !token.is_empty() {
+            req = req.set("Authorization", &format!("Bearer {token}"));
+        }
+    }
+    let resp = match req.call() {
+        Ok(r) => r,
+        Err(ureq::Error::Status(code, resp)) => {
+            let body = resp.into_string().unwrap_or_default();
+            bail!(
+                "GitHub API HTTP {code} (rate limit or auth). \
+                 Set GITHUB_TOKEN/GH_TOKEN, wait for rate limit reset, \
+                 or reinstall: curl -fsSL https://f00.sh/install.sh | bash\n{body}"
+            );
+        }
+        Err(e) => return Err(e).context("fetch latest release from GitHub API"),
+    };
     let body: serde_json::Value = resp.into_json().context("parse releases JSON")?;
     let tag = body
         .get("tag_name")
@@ -88,6 +168,22 @@ pub fn latest_release() -> Result<ReleaseInfo> {
         .to_string();
     let version = tag.trim_start_matches('v').to_string();
     Ok(ReleaseInfo { tag, version })
+}
+
+/// Fetch latest stable release tag.
+///
+/// Prefers the unauthenticated HTML redirect (same as `install.sh`), then the
+/// REST API. This avoids hard failure when `api.github.com` returns **403** due
+/// to unauthenticated rate limits.
+pub fn latest_release() -> Result<ReleaseInfo> {
+    match latest_release_via_redirect() {
+        Ok(info) => Ok(info),
+        Err(redir_err) => latest_release_via_api().map_err(|api_err| {
+            anyhow!(
+                "could not resolve latest release\n  redirect: {redir_err:#}\n  api: {api_err:#}"
+            )
+        }),
+    }
 }
 
 /// Compare dotted numeric versions (`1.2.3`). Returns `Ordering`.
@@ -301,12 +397,19 @@ fn replace_current_exe(new_bin: &Path) -> Result<()> {
 pub fn perform_update() -> Result<(String, String)> {
     let current = current_version().to_string();
     let rel = latest_release()?;
-    if cmp_version(&current, &rel.version) != std::cmp::Ordering::Less {
-        println!(
-            "f00 {current} is already up to date (latest {})",
-            rel.version
-        );
-        return Ok((current.clone(), rel.version));
+    match cmp_version(&current, &rel.version) {
+        std::cmp::Ordering::Less => {}
+        std::cmp::Ordering::Equal => {
+            println!("f00 {current} is already up to date");
+            return Ok((current.clone(), rel.version));
+        }
+        std::cmp::Ordering::Greater => {
+            println!(
+                "f00 {current} is newer than published latest {} — nothing to install",
+                rel.version
+            );
+            return Ok((current.clone(), rel.version));
+        }
     }
 
     let target = host_target()?;
@@ -339,7 +442,11 @@ pub fn perform_update() -> Result<(String, String)> {
 pub fn print_check_update() -> i32 {
     match check_update() {
         Ok(CheckResult::UpToDate { current, latest }) => {
-            println!("f00 {current} (latest {latest}) — up to date");
+            if cmp_version(&current, &latest) == std::cmp::Ordering::Greater {
+                println!("f00 {current} (published latest {latest}) — local is newer");
+            } else {
+                println!("f00 {current} (latest {latest}) — up to date");
+            }
             0
         }
         Ok(CheckResult::UpdateAvailable {
@@ -365,7 +472,10 @@ mod tests {
     #[test]
     fn version_cmp_basic() {
         assert_eq!(cmp_version("0.3.0", "0.4.0"), std::cmp::Ordering::Less);
-        assert_eq!(cmp_version("0.4.0", "0.4.0"), std::cmp::Ordering::Equal);
+        assert_eq!(
+            cmp_version("0.4.0", "0.4.0"),
+            std::cmp::Ordering::Equal
+        );
         assert_eq!(cmp_version("0.4.1", "0.4.0"), std::cmp::Ordering::Greater);
         assert_eq!(cmp_version("v0.4.0", "0.3.9"), std::cmp::Ordering::Greater);
     }
@@ -373,5 +483,15 @@ mod tests {
     #[test]
     fn current_version_nonzero() {
         assert!(!current_version().is_empty());
+    }
+
+    #[test]
+    fn parse_tag_from_location() {
+        let info = tag_from_release_url(
+            "https://github.com/theesfeld/f00/releases/tag/v0.5.0",
+        )
+        .unwrap();
+        assert_eq!(info.tag, "v0.5.0");
+        assert_eq!(info.version, "0.5.0");
     }
 }

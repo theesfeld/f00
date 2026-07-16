@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.7.1] - 2026-07-16
+
+### Fixed
+- **`--update` / `--check-update`**: resolve latest via `github.com/.../releases/latest` redirect first (same as install.sh), avoiding GitHub API **403** when unauthenticated rate limits are exhausted; optional `GITHUB_TOKEN` / `GH_TOKEN` for API fallback
+
+### Changed
+- Installer default directory: **`~/.local/bin`** (was `~/.f00/bin`); `ADD_PATH` ensures shell rc when missing; warns on legacy `~/.f00/bin`
+- Version **0.7.0 → 0.7.1**
+
 ## [0.7.0] - 2026-07-16
 
 ### Added
@@ -91,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.7.1]: https://github.com/theesfeld/f00/releases/tag/v0.7.1
 [0.7.0]: https://github.com/theesfeld/f00/releases/tag/v0.7.0
 [0.6.0]: https://github.com/theesfeld/f00/releases/tag/v0.6.0
 [0.5.0]: https://github.com/theesfeld/f00/releases/tag/v0.5.0
