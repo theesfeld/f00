@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.7.0] - 2026-07-16
+
+### Added
+- **Richer `--json` / `-j`:** full machine dump — timestamps (mtime/atime/ctime/btime), inode, nlink, blocks, uid/gid, owner/group/author, permissions string, readonly, extension, absolute_path, SELinux context when filled; `mode_octal` alias
+- **`-j`** short flag for `--json` (GNU `ls` has no `-j`)
+- JSON/CSV/TSV resolve owner/group names by default (skip with `-n`)
+- CSV/TSV columns aligned with the rich JSON field set
+
+### Changed
+- Version **0.6.0 → 0.7.0**
+
 ## [0.6.0] - 2026-07-16
 
 ### Added
@@ -80,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.7.0]: https://github.com/theesfeld/f00/releases/tag/v0.7.0
 [0.6.0]: https://github.com/theesfeld/f00/releases/tag/v0.6.0
 [0.5.0]: https://github.com/theesfeld/f00/releases/tag/v0.5.0
 [0.4.0]: https://github.com/theesfeld/f00/releases/tag/v0.4.0

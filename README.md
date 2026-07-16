@@ -8,10 +8,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.6.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.7.0
 
 <!-- agents:status:begin -->
-> **Status:** v0.6 io_uring + dual-pane FM + locale goldens · Phase: [#47](https://github.com/theesfeld/f00/issues/47) · Latest: `v0.6.0` · 0.x minors may include breaking changes
+> **Status:** v0.7 richer `--json`/`-j` · Latest: `v0.7.0` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -125,8 +125,9 @@ f00 -l --time-style=long-iso
 f00 --hide='*.o' -1
 f00 --hyperlink=auto -1
 
-# Machine output
+# Machine output (rich metadata: inode, times, owner, permissions, …)
 f00 --json
+f00 -j                 # short for --json (not used by GNU ls)
 f00 --csv
 f00 --tsv
 
@@ -285,7 +286,7 @@ cargo build --release -p f00
 | | GNU `ls` | eza | lsd | **f00** |
 |--|----------|-----|-----|---------|
 | Language | C | Rust | Rust | Rust |
-| Full coreutils flags | Native | Partial | Partial | **Goal: full clone** |
+| Full coreutils flags | Native | Partial | Partial | **Shipped** (+ `--gnu`) |
 | Icons / git | No | Yes | Yes | Yes |
 | TUI | No | No | No | **Yes** |
 | Archives | No | No | No | **Yes** |
