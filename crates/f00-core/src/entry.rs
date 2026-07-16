@@ -570,9 +570,9 @@ mod meta_fill_tests {
         let p = temp_file();
         let e = Entry::from_path_with(&p, 0, MetaFill::rich(false)).unwrap();
         #[cfg(unix)]
-        {
-            assert!(!e.owner.is_empty() || e.uid > 0);
-        }
+        assert!(!e.owner.is_empty() || e.uid > 0);
+        #[cfg(not(unix))]
+        let _ = e;
         let _ = fs::remove_file(&p);
     }
 }

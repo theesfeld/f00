@@ -156,10 +156,16 @@ fn entry_from_dir_entry(
         return Entry::from_path_follow_with(&entry_path, 0, fill).ok();
     }
     #[cfg(target_os = "linux")]
-    if prefer_statx {
-        if let Ok(e) = crate::linux_statx::entry_from_statx(&entry_path, 0, fill) {
-            return Some(e);
+    {
+        if prefer_statx {
+            if let Ok(e) = crate::linux_statx::entry_from_statx(&entry_path, 0, fill) {
+                return Some(e);
+            }
         }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = prefer_statx;
     }
     let meta = item
         .metadata()
