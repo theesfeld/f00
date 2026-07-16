@@ -94,8 +94,8 @@ pre,
 
 .logo {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.45rem;
+  align-items: center;
+  gap: 0.55rem;
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: 1.15rem;
@@ -107,6 +107,21 @@ pre,
 .logo:hover {
   color: var(--text);
   text-decoration: none;
+}
+
+.logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: block;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.logo-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15rem;
 }
 
 .logo .prompt {

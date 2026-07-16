@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>f00 logo options</title>
+  <style>
+    :root {
+      --bg: #07090c;
+      --panel: #11161e;
+      --border: #1c2430;
+      --text: #e8edf4;
+      --dim: #8b97a8;
+      --accent: #3ecf8e;
+    }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 2rem 1.25rem 4rem;
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.35rem; }
+    .sub { color: var(--dim); margin: 0 0 2rem; max-width: 42rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1rem 1.15rem;
+    }
+    .card h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+      font-family: ui-monospace, monospace;
+      color: var(--accent);
+    }
+    .card p { margin: 0 0 0.85rem; font-size: 0.9rem; color: var(--dim); }
+    .art {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      border-radius: 8px;
+      background: #0a0e14;
+      border: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+    }
+    .art.wide { min-height: 120px; }
+    .art img { width: 100%; height: auto; max-height: 220px; object-fit: contain; }
+    .meta { font-size: 0.8rem; color: var(--dim); font-family: ui-monospace, monospace; }
+    .fav {
+      display: flex; gap: 0.75rem; align-items: center; margin-top: 0.5rem;
+    }
+    .fav img { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border); }
+    .fav span { font-size: 0.8rem; color: var(--dim); }
+  </style>
+</head>
+<body>
+  <h1>f00 logo options</h1>
+  <p class="sub">
+    Palette matches f00.sh (<code style="color:var(--accent)">#3ecf8e</code> accent,
+    <code>#07090c</code> bg). Open files in
+    <code>site/assets/logos/</code>. Reply with A–E (or combos, e.g. “B app icon + D wordmark”).
+  </p>
+  <div class="grid">
+    <article class="card">
+      <h2>A · Prompt</h2>
+      <p>Terminal <code>$ f00</code> + cursor. Strong brand story for a CLI; works on dark site header.</p>
+      <div class="art"><img src="option-a-prompt.svg" alt="Option A" /></div>
+      <div class="meta">option-a-prompt.svg · also light variant</div>
+      <div class="fav">
+        <img src="option-a-prompt.svg" alt="" />
+        <span>@32px favicon preview</span>
+      </div>
+    </article>
+    <article class="card">
+      <h2>B · Monogram</h2>
+      <p>Geometric <code>f</code> + linked zeros. Abstract, unique, good square lockup / sticker.</p>
+      <div class="art"><img src="option-b-monogram.svg" alt="Option B" /></div>
+      <div class="meta">option-b-monogram.svg</div>
+      <div class="fav">
+        <img src="option-b-monogram.svg" alt="" />
+        <span>@32px favicon preview</span>
+      </div>
+    </article>
+    <article class="card">
+      <h2>C · Listing</h2>
+      <p>UI metaphor: directory rows with one active line. Explains the product in one glance.</p>
+      <div class="art"><img src="option-c-listing.svg" alt="Option C" /></div>
+      <div class="meta">option-c-listing.svg</div>
+      <div class="fav">
+        <img src="option-c-listing.svg" alt="" />
+        <span>@32px favicon preview</span>
+      </div>
+    </article>
+    <article class="card">
+      <h2>D · Wordmark</h2>
+      <p>Horizontal <code>f00</code> for README / press headers. Pair with a square mark (B or E).</p>
+      <div class="art wide"><img src="option-d-wordmark.svg" alt="Option D" /></div>
+      <div class="meta">option-d-wordmark.svg · wide 640×200</div>
+    </article>
+    <article class="card">
+      <h2>E · Glyph</h2>
+      <p>Favicon-first: bold <code>f</code> + double ring. Designed for 16–32px legibility.</p>
+      <div class="art"><img src="option-e-glyph.svg" alt="Option E" /></div>
+      <div class="meta">option-e-glyph.svg</div>
+      <div class="fav">
+        <img src="option-e-glyph.svg" alt="" />
+        <span>@32px favicon preview</span>
+      </div>
+    </article>
+  </div>
+</body>
+</html>

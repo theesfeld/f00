@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" role="img" aria-label="f00 wordmark">
+  <title>f00 — option D · wordmark</title>
+  <desc>Horizontal wordmark for README headers, press kits, and light/dark variants via currentColor.</desc>
+  <!-- Transparent bg; use currentColor so host can theme -->
+  <text x="32" y="138"
+        font-family="ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace"
+        font-size="120" font-weight="700" fill="#e8edf4" letter-spacing="-6">f</text>
+  <text x="92" y="138"
+        font-family="ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace"
+        font-size="120" font-weight="700" fill="#3ecf8e" letter-spacing="-6">00</text>
+  <!-- underline accent -->
+  <rect x="32" y="156" width="248" height="8" rx="4" fill="#3ecf8e" opacity="0.85"/>
+  <text x="300" y="130"
+        font-family="ui-monospace, 'IBM Plex Mono', Menlo, monospace"
+        font-size="28" font-weight="500" fill="#8b97a8">directory lister</text>
+</svg>
