@@ -97,7 +97,8 @@ pub fn load_ignore_set(dir: &Path) -> IgnoreSet {
 fn parse_ignore_text(text: &str) -> Vec<IgnorePattern> {
     let mut out = Vec::new();
     for line in text.lines() {
-        let line = line.trim();
+        // Trim BOM/CRLF leftovers for Windows-friendly ignore files.
+        let line = line.trim().trim_end_matches('\r');
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
@@ -154,9 +155,17 @@ fn pattern_matches(pat: &IgnorePattern, rel: &str) -> bool {
 }
 
 fn relative_path(base: &Path, path: &Path) -> Option<String> {
-    path.strip_prefix(base)
-        .ok()
-        .map(|p| p.to_string_lossy().into_owned())
+    if let Ok(p) = path.strip_prefix(base) {
+        return Some(p.to_string_lossy().replace('\\', "/"));
+    }
+    // Windows can fail strip_prefix across different path prefixes; fall back to
+    // file name when both live under the same parent.
+    if path.parent() == Some(base) {
+        return path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned());
+    }
+    None
 }
 
 /// Filter entries in place using an optional ignore set.
@@ -229,10 +238,13 @@ mod tests {
         let set = IgnoreSet::load_for_dir(&dir);
         assert!(set.ignores(&entry_in(&dir, "foo.o", false)));
         assert!(!set.ignores(&entry_in(&dir, "foo.rs", false)));
-        assert!(set.ignores(&entry_in(&dir, "build", false)));
+        assert!(
+            set.ignores(&entry_in(&dir, "build", false)),
+            "anchored /build should match name build"
+        );
         assert!(set.ignores(&entry_in(&dir, "tmp", true)));
         assert!(!set.ignores(&entry_in(&dir, "tmp", false))); // dir_only
-                                                              // Negation: last matching rule wins
+        // Negation: last matching rule wins
         assert!(!set.ignores(&entry_in(&dir, "keep.o", false)));
         let _ = fs::remove_dir_all(&dir);
     }
