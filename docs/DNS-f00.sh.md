@@ -46,6 +46,15 @@ curl -fsSL https://raw.githubusercontent.com/theesfeld/f00/main/install.sh | bas
 # https://theesfeld.github.io/f00/
 ```
 
-## Status note
+## Status (live)
 
-As of v0.3 prep: Pages deploy succeeds; **apex DNS may still need records at the registrar** if `f00.sh` does not resolve. Tracked in issue #20.
+| Check | Status |
+|-------|--------|
+| DNS A/AAAA | Points at GitHub Pages |
+| `www` CNAME | `theesfeld.github.io` |
+| TLS cert | Let's Encrypt for `f00.sh` + `www.f00.sh` |
+| **Enforce HTTPS** | **On** (`https_enforced: true`) |
+| HTTP → HTTPS | 301 to `https://f00.sh/` |
+| Install | `curl -fsSL https://f00.sh/install.sh \| bash` |
+
+Certificate renews automatically via GitHub Pages.
