@@ -203,8 +203,11 @@ mod tests {
         ));
         std::fs::create_dir_all(base.join("nested/deep")).unwrap();
         std::fs::create_dir_all(base.join(".git")).unwrap();
-        let found = find_repo_root(&base.join("nested/deep"));
-        assert_eq!(found.as_deref(), Some(base.as_path()));
+        let found = find_repo_root(&base.join("nested/deep")).expect("repo root");
+        // canonicalize both sides: macOS /var → /private/var, Windows \\?\ prefixes.
+        let found_c = std::fs::canonicalize(&found).unwrap_or(found);
+        let base_c = std::fs::canonicalize(&base).unwrap_or(base.clone());
+        assert_eq!(found_c, base_c);
         let _ = std::fs::remove_dir_all(&base);
 
         // Also accept the live workspace when present (non-fatal if path moved).
