@@ -29,15 +29,48 @@ export PATH="$HOME/.f00/bin:$PATH"
 ```
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.4.1 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.6.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
-curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash   # optional ls symlink
 ```
 
 ```bash
-cargo install f00 --locked          # from crates.io (when published)
+cargo install f00 --locked          # crates.io
 brew install --formula ./Formula/f00.rb   # from a clone; needs Homebrew
 ```
+
+**We never replace system `/bin/ls` by default.** The primary command is always `f00`.
+
+### Using f00 as `ls`
+
+Most people should keep typing **`f00`**. If you want muscle memory for `ls`, pick one opt-in path:
+
+**1. Shell alias (recommended for interactive use)**
+
+```bash
+# modern product defaults (icons, git, …)
+echo "alias ls='f00'" >> ~/.bashrc    # or ~/.zshrc
+echo "alias ll='f00 -la'" >> ~/.bashrc
+
+# coreutils-shaped (no icons/git; better for scripts / boring output)
+# echo "alias ls='f00 --gnu'" >> ~/.bashrc
+# or: export F00_GNU=1
+```
+
+Aliases only affect interactive shells. Non-interactive scripts keep using `/bin/ls` unless they call your alias-enabled shell.
+
+**2. Optional PATH symlink (installer opt-in)**
+
+```bash
+curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash
+```
+
+Creates `…/bin/ls` → `f00` next to the binary. Anything that finds `ls` on your `PATH` (before `/bin`) will run f00. Does **not** overwrite `/bin/ls`.
+
+**3. Soft drop-in when the binary is named `ls`**
+
+If you symlink or rename so argv0 is `ls`, f00 uses quieter defaults (icons/dirs-first off). Full strict mode still needs `--gnu` or `F00_GNU=1`.
+
+More detail: [f00.sh#as-ls](https://f00.sh/#as-ls)
 
 ### Update
 
@@ -45,6 +78,7 @@ brew install --formula ./Formula/f00.rb   # from a clone; needs Homebrew
 f00 --update          # or: f00 update
 f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 ```
+
 ---
 
 ## Features

@@ -2,20 +2,26 @@
 
 use std::fs;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use f00_cli::cli::{Args, ColorArg};
 use f00_cli::run::build_config;
 use f00_core::list_path;
 use f00_format::format_listing;
 
+static FIXTURE_SEQ: AtomicU64 = AtomicU64::new(0);
+
 fn temp_fixture() -> PathBuf {
+    // Unique per call: pid + nanos alone can collide when tests run in parallel.
+    let seq = FIXTURE_SEQ.fetch_add(1, Ordering::Relaxed);
     let base = std::env::temp_dir().join(format!(
-        "f00-test-{}-{}",
+        "f00-test-{}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_nanos())
-            .unwrap_or(0)
+            .unwrap_or(0),
+        seq
     ));
     fs::create_dir_all(&base).expect("mkdir");
     fs::write(base.join("alpha.txt"), b"hello").expect("write");
