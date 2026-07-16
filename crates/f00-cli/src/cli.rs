@@ -107,8 +107,8 @@ pub struct Args {
     )]
     pub color: ColorArg,
 
-    /// Emit structured JSON
-    #[arg(long = "json")]
+    /// Emit structured JSON (`-j` is free: GNU ls has no short `-j`)
+    #[arg(short = 'j', long = "json")]
     pub json: bool,
 
     /// Emit CSV

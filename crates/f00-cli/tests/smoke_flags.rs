@@ -201,6 +201,25 @@ fn smoke_json() {
         .filter_map(|e| e.get("name").and_then(|n| n.as_str()))
         .collect();
     assert!(names.contains(&"alpha.txt"), "names={names:?}");
+    let first = v.as_array().unwrap().first().unwrap();
+    assert!(first.get("inode").is_some(), "{first}");
+    assert!(first.get("permissions").is_some(), "{first}");
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn smoke_json_short_j() {
+    let (dir, cfg) = smoke_fixture("json-j");
+    let out = f00(&cfg).args(["-j"]).arg(&dir).output().unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let v: serde_json::Value = serde_json::from_str(stdout.trim()).expect("json from -j");
+    assert!(v.is_array(), "{stdout}");
     let _ = fs::remove_dir_all(&dir);
 }
 

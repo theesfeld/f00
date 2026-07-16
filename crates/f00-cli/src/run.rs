@@ -271,8 +271,11 @@ pub fn build_config(args: &Args) -> Config {
     }
 
     // Expensive metadata only when the presentation needs it.
-    let needs_names = matches!(output, OutputMode::Long)
-        && ((show_owner && !args.numeric_uid_gid) || (show_group && !args.numeric_uid_gid));
+    // JSON/CSV/TSV are machine dumps: resolve owner/group names unless `-n`.
+    let machine = matches!(output, OutputMode::Json | OutputMode::Csv | OutputMode::Tsv);
+    let needs_names = (matches!(output, OutputMode::Long)
+        && ((show_owner && !args.numeric_uid_gid) || (show_group && !args.numeric_uid_gid)))
+        || (machine && !args.numeric_uid_gid);
     list.resolve_owner_group = needs_names || args.author;
     list.read_selinux = args.context;
     list.linux_statx = true;

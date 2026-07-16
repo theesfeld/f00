@@ -526,7 +526,7 @@ dependencies = [
 
 [[package]]
 name = "f00"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -553,7 +553,7 @@ dependencies = [
 
 [[package]]
 name = "f00-archive"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "f00-compat"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "f00-core",
  "f00-format",
@@ -573,7 +573,7 @@ dependencies = [
 
 [[package]]
 name = "f00-core"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "chrono",
  "criterion",
@@ -586,7 +586,7 @@ dependencies = [
 
 [[package]]
 name = "f00-format"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "chrono",
  "f00-core",
@@ -599,14 +599,14 @@ dependencies = [
 
 [[package]]
 name = "f00-git"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "f00-core",
 ]
 
 [[package]]
 name = "f00-plugin"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "directories",
  "libloading",
@@ -617,14 +617,14 @@ dependencies = [
 
 [[package]]
 name = "f00-plugin-hello"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "f00-plugin",
 ]
 
 [[package]]
 name = "f00-tui"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "chrono",

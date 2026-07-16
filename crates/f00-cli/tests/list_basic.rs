@@ -81,6 +81,50 @@ fn json_output_is_array() {
 }
 
 #[test]
+fn json_includes_rich_metadata_keys() {
+    let dir = temp_fixture();
+    let mut args = Args::test_default();
+    args.paths = vec![dir.clone()];
+    args.json = true;
+    args.color = ColorArg::Never;
+    let config = build_config(&args);
+    assert!(
+        config.list.resolve_owner_group,
+        "JSON should resolve owner/group names"
+    );
+    let listing = list_path(&dir, &config.list).expect("list");
+    let out = format_listing(&listing, &config).expect("format");
+    let v: serde_json::Value = serde_json::from_str(&out).expect("json parse");
+    let first = v
+        .as_array()
+        .and_then(|a| a.first())
+        .expect("at least one entry");
+    for key in [
+        "name",
+        "path",
+        "kind",
+        "size",
+        "mode",
+        "mode_octal",
+        "permissions",
+        "readonly",
+        "inode",
+        "nlink",
+        "blocks",
+        "uid",
+        "gid",
+        "git_status",
+        "depth",
+    ] {
+        assert!(first.get(key).is_some(), "missing key {key} in {first}");
+    }
+    assert!(first.get("permissions").and_then(|p| p.as_str()).is_some());
+    assert!(first.get("mode").and_then(|m| m.as_str()).is_some());
+
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn all_flag_includes_hidden() {
     let dir = temp_fixture();
     let mut args = Args::test_default();
