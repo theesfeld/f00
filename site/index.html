@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>f00 — next-generation ls in Rust</title>
+  <meta name="description" content="f00 is a fast, cross-platform ls rewrite in Rust. Colors, icons, tree, JSON, git status, GNU mode. Install with curl | bash." />
+  <meta name="theme-color" content="#07090c" />
+  <link rel="canonical" href="https://f00.sh/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://f00.sh/" />
+  <meta property="og:title" content="f00 — next-generation ls in Rust" />
+  <meta property="og:description" content="Fast cross-platform directory listings with modern UX and an optional GNU-compatible mode." />
+  <meta property="og:site_name" content="f00" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="f00 — next-generation ls in Rust" />
+  <meta name="twitter:description" content="Fast cross-platform directory listings. curl -fsSL https://f00.sh/install.sh | bash" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;650&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/">
+        <span class="prompt">$</span> f00<span class="dot">.sh</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+        <a href="#demos">Demos</a>
+        <a href="#compare">Compare</a>
+        <a href="#roadmap">Roadmap</a>
+        <a class="btn btn-ghost btn-sm" href="https://github.com/theesfeld/f00">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow">cross-platform · rust · open source</p>
+          <h1>
+            Directory listings<br />
+            that <span class="accent">don’t suck</span>
+          </h1>
+          <p class="lead">
+            <strong>f00</strong> is a next-generation <code class="mono">ls</code> rewrite:
+            fast, portable, and built for modern terminals — with an escape hatch
+            to GNU-compatible mode when you need it.
+          </p>
+
+          <div class="install-row" id="install-hero">
+            <div class="install-cmd" title="Install command">
+              <span class="dollar">$</span>
+              <code id="install-line">curl -fsSL https://f00.sh/install.sh | bash</code>
+            </div>
+            <button type="button" class="copy-btn" id="copy-install" aria-label="Copy install command">copy</button>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.25rem;">
+            <a class="btn btn-primary" href="#install">Get started</a>
+            <a class="btn btn-ghost" href="https://github.com/theesfeld/f00">View source</a>
+          </div>
+
+          <div class="hero-meta">
+            <span class="ok">listing · -la · color</span>
+            <span class="ok">tree · json · icons</span>
+            <span class="ok">git · recursive · --gnu</span>
+          </div>
+        </div>
+
+        <aside class="term" aria-label="Example f00 output">
+          <div class="term-bar">
+            <i></i><i></i><i></i>
+            <span class="term-title">~/projects — f00 -la --icons --git</span>
+          </div>
+          <pre class="term-body"><span class="m">drwxr-xr-x</span>  <span class="w">glenda</span>  <span class="y">4.2K</span>  <span class="m">Jul 14 09:12</span>  <span class="d"> src</span>     <span class="g">[M]</span>
+<span class="m">drwxr-xr-x</span>  <span class="w">glenda</span>  <span class="y">4.2K</span>  <span class="m">Jul 14 09:10</span>  <span class="d"> crates</span>
+<span class="m">-rw-r--r--</span>  <span class="w">glenda</span>  <span class="y">1.8K</span>  <span class="m">Jul 15 18:03</span>  <span class="w"> README.md</span>
+<span class="m">-rw-r--r--</span>  <span class="w">glenda</span>  <span class="y">412B</span>  <span class="m">Jul 15 17:40</span>  <span class="w"> Cargo.toml</span>
+<span class="m">-rwxr-xr-x</span>  <span class="w">glenda</span>  <span class="y">12K</span>   <span class="m">Jul 15 18:22</span>  <span class="x"> install.sh</span>
+<span class="m">-rw-r--r--</span>  <span class="w">glenda</span>  <span class="y">2.1K</span>  <span class="m">Jul 14 08:01</span>  <span class="w"> .gitignore</span>
+
+<span class="c">$</span> <span class="w">f00</span> <span class="m">--tree crates</span>
+<span class="d">crates</span>
+<span class="m">├──</span> <span class="d">f00-cli</span>
+<span class="m">├──</span> <span class="d">f00-core</span>
+<span class="m">├──</span> <span class="d">f00-format</span>
+<span class="m">├──</span> <span class="d">f00-git</span>
+<span class="m">└──</span> <span class="d">f00-compat</span></pre>
+        </aside>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Built for daily use</h2>
+          <p>
+            MVP ships the essentials modern tools expect. Planned features are labeled —
+            we don’t sell vaporware as stable.
+          </p>
+        </div>
+        <div class="features">
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Speed first</h3>
+            <p>Rust core, lean I/O, and formatting that stays snappy on large trees.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Portable</h3>
+            <p>Linux, macOS, Windows, and BSD targets with consistent behavior where it counts.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>GNU mode</h3>
+            <p>Flip <code class="mono">--gnu</code> when scripts or muscle memory need classic <code class="mono">ls</code> shape.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Modern UX</h3>
+            <p>Colors, human sizes, recursive listing, and sensible defaults out of the box.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Git status</h3>
+            <p>See dirty, staged, and ignored paths inline while browsing a repository.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>Icons</h3>
+            <p>File-type icons when your terminal and font support them — optional, never required.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>JSON &amp; tree</h3>
+            <p>Machine-readable JSON for scripts; tree view for humans exploring structure.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>TOML config</h3>
+            <p>XDG-friendly <code class="mono">config.toml</code> for colors, icons, git, and defaults.</p>
+          </article>
+          <article class="card">
+            <span class="tag planned">planned</span>
+            <h3>TUI browser</h3>
+            <p>Interactive directory browser for when a one-shot listing isn’t enough.</p>
+          </article>
+          <article class="card">
+            <span class="tag planned">planned</span>
+            <h3>Archives</h3>
+            <p>List inside zip/tar (and friends) without extracting to disk.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Install in one line</h2>
+          <p>
+            Detects OS/arch, downloads the latest GitHub release, verifies checksums when
+            present, and installs to <code class="mono">~/.local/bin</code> (or
+            <code class="mono">INSTALL_DIR</code>).
+          </p>
+        </div>
+        <div class="two-col">
+          <div class="prose-block">
+            <h3>Quick install</h3>
+            <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
+            <p>Pin a version or choose a directory:</p>
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.1.0 bash
+curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
+            <p>Optional <code class="mono">ls</code> symlink (off by default):</p>
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
+          </div>
+          <div class="prose-block">
+            <h3>From source</h3>
+            <pre><code>git clone https://github.com/theesfeld/f00.git
+cd f00
+cargo build --release
+./target/release/f00 -la</code></pre>
+            <p>
+              Prefer crates.io when published:
+              <code class="mono">cargo install f00</code>
+            </p>
+            <p>
+              Full docs live in the
+              <a href="https://github.com/theesfeld/f00#readme">README</a>.
+              Installer script:
+              <a href="/install.sh">f00.sh/install.sh</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="demos">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Everyday commands</h2>
+          <p>Same spirit as <code class="mono">ls</code>, fewer papercuts.</p>
+        </div>
+        <div class="demo-grid">
+          <div class="demo">
+            <header>long listing + human sizes</header>
+            <pre><span style="color:#3ecf8e">$</span> f00 -lah
+drwxr-xr-x  glenda  4.2K  Jul 15  .git/
+-rw-r--r--  glenda  1.8K  Jul 15  README.md
+-rwxr-xr-x  glenda   12K  Jul 15  install.sh</pre>
+          </div>
+          <div class="demo">
+            <header>tree</header>
+            <pre><span style="color:#3ecf8e">$</span> f00 --tree
+.
+├── crates/
+│   ├── f00-cli/
+│   └── f00-core/
+└── site/</pre>
+          </div>
+          <div class="demo">
+            <header>json (tooling)</header>
+            <pre><span style="color:#3ecf8e">$</span> f00 --json | head -c 120
+{"entries":[{"name":"README.md","type":"file",…</pre>
+          </div>
+          <div class="demo">
+            <header>gnu-compatible mode</header>
+            <pre><span style="color:#3ecf8e">$</span> f00 --gnu -la /tmp
+# flag &amp; column shape closer to coreutils ls</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="compare">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>How f00 compares</h2>
+          <p>Not a pure clone of GNU ls, eza, or lsd — modern defaults plus a GNU escape hatch.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="compare">
+            <thead>
+              <tr>
+                <th></th>
+                <th>GNU ls</th>
+                <th>eza</th>
+                <th>lsd</th>
+                <th class="hl">f00</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Language</td>
+                <td>C</td>
+                <td>Rust</td>
+                <td>Rust</td>
+                <td class="hl">Rust</td>
+              </tr>
+              <tr>
+                <td>Icons / git</td>
+                <td>—</td>
+                <td>yes</td>
+                <td>yes</td>
+                <td class="hl">yes</td>
+              </tr>
+              <tr>
+                <td>Tree / JSON</td>
+                <td>—</td>
+                <td>tree</td>
+                <td>tree</td>
+                <td class="hl">tree + JSON</td>
+              </tr>
+              <tr>
+                <td>GNU mode flag</td>
+                <td>native</td>
+                <td>partial</td>
+                <td>partial</td>
+                <td class="hl">--gnu</td>
+              </tr>
+              <tr>
+                <td>Windows</td>
+                <td>via ports</td>
+                <td>yes</td>
+                <td>yes</td>
+                <td class="hl">first-class</td>
+              </tr>
+              <tr>
+                <td>curl | bash</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td class="hl">f00.sh</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Roadmap</h2>
+          <p>
+            Tracking is on
+            <a href="https://github.com/theesfeld/f00/issues">GitHub Issues</a>
+            — this is a summary only.
+          </p>
+        </div>
+        <ol class="roadmap">
+          <li>
+            <span class="n">01</span>
+            <div>
+              <strong>MVP solidify</strong>
+              <span>listing, -la, color, tree, JSON, icons, git, recursive, human sizes, --gnu</span>
+            </div>
+          </li>
+          <li>
+            <span class="n">02</span>
+            <div>
+              <strong>Release pipeline</strong>
+              <span>multi-arch binaries, checksums, installer, GitHub Pages site</span>
+            </div>
+          </li>
+          <li>
+            <span class="n">03</span>
+            <div>
+              <strong>Config &amp; completions</strong>
+              <span>TOML polish, shell completions, theme knobs</span>
+            </div>
+          </li>
+          <li>
+            <span class="n">04</span>
+            <div>
+              <strong>TUI (planned)</strong>
+              <span>interactive browser for large trees and quick navigation</span>
+            </div>
+          </li>
+          <li>
+            <span class="n">05</span>
+            <div>
+              <strong>Archives (planned)</strong>
+              <span>list zip/tar contents without extracting</span>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="docs">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Docs &amp; community</h2>
+          <p>Source of truth is the repository. Contributions welcome under dual MIT / Apache-2.0.</p>
+        </div>
+        <div class="two-col">
+          <div class="prose-block">
+            <h3>Links</h3>
+            <p><a href="https://github.com/theesfeld/f00">github.com/theesfeld/f00</a></p>
+            <p><a href="https://github.com/theesfeld/f00/releases">Releases</a></p>
+            <p><a href="https://github.com/theesfeld/f00/issues">Issues / roadmap tracking</a></p>
+            <p><a href="https://github.com/theesfeld/f00/blob/main/CONTRIBUTING.md">Contributing guide</a></p>
+          </div>
+          <div class="prose-block">
+            <h3>License</h3>
+            <p>
+              Dual-licensed under
+              <a href="https://github.com/theesfeld/f00/blob/main/LICENSE-MIT">MIT</a>
+              OR
+              <a href="https://github.com/theesfeld/f00/blob/main/LICENSE-APACHE">Apache-2.0</a>,
+              at your option.
+            </p>
+            <p style="margin-top:1.25rem;">
+              <a class="btn btn-primary" href="https://github.com/theesfeld/f00">Star on GitHub</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="copy">
+        <strong style="color:var(--text-dim)">f00</strong>
+        — next-generation <code class="mono">ls</code>.
+        © 2026 f00 contributors.
+        Licensed under MIT OR Apache-2.0.
+      </div>
+      <nav aria-label="Footer">
+        <a href="https://f00.sh/install.sh">install.sh</a>
+        <a href="https://github.com/theesfeld/f00">GitHub</a>
+        <a href="#install">Install</a>
+        <a href="#roadmap">Roadmap</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var btn = document.getElementById("copy-install");
+      var line = document.getElementById("install-line");
+      if (!btn || !line) return;
+      btn.addEventListener("click", function () {
+        var text = line.textContent.trim();
+        function done() {
+          btn.textContent = "copied";
+          btn.classList.add("copied");
+          setTimeout(function () {
+            btn.textContent = "copy";
+            btn.classList.remove("copied");
+          }, 1600);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(function () {
+            fallback();
+          });
+        } else {
+          fallback();
+        }
+        function fallback() {
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand("copy"); } catch (e) {}
+          document.body.removeChild(ta);
+          done();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  BINARY: f00
+
+jobs:
+  build:
+    name: build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive: tar.gz
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            archive: tar.gz
+            cross: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            archive: tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            archive: tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive: zip
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.target }}
+
+      - name: Install cross (Linux aarch64)
+        if: matrix.cross
+        run: cargo install cross --locked
+
+      - name: Build (cargo)
+        if: ${{ !matrix.cross }}
+        run: cargo build --release --locked --target ${{ matrix.target }} -p f00-cli
+        continue-on-error: false
+
+      - name: Build (cross)
+        if: matrix.cross
+        run: cross build --release --locked --target ${{ matrix.target }} -p f00-cli
+
+      - name: Package (Unix)
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="dist/${{ env.BINARY }}-${{ matrix.target }}"
+          mkdir -p "$STAGE"
+          BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}"
+          # Fallback if package layout uses workspace root target without -p path quirks
+          if [[ ! -f "$BIN" ]]; then
+            BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}"
+          fi
+          cp "$BIN" "$STAGE/${{ env.BINARY }}"
+          chmod +x "$STAGE/${{ env.BINARY }}"
+          # Optional docs in archive
+          for f in README.md LICENSE-MIT LICENSE-APACHE; do
+            [[ -f "$f" ]] && cp "$f" "$STAGE/"
+          done
+          tar -C dist -czf "dist/${{ env.BINARY }}-${{ matrix.target }}.tar.gz" "${{ env.BINARY }}-${{ matrix.target }}"
+          echo "ASSET=dist/${{ env.BINARY }}-${{ matrix.target }}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Package (Windows)
+        if: matrix.archive == 'zip'
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="dist/${{ env.BINARY }}-${{ matrix.target }}"
+          mkdir -p "$STAGE"
+          BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}.exe"
+          cp "$BIN" "$STAGE/${{ env.BINARY }}.exe"
+          for f in README.md LICENSE-MIT LICENSE-APACHE; do
+            [[ -f "$f" ]] && cp "$f" "$STAGE/"
+          done
+          (cd dist && 7z a -tzip "${{ env.BINARY }}-${{ matrix.target }}.zip" "${{ env.BINARY }}-${{ matrix.target }}")
+          echo "ASSET=dist/${{ env.BINARY }}-${{ matrix.target }}.zip" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BINARY }}-${{ matrix.target }}
+          path: dist/${{ env.BINARY }}-${{ matrix.target }}.*
+          if-no-files-found: error
+
+  publish:
+    name: publish release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten assets & checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          # artifacts/<name>/<files>
+          find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) -print0 \
+            | while IFS= read -r -d '' f; do
+                cp "$f" release-assets/
+              done
+          cd release-assets
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          generate_release_notes: true
+          files: |
+            release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
