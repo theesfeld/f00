@@ -331,8 +331,19 @@ Is ${version} published? Check ${GITHUB_RELEASES}"
     fi
   fi
 
-  printf "\n${GREEN}${BOLD}Done.${RESET} Run ${BOLD}f00 --help${RESET} to get started.\n" >&2
-  printf "${DIM}Docs: https://f00.sh · https://github.com/${REPO}${RESET}\n\n" >&2
+  printf "\n${GREEN}${BOLD}Done.${RESET} Run ${BOLD}f00 --help${RESET} or ${BOLD}f00 -la${RESET}.\n" >&2
+  printf "${DIM}Docs: https://f00.sh · https://github.com/${REPO}${RESET}\n" >&2
+  printf "\n${BOLD}Using f00 as ls?${RESET} (optional — we never replace /bin/ls by default)\n" >&2
+  printf "  Interactive alias (recommended):\n" >&2
+  printf "    echo \"alias ls='f00'\" >> ~/.bashrc    # or ~/.zshrc\n" >&2
+  printf "    echo \"alias ll='f00 -la'\" >> ~/.bashrc\n" >&2
+  printf "  Coreutils-shaped:  alias ls='f00 --gnu'   or   export F00_GNU=1\n" >&2
+  if [[ "${F00_INSTALL_LS:-0}" != "1" ]]; then
+    printf "  PATH symlink next time:  curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash\n" >&2
+  else
+    printf "  PATH symlink: enabled (ls -> f00 in %s)\n" "$install_dir" >&2
+  fi
+  printf "  Guide: ${BOLD}https://f00.sh/#as-ls${RESET}\n\n" >&2
 }
 
 main "$@"

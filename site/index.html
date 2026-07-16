@@ -35,6 +35,7 @@
       <nav class="nav" aria-label="Primary">
         <a href="#features">Features</a>
         <a href="#install">Install</a>
+        <a href="#as-ls">As ls</a>
         <a href="#demos">Demos</a>
         <a href="#compare">Compare</a>
         <a href="#roadmap">Roadmap</a>
@@ -217,8 +218,10 @@
             <p>Pin a version or choose a directory:</p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.6.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
-            <p>Optional <code class="mono">ls</code> symlink (off by default):</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
+            <p>
+              <strong>We never replace system <code class="mono">/bin/ls</code> by default.</strong>
+              The primary command is always <code class="mono">f00</code>.
+            </p>
           </div>
           <div class="prose-block">
             <h3>Update</h3>
@@ -236,7 +239,7 @@ cd f00
 cargo build --release -p f00
 ./target/release/f00 -la</code></pre>
             <p>
-              crates.io (when published):
+              crates.io:
               <code class="mono">cargo install f00 --locked</code>
             </p>
             <p>
@@ -246,6 +249,51 @@ cargo build --release -p f00
               <a href="/install.sh">f00.sh/install.sh</a>
               · releases:
               <a href="https://github.com/theesfeld/f00/releases">GitHub</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="as-ls">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Using f00 as <code class="mono">ls</code></h2>
+          <p>
+            The product command is <code class="mono">f00</code>. Drop-in for
+            <code class="mono">ls</code> is optional — we never replace system
+            <code class="mono">/bin/ls</code> by default.
+          </p>
+        </div>
+        <div class="two-col">
+          <div class="prose-block">
+            <h3>1. Shell alias (recommended)</h3>
+            <p>Interactive shells only. Scripts that call <code class="mono">/bin/ls</code> are unchanged.</p>
+            <pre><code># modern defaults (icons, git, …)
+echo "alias ls='f00'" >> ~/.bashrc    # or ~/.zshrc
+echo "alias ll='f00 -la'" >> ~/.bashrc
+
+# coreutils-shaped (no icons/git)
+# echo "alias ls='f00 --gnu'" >> ~/.bashrc
+# or: export F00_GNU=1</code></pre>
+          </div>
+          <div class="prose-block">
+            <h3>2. PATH symlink (installer opt-in)</h3>
+            <p>
+              Puts <code class="mono">ls → f00</code> next to the binary on your
+              <code class="mono">PATH</code>. Does not overwrite
+              <code class="mono">/bin/ls</code>.
+            </p>
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
+            <h3>3. Binary named <code class="mono">ls</code></h3>
+            <p>
+              If argv0 is <code class="mono">ls</code>, f00 uses quieter defaults
+              (icons / dirs-first off). Full strict mode still needs
+              <code class="mono">--gnu</code> or <code class="mono">F00_GNU=1</code>.
+            </p>
+            <p>
+              Full write-up:
+              <a href="https://github.com/theesfeld/f00#using-f00-as-ls">README</a>
             </p>
           </div>
         </div>
