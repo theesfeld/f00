@@ -407,6 +407,9 @@ pub struct ListOptions {
     /// Prefer io_uring batch `statx` for large directories when the `io-uring`
     /// cargo feature is enabled (Linux only; ignored otherwise).
     pub io_uring: bool,
+    /// Emit synthetic directory section headers in recursive listings (`-R`).
+    /// Off for `--tree` (headers are not used and cost extra work).
+    pub emit_dir_headers: bool,
 }
 
 impl Default for ListOptions {
@@ -438,6 +441,7 @@ impl Default for ListOptions {
             linux_statx: true,
             // Default on when the feature is compiled; runtime still falls back.
             io_uring: cfg!(feature = "io-uring"),
+            emit_dir_headers: true,
         }
     }
 }

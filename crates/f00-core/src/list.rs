@@ -313,17 +313,18 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
     )
 }
 
-/// Basic recursive listing using walkdir.
+/// Lightweight walk record (owned paths so we can parallelize metadata).
+struct Walked {
+    path: PathBuf,
+    depth: usize,
+    is_dir: bool,
+}
+
+/// Basic recursive listing using walkdir + optional parallel metadata.
 pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     let collect_timing = opts.collect_timing;
     let mut timing = ListTiming::default();
-    let t_all = if collect_timing {
-        Some(Instant::now())
-    } else {
-        None
-    };
 
-    let mut entries = Vec::new();
     let mut minor_errors = 0usize;
     let max_depth = opts.max_depth.unwrap_or(usize::MAX);
 
@@ -332,21 +333,21 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
     } else {
         None
     };
-    let mut ignore_by_dir: Vec<(PathBuf, IgnoreSet)> = Vec::new();
 
-    let fill = meta_fill_from(opts);
-    // Group by parent directory: emit header then children for each dir.
-    // First, collect all walkdir results.
-    // Recursive walk stays sequential: headers and section order must be stable.
-    // (Parallelism lives in non-recursive `list_directory` where readdir is flat.)
+    let t_walk = if collect_timing {
+        Some(Instant::now())
+    } else {
+        None
+    };
+
+    // Phase 1: sequential walk (stable preorder + name sort within dirs).
+    // Avoid calling `metadata()` here so we can stat in parallel next.
     let walker = WalkDir::new(path)
         .follow_links(opts.follow_links)
         .max_depth(max_depth)
         .sort_by_file_name();
 
-    // Track which directories we've seen to emit headers.
-    let mut current_dir: Option<PathBuf> = None;
-
+    let mut walked: Vec<Walked> = Vec::new();
     for item in walker {
         let item = match item {
             Ok(i) => i,
@@ -355,60 +356,84 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
                 continue;
             }
         };
-
         let depth = item.depth();
-        let entry_path = item.path();
-
-        // Skip the root itself as an entry; we'll list its children under a header if needed.
         if depth == 0 {
-            current_dir = Some(entry_path.to_path_buf());
-            // Emit header for root
-            entries.push(Entry::dir_header(entry_path, 0));
-            continue;
+            continue; // root is not a listed entry
         }
-
-        let parent = entry_path.parent().map(|p| p.to_path_buf());
-        if let Some(ref p) = parent {
-            if current_dir.as_ref() != Some(p) {
-                // New directory section
-                current_dir = Some(p.clone());
-            }
-        }
-
-        // When we visit a directory (depth > 0), emit a header before its children.
-        // Walkdir yields the directory node first.
-        if item.file_type().is_dir() && depth > 0 {
-            if let Ok(meta) = item.metadata() {
-                if let Ok(e) = Entry::from_path_and_meta_with(entry_path, &meta, depth, fill) {
-                    let show = crate::filter::should_show(&e, opts)
-                        && !ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir);
-                    if show {
-                        entries.push(e);
-                    }
-                }
-            }
-            entries.push(Entry::dir_header(entry_path, depth));
-            continue;
-        }
-
-        let meta = match item.metadata() {
-            Ok(m) => m,
-            Err(_) => continue,
-        };
-        if let Ok(e) = Entry::from_path_and_meta_with(entry_path, &meta, depth, fill) {
-            if crate::filter::should_show(&e, opts)
-                && !ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir)
-            {
-                entries.push(e);
-            }
-        }
+        walked.push(Walked {
+            path: item.path().to_path_buf(),
+            depth,
+            is_dir: item.file_type().is_dir(),
+        });
     }
 
-    if let Some(t0) = t_all {
-        // Attribute walk+stat wall time primarily to readdir/stat combined.
-        let ms = t0.elapsed().as_millis();
-        timing.readdir_ms = ms / 2;
-        timing.stat_ms = ms.saturating_sub(timing.readdir_ms);
+    if let Some(t0) = t_walk {
+        timing.readdir_ms = t0.elapsed().as_millis();
+    }
+
+    let fill = meta_fill_from(opts);
+    let t_stat = if collect_timing {
+        Some(Instant::now())
+    } else {
+        None
+    };
+
+    // Phase 2: parallel metadata → Entry (order-preserving).
+    let use_parallel = opts.use_parallel_stat(walked.len().max(1));
+    let built: Vec<Option<Entry>> = if use_parallel {
+        let map = |w: &Walked| {
+            Entry::from_path_with(&w.path, w.depth, fill)
+                .ok()
+                .filter(|e| crate::filter::should_show(e, opts))
+        };
+        if opts.threads > 1 {
+            match rayon::ThreadPoolBuilder::new()
+                .num_threads(opts.threads)
+                .build()
+            {
+                Ok(pool) => pool.install(|| walked.par_iter().map(map).collect()),
+                Err(_) => walked.par_iter().map(map).collect(),
+            }
+        } else {
+            walked.par_iter().map(map).collect()
+        }
+    } else {
+        walked
+            .iter()
+            .map(|w| {
+                Entry::from_path_with(&w.path, w.depth, fill)
+                    .ok()
+                    .filter(|e| crate::filter::should_show(e, opts))
+            })
+            .collect()
+    };
+
+    if let Some(t0) = t_stat {
+        timing.stat_ms = t0.elapsed().as_millis();
+    }
+
+    // Phase 3: sequential ignore filter + optional dir headers (stable walk order).
+    let mut ignore_by_dir: Vec<(PathBuf, IgnoreSet)> = Vec::new();
+    let mut entries: Vec<Entry> = Vec::with_capacity(built.len().saturating_add(16));
+
+    if opts.emit_dir_headers {
+        entries.push(Entry::dir_header(path, 0));
+    }
+
+    for (w, maybe) in walked.iter().zip(built) {
+        let Some(e) = maybe else {
+            continue;
+        };
+        if ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir) {
+            continue;
+        }
+        if opts.emit_dir_headers && w.is_dir {
+            // Directory node as a listable entry, then a section header for its children.
+            entries.push(e);
+            entries.push(Entry::dir_header(&w.path, w.depth));
+        } else {
+            entries.push(e);
+        }
     }
 
     let t_sort = if collect_timing {
@@ -417,8 +442,15 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
         None
     };
 
-    // For recursive mode, sort within sections delimited by headers.
-    sort_recursive_sections(&mut entries, opts);
+    if opts.emit_dir_headers {
+        sort_recursive_sections(&mut entries, opts);
+    } else {
+        // Tree path: walk order already name-sorted within each directory (WalkDir).
+        // Re-sort siblings only if a non-name primary sort was requested.
+        if !matches!(opts.sort_by, crate::options::SortBy::Name) || opts.reverse {
+            sort_tree_preorder(&mut entries, opts);
+        }
+    }
 
     if let Some(t0) = t_sort {
         timing.sort_ms = t0.elapsed().as_millis();
@@ -428,6 +460,58 @@ pub fn list_recursive(path: &Path, opts: &ListOptions) -> Result<Listing> {
         .with_timing(if collect_timing { Some(timing) } else { None });
     listing.minor_errors = minor_errors;
     Ok(listing)
+}
+
+/// Re-sort a preorder tree listing by re-grouping siblings after a non-name sort.
+///
+/// Keeps a valid preorder: each directory’s children stay contiguous under it.
+fn sort_tree_preorder(entries: &mut [Entry], opts: &ListOptions) {
+    if entries.is_empty() {
+        return;
+    }
+    // Build groups by parent path; stable relative to walk.
+    // Simple approach: sort by (parent, sort_key) while preserving depth structure
+    // via full path component sort with custom comparator for the leaf name only.
+    // For size/time sorts, sort siblings that share the same parent.
+    let mut i = 0;
+    while i < entries.len() {
+        let depth = entries[i].depth;
+        // Find run of direct children of the same parent starting at i… actually
+        // at depth `depth`, a sibling run is contiguous until depth < depth.
+        let parent = entries[i].path.parent().map(Path::to_path_buf);
+        let mut j = i + 1;
+        while j < entries.len() {
+            if entries[j].depth < depth {
+                break;
+            }
+            if entries[j].depth == depth {
+                let p = entries[j].path.parent().map(Path::to_path_buf);
+                if p != parent {
+                    break;
+                }
+            }
+            j += 1;
+        }
+        // Within [i, j), extract sibling indices at exactly `depth`.
+        let sib: Vec<usize> = (i..j).filter(|&k| entries[k].depth == depth).collect();
+        if sib.len() > 1 {
+            // Sort sibling subtrees by moving whole subtree blocks.
+            // Build blocks: each sibling at depth owns [start, next_sibling).
+            let mut blocks: Vec<Vec<Entry>> = Vec::with_capacity(sib.len());
+            for (bi, &start) in sib.iter().enumerate() {
+                let end = sib.get(bi + 1).copied().unwrap_or(j);
+                blocks.push(entries[start..end].to_vec());
+            }
+            // cmp_entry already applies reverse when set.
+            blocks.sort_by(|a, b| crate::sort::cmp_entry(&a[0], &b[0], opts));
+            let mut out = Vec::with_capacity(j - i);
+            for b in blocks {
+                out.extend(b);
+            }
+            entries[i..j].clone_from_slice(&out);
+        }
+        i = if j > i { j } else { i + 1 };
+    }
 }
 
 /// Check root ignore set and the ignore file in the entry's parent directory.
