@@ -399,3 +399,44 @@ fn recursive_unreadable_subdir_exits_1_continues() {
 
     let _ = fs::remove_dir_all(&dir);
 }
+
+/// GNU coreutils accepts several WHEN synonyms for `--color`.
+/// Distros (notably NixOS) inject `ls --color=tty` via shell aliases.
+#[test]
+fn smoke_color_gnu_synonyms_accepted() {
+    let (dir, cfg) = smoke_fixture("color-syn");
+    // Values accepted by GNU coreutils 9.x `ls --color=WHEN`
+    let gnu_when = [
+        "auto", "always", "never", "tty", "if-tty", "yes", "no", "force", "none",
+    ];
+    for when in gnu_when {
+        let out = Command::new(bin())
+            .env("LC_ALL", "C")
+            .args([&format!("--color={when}"), "-1", "--git=false", "--config"])
+            .arg(&cfg)
+            .arg(&dir)
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "--color={when} must be accepted (GNU drop-in); stderr={}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        assert!(
+            stdout.contains("alpha.txt"),
+            "--color={when} should still list: {stdout}"
+        );
+    }
+    // Clap rejection for unknown WHEN must stay (not silent ignore)
+    let bad = Command::new(bin())
+        .env("LC_ALL", "C")
+        .args(["--color=rainbow", "-1", "--git=false", "--config"])
+        .arg(&cfg)
+        .arg(&dir)
+        .output()
+        .unwrap();
+    assert_ne!(bad.status.code(), Some(0), "unknown --color WHEN must fail");
+    let _ = fs::remove_dir_all(&dir);
+}
