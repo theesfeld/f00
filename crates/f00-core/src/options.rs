@@ -26,11 +26,12 @@ pub enum ColorWhen {
 }
 
 impl ColorWhen {
+    /// Parse GNU `ls` WHEN tokens used by `--color`, `--classify`, `--hyperlink`.
     pub fn parse(s: &str) -> Option<Self> {
         match s.to_ascii_lowercase().as_str() {
-            "auto" => Some(Self::Auto),
-            "always" | "yes" | "force" => Some(Self::Always),
-            "never" | "no" | "none" => Some(Self::Never),
+            "auto" | "tty" | "if-tty" => Some(Self::Auto),
+            "always" | "yes" | "force" | "true" | "on" => Some(Self::Always),
+            "never" | "no" | "none" | "false" | "off" => Some(Self::Never),
             _ => None,
         }
     }
@@ -56,7 +57,7 @@ pub enum IconsWhen {
 impl IconsWhen {
     pub fn parse(s: &str) -> Option<Self> {
         match s.to_ascii_lowercase().as_str() {
-            "auto" => Some(Self::Auto),
+            "auto" | "tty" | "if-tty" => Some(Self::Auto),
             "always" | "yes" | "force" | "true" | "on" => Some(Self::Always),
             "never" | "no" | "none" | "false" | "off" => Some(Self::Never),
             _ => None,
@@ -230,9 +231,10 @@ pub enum HyperlinkWhen {
 }
 
 impl HyperlinkWhen {
+    /// Same WHEN vocabulary as GNU `--color` / `--classify` / `--hyperlink`.
     pub fn parse(s: &str) -> Option<Self> {
         match s.to_ascii_lowercase().as_str() {
-            "auto" => Some(Self::Auto),
+            "auto" | "tty" | "if-tty" => Some(Self::Auto),
             "always" | "yes" | "force" | "true" | "on" => Some(Self::Always),
             "never" | "no" | "none" | "false" | "off" => Some(Self::Never),
             _ => None,

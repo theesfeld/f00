@@ -101,15 +101,21 @@ fn resolve_output(args: &Args) -> OutputMode {
     }
 }
 
-fn resolve_indicator(args: &Args) -> IndicatorStyle {
+fn resolve_indicator(args: &Args, is_tty: bool) -> IndicatorStyle {
     if let Some(ref word) = args.indicator_style {
         if let Some(s) = IndicatorStyle::parse(word) {
             return s;
         }
     }
-    if args.classify {
-        IndicatorStyle::Classify
-    } else if args.file_type {
+    // GNU: `-F` / `--classify[=WHEN]` — WHEN uses the same vocabulary as `--color`.
+    if let Some(when) = args.classify {
+        let when = f00_core::ColorWhen::from(when);
+        if when.enabled(is_tty) {
+            return IndicatorStyle::Classify;
+        }
+        // `--classify=never` or auto on non-TTY: do not classify (still honor -p / --file-type).
+    }
+    if args.file_type {
         IndicatorStyle::FileType
     } else if args.indicator_slash {
         IndicatorStyle::Slash
@@ -174,9 +180,11 @@ fn resolve_block_size(args: &Args) -> BlockSize {
 }
 
 fn resolve_hyperlink(args: &Args) -> HyperlinkWhen {
-    match args.hyperlink.as_deref() {
+    match args.hyperlink {
         None => HyperlinkWhen::Never,
-        Some(s) => HyperlinkWhen::parse(s).unwrap_or(HyperlinkWhen::Always),
+        Some(crate::cli::ColorArg::Auto) => HyperlinkWhen::Auto,
+        Some(crate::cli::ColorArg::Always) => HyperlinkWhen::Always,
+        Some(crate::cli::ColorArg::Never) => HyperlinkWhen::Never,
     }
 }
 
@@ -299,6 +307,8 @@ pub fn build_config(args: &Args) -> Config {
         hyperlink = HyperlinkWhen::Never;
     }
 
+    let indicator = resolve_indicator(args, is_stdout_tty);
+
     Config {
         list,
         output,
@@ -306,8 +316,8 @@ pub fn build_config(args: &Args) -> Config {
         human_sizes: args.human_readable || args.si,
         si_sizes: args.si,
         icons,
-        classify: args.classify,
-        indicator: resolve_indicator(args),
+        classify: matches!(indicator, IndicatorStyle::Classify),
+        indicator,
         terminal_width: resolve_width(args),
         is_stdout_tty,
         show_owner,

@@ -117,8 +117,9 @@ pub fn load_user_config(explicit: Option<&Path>) -> anyhow::Result<Option<FileCo
 }
 
 fn parse_color_arg(s: &str) -> Option<ColorArg> {
+    // Keep in sync with `ColorArg` clap aliases (GNU coreutils ls --color=WHEN).
     match s.to_ascii_lowercase().as_str() {
-        "auto" => Some(ColorArg::Auto),
+        "auto" | "tty" | "if-tty" => Some(ColorArg::Auto),
         "always" | "yes" | "force" | "true" | "on" => Some(ColorArg::Always),
         "never" | "no" | "none" | "false" | "off" => Some(ColorArg::Never),
         _ => None,
@@ -200,7 +201,7 @@ pub fn merge_config_into_args(args: &mut Args, file: &FileConfig) {
         args.human_readable = true;
     }
     if let Some(true) = d.classify {
-        args.classify = true;
+        args.classify = Some(ColorArg::Always);
     }
 
     if let Some(v) = d.icons {
@@ -377,6 +378,37 @@ mod tests {
         let mut args = empty_args();
         merge_config_into_args(&mut args, &cfg);
         assert!(matches!(args.color, ColorArg::Never));
+    }
+
+    #[test]
+    fn parse_color_arg_gnu_synonyms() {
+        for s in ["auto", "tty", "if-tty", "TTY", "If-Tty"] {
+            assert!(
+                matches!(parse_color_arg(s), Some(ColorArg::Auto)),
+                "auto synonym: {s}"
+            );
+        }
+        for s in ["always", "yes", "force", "true", "on"] {
+            assert!(
+                matches!(parse_color_arg(s), Some(ColorArg::Always)),
+                "always synonym: {s}"
+            );
+        }
+        for s in ["never", "no", "none", "false", "off"] {
+            assert!(
+                matches!(parse_color_arg(s), Some(ColorArg::Never)),
+                "never synonym: {s}"
+            );
+        }
+        assert!(parse_color_arg("rainbow").is_none());
+    }
+
+    #[test]
+    fn merge_color_tty_from_config() {
+        let cfg = parse_config_str(r#"color = "tty""#).unwrap();
+        let mut args = empty_args();
+        merge_config_into_args(&mut args, &cfg);
+        assert!(matches!(args.color, ColorArg::Auto));
     }
 
     #[test]

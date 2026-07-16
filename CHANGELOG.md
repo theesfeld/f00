@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.10.1] - 2026-07-16
+
+### Fixed
+- **`--color=WHEN` GNU synonyms:** accept `tty` / `if-tty` (auto), plus `yes`/`force` (always) and `no`/`none` (never), matching coreutils so distro `ls` aliases work (NixOS injects `--color=tty`)
+- **`--classify[=WHEN]`** / `-F`: accept optional WHEN (same vocabulary as `--color`); bare `-F` / `--classify` still means always
+- **`--hyperlink[=WHEN]`**: strict WHEN enum with the same GNU synonyms (unknown values rejected)
+- Config `color = "tty"` / `"if-tty"` parsed the same way as the CLI
+
+### Changed
+- Version **0.10.0 → 0.10.1**
+
 ## [0.10.0] - 2026-07-16
 
 ### Added
@@ -142,6 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.10.1]: https://github.com/theesfeld/f00/releases/tag/v0.10.1
 [0.10.0]: https://github.com/theesfeld/f00/releases/tag/v0.10.0
 [0.9.0]: https://github.com/theesfeld/f00/releases/tag/v0.9.0
 [0.8.0]: https://github.com/theesfeld/f00/releases/tag/v0.8.0
