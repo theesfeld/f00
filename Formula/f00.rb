@@ -11,28 +11,28 @@
 class F00 < Formula
   desc "Modern, friendly directory lister (ls rewrite in Rust)"
   homepage "https://f00.sh"
-  version "0.10.4"
+  version "0.10.5"
   license any_of: ["MIT", "Apache-2.0"]
 
   on_macos do
     on_arm do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-apple-darwin.tar.gz"
-      sha256 "f94298a6d0b4cc0de7269f0e2a0716b3aeaabb68a9099e7c8651b096e9b1f923"
+      sha256 "13a199e9a7dbf173bbc01d80b8d4ae6d05d92e6c8fc4b2fb5279e35b2ec62fad"
     end
     on_intel do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-apple-darwin.tar.gz"
-      sha256 "fbcd9260e86391389e10665a15fe6793648570b02a8925ecffbf64a488744714"
+      sha256 "8855d7e9c3ffcc06b06da7103948d13c9fa2f600063f649d445d246ca17183b8"
     end
   end
 
   on_linux do
     on_arm do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "0c0f6fd886da8099f086d037ddacd75c3fa51943068cd135397a13177b876cb3"
+      sha256 "2e868d2b1d0b23c6c1fefbb782fe356c0dd1f8924bb48f44040b05a0cbadfe38"
     end
     on_intel do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "060420f2af3efd73ef6a6acbaed940f9e52dea8f597c6dd0383f85a7e27e3c47"
+      sha256 "444a44569e2bd79e843b62ed08769d7aa8c0da572d1b5e8716d5e5ec1beaa7ac"
     end
   end
 
