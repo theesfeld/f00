@@ -1,0 +1,23 @@
+# nfpm template for f00. Env: VERSION, ARCH (amd64|arm64), BIN_PATH, OUT_DIR
+name: f00
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: utils
+priority: optional
+maintainer: theesfeld <noreply@f00.sh>
+description: |
+  f00 — a modern, friendly directory lister (ls rewrite in Rust).
+  Modern UX by default; exact GNU behavior under --gnu.
+homepage: https://f00.sh
+license: MIT OR Apache-2.0
+contents:
+  - src: ${BIN_PATH}
+    dst: /usr/bin/f00
+    file_info:
+      mode: 0755
+overrides:
+  deb:
+    depends: []
+  rpm:
+    depends: []

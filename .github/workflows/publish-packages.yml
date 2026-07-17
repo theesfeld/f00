@@ -1,0 +1,45 @@
+name: Publish packages
+
+# Bootstrap / re-push package manager channels from the current repo manifests
+# without cutting a new release. Used after secrets are first added.
+on:
+  workflow_dispatch:
+    inputs:
+      channels:
+        description: "Comma list: homebrew,scoop,aur,all"
+        required: false
+        default: "all"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: chmod scripts
+        run: chmod +x scripts/*.sh
+
+      - name: Publish Homebrew tap
+        if: ${{ github.event.inputs.channels == 'all' || contains(github.event.inputs.channels, 'homebrew') }}
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: scripts/publish-homebrew-tap.sh Formula/f00.rb
+
+      - name: Publish Scoop bucket
+        if: ${{ github.event.inputs.channels == 'all' || contains(github.event.inputs.channels, 'scoop') }}
+        env:
+          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-scoop.sh packaging/scoop/f00.json
+
+      - name: Publish AUR
+        if: ${{ github.event.inputs.channels == 'all' || contains(github.event.inputs.channels, 'aur') }}
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+          AUR_EMAIL: ${{ secrets.AUR_EMAIL }}
+        run: scripts/publish-aur.sh packaging/aur

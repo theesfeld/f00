@@ -229,10 +229,40 @@ curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
               <strong>We never replace system <code class="mono">/bin/ls</code> by default.</strong>
               The primary command is always <code class="mono">f00</code>.
             </p>
+
+            <h3>Package managers</h3>
+            <p>Same release assets; prefer the package manager’s upgrade for these installs.</p>
+            <pre><code># Homebrew
+brew install theesfeld/tap/f00
+
+# crates.io
+cargo install f00 --locked
+
+# Arch (AUR)
+yay -S f00
+# or: paru -S f00
+
+# Windows Scoop
+scoop bucket add theesfeld https://github.com/theesfeld/scoop-bucket
+scoop install f00
+
+# Windows winget (after first catalog merge)
+winget install theesfeld.f00
+
+# Nix
+nix profile install github:theesfeld/f00
+
+# Debian/Ubuntu (.deb from GitHub Releases)
+# curl -fsSL -O https://github.com/theesfeld/f00/releases/download/v0.10.4/f00_0.10.4_amd64.deb
+# sudo dpkg -i f00_0.10.4_amd64.deb
+
+# Fedora/RHEL (.rpm from GitHub Releases)
+# curl -fsSL -O https://github.com/theesfeld/f00/releases/download/v0.10.4/f00-0.10.4-1.x86_64.rpm
+# sudo rpm -i f00-0.10.4-1.x86_64.rpm</code></pre>
           </div>
           <div class="prose-block">
             <h3>Update</h3>
-            <p>Once installed, upgrade from GitHub Releases (checksum verified):</p>
+            <p>Once installed via the shell installer, upgrade from GitHub Releases (checksum verified):</p>
             <pre><code>f00 --update
 # or
 f00 update</code></pre>
@@ -240,15 +270,17 @@ f00 update</code></pre>
             <pre><code>f00 --check-update
 # or
 f00 check-update</code></pre>
+            <p>
+              Package-manager installs should use that tool instead
+              (<code class="mono">brew upgrade f00</code>,
+              <code class="mono">yay -Syu f00</code>,
+              <code class="mono">scoop update f00</code>, …).
+            </p>
             <h3>From source</h3>
             <pre><code>git clone https://github.com/theesfeld/f00.git
 cd f00
 cargo build --release -p f00
 ./target/release/f00 -la</code></pre>
-            <p>
-              crates.io:
-              <code class="mono">cargo install f00 --locked</code>
-            </p>
             <p>
               Full docs:
               <a href="https://github.com/theesfeld/f00#readme">README</a>

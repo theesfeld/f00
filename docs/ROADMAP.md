@@ -25,10 +25,9 @@ Phase: [#47](https://github.com/theesfeld/f00/issues/47) · Impl: [#48](https://
 
 | Item | Notes |
 |------|--------|
-| crates.io publish | Needs `CARGO_REGISTRY_TOKEN` |
-| Homebrew tap content | Push formula + sha256s to `theesfeld/homebrew-tap` |
-| `--update` rate-limit resilience | [#49](https://github.com/theesfeld/f00/issues/49) — redirect-first latest resolve |
-| Install path / PATH UX | Prefer `~/.local/bin` + shell rc (tracked with #49) |
+| Package managers (Homebrew, deb/rpm, AUR, Scoop, Winget) | [#81](https://github.com/theesfeld/f00/issues/81) — auto on release; needs secrets |
+| crates.io publish on tag | Needs `CARGO_REGISTRY_TOKEN` (wired in release workflow) |
+| Official distro packages | Later (Debian/Fedora/homebrew-core) — not phase #81 |
 
 ## Tracking
 

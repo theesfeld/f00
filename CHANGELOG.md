@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [Unreleased]
+
+### Added
+- **Package managers:** release pipeline builds `.deb`/`.rpm`, refreshes Homebrew/AUR/Scoop manifests, and publishes when secrets are set (Homebrew tap, Scoop bucket, AUR, optional winget/crates.io)
+- Install docs (README + f00.sh) list Homebrew, cargo, AUR, Scoop, winget, Nix, deb, and rpm
+- Manual workflow **Publish packages** to bootstrap channels without a new tag
+
 ## [0.10.4] - 2026-07-17
 
 ### Changed
