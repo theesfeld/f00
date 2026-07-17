@@ -12,10 +12,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust: modern UX by default, **exact GNU behavior under `--gnu`** for scripts, plus tree / JSON / icons / git.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.4
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.5
 
 <!-- agents:status:begin -->
-> **Status:** v0.10.4 dim dotfiles · full chrome as `ls` · exact GNU under `--gnu` · Latest: `v0.10.4` · 0.x minors may include breaking changes
+> **Status:** v0.10.5 packaging (deb/rpm · brew · AUR · scoop · winget) · Latest: `v0.10.5` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -31,7 +31,7 @@ curl -fsSL https://f00.sh/install.sh | bash
 Installs to **`~/.local/bin`** by default (override with `INSTALL_DIR`). The installer adds that dir to your shell rc when it is missing from `PATH` (`ADD_PATH=0` to skip).
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.4 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.5 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 ```
 
