@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Submit or update theesfeld.f00 on microsoft/winget-pkgs via a fork + PR.
-# Requires: WINGET_TOKEN (PAT that can fork public repos and open PRs)
+# Requires:
+#   - WINGET_TOKEN: classic PAT with `public_repo` (recommended) OR fine-grained
+#     with write access to theesfeld/winget-pkgs after a manual fork
+#   - Fork https://github.com/microsoft/winget-pkgs → theesfeld/winget-pkgs (once)
 # Usage: publish-winget.sh <version> [SHA256SUMS-path]
-# If SHA256SUMS is omitted, regenerates from packaging/winget if present, or fails.
 set -euo pipefail
 
 VERSION="${1:?version required (no v prefix)}"
@@ -34,16 +36,29 @@ if [[ ! -d "${MANIFEST_DIR}" ]]; then
   exit 1
 fi
 
-# Ensure fork exists
+# Prefer an existing fork. Auto-fork only as a best-effort (classic PAT).
 if ! gh api "repos/${FORK}" >/dev/null 2>&1; then
-  echo "forking ${UPSTREAM} → ${FORK_OWNER}"
-  gh repo fork "${UPSTREAM}" --clone=false --default-branch-only=false 2>/dev/null \
-    || gh api -X POST "repos/${UPSTREAM}/forks" >/dev/null
-  # Wait for fork availability
+  echo "fork ${FORK} not found; attempting create from ${UPSTREAM}"
+  if ! gh repo fork "${UPSTREAM}" --clone=false 2>"${TMPDIR:-/tmp}/winget-fork.err"; then
+    cat "${TMPDIR:-/tmp}/winget-fork.err" >&2 || true
+    echo "" >&2
+    echo "winget: cannot create fork with this token." >&2
+    echo "Do this once in the browser, then re-run:" >&2
+    echo "  1) Open https://github.com/microsoft/winget-pkgs" >&2
+    echo "  2) Click Fork → create theesfeld/winget-pkgs" >&2
+    echo "  3) Use a classic PAT (public_repo) as WINGET_TOKEN, or a fine-grained" >&2
+    echo "     token with Contents+PR write on theesfeld/winget-pkgs" >&2
+    exit 1
+  fi
   for _ in $(seq 1 30); do
     gh api "repos/${FORK}" >/dev/null 2>&1 && break
     sleep 2
   done
+fi
+
+if ! gh api "repos/${FORK}" >/dev/null 2>&1; then
+  echo "winget: fork ${FORK} still missing" >&2
+  exit 1
 fi
 
 WORKDIR="$(mktemp -d)"
@@ -52,7 +67,6 @@ trap 'rm -rf "${WORKDIR}"' EXIT
 git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${FORK}.git" "${WORKDIR}/winget-pkgs"
 cd "${WORKDIR}/winget-pkgs"
 
-# Sync main from upstream (best-effort)
 git remote add upstream "https://github.com/${UPSTREAM}.git" 2>/dev/null || true
 git fetch --depth 1 upstream master 2>/dev/null || git fetch --depth 1 upstream main 2>/dev/null || true
 BASE_BRANCH="master"
@@ -77,22 +91,20 @@ git config user.name "f00-release-bot"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git add "${DEST}"
 if git diff --cached --quiet; then
-  echo "winget: manifests unchanged"
-  # Still try to open PR if branch exists remotely with changes
+  echo "winget: manifests unchanged on branch"
 else
   git commit -m "New version: ${ID} version ${VERSION}"
 fi
 
 git push -u origin "${BRANCH}" --force
 
-# Open PR against upstream if none open
 EXISTING="$(gh pr list --repo "${UPSTREAM}" --head "${FORK_OWNER}:${BRANCH}" --json number -q '.[0].number' 2>/dev/null || true)"
 if [[ -n "${EXISTING}" ]]; then
-  echo "winget: PR #${EXISTING} already open"
+  echo "winget: PR #${EXISTING} already open → https://github.com/${UPSTREAM}/pull/${EXISTING}"
   exit 0
 fi
 
-gh pr create --repo "${UPSTREAM}" \
+URL="$(gh pr create --repo "${UPSTREAM}" \
   --base "${BASE_BRANCH}" \
   --head "${FORK_OWNER}:${BRANCH}" \
   --title "New version: ${ID} version ${VERSION}" \
@@ -111,6 +123,6 @@ Portable zip installer from GitHub Releases.
 
 Submitted by automated release packaging for theesfeld/f00.
 EOF
-)"
+)")"
 
-echo "winget: opened PR for ${ID} ${VERSION}"
+echo "winget: opened ${URL}"
