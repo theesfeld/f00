@@ -1,6 +1,6 @@
 //! GNU / POSIX `ls` compatibility helpers for **f00**.
 
-use f00_core::{IconsWhen, ListOptions, OutputMode, SortBy};
+use f00_core::{ListOptions, OutputMode, SortBy};
 
 /// Compatibility profile applied when `--gnu` is set.
 #[derive(Debug, Clone, Default)]
@@ -54,18 +54,13 @@ pub fn gnu_mode_active(gnu_flag: bool) -> bool {
 
 /// Soft defaults when the binary is invoked as `ls` / `ls.exe`.
 ///
-/// Turns off icons and dirs-first unless the corresponding CLI flags were set.
-/// Config may re-enable them after this runs. Does **not** enable full `--gnu`
-/// strict mode — that remains opt-in via `--gnu` / `F00_GNU`.
-pub fn prefer_ls_defaults(
-    icons: &mut IconsWhen,
-    dirs_first: &mut bool,
-    icons_from_cli: bool,
-    dirs_first_from_cli: bool,
-) {
-    if !icons_from_cli {
-        *icons = IconsWhen::Never;
-    }
+/// Interactive drop-in keeps **full f00 chrome** (icons, git, modern colors) —
+/// `icons=auto` already stays off when stdout is not a TTY. Only dirs-first is
+/// defaulted off (GNU `ls` does not group dirs first) unless the user passed
+/// `--group-directories-first` / config.
+///
+/// Full strict coreutils behavior remains opt-in via `--gnu` / `F00_GNU`.
+pub fn prefer_ls_defaults(dirs_first: &mut bool, dirs_first_from_cli: bool) {
     if !dirs_first_from_cli {
         *dirs_first = false;
     }
@@ -125,20 +120,16 @@ mod tests {
     }
 
     #[test]
-    fn prefer_ls_clears_presentation_defaults() {
-        let mut icons = IconsWhen::Auto;
+    fn prefer_ls_defaults_dirs_first_off() {
         let mut dirs_first = true;
-        prefer_ls_defaults(&mut icons, &mut dirs_first, false, false);
-        assert_eq!(icons, IconsWhen::Never);
+        prefer_ls_defaults(&mut dirs_first, false);
         assert!(!dirs_first);
     }
 
     #[test]
-    fn prefer_ls_keeps_cli_overrides() {
-        let mut icons = IconsWhen::Always;
+    fn prefer_ls_keeps_explicit_dirs_first() {
         let mut dirs_first = true;
-        prefer_ls_defaults(&mut icons, &mut dirs_first, true, true);
-        assert_eq!(icons, IconsWhen::Always);
+        prefer_ls_defaults(&mut dirs_first, true);
         assert!(dirs_first);
     }
 

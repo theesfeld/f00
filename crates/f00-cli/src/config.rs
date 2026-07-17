@@ -279,15 +279,12 @@ pub fn invoked_as_ls_from(argv0: Option<std::ffi::OsString>) -> bool {
 /// CLI flags already present in `args` win over config where merge logic allows.
 pub fn resolve_args(args: &mut Args, file: Option<&FileConfig>, as_ls: bool) {
     if as_ls {
-        // Icons / dirs_first off unless the user passed the flags (config may re-enable).
-        let mut icons = IconsWhen::from(args.icons);
+        // Soft drop-in: keep full f00 chrome (icons/git). Only quiet dirs-first
+        // unless the user asked for it. Strict plain mode is `--gnu` only.
         f00_compat::prefer_ls_defaults(
-            &mut icons,
             &mut args.dirs_first,
-            cli_has_long("--icons"),
-            cli_has_long("--dirs-first"),
+            cli_has_long("--dirs-first") || cli_has_long("--group-directories-first"),
         );
-        args.icons = IconsArg::from(icons);
     }
     if let Some(file) = file {
         merge_config_into_args(args, file);
@@ -445,14 +442,26 @@ mod tests {
     }
 
     #[test]
-    fn resolve_ls_then_config_can_enable_icons() {
+    fn resolve_ls_soft_mode_keeps_default_icons() {
+        let mut args = empty_args();
+        assert_eq!(args.icons, IconsArg::Auto);
+        resolve_args(&mut args, None, true);
+        assert_eq!(
+            args.icons,
+            IconsArg::Auto,
+            "argv0 ls must keep icons=auto (full chrome; only --gnu strips icons)"
+        );
+        assert!(
+            !args.dirs_first,
+            "soft ls still defaults dirs-first off like GNU"
+        );
+    }
+
+    #[test]
+    fn resolve_ls_config_can_set_icons_always() {
         let cfg = parse_config_str(r#"icons = true"#).unwrap();
         let mut args = empty_args();
         resolve_args(&mut args, Some(&cfg), true);
-        assert_eq!(
-            args.icons,
-            IconsArg::Always,
-            "config should re-enable icons under argv0 ls"
-        );
+        assert_eq!(args.icons, IconsArg::Always);
     }
 }

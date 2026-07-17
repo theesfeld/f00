@@ -72,7 +72,7 @@
               <a class="version-pill" id="latest-version"
                  href="https://github.com/theesfeld/f00/releases/latest"
                  title="GitHub Releases">
-                <strong id="latest-version-label">v0.10.2</strong>
+                <strong id="latest-version-label">v0.10.3</strong>
               </a>
               <a class="version-assets" href="https://github.com/theesfeld/f00/releases">assets</a>
             </p>
@@ -216,14 +216,14 @@
             <p class="install-version-label">
               Latest release
               <a class="version-pill" href="https://github.com/theesfeld/f00/releases/latest">
-                <strong id="install-version-label">v0.10.2</strong>
+                <strong id="install-version-label">v0.10.3</strong>
               </a>
             </p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Add to your <code class="mono">PATH</code> if needed:</p>
             <pre><code>export PATH="$HOME/.local/bin:$PATH"</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.2 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.3 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>
               <strong>We never replace system <code class="mono">/bin/ls</code> by default.</strong>
@@ -294,8 +294,9 @@ echo "alias ls='f00 --gnu'" >> ~/.bashrc
             <pre><code>curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash</code></pre>
             <h3>3. Binary named <code class="mono">ls</code></h3>
             <p>
-              If argv0 is <code class="mono">ls</code>, f00 uses quieter defaults
-              (icons / dirs-first off). Full strict mode still needs
+              If argv0 is <code class="mono">ls</code>, f00 keeps full product chrome
+              on a TTY (icons, git, modern colors). Dirs-first stays off by default.
+              Strict plain coreutils needs
               <code class="mono">--gnu</code> or <code class="mono">F00_GNU=1</code>.
             </p>
             <p>
@@ -550,7 +551,7 @@ crates
       <div class="copy">
         <strong style="color:var(--text-dim)">f00</strong>
         — next-generation <code class="mono">ls</code>.
-        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.10.2</a>.
+        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.10.3</a>.
         © 2026 f00 contributors.
         Licensed under MIT OR Apache-2.0.
       </div>
@@ -567,7 +568,7 @@ crates
   <script>
     (function () {
       // Fallback version embedded at ship time; refreshed from Releases API when available.
-      var FALLBACK_VERSION = "v0.10.2";
+      var FALLBACK_VERSION = "v0.10.3";
 
       function setVersionLabels(tag) {
         if (!tag) return;
