@@ -40,9 +40,17 @@ impl Colorizer {
     }
 
     /// Colorize a display name for an entry using full LS_COLORS matching.
+    ///
+    /// Hidden / dotfile names (leading `.`) are painted **darker grey** so they
+    /// recede next to normal entries (eza-style). Applies whenever colors are on,
+    /// including under `--gnu` when color is forced on.
     pub fn paint_name(&self, entry: &Entry, text: &str) -> String {
         if !self.enabled {
             return text.to_string();
+        }
+
+        if is_dotfile_name(&entry.name) {
+            return Color::DarkGray.paint(text).to_string();
         }
 
         // Prefer path + metadata style when possible.
@@ -231,6 +239,11 @@ fn paint_with_ls_style(text: &str, style: &Style) -> String {
     style.to_nu_ansi_term_style().paint(text).to_string()
 }
 
+/// Dotfiles / hidden entries: basename starts with `.` (includes `.` and `..`).
+fn is_dotfile_name(name: &str) -> bool {
+    name.starts_with('.')
+}
+
 fn entry_is_exec(entry: &Entry) -> bool {
     #[cfg(unix)]
     {
@@ -302,6 +315,35 @@ mod tests {
         assert!(c.modern_long_theme(false));
         assert_eq!(c.paint_perms("-rwxr-xr-x", true), "-rwxr-xr-x");
         assert_ne!(c.paint_perms("-rwxr-xr-x", false), "-rwxr-xr-x");
+    }
+
+    #[test]
+    fn hidden_dotfiles_paint_dark_grey() {
+        let c = Colorizer::from_ls_colors(true, "*.rs=01;31:");
+        let hidden = file(".gitignore");
+        let normal = file("README.md");
+        let painted_h = c.paint_name(&hidden, ".gitignore");
+        let painted_n = c.paint_name(&normal, "README.md");
+        assert!(
+            painted_h.contains(".gitignore"),
+            "name preserved: {painted_h:?}"
+        );
+        // Dark gray uses an ANSI sequence; plain name alone would not.
+        assert_ne!(
+            painted_h, ".gitignore",
+            "hidden name should be styled, got {painted_h:?}"
+        );
+        // Hidden styling is independent of LS_COLORS extension rules.
+        assert!(
+            painted_h.contains('\u{1b}') || painted_h != painted_n,
+            "expected ANSI or distinct paint for hidden vs normal"
+        );
+        let off = Colorizer::from_ls_colors(false, "");
+        assert_eq!(off.paint_name(&hidden, ".gitignore"), ".gitignore");
+        assert!(is_dotfile_name("."));
+        assert!(is_dotfile_name(".."));
+        assert!(is_dotfile_name(".config"));
+        assert!(!is_dotfile_name("config"));
     }
 
     #[test]
