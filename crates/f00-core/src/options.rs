@@ -12,6 +12,8 @@ pub enum SortBy {
     Extension,
     /// Natural / version sort (`-v`, strverscmp-like).
     Version,
+    /// Shortest display width first (GNU `--sort=width`).
+    Width,
     /// Directory order / no sort (`-U`).
     None,
 }
@@ -500,6 +502,9 @@ pub struct Config {
     pub dired: bool,
     /// Long-listing time style.
     pub time_style: TimeStyle,
+    /// Print GNU `total N` before directory content listings (`-l` / `-s`).
+    /// False when listing a single non-directory operand (or `-d` on a dir).
+    pub emit_block_total: bool,
 }
 
 impl Default for Config {
@@ -533,6 +538,7 @@ impl Default for Config {
             zero: false,
             dired: false,
             time_style: TimeStyle::Locale,
+            emit_block_total: true,
         }
     }
 }
@@ -564,11 +570,25 @@ impl Config {
     }
 
     /// Effective block size for allocated-size display (`-s`).
+    ///
+    /// GNU coreutils defaults to **1024**-byte units for `-s` (and `-k` forces
+    /// that). A bare `--block-size=1` / default long-size unit of 1 byte must
+    /// **not** be reused for `-s` (that produced wild totals like `4096` for a
+    /// 4KiB file). `POSIXLY_CORRECT` selects 512-byte units.
     pub fn blocks_unit(&self) -> u64 {
         if self.kibibytes {
             return 1024;
         }
-        self.block_size.block_divisor()
+        match self.block_size {
+            BlockSize::Bytes(0 | 1) => {
+                if std::env::var_os("POSIXLY_CORRECT").is_some() {
+                    512
+                } else {
+                    1024
+                }
+            }
+            other => other.block_divisor(),
+        }
     }
 
     /// Line terminator (newline or NUL).

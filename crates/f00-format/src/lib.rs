@@ -89,7 +89,10 @@ pub fn format_listings(
             out.push_str(ending);
         }
 
-        out.push_str(&format_entries(&listing.entries, config, &colorizer)?);
+        // GNU prints `total N` only for directory *contents*, not file operands / `-d`.
+        let mut cfg = config.clone();
+        cfg.emit_block_total = listing.root_is_dir && !is_dir_self;
+        out.push_str(&format_entries(&listing.entries, &cfg, &colorizer)?);
     }
     Ok(out)
 }

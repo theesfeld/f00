@@ -32,8 +32,8 @@ pub fn apply_gnu_list_options(opts: &mut ListOptions, gnu: bool) {
         return;
     }
     opts.gnu_mode = true;
-    // GNU ls does not default to directories-first.
-    opts.dirs_first = false;
+    // GNU ls does not *default* to directories-first, but `--group-directories-first`
+    // is honored. Never clear `dirs_first` here — the CLI already sets the flag.
 }
 
 /// Adjust output mode for GNU-ish behavior.
@@ -79,6 +79,7 @@ pub fn parse_sort_word(word: &str) -> Option<SortBy> {
         "time" => Some(SortBy::Time),
         "extension" | "ext" => Some(SortBy::Extension),
         "version" | "v" => Some(SortBy::Version),
+        "width" => Some(SortBy::Width),
         "none" => Some(SortBy::None),
         _ => None,
     }
@@ -101,13 +102,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn apply_gnu_disables_dirs_first() {
+    fn apply_gnu_sets_mode_preserves_dirs_first_flag() {
         let mut opts = ListOptions {
             dirs_first: true,
             ..Default::default()
         };
         apply_gnu_list_options(&mut opts, true);
-        assert!(!opts.dirs_first);
+        // Explicit --group-directories-first must survive --gnu.
+        assert!(opts.dirs_first);
         assert!(opts.gnu_mode);
     }
 

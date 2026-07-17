@@ -153,6 +153,8 @@ fn push_c_escape(out: &mut String, c: char, in_double_quotes: bool) {
         '\x0c' => out.push_str("\\f"),
         '\x0b' => out.push_str("\\v"),
         '\0' => out.push_str("\\0"),
+        // GNU `ls -b` / `--quoting-style=escape` escapes spaces (not only controls).
+        ' ' if !in_double_quotes => out.push_str("\\ "),
         '"' if in_double_quotes => out.push_str("\\\""),
         '\'' if !in_double_quotes => {
             // Outside double quotes (escape style / $'') — escape single quote as \'.
@@ -194,7 +196,7 @@ mod tests {
         let q = quote_name("a\nb", QuotingStyle::Escape, false);
         assert_eq!(q, "a\\nb");
         let q2 = quote_name("x y", QuotingStyle::Escape, false);
-        assert_eq!(q2, "x y");
+        assert_eq!(q2, "x\\ y");
     }
 
     #[test]

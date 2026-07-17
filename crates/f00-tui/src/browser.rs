@@ -236,8 +236,10 @@ impl Browser {
             SortBy::Name => SortBy::Size,
             SortBy::Size => SortBy::Time,
             SortBy::Time => SortBy::Extension,
-            SortBy::Extension => SortBy::Name,
-            other => other,
+            SortBy::Extension => SortBy::Version,
+            SortBy::Version => SortBy::Width,
+            SortBy::Width => SortBy::Name,
+            SortBy::None => SortBy::Name,
         };
         self.reload_all()?;
         self.status = format!(
@@ -255,6 +257,7 @@ impl Browser {
             SortBy::Time => "mtime",
             SortBy::Extension => "ext",
             SortBy::Version => "version",
+            SortBy::Width => "width",
             SortBy::None => "none",
         }
     }

@@ -223,7 +223,8 @@ pub fn build_config(args: &Args) -> Config {
         almost_all: almost_all || all,
         sort_by,
         reverse: args.reverse,
-        dirs_first: args.dirs_first && !args.gnu,
+        // Honor explicit `--group-directories-first` even under `--gnu` (GNU does).
+        dirs_first: args.dirs_first,
         recursive: (args.recursive || args.tree) && !args.directory,
         max_depth: args.max_depth,
         gnu_mode: args.gnu,
@@ -338,6 +339,8 @@ pub fn build_config(args: &Args) -> Config {
         zero: args.zero,
         dired: args.dired,
         time_style: resolve_time_style(args),
+        // Per-listing override in format_listings for file operands.
+        emit_block_total: true,
     }
 }
 
@@ -350,7 +353,8 @@ pub fn prepare_args(mut args: Args, as_ls: bool) -> Result<Args> {
     if args.gnu {
         args.git = false;
         args.icons = crate::cli::IconsArg::Never;
-        args.dirs_first = false;
+        // Do **not** clear `dirs_first` here: `--group-directories-first` must
+        // still work in GNU mode (coreutils accepts it). Default stays off.
     }
     Ok(args)
 }
