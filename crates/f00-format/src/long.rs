@@ -228,15 +228,20 @@ pub fn format_long(entries: &[Entry], colorizer: &Colorizer, config: &Config) ->
     let mut dired_global: Vec<(usize, usize)> = Vec::new();
     let ending = config.line_ending();
 
-    for entry in entries {
-        if entry.is_dir_header {
-            if !out.is_empty() {
-                out.push_str(if config.zero { "\0" } else { "\n" });
-            }
-            out.push_str(&format!("{}:", entry.path.display()));
-            out.push_str(ending);
-            continue;
+    let write_total = |out: &mut String, section: &[Entry]| {
+        if config.zero || !config.emit_block_total {
+            return;
         }
+        let total: u64 = section
+            .iter()
+            .filter(|e| !e.is_dir_header)
+            .map(|e| crate::human::block_display_with_unit(e.blocks, config.blocks_unit()))
+            .fold(0u64, u64::saturating_add);
+        out.push_str(&format!("total {total}"));
+        out.push_str(ending);
+    };
+
+    let write_entry = |out: &mut String, dired_global: &mut Vec<(usize, usize)>, entry: &Entry| {
         if config.dired {
             let base = out.len();
             let mut local = Vec::new();
@@ -249,6 +254,37 @@ pub fn format_long(entries: &[Entry], colorizer: &Colorizer, config: &Config) ->
         } else {
             out.push_str(&format_long_line(entry, colorizer, config, &widths));
             out.push_str(ending);
+        }
+    };
+
+    // Walk sections (optional dir headers for `-R`). GNU prints `total` *before*
+    // any entry lines in each section.
+    let mut i = 0;
+    let has_headers = entries.iter().any(|e| e.is_dir_header);
+    if !has_headers {
+        write_total(&mut out, entries);
+        for entry in entries {
+            write_entry(&mut out, &mut dired_global, entry);
+        }
+    } else {
+        while i < entries.len() {
+            if entries[i].is_dir_header {
+                if !out.is_empty() {
+                    out.push_str(if config.zero { "\0" } else { "\n" });
+                }
+                out.push_str(&format!("{}:", entries[i].path.display()));
+                out.push_str(ending);
+                i += 1;
+            }
+            let start = i;
+            while i < entries.len() && !entries[i].is_dir_header {
+                i += 1;
+            }
+            let section = &entries[start..i];
+            write_total(&mut out, section);
+            for entry in section {
+                write_entry(&mut out, &mut dired_global, entry);
+            }
         }
     }
 

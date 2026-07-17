@@ -5,7 +5,7 @@ use std::time::Instant;
 use rayon::prelude::*;
 // jwalk for parallel recursive walks.
 
-use crate::entry::Entry;
+use crate::entry::{Entry, EntryKind};
 use crate::error::{Error, Result};
 use crate::filter::filter_entries;
 use crate::ignore::{apply_ignore_set, load_ignore_set, IgnoreSet};
@@ -505,28 +505,20 @@ fn finish_recursive(
     mut timing: ListTiming,
     collect_timing: bool,
 ) -> Result<Listing> {
-    // Phase 3: sequential ignore filter + optional dir headers (stable walk order).
+    // Phase 3: sequential ignore filter. For `-R` (emit_dir_headers) rebuild into
+    // GNU section order: all siblings of a directory, then each subdir section —
+    // never DFS-interleave children mid-sibling-list (that broke drop-in `-R`).
     let mut ignore_by_dir: Vec<(PathBuf, IgnoreSet)> = Vec::new();
-    let mut entries: Vec<Entry> = Vec::with_capacity(built.len().saturating_add(16));
+    let mut plain: Vec<Entry> = Vec::with_capacity(built.len());
 
-    if opts.emit_dir_headers {
-        entries.push(Entry::dir_header(path, 0));
-    }
-
-    for (w, maybe) in walked.iter().zip(built) {
+    for (_w, maybe) in walked.iter().zip(built) {
         let Some(e) = maybe else {
             continue;
         };
         if ignored_by_sets(&e, opts, root_ignore.as_ref(), &mut ignore_by_dir) {
             continue;
         }
-        if opts.emit_dir_headers && w.is_dir {
-            // Directory node as a listable entry, then a section header for its children.
-            entries.push(e);
-            entries.push(Entry::dir_header(&w.path, w.depth));
-        } else {
-            entries.push(e);
-        }
+        plain.push(e);
     }
 
     let t_sort = if collect_timing {
@@ -535,15 +527,17 @@ fn finish_recursive(
         None
     };
 
-    if opts.emit_dir_headers {
-        sort_recursive_sections(&mut entries, opts);
+    let entries = if opts.emit_dir_headers {
+        rebuild_gnu_recursive_sections(path, plain, opts)
     } else {
         // Tree path: walk order already name-sorted within each directory (WalkDir).
         // Re-sort siblings only if a non-name primary sort was requested.
+        let mut entries = plain;
         if !matches!(opts.sort_by, crate::options::SortBy::Name) || opts.reverse {
             sort_tree_preorder(&mut entries, opts);
         }
-    }
+        entries
+    };
 
     if let Some(t0) = t_sort {
         timing.sort_ms = t0.elapsed().as_millis();
@@ -639,28 +633,48 @@ fn ignored_by_sets(
     ignored
 }
 
-fn sort_recursive_sections(entries: &mut [Entry], opts: &ListOptions) {
-    let mut start = 0;
-    while start < entries.len() {
-        // Find next header after start
-        if entries[start].is_dir_header {
-            let section_start = start + 1;
-            let mut end = section_start;
-            while end < entries.len() && !entries[end].is_dir_header {
-                end += 1;
-            }
-            sort_entries(&mut entries[section_start..end], opts);
-            start = end;
-        } else {
-            // Leading non-header run
-            let mut end = start;
-            while end < entries.len() && !entries[end].is_dir_header {
-                end += 1;
-            }
-            sort_entries(&mut entries[start..end], opts);
-            start = end;
+/// Build GNU `ls -R` layout: `dir:` header, sorted immediate children, then recurse
+/// into each subdirectory in that same sorted order.
+fn rebuild_gnu_recursive_sections(
+    root: &Path,
+    plain: Vec<Entry>,
+    opts: &ListOptions,
+) -> Vec<Entry> {
+    use std::collections::HashMap;
+
+    let mut by_parent: HashMap<PathBuf, Vec<Entry>> = HashMap::new();
+    for e in plain {
+        let parent = e
+            .path
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| root.to_path_buf());
+        by_parent.entry(parent).or_default().push(e);
+    }
+
+    let mut out = Vec::new();
+    fn emit(
+        dir: &Path,
+        depth: usize,
+        by_parent: &mut HashMap<PathBuf, Vec<Entry>>,
+        opts: &ListOptions,
+        out: &mut Vec<Entry>,
+    ) {
+        out.push(Entry::dir_header(dir, depth));
+        let mut kids = by_parent.remove(dir).unwrap_or_default();
+        sort_entries(&mut kids, opts);
+        let subdirs: Vec<PathBuf> = kids
+            .iter()
+            .filter(|e| e.kind == EntryKind::Directory)
+            .map(|e| e.path.clone())
+            .collect();
+        out.extend(kids);
+        for sub in subdirs {
+            emit(&sub, depth.saturating_add(1), by_parent, opts, out);
         }
     }
+    emit(root, 0, &mut by_parent, opts, &mut out);
+    out
 }
 
 /// Outcome of listing one or more path arguments.

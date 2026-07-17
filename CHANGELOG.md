@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.10.2] - 2026-07-16
+
+### Fixed
+- **Drop-in GNU behavior** under `--gnu` (not just flag parse):
+  - `-l` / `-s` print GNU `total N` for directory listings (not single-file operands)
+  - `-s` uses **1024-byte** display units by default (512 with `POSIXLY_CORRECT`)
+  - `-R` section order matches coreutils (all siblings, then each subdir)
+  - `-v` strverscmp: `~` sorts before digits (`file~` before `file1`)
+  - `--sort=width` implemented (shortest name width first)
+  - `-b` / `--escape` escapes spaces (`x y` → `x\ y`)
+  - `--group-directories-first` honored even with `--gnu`
+- Site demos: full **tree** and **JSON** examples; drop-in story clarified
+
+### Changed
+- Version **0.10.1 → 0.10.2**
+
 ## [0.10.1] - 2026-07-16
 
 ### Fixed
@@ -153,6 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.10.2]: https://github.com/theesfeld/f00/releases/tag/v0.10.2
 [0.10.1]: https://github.com/theesfeld/f00/releases/tag/v0.10.1
 [0.10.0]: https://github.com/theesfeld/f00/releases/tag/v0.10.0
 [0.9.0]: https://github.com/theesfeld/f00/releases/tag/v0.9.0

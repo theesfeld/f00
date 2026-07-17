@@ -61,8 +61,9 @@
           </h1>
           <p class="lead">
             <strong>f00</strong> is a next-generation <code class="mono">ls</code> rewrite:
-            fast, portable, and built for modern terminals — with an escape hatch
-            to GNU-compatible mode when you need it.
+            modern defaults that feel great, <strong>exact coreutils drop-in</strong> for
+            scripts (<code class="mono">--gnu</code> / <code class="mono">alias ls='f00 --gnu'</code>),
+            plus tree, JSON, icons, and git status when you want more than bare listing.
           </p>
 
           <div class="install-block" id="install-hero-block">
@@ -71,7 +72,7 @@
               <a class="version-pill" id="latest-version"
                  href="https://github.com/theesfeld/f00/releases/latest"
                  title="GitHub Releases">
-                <strong id="latest-version-label">v0.10.1</strong>
+                <strong id="latest-version-label">v0.10.2</strong>
               </a>
               <a class="version-assets" href="https://github.com/theesfeld/f00/releases">assets</a>
             </p>
@@ -215,14 +216,14 @@
             <p class="install-version-label">
               Latest release
               <a class="version-pill" href="https://github.com/theesfeld/f00/releases/latest">
-                <strong id="install-version-label">v0.10.1</strong>
+                <strong id="install-version-label">v0.10.2</strong>
               </a>
             </p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Add to your <code class="mono">PATH</code> if needed:</p>
             <pre><code>export PATH="$HOME/.local/bin:$PATH"</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.1 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.2 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>
               <strong>We never replace system <code class="mono">/bin/ls</code> by default.</strong>
@@ -279,8 +280,8 @@ cargo build --release -p f00
 echo "alias ls='f00'" >> ~/.bashrc    # or ~/.zshrc
 echo "alias ll='f00 -la'" >> ~/.bashrc
 
-# coreutils-shaped (no icons/git)
-# echo "alias ls='f00 --gnu'" >> ~/.bashrc
+# exact coreutils drop-in for scripts / muscle memory
+echo "alias ls='f00 --gnu'" >> ~/.bashrc
 # or: export F00_GNU=1</code></pre>
           </div>
           <div class="prose-block">
@@ -309,35 +310,74 @@ echo "alias ll='f00 -la'" >> ~/.bashrc
     <section id="demos">
       <div class="wrap">
         <div class="section-head">
-          <h2>Everyday commands</h2>
-          <p>Same spirit as <code class="mono">ls</code>, fewer papercuts.</p>
+          <h2>See it work</h2>
+          <p>
+            Modern UX by default. Scripting gets <strong>byte-matching coreutils</strong>
+            under <code class="mono">--gnu</code>. Machine output when you need pipes.
+          </p>
         </div>
         <div class="demo-grid">
           <div class="demo">
-            <header>long listing + human sizes</header>
+            <header>long listing + human sizes + icons</header>
             <pre><span style="color:#3ecf8e">$</span> f00 -lah
-drwxr-xr-x  glenda  4.2K  Jul 15  .git/
--rw-r--r--  glenda  1.8K  Jul 15  README.md
--rwxr-xr-x  glenda   12K  Jul 15  install.sh</pre>
+drwxr-xr-x  glenda  4.2K  Jul 15   crates
+-rw-r--r--  glenda  1.8K  Jul 15   README.md
+-rwxr-xr-x  glenda   12K  Jul 15   install.sh
+-rw-r--r--  glenda  2.1K  Jul 14   Cargo.toml</pre>
           </div>
           <div class="demo">
             <header>tree</header>
-            <pre><span style="color:#3ecf8e">$</span> f00 --tree
-.
-├── crates/
-│   ├── f00-cli/
-│   └── f00-core/
-└── site/</pre>
+            <pre><span style="color:#3ecf8e">$</span> f00 --tree crates
+crates
+├── f00-archive
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+├── f00-cli
+│   ├── Cargo.toml
+│   ├── src
+│   │   ├── cli.rs
+│   │   ├── main.rs
+│   │   └── run.rs
+│   └── tests
+├── f00-core
+│   └── src
+│       ├── list.rs
+│       └── sort.rs
+└── f00-format
+    └── src
+        ├── json.rs
+        └── tree.rs</pre>
           </div>
           <div class="demo">
-            <header>json (tooling)</header>
-            <pre><span style="color:#3ecf8e">$</span> f00 --json | head -c 120
-{"entries":[{"name":"README.md","type":"file",…</pre>
+            <header>json (tooling / agents)</header>
+            <pre><span style="color:#3ecf8e">$</span> f00 -j README.md
+[
+  {
+    "name": "README.md",
+    "path": "README.md",
+    "kind": "file",
+    "size": 10083,
+    "permissions": "-rw-r--r--",
+    "mode_octal": "100644",
+    "modified": "2026-07-16T…",
+    "owner": "glenda",
+    "group": "users",
+    "inode": 1830123,
+    "blocks": 24,
+    "extension": "md",
+    "git_status": "clean"
+  }
+]</pre>
           </div>
           <div class="demo">
-            <header>gnu-compatible mode</header>
-            <pre><span style="color:#3ecf8e">$</span> f00 --gnu -la /tmp
-# flag &amp; column shape closer to coreutils ls</pre>
+            <header>drop-in GNU mode (scripts)</header>
+            <pre><span style="color:#3ecf8e">$</span> alias ls='f00 --gnu'
+<span style="color:#3ecf8e">$</span> ls -lah --group-directories-first
+<span style="color:#3ecf8e">$</span> ls -1v          <span style="color:#6b7280"># strverscmp like coreutils</span>
+<span style="color:#3ecf8e">$</span> ls -1R          <span style="color:#6b7280"># section order matches ls -R</span>
+<span style="color:#3ecf8e">$</span> ls -s1          <span style="color:#6b7280"># total N + 1024-byte units</span>
+<span style="color:#3ecf8e">$</span> ls --color=tty  <span style="color:#6b7280"># NixOS aliases work</span></pre>
           </div>
         </div>
       </div>
@@ -510,7 +550,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
       <div class="copy">
         <strong style="color:var(--text-dim)">f00</strong>
         — next-generation <code class="mono">ls</code>.
-        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.10.1</a>.
+        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.10.2</a>.
         © 2026 f00 contributors.
         Licensed under MIT OR Apache-2.0.
       </div>
@@ -527,7 +567,7 @@ drwxr-xr-x  glenda  4.2K  Jul 15  .git/
   <script>
     (function () {
       // Fallback version embedded at ship time; refreshed from Releases API when available.
-      var FALLBACK_VERSION = "v0.10.1";
+      var FALLBACK_VERSION = "v0.10.2";
 
       function setVersionLabels(tag) {
         if (!tag) return;

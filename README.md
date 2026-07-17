@@ -10,12 +10,12 @@
 [![crates.io](https://img.shields.io/crates/v/f00?style=flat-square)](https://crates.io/crates/f00)
 [![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows%20%7C%20bsd-lightgrey?style=flat-square)](https://f00.sh)
 
-**f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust, with modern UX and a supertool layer.
+**f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust: modern UX by default, **exact GNU behavior under `--gnu`** for scripts, plus tree / JSON / icons / git.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.1
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.2
 
 <!-- agents:status:begin -->
-> **Status:** v0.10.1 full GNU `ls` long-opt + WHEN drop-in (`--color`/`--classify`/`--hyperlink`) · Latest: `v0.10.1` · 0.x minors may include breaking changes
+> **Status:** v0.10.2 exact GNU drop-in behavior (`--gnu`) + flag WHEN parity · Latest: `v0.10.2` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -85,7 +85,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 
 | Area | Status | Notes |
 |------|--------|--------|
-| **GNU coreutils `ls`** | Shipped | Full flag surface + `--gnu` strict mode |
+| **GNU coreutils `ls`** | Shipped | Flag surface + **`--gnu` behavior parity** (CI tests vs system `ls`) |
 | **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` + `QUOTING_STYLE` |
 | **LS_COLORS** | Shipped | Via `lscolors` / env |
 | **Speed** | Shipped | Parallel `stat` (rayon), cheap short path, uid cache, Linux `statx` + **io_uring** batch, `--threads`, `--profile` |

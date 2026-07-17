@@ -85,15 +85,21 @@ pub fn format_one_per_line_cfg(
     let mut out = String::new();
     let mut dired: Vec<(usize, usize)> = Vec::new();
 
-    for entry in entries {
-        if entry.is_dir_header {
-            if !out.is_empty() && !config.zero {
-                out.push('\n');
-            }
-            out.push_str(&format!("{}:", entry.path.display()));
-            out.push_str(ending);
-            continue;
+    let write_total = |out: &mut String, section: &[Entry]| {
+        // GNU `ls -s` prints `total N` for directory contents (even without `-l`).
+        if !config.show_blocks || config.zero || !config.emit_block_total {
+            return;
         }
+        let total: u64 = section
+            .iter()
+            .filter(|e| !e.is_dir_header)
+            .map(|e| crate::human::block_display_with_unit(e.blocks, config.blocks_unit()))
+            .fold(0u64, u64::saturating_add);
+        out.push_str(&format!("total {total}"));
+        out.push_str(ending);
+    };
+
+    let write_entry = |out: &mut String, dired: &mut Vec<(usize, usize)>, entry: &Entry| {
         let prepared = prepare_entries(std::slice::from_ref(entry), colorizer, config);
         let p = &prepared[0];
         if config.dired {
@@ -105,6 +111,35 @@ pub fn format_one_per_line_cfg(
             out.push_str(&p.painted);
         }
         out.push_str(ending);
+    };
+
+    let has_headers = entries.iter().any(|e| e.is_dir_header);
+    if !has_headers {
+        write_total(&mut out, entries);
+        for entry in entries {
+            write_entry(&mut out, &mut dired, entry);
+        }
+    } else {
+        let mut i = 0;
+        while i < entries.len() {
+            if entries[i].is_dir_header {
+                if !out.is_empty() && !config.zero {
+                    out.push('\n');
+                }
+                out.push_str(&format!("{}:", entries[i].path.display()));
+                out.push_str(ending);
+                i += 1;
+            }
+            let start = i;
+            while i < entries.len() && !entries[i].is_dir_header {
+                i += 1;
+            }
+            let section = &entries[start..i];
+            write_total(&mut out, section);
+            for entry in section {
+                write_entry(&mut out, &mut dired, entry);
+            }
+        }
     }
 
     if config.dired && !config.zero {
