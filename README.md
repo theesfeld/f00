@@ -22,6 +22,8 @@
 
 ## Install
 
+### Quick install (recommended)
+
 ```bash
 curl -fsSL https://f00.sh/install.sh | bash
 ```
@@ -29,14 +31,26 @@ curl -fsSL https://f00.sh/install.sh | bash
 Installs to **`~/.local/bin`** by default (override with `INSTALL_DIR`). The installer adds that dir to your shell rc when it is missing from `PATH` (`ADD_PATH=0` to skip).
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.7.1 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.4 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 ```
 
-```bash
-cargo install f00 --locked          # crates.io
-brew install --formula ./Formula/f00.rb   # from a clone; needs Homebrew
-```
+### Package managers
+
+| Channel | Command |
+|---------|---------|
+| **Homebrew** | `brew install theesfeld/tap/f00` |
+| **crates.io** | `cargo install f00 --locked` |
+| **AUR** | `yay -S f00` (or `paru -S f00`) |
+| **Scoop** | `scoop bucket add theesfeld https://github.com/theesfeld/scoop-bucket` then `scoop install f00` |
+| **Winget** | `winget install theesfeld.f00` (after first merge into winget-pkgs) |
+| **Nix** | `nix profile install github:theesfeld/f00` |
+| **deb** | Download `f00_*_amd64.deb` / `*_arm64.deb` from [Releases](https://github.com/theesfeld/f00/releases), then `sudo dpkg -i f00_*.deb` |
+| **rpm** | Download `f00-*.x86_64.rpm` / `*.aarch64.rpm` from [Releases](https://github.com/theesfeld/f00/releases), then `sudo rpm -i f00-*.rpm` |
+
+Package manifests track GitHub Releases automatically. Prefer the package manager’s upgrade command for brew/apt/rpm/AUR/Scoop; use `f00 --update` for installs from `install.sh`.
+
+Local Homebrew formula (from a clone): `brew install --formula ./Formula/f00.rb`
 
 **We never replace system `/bin/ls` by default.** The primary command is always `f00`.
 

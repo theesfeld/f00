@@ -55,7 +55,6 @@ jobs:
       - name: Build (cargo)
         if: ${{ !matrix.cross }}
         run: cargo build --release --locked --target ${{ matrix.target }} -p f00
-        continue-on-error: false
 
       - name: Build (cross)
         if: matrix.cross
@@ -69,13 +68,8 @@ jobs:
           STAGE="dist/${{ env.BINARY }}-${{ matrix.target }}"
           mkdir -p "$STAGE"
           BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}"
-          # Fallback if package layout uses workspace root target without -p path quirks
-          if [[ ! -f "$BIN" ]]; then
-            BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}"
-          fi
           cp "$BIN" "$STAGE/${{ env.BINARY }}"
           chmod +x "$STAGE/${{ env.BINARY }}"
-          # Optional docs in archive
           for f in README.md LICENSE-MIT LICENSE-APACHE; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done
@@ -108,24 +102,44 @@ jobs:
     name: publish release
     needs: build
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Version from tag
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Flatten assets & checksums
+      - name: Flatten assets, build deb/rpm, checksums
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p release-assets
-          # artifacts/<name>/<files>
           find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) -print0 \
             | while IFS= read -r -d '' f; do
                 cp "$f" release-assets/
               done
+
+          # nfpm for .deb / .rpm (linux only)
+          curl -sSfL https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_Linux_x86_64.tar.gz \
+            | tar -xz -C /tmp nfpm
+          sudo mv /tmp/nfpm /usr/local/bin/nfpm
+
+          chmod +x scripts/build-linux-packages.sh
+          scripts/build-linux-packages.sh "${{ steps.meta.outputs.version }}" release-assets release-assets
+
           cd release-assets
           sha256sum * > SHA256SUMS
           cat SHA256SUMS
@@ -139,3 +153,74 @@ jobs:
             release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync in-repo package manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/*.sh
+          scripts/sync-package-manifests.sh "${{ steps.meta.outputs.version }}" release-assets/SHA256SUMS
+
+      - name: Publish Homebrew tap
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: scripts/publish-homebrew-tap.sh Formula/f00.rb
+
+      - name: Publish Scoop bucket
+        env:
+          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-scoop.sh packaging/scoop/f00.json
+
+      - name: Publish AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+          AUR_EMAIL: ${{ secrets.AUR_EMAIL }}
+        run: scripts/publish-aur.sh packaging/aur
+
+      - name: Publish winget (best-effort)
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: scripts/publish-winget.sh "${{ steps.meta.outputs.version }}" release-assets/SHA256SUMS
+
+      - name: Publish crates.io (optional)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${CARGO_REGISTRY_TOKEN:-}" ]]; then
+            echo "skip crates.io: no CARGO_REGISTRY_TOKEN"
+            exit 0
+          fi
+          # Only publish if version is new on crates.io for the binary crate.
+          CUR="$(cargo search f00 --limit 1 2>/dev/null | head -1 | sed -E 's/.*"([0-9][^"]*)".*/\1/' || true)"
+          VER="${{ steps.meta.outputs.version }}"
+          if [[ "${CUR}" == "${VER}" ]]; then
+            echo "crates.io already has f00 ${VER}"
+            exit 0
+          fi
+          scripts/publish-crates.sh
+
+      - name: Commit package manifests back to main (best-effort)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git stash push -u -m "pkg-manifests" -- Formula/f00.rb packaging/aur/PKGBUILD packaging/scoop/f00.json || true
+          git checkout main
+          git pull --ff-only origin main || true
+          git stash pop || true
+          git add Formula/f00.rb packaging/aur/PKGBUILD packaging/scoop/f00.json || true
+          if git diff --cached --quiet; then
+            echo "no manifest changes to commit"
+            exit 0
+          fi
+          git commit -m "chore(packaging): sync manifests for v${{ steps.meta.outputs.version }}
+
+          Refs: #81"
+          git push origin main || echo "could not push manifests to main (non-fatal)"
