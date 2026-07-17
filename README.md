@@ -12,10 +12,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust: modern UX by default, **exact GNU behavior under `--gnu`** for scripts, plus tree / JSON / icons / git.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.3
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.4
 
 <!-- agents:status:begin -->
-> **Status:** v0.10.3 argv0 `ls` keeps full chrome · exact GNU under `--gnu` · Latest: `v0.10.3` · 0.x minors may include breaking changes
+> **Status:** v0.10.4 dim dotfiles · full chrome as `ls` · exact GNU under `--gnu` · Latest: `v0.10.4` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -87,7 +87,8 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 |------|--------|--------|
 | **GNU coreutils `ls`** | Shipped | Flag surface + **`--gnu` behavior parity** (CI tests vs system `ls`) |
 | **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` + `QUOTING_STYLE` |
-| **LS_COLORS** | Shipped | Via `lscolors` / env |
+| **LS_COLORS** | Shipped | Via `lscolors` / env; **dotfiles** dimmed (darker grey) when color is on |
+
 | **Speed** | Shipped | Parallel `stat` (rayon), cheap short path, uid cache, Linux `statx` + **io_uring** batch, `--threads`, `--profile` |
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |

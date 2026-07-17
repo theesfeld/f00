@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
 
+## [0.10.4] - 2026-07-17
+
+### Changed
+- **Hidden / dotfile names** (leading `.`) paint in **darker grey** when colors are on, so they recede next to normal entries
+- Version **0.10.3 → 0.10.4**
+
 ## [0.10.3] - 2026-07-17
 
 ### Fixed
@@ -177,6 +183,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.10.4]: https://github.com/theesfeld/f00/releases/tag/v0.10.4
 [0.10.3]: https://github.com/theesfeld/f00/releases/tag/v0.10.3
 [0.10.2]: https://github.com/theesfeld/f00/releases/tag/v0.10.2
 [0.10.1]: https://github.com/theesfeld/f00/releases/tag/v0.10.1
