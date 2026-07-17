@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.5] - 2026-07-17
+
 ### Added
-- **Package managers:** release pipeline builds `.deb`/`.rpm`, refreshes Homebrew/AUR/Scoop manifests, and publishes when secrets are set (Homebrew tap, Scoop bucket, AUR, optional winget/crates.io)
+- **Package managers:** release pipeline builds `.deb`/`.rpm`, refreshes Homebrew/AUR/Scoop manifests, and publishes when secrets are set (Homebrew tap, Scoop bucket, AUR, winget, crates.io)
 - Install docs (README + f00.sh) list Homebrew, cargo, AUR, Scoop, winget, Nix, deb, and rpm
 - Manual workflow **Publish packages** to bootstrap channels without a new tag
+
+### Changed
+- Version **0.10.4 → 0.10.5**
 
 ## [0.10.4] - 2026-07-17
 
@@ -190,6 +195,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
+[0.10.5]: https://github.com/theesfeld/f00/releases/tag/v0.10.5
 [0.10.4]: https://github.com/theesfeld/f00/releases/tag/v0.10.4
 [0.10.3]: https://github.com/theesfeld/f00/releases/tag/v0.10.3
 [0.10.2]: https://github.com/theesfeld/f00/releases/tag/v0.10.2

@@ -10,9 +10,9 @@ on:
         required: false
         default: "all"
       version:
-        description: "Version for winget (no v prefix); default 0.10.4"
+        description: "Version for winget (no v prefix); default 0.10.5"
         required: false
-        default: "0.10.4"
+        default: "0.10.5"
 
 
 permissions:
