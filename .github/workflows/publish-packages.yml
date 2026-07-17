@@ -6,9 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       channels:
-        description: "Comma list: homebrew,scoop,aur,all"
+        description: "Comma list: homebrew,scoop,aur,winget,all"
         required: false
         default: "all"
+      version:
+        description: "Version for winget (no v prefix); default 0.10.4"
+        required: false
+        default: "0.10.4"
+
 
 permissions:
   contents: read
@@ -43,3 +48,9 @@ jobs:
           AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
           AUR_EMAIL: ${{ secrets.AUR_EMAIL }}
         run: scripts/publish-aur.sh packaging/aur
+
+      - name: Publish winget (PR to winget-pkgs)
+        if: ${{ github.event.inputs.channels == 'all' || contains(github.event.inputs.channels, 'winget') }}
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: scripts/publish-winget.sh "${{ github.event.inputs.version }}"
