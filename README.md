@@ -12,10 +12,10 @@
 
 **f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust: modern UX by default, **exact GNU behavior under `--gnu`** for scripts, plus tree / JSON / icons / git.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.2
+**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.3
 
 <!-- agents:status:begin -->
-> **Status:** v0.10.2 exact GNU drop-in behavior (`--gnu`) + flag WHEN parity · Latest: `v0.10.2` · 0.x minors may include breaking changes
+> **Status:** v0.10.3 argv0 `ls` keeps full chrome · exact GNU under `--gnu` · Latest: `v0.10.3` · 0.x minors may include breaking changes
 <!-- agents:status:end -->
 
 ---
@@ -68,7 +68,7 @@ Creates `…/bin/ls` → `f00` next to the binary. Anything that finds `ls` on y
 
 **3. Soft drop-in when the binary is named `ls`**
 
-If you symlink or rename so argv0 is `ls`, f00 uses quieter defaults (icons/dirs-first off). Full strict mode still needs `--gnu` or `F00_GNU=1`.
+If you symlink or rename so argv0 is `ls`, f00 keeps **full product chrome** on a TTY (icons, git, modern colors) — same as `f00`. Dirs-first stays off by default (like GNU). **Strict plain coreutils** still needs `--gnu` or `F00_GNU=1`.
 
 More detail: [f00.sh#as-ls](https://f00.sh/#as-ls)
 
