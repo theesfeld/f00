@@ -278,8 +278,10 @@ mod tests {
 
     #[test]
     fn width_sort_shorter_first() {
-        let mut opts = ListOptions::default();
-        opts.sort_by = SortBy::Width;
+        let opts = ListOptions {
+            sort_by: SortBy::Width,
+            ..Default::default()
+        };
         let a = entry("a", EntryKind::File, 0, None);
         let b = entry("bbbb", EntryKind::File, 0, None);
         assert_eq!(cmp_entry(&a, &b, &opts), std::cmp::Ordering::Less);
