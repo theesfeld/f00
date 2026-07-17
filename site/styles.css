@@ -440,13 +440,47 @@ pre,
   white-space: pre;
 }
 
-.term-body .c { color: var(--accent); }
-.term-body .d { color: #79b8ff; }
-.term-body .x { color: #f97583; }
-.term-body .g { color: #85e89d; }
-.term-body .m { color: var(--text-mute); }
-.term-body .y { color: var(--warn); }
-.term-body .w { color: var(--text); }
+/* Terminal chrome palette — mirrors f00 modern (non-GNU) long theme:
+   perms type letter + r/w/x · owner yellow · size green→yellow→red ·
+   time blue · names LS_COLORS · git status accents. Shared by hero + demos. */
+.term-body .c,
+.demo pre .c { color: var(--accent); }           /* prompt $ */
+
+.term-body .d,
+.demo pre .d { color: #79b8ff; }                 /* dirs, time, blue names */
+
+.term-body .x,
+.demo pre .x { color: #f97583; }                 /* write bit, red / large size */
+
+.term-body .g,
+.demo pre .g { color: #85e89d; }                 /* exec bit, size, green names */
+
+.term-body .m,
+.demo pre .m { color: var(--text-mute); }        /* dim: dashes, nlink, tree lines */
+
+.term-body .y,
+.demo pre .y { color: var(--warn); }             /* read bit, owner/group, mid size */
+
+.term-body .w,
+.demo pre .w { color: var(--text); }             /* default names / body text */
+
+.term-body .cy,
+.demo pre .cy { color: #56d4dd; }                /* symlink / cyan */
+
+.term-body .pu,
+.demo pre .pu { color: #b392f0; }                /* untracked / purple */
+
+.term-body .jk,
+.demo pre .jk { color: #79b8ff; }                /* JSON key */
+
+.term-body .js,
+.demo pre .js { color: #85e89d; }                /* JSON string */
+
+.term-body .jn,
+.demo pre .jn { color: var(--warn); }            /* JSON number */
+
+.term-body .jb,
+.demo pre .jb { color: #f97583; }                /* JSON bool / null */
 
 /* ── sections ───────────────────────────────────────────── */
 
