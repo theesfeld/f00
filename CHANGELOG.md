@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Document JSON as a **core** f00 surface (not a secondary machine format)
 - **Faster large-directory listing (Linux):** open the dir once and `statx` with **dirfd + relative names**; multi-thread rayon by default; io_uring reserved for serial (`--threads 1`); owner/group resolved after batch stat (no re-stat); short-list format prepares the whole section once. No feature loss.
 - **Kind-only readdir path:** when short listing needs only names + kind (no color/classify/size/time sort), use readdir `d_type` / `file_type()` and skip `statx`.
-- **Site:** public hyperfine benches; fair coreutils compare uses `f00 --gnu`.
+- **Site:** public hyperfine benches with **two tracks** — coreutils ↔ `f00 --gnu`, eza/lsd ↔ product `f00`.
 
 ## [0.11.0] - 2026-07-20
 

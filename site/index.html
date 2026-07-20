@@ -46,11 +46,9 @@
 
       <nav class="site-nav nav" id="site-nav" aria-label="Primary">
         <a href="#story">Why</a>
+        <a href="#bench">Speed</a>
         <a href="#demos">Demos</a>
-        <a href="#bench">Bench</a>
         <a href="#install">Install</a>
-        <a href="#compare">Compare</a>
-        <a href="#roadmap">Roadmap</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/theesfeld/f00">GitHub</a>
       </nav>
     </div>
@@ -332,126 +330,134 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     <section id="bench" class="bench-section">
       <div class="wrap">
         <div class="section-head reveal">
-          <h2>Benchmarks</h2>
-          <p>
-            Measured with <strong>hyperfine</strong> on a warm-cache tmpfs-backed
-            directory of <strong>20&nbsp;000</strong> files. Colors forced off.
-            Against coreutils we use <code class="mono">f00 --gnu</code> —
-            the fair drop-in comparison. Modern tools get product-mode runs too.
+          <h2>Speed</h2>
+          <p class="lead-tight">
+            Two tracks. Don’t mix them.
           </p>
         </div>
 
-        <div class="bench-meta reveal">
-          <span>host: Linux x86_64</span>
-          <span>hyperfine 1.20 · 25 runs · 5 warmup</span>
-          <span>coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.11</span>
+        <div class="rules-grid reveal">
+          <div class="rule-card">
+            <span class="rule-kicker">Track A · drop-in</span>
+            <p><strong>coreutils <code class="mono">ls</code></strong> vs <strong><code class="mono">f00 --gnu</code></strong></p>
+            <p class="muted">Same job: no icons, no git, script-shaped output.</p>
+          </div>
+          <div class="rule-card">
+            <span class="rule-kicker">Track B · modern tools</span>
+            <p><strong>eza / lsd</strong> vs <strong>product <code class="mono">f00</code></strong></p>
+            <p class="muted">Daily-driver defaults (no <code class="mono">--gnu</code>).</p>
+          </div>
         </div>
 
-        <div class="bench-grid">
-          <article class="bench-card reveal hl-win">
-            <h3>Long listing <code class="mono">-l</code></h3>
-            <p class="bench-tag win">f00 --gnu wins vs coreutils</p>
-            <div class="bench-bars" aria-hidden="true">
-              <div class="bar-row"><span class="bar-label">f00 --gnu -l</span><span class="bar" style="--w:40.8%"></span><span class="bar-val">40.8 ms</span></div>
-              <div class="bar-row"><span class="bar-label">coreutils ls -l</span><span class="bar dim" style="--w:51.2%"></span><span class="bar-val">51.2 ms</span></div>
-              <div class="bar-row"><span class="bar-label">eza -l</span><span class="bar dim" style="--w:65.6%"></span><span class="bar-val">65.6 ms</span></div>
-              <div class="bar-row"><span class="bar-label">lsd -l</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">103 ms</span></div>
-            </div>
-            <p class="muted">~<strong>1.25×</strong> faster than GNU <code class="mono">ls -l</code>, ~1.6× eza, ~2.5× lsd.</p>
-          </article>
+        <div class="bench-shell reveal">
+          <div class="demo-tabs" data-bench-tabs role="tablist" aria-label="Benchmark tracks">
+            <button type="button" role="tab" data-bench-tab="gnu" aria-selected="true" aria-controls="bench-gnu" id="tab-bench-gnu">vs coreutils</button>
+            <button type="button" role="tab" data-bench-tab="modern" aria-selected="false" aria-controls="bench-modern" id="tab-bench-modern" tabindex="-1">vs eza / lsd</button>
+            <button type="button" role="tab" data-bench-tab="unique" aria-selected="false" aria-controls="bench-unique" id="tab-bench-unique" tabindex="-1">f00-only</button>
+          </div>
 
-          <article class="bench-card reveal">
-            <h3>Short names <code class="mono">-1</code></h3>
-            <p class="bench-tag fair">fair: f00 --gnu vs coreutils</p>
-            <div class="bench-bars" aria-hidden="true">
-              <div class="bar-row"><span class="bar-label">coreutils ls -1</span><span class="bar dim" style="--w:10.3%"></span><span class="bar-val">10.3 ms</span></div>
-              <div class="bar-row"><span class="bar-label">f00 --gnu -1</span><span class="bar" style="--w:18.4%"></span><span class="bar-val">18.4 ms</span></div>
-              <div class="bar-row"><span class="bar-label">eza -1</span><span class="bar dim" style="--w:29.4%"></span><span class="bar-val">29.4 ms</span></div>
-              <div class="bar-row"><span class="bar-label">lsd -1</span><span class="bar dim" style="--w:64.6%"></span><span class="bar-val">64.6 ms</span></div>
-            </div>
-            <p class="muted">
-              Coreutils still wins pure name dump (getdents-first).
-              Among modern tools, <strong>f00 leads</strong> (~1.6× eza, ~3.5× lsd).
+          <!-- TRACK A -->
+          <div id="bench-gnu" class="bench-pane" data-bench-pane="gnu" role="tabpanel" aria-labelledby="tab-bench-gnu">
+            <p class="bench-pane-lead">
+              <code class="mono">f00 --gnu</code> · 20k files · hyperfine 20× · colors off
             </p>
-          </article>
-
-          <article class="bench-card reveal hl-win">
-            <h3>Product chrome (icons)</h3>
-            <p class="bench-tag win">daily-driver mode</p>
-            <div class="bench-bars" aria-hidden="true">
-              <div class="bar-row"><span class="bar-label">f00 -l --icons</span><span class="bar" style="--w:43.9%"></span><span class="bar-val">43.9 ms</span></div>
-              <div class="bar-row"><span class="bar-label">eza -l --icons</span><span class="bar dim" style="--w:68.1%"></span><span class="bar-val">68.1 ms</span></div>
-              <div class="bar-row"><span class="bar-label">lsd -l</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">~103 ms</span></div>
+            <div class="bench-grid two">
+              <article class="bench-card hl-win">
+                <h3><code class="mono">-l</code> long listing</h3>
+                <p class="bench-tag win">f00 wins</p>
+                <div class="bench-bars">
+                  <div class="bar-row"><span class="bar-label">f00 --gnu -l</span><span class="bar" style="--w:76%"></span><span class="bar-val">38.0 ms</span></div>
+                  <div class="bar-row"><span class="bar-label">coreutils ls -l</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">50.1 ms</span></div>
+                </div>
+                <p class="muted"><strong>1.32×</strong> faster than GNU <code class="mono">ls -l</code>.</p>
+              </article>
+              <article class="bench-card">
+                <h3><code class="mono">-1</code> names only</h3>
+                <p class="bench-tag fair">coreutils still leads</p>
+                <div class="bench-bars">
+                  <div class="bar-row"><span class="bar-label">coreutils ls -1</span><span class="bar dim" style="--w:52%"></span><span class="bar-val">10.4 ms</span></div>
+                  <div class="bar-row"><span class="bar-label">f00 --gnu -1</span><span class="bar" style="--w:100%"></span><span class="bar-val">20.1 ms</span></div>
+                </div>
+                <p class="muted">Getdents-tuned C still wins pure name dump. We’re closing the gap without stripping features.</p>
+              </article>
             </div>
-            <p class="muted">Icons + long format still faster than eza/lsd — chrome is not an excuse to be slow.</p>
-          </article>
+          </div>
 
-          <article class="bench-card reveal">
-            <h3>f00-only: JSON</h3>
-            <p class="bench-tag unique">no competitor equivalent</p>
-            <div class="bench-bars" aria-hidden="true">
-              <div class="bar-row"><span class="bar-label">f00 -j (20k)</span><span class="bar" style="--w:79%"></span><span class="bar-val">79.0 ms</span></div>
-            </div>
-            <p class="muted">
-              Rich metadata JSON is a <strong>core</strong> surface — not a plugin.
-              Coreutils / eza / lsd have no peer.
+          <!-- TRACK B -->
+          <div id="bench-modern" class="bench-pane" data-bench-pane="modern" role="tabpanel" aria-labelledby="tab-bench-modern" hidden>
+            <p class="bench-pane-lead">
+              product <code class="mono">f00</code> (not --gnu) · 20k files · hyperfine 20× · colors off
             </p>
-          </article>
+            <div class="bench-grid two">
+              <article class="bench-card hl-win">
+                <h3><code class="mono">-1</code> short</h3>
+                <p class="bench-tag win">beats eza &amp; lsd</p>
+                <div class="bench-bars">
+                  <div class="bar-row"><span class="bar-label">f00 -1</span><span class="bar" style="--w:29%"></span><span class="bar-val">19.0 ms</span></div>
+                  <div class="bar-row"><span class="bar-label">eza -1</span><span class="bar dim" style="--w:48%"></span><span class="bar-val">31.2 ms</span></div>
+                  <div class="bar-row"><span class="bar-label">lsd -1</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">65.4 ms</span></div>
+                </div>
+                <p class="muted"><strong>1.6×</strong> eza · <strong>3.4×</strong> lsd</p>
+              </article>
+              <article class="bench-card hl-win">
+                <h3><code class="mono">-l</code> long</h3>
+                <p class="bench-tag win">beats eza &amp; lsd</p>
+                <div class="bench-bars">
+                  <div class="bar-row"><span class="bar-label">f00 -l</span><span class="bar" style="--w:39%"></span><span class="bar-val">39.0 ms</span></div>
+                  <div class="bar-row"><span class="bar-label">eza -l</span><span class="bar dim" style="--w:54%"></span><span class="bar-val">53.5 ms</span></div>
+                  <div class="bar-row"><span class="bar-label">lsd -l</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">99.7 ms</span></div>
+                </div>
+                <p class="muted"><strong>1.4×</strong> eza · <strong>2.6×</strong> lsd</p>
+              </article>
+              <article class="bench-card hl-win">
+                <h3><code class="mono">-l</code> + icons</h3>
+                <p class="bench-tag win">chrome still fast</p>
+                <div class="bench-bars">
+                  <div class="bar-row"><span class="bar-label">f00 -l --icons</span><span class="bar" style="--w:73%"></span><span class="bar-val">40.8 ms</span></div>
+                  <div class="bar-row"><span class="bar-label">eza -l --icons</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">56.2 ms</span></div>
+                </div>
+                <p class="muted"><strong>1.4×</strong> faster than eza with icons.</p>
+              </article>
+              <article class="bench-card">
+                <h3>Summary</h3>
+                <p class="muted">
+                  Against modern Rust tools, product f00 wins the common cases —
+                  short, long, and icon long — without turning features off.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <!-- UNIQUE -->
+          <div id="bench-unique" class="bench-pane" data-bench-pane="unique" role="tabpanel" aria-labelledby="tab-bench-unique" hidden>
+            <p class="bench-pane-lead">Surfaces the others don’t have.</p>
+            <div class="bench-grid two">
+              <article class="bench-card hl-win">
+                <h3>JSON <code class="mono">-j</code></h3>
+                <p class="bench-tag unique">coreutils / eza / lsd: none</p>
+                <div class="bench-bars">
+                  <div class="bar-row"><span class="bar-label">f00 -j (20k)</span><span class="bar" style="--w:80%"></span><span class="bar-val">79.7 ms</span></div>
+                </div>
+                <p class="muted">Rich metadata JSON is a <strong>core</strong> product surface, not an afterthought.</p>
+              </article>
+              <article class="bench-card">
+                <h3>Also unique</h3>
+                <ul class="plain-list">
+                  <li><code class="mono">f00-tui</code> dual-pane browser</li>
+                  <li>Auto script-safe non-TTY (same as --gnu)</li>
+                  <li>Full coreutils flag surface + <code class="mono">--update</code></li>
+                </ul>
+              </article>
+            </div>
+          </div>
         </div>
 
-        <div class="table-wrap reveal bench-table">
-          <table class="compare">
-            <thead>
-              <tr>
-                <th>Scenario</th>
-                <th>coreutils</th>
-                <th>eza</th>
-                <th>lsd</th>
-                <th class="hl">f00</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code class="mono">-1</code> short (fair = --gnu)</td>
-                <td>10.3 ms</td>
-                <td>29.4 ms</td>
-                <td>64.6 ms</td>
-                <td class="hl"><strong>18.4 ms</strong> --gnu</td>
-              </tr>
-              <tr>
-                <td><code class="mono">-l</code> long (fair = --gnu)</td>
-                <td>51.2 ms</td>
-                <td>65.6 ms</td>
-                <td>103 ms</td>
-                <td class="hl"><strong>40.8 ms</strong> --gnu ★</td>
-              </tr>
-              <tr>
-                <td><code class="mono">-l</code> + icons</td>
-                <td>—</td>
-                <td>68.1 ms</td>
-                <td>~103 ms</td>
-                <td class="hl"><strong>43.9 ms</strong> ★</td>
-              </tr>
-              <tr>
-                <td>JSON <code class="mono">-j</code></td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td class="hl"><strong>79.0 ms</strong> unique</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="bench-notes reveal">
-          <h3>How to read this</h3>
-          <ul>
-            <li><strong>Fair coreutils compare:</strong> always <code class="mono">f00 --gnu</code> (or non-TTY auto). Same shape of work: no icons/git chrome.</li>
-            <li><strong>Where we win hard:</strong> long listings and modern chrome — the daily-driver path.</li>
-            <li><strong>Where coreutils still leads:</strong> pure name dump (<code class="mono">-1</code>) — decades of getdents-tuned C. We’re closing the gap with dirfd <code class="mono">statx</code> / d_type shortcuts, not by deleting features.</li>
-            <li><strong>Reproduce:</strong> <code class="mono">./scripts/bench-compare.sh 20000</code> (hyperfine + GNU time).</li>
-          </ul>
-        </div>
+        <p class="bench-foot muted reveal">
+          Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.11 ·
+          raw: <a href="/bench/hyperfine-20k.md">markdown</a> ·
+          <a href="/bench/hyperfine-20k.json">json</a> ·
+          <a href="/bench/">method</a>
+        </p>
       </div>
     </section>
 
@@ -540,128 +546,15 @@ yay -S f00
       </div>
     </section>
 
-    <!-- ═══ COMPARE ═══ -->
-    <section id="compare">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <h2>Feature matrix</h2>
-          <p>Speed is only half the story — surface area matters.</p>
-        </div>
-        <div class="table-wrap reveal">
-          <table class="compare">
-            <thead>
-              <tr>
-                <th></th>
-                <th>GNU ls</th>
-                <th>eza</th>
-                <th>lsd</th>
-                <th class="hl">f00</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>TTY chrome</td>
-                <td>—</td>
-                <td>yes</td>
-                <td>yes</td>
-                <td class="hl">yes</td>
-              </tr>
-              <tr>
-                <td>Pipe-safe default</td>
-                <td>yes</td>
-                <td>partial</td>
-                <td>partial</td>
-                <td class="hl"><strong>yes</strong></td>
-              </tr>
-              <tr>
-                <td>JSON</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td class="hl"><strong>core</strong></td>
-              </tr>
-              <tr>
-                <td>Full coreutils flags</td>
-                <td>native</td>
-                <td>partial</td>
-                <td>partial</td>
-                <td class="hl">+ --gnu</td>
-              </tr>
-              <tr>
-                <td>Fair drop-in speed (-l)</td>
-                <td>baseline</td>
-                <td>slower</td>
-                <td>slower</td>
-                <td class="hl"><strong>faster</strong></td>
-              </tr>
-              <tr>
-                <td>TUI browser</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td class="hl">f00-tui</td>
-              </tr>
-              <tr>
-                <td>curl | bash install</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td class="hl">f00.sh</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ ROADMAP ═══ -->
-    <section id="roadmap">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <h2>Status</h2>
-          <p>
-            Live tracking:
-            <a href="https://github.com/theesfeld/f00/issues">Issues</a>
-            · phase
-            <a href="https://github.com/theesfeld/f00/issues/88">#88</a>
-            · migration
-            <a href="https://github.com/theesfeld/f00/blob/main/MIGRATION.md">MIGRATION.md</a>
-          </p>
-        </div>
-        <ol class="roadmap reveal">
-          <li>
-            <span class="n">✓</span>
-            <div>
-              <strong>v0.11 focus cut</strong>
-              <span>script-safe non-TTY · lean features · f00-tui binary · install.sh + Nix first</span>
-            </div>
-          </li>
-          <li>
-            <span class="n">✓</span>
-            <div>
-              <strong>JSON polish</strong>
-              <span>pretty + colored when color on; compact for pipes</span>
-            </div>
-          </li>
-          <li>
-            <span class="n">→</span>
-            <div>
-              <strong>Next</strong>
-              <span>site UX (this page) · packaging lag cleanup · more speed goldens</span>
-            </div>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- ═══ DOCS ═══ -->
+    <!-- ═══ FOOT ═══ -->
     <section id="docs" class="docs-section">
       <div class="wrap docs-row reveal">
         <div>
-          <h2>Docs &amp; license</h2>
+          <h2>Open source</h2>
           <p class="muted">
-            Dual MIT OR Apache-2.0.
-            <a href="https://github.com/theesfeld/f00">github.com/theesfeld/f00</a>
+            MIT OR Apache-2.0 ·
+            <a href="https://github.com/theesfeld/f00">github.com/theesfeld/f00</a> ·
+            <a href="https://github.com/theesfeld/f00/blob/main/MIGRATION.md">migration</a>
           </p>
         </div>
         <div class="docs-actions">
@@ -684,10 +577,11 @@ yay -S f00
         © <span data-year>2026</span> · MIT OR Apache-2.0
       </div>
       <nav aria-label="Footer">
+        <a href="#bench">Speed</a>
+        <a href="#install">Install</a>
         <a href="/install.sh">install.sh</a>
         <a href="https://github.com/theesfeld/f00/releases">Releases</a>
         <a href="https://github.com/theesfeld/f00">GitHub</a>
-        <a href="#install">Install</a>
       </nav>
     </div>
   </footer>
