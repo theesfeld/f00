@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-07-20
+
 ### Added
 - **Auto script-safe mode** when stdout is not a TTY (GNU-equivalent without requiring `--gnu`)
 - **`--no-gnu`** / **`F00_NO_GNU`** to force modern product chrome on pipes
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive browser **de-emphasized** in favor of `f00-tui`; `f00 --browse` requires `--features tui` or use the companion binary
 - Installer installs `f00-tui` when present in the release archive (`F00_INSTALL_TUI=0` to skip)
 - README / site: daily-driver positioning; **install.sh + Nix** first-class; other package managers secondary
+- Version **0.10.5 → 0.11.0**
 
 ## [0.10.5] - 2026-07-17
 
@@ -209,7 +212,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial MVP workspace and listing core
 
-[0.10.5]: https://github.com/theesfeld/f00/releases/tag/v0.10.5
+[0.11.0]: https://github.com/theesfeld/f00/releases/tag/v0.11.0
 [0.10.4]: https://github.com/theesfeld/f00/releases/tag/v0.10.4
 [0.10.3]: https://github.com/theesfeld/f00/releases/tag/v0.10.3
 [0.10.2]: https://github.com/theesfeld/f00/releases/tag/v0.10.2

@@ -11,7 +11,7 @@
 class F00 < Formula
   desc "Modern, friendly directory lister (ls rewrite in Rust)"
   homepage "https://f00.sh"
-  version "0.10.5"
+  version "0.11.0"
   license any_of: ["MIT", "Apache-2.0"]
 
   on_macos do

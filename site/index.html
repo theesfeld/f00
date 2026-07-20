@@ -73,7 +73,7 @@
               <a class="version-pill" id="latest-version"
                  href="https://github.com/theesfeld/f00/releases/latest"
                  title="GitHub Releases">
-                <strong id="latest-version-label">v0.10.5</strong>
+                <strong id="latest-version-label">v0.11.0</strong>
               </a>
               <a class="version-assets" href="https://github.com/theesfeld/f00/releases">assets</a>
             </p>
@@ -222,14 +222,14 @@
             <p class="install-version-label">
               Latest release
               <a class="version-pill" href="https://github.com/theesfeld/f00/releases/latest">
-                <strong id="install-version-label">v0.10.5</strong>
+                <strong id="install-version-label">v0.11.0</strong>
               </a>
             </p>
             <pre><code>curl -fsSL https://f00.sh/install.sh | bash</code></pre>
             <p>Add to your <code class="mono">PATH</code> if needed:</p>
             <pre><code>export PATH="$HOME/.local/bin:$PATH"</code></pre>
             <p>Pin a version or choose a directory:</p>
-            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.5 bash
+            <pre><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.11.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
             <p>
               <strong>We never replace system <code class="mono">/bin/ls</code> by default.</strong>
@@ -254,12 +254,12 @@ yay -S f00
 # Scoop / winget / deb / rpm — see GitHub Releases
 
 # Debian/Ubuntu (.deb from GitHub Releases)
-# curl -fsSL -O https://github.com/theesfeld/f00/releases/download/v0.10.5/f00_0.10.5_amd64.deb
-# sudo dpkg -i f00_0.10.5_amd64.deb
+# curl -fsSL -O https://github.com/theesfeld/f00/releases/download/v0.11.0/f00_0.11.0_amd64.deb
+# sudo dpkg -i f00_0.11.0_amd64.deb
 
 # Fedora/RHEL (.rpm from GitHub Releases)
-# curl -fsSL -O https://github.com/theesfeld/f00/releases/download/v0.10.5/f00-0.10.5-1.x86_64.rpm
-# sudo rpm -i f00-0.10.5-1.x86_64.rpm</code></pre>
+# curl -fsSL -O https://github.com/theesfeld/f00/releases/download/v0.11.0/f00-0.11.0-1.x86_64.rpm
+# sudo rpm -i f00-0.11.0-1.x86_64.rpm</code></pre>
           </div>
           <div class="prose-block">
             <h3>Update</h3>
@@ -585,7 +585,7 @@ echo "alias ls='f00 --gnu'" >> ~/.bashrc
       <div class="copy">
         <strong style="color:var(--text-dim)">f00</strong>
         — next-generation <code class="mono">ls</code>.
-        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.10.5</a>.
+        Latest: <a href="https://github.com/theesfeld/f00/releases/latest" id="footer-version">v0.11.0</a>.
         © 2026 f00 contributors.
         Licensed under MIT OR Apache-2.0.
       </div>
@@ -602,7 +602,7 @@ echo "alias ls='f00 --gnu'" >> ~/.bashrc
   <script>
     (function () {
       // Fallback version embedded at ship time; refreshed from Releases API when available.
-      var FALLBACK_VERSION = "v0.10.5";
+      var FALLBACK_VERSION = "v0.11.0";
 
       function setVersionLabels(tag) {
         if (!tag) return;
