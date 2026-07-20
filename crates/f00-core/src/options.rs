@@ -414,6 +414,11 @@ pub struct ListOptions {
     /// Emit synthetic directory section headers in recursive listings (`-R`).
     /// Off for `--tree` (headers are not used and cost extra work).
     pub emit_dir_headers: bool,
+    /// When false, prefer readdir `d_type` / `file_type()` kind-only entries and
+    /// skip `stat`/`statx` for children (names + kind only). Callers set this
+    /// when sort/display do not need size, times, mode, inode, or blocks.
+    /// Features that need full metadata force this true.
+    pub full_metadata: bool,
 }
 
 impl Default for ListOptions {
@@ -446,6 +451,9 @@ impl Default for ListOptions {
             // Default on when the feature is compiled; runtime still falls back.
             io_uring: cfg!(feature = "io-uring"),
             emit_dir_headers: true,
+            // Safe default: always full metadata unless the CLI opts into the
+            // kind-only fast path (short name listings without color/classify).
+            full_metadata: true,
         }
     }
 }
@@ -454,6 +462,19 @@ impl ListOptions {
     /// Whether metadata should use rayon for this listing size.
     pub fn use_parallel_stat(&self, entry_count: usize) -> bool {
         self.parallel && self.threads != 1 && entry_count > PARALLEL_STAT_THRESHOLD
+    }
+
+    /// Kind-only path is safe when we only need names + directory/file kind
+    /// (from readdir `d_type` when available) and not size/time/mode fields.
+    pub fn use_kind_only(&self) -> bool {
+        if self.full_metadata || self.follow_links || self.resolve_owner_group || self.read_selinux
+        {
+            return false;
+        }
+        matches!(
+            self.sort_by,
+            SortBy::Name | SortBy::None | SortBy::Extension | SortBy::Version | SortBy::Width
+        )
     }
 }
 

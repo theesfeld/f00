@@ -248,6 +248,8 @@ pub fn build_config(args: &Args) -> Config {
         io_uring: cfg!(feature = "io-uring"),
         // Adjusted below for `--tree` (headers not needed).
         emit_dir_headers: true,
+        // Flipped below once output / color / classify are known.
+        full_metadata: true,
     };
 
     apply_gnu_list_options(&mut list, args.gnu);
@@ -294,6 +296,36 @@ pub fn build_config(args: &Args) -> Config {
     // Tree does not use section headers; skip them for less work and cleaner depths.
     list.emit_dir_headers = !matches!(output, OutputMode::Tree);
 
+    // Full metadata (statx) only when something actually needs size/mode/times.
+    // Short name listings with color/icons off can use readdir d_type only.
+    let color_on = if args.zero {
+        false
+    } else {
+        f00_core::ColorWhen::from(args.color).enabled(is_stdout_tty)
+    };
+    let indicator = resolve_indicator(args, is_stdout_tty);
+    let needs_mode = color_on
+        || !matches!(indicator, f00_core::IndicatorStyle::None)
+        || args.classify.is_some()
+        || args.file_type
+        || args.indicator_slash;
+    let needs_size_or_time = matches!(sort_by, f00_core::SortBy::Size | f00_core::SortBy::Time)
+        || matches!(
+            output,
+            OutputMode::Long | OutputMode::Json | OutputMode::Csv | OutputMode::Tsv
+        )
+        || args.size_blocks
+        || args.inode
+        || args.human_readable
+        || args.si;
+    list.full_metadata = list.resolve_owner_group
+        || list.read_selinux
+        || needs_mode
+        || needs_size_or_time
+        || list.follow_links
+        || args.recursive
+        || args.tree;
+
     let _ = (&mut all, &mut almost_all);
 
     // --zero disables color and hyperlinks in GNU ls.
@@ -307,8 +339,6 @@ pub fn build_config(args: &Args) -> Config {
     if args.zero {
         hyperlink = HyperlinkWhen::Never;
     }
-
-    let indicator = resolve_indicator(args, is_stdout_tty);
 
     Config {
         list,

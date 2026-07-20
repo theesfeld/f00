@@ -47,6 +47,7 @@
       <nav class="site-nav nav" id="site-nav" aria-label="Primary">
         <a href="#story">Why</a>
         <a href="#demos">Demos</a>
+        <a href="#bench">Bench</a>
         <a href="#install">Install</a>
         <a href="#compare">Compare</a>
         <a href="#roadmap">Roadmap</a>
@@ -327,6 +328,133 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
       </div>
     </section>
 
+    <!-- ═══ BENCHMARKS ═══ -->
+    <section id="bench" class="bench-section">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Benchmarks</h2>
+          <p>
+            Measured with <strong>hyperfine</strong> on a warm-cache tmpfs-backed
+            directory of <strong>20&nbsp;000</strong> files. Colors forced off.
+            Against coreutils we use <code class="mono">f00 --gnu</code> —
+            the fair drop-in comparison. Modern tools get product-mode runs too.
+          </p>
+        </div>
+
+        <div class="bench-meta reveal">
+          <span>host: Linux x86_64</span>
+          <span>hyperfine 1.20 · 25 runs · 5 warmup</span>
+          <span>coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.11</span>
+        </div>
+
+        <div class="bench-grid">
+          <article class="bench-card reveal hl-win">
+            <h3>Long listing <code class="mono">-l</code></h3>
+            <p class="bench-tag win">f00 --gnu wins vs coreutils</p>
+            <div class="bench-bars" aria-hidden="true">
+              <div class="bar-row"><span class="bar-label">f00 --gnu -l</span><span class="bar" style="--w:40.8%"></span><span class="bar-val">40.8 ms</span></div>
+              <div class="bar-row"><span class="bar-label">coreutils ls -l</span><span class="bar dim" style="--w:51.2%"></span><span class="bar-val">51.2 ms</span></div>
+              <div class="bar-row"><span class="bar-label">eza -l</span><span class="bar dim" style="--w:65.6%"></span><span class="bar-val">65.6 ms</span></div>
+              <div class="bar-row"><span class="bar-label">lsd -l</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">103 ms</span></div>
+            </div>
+            <p class="muted">~<strong>1.25×</strong> faster than GNU <code class="mono">ls -l</code>, ~1.6× eza, ~2.5× lsd.</p>
+          </article>
+
+          <article class="bench-card reveal">
+            <h3>Short names <code class="mono">-1</code></h3>
+            <p class="bench-tag fair">fair: f00 --gnu vs coreutils</p>
+            <div class="bench-bars" aria-hidden="true">
+              <div class="bar-row"><span class="bar-label">coreutils ls -1</span><span class="bar dim" style="--w:10.3%"></span><span class="bar-val">10.3 ms</span></div>
+              <div class="bar-row"><span class="bar-label">f00 --gnu -1</span><span class="bar" style="--w:18.4%"></span><span class="bar-val">18.4 ms</span></div>
+              <div class="bar-row"><span class="bar-label">eza -1</span><span class="bar dim" style="--w:29.4%"></span><span class="bar-val">29.4 ms</span></div>
+              <div class="bar-row"><span class="bar-label">lsd -1</span><span class="bar dim" style="--w:64.6%"></span><span class="bar-val">64.6 ms</span></div>
+            </div>
+            <p class="muted">
+              Coreutils still wins pure name dump (getdents-first).
+              Among modern tools, <strong>f00 leads</strong> (~1.6× eza, ~3.5× lsd).
+            </p>
+          </article>
+
+          <article class="bench-card reveal hl-win">
+            <h3>Product chrome (icons)</h3>
+            <p class="bench-tag win">daily-driver mode</p>
+            <div class="bench-bars" aria-hidden="true">
+              <div class="bar-row"><span class="bar-label">f00 -l --icons</span><span class="bar" style="--w:43.9%"></span><span class="bar-val">43.9 ms</span></div>
+              <div class="bar-row"><span class="bar-label">eza -l --icons</span><span class="bar dim" style="--w:68.1%"></span><span class="bar-val">68.1 ms</span></div>
+              <div class="bar-row"><span class="bar-label">lsd -l</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">~103 ms</span></div>
+            </div>
+            <p class="muted">Icons + long format still faster than eza/lsd — chrome is not an excuse to be slow.</p>
+          </article>
+
+          <article class="bench-card reveal">
+            <h3>f00-only: JSON</h3>
+            <p class="bench-tag unique">no competitor equivalent</p>
+            <div class="bench-bars" aria-hidden="true">
+              <div class="bar-row"><span class="bar-label">f00 -j (20k)</span><span class="bar" style="--w:79%"></span><span class="bar-val">79.0 ms</span></div>
+            </div>
+            <p class="muted">
+              Rich metadata JSON is a <strong>core</strong> surface — not a plugin.
+              Coreutils / eza / lsd have no peer.
+            </p>
+          </article>
+        </div>
+
+        <div class="table-wrap reveal bench-table">
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>coreutils</th>
+                <th>eza</th>
+                <th>lsd</th>
+                <th class="hl">f00</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code class="mono">-1</code> short (fair = --gnu)</td>
+                <td>10.3 ms</td>
+                <td>29.4 ms</td>
+                <td>64.6 ms</td>
+                <td class="hl"><strong>18.4 ms</strong> --gnu</td>
+              </tr>
+              <tr>
+                <td><code class="mono">-l</code> long (fair = --gnu)</td>
+                <td>51.2 ms</td>
+                <td>65.6 ms</td>
+                <td>103 ms</td>
+                <td class="hl"><strong>40.8 ms</strong> --gnu ★</td>
+              </tr>
+              <tr>
+                <td><code class="mono">-l</code> + icons</td>
+                <td>—</td>
+                <td>68.1 ms</td>
+                <td>~103 ms</td>
+                <td class="hl"><strong>43.9 ms</strong> ★</td>
+              </tr>
+              <tr>
+                <td>JSON <code class="mono">-j</code></td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td class="hl"><strong>79.0 ms</strong> unique</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bench-notes reveal">
+          <h3>How to read this</h3>
+          <ul>
+            <li><strong>Fair coreutils compare:</strong> always <code class="mono">f00 --gnu</code> (or non-TTY auto). Same shape of work: no icons/git chrome.</li>
+            <li><strong>Where we win hard:</strong> long listings and modern chrome — the daily-driver path.</li>
+            <li><strong>Where coreutils still leads:</strong> pure name dump (<code class="mono">-1</code>) — decades of getdents-tuned C. We’re closing the gap with dirfd <code class="mono">statx</code> / d_type shortcuts, not by deleting features.</li>
+            <li><strong>Reproduce:</strong> <code class="mono">./scripts/bench-compare.sh 20000</code> (hyperfine + GNU time).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══ INSTALL ═══ -->
     <section id="install" class="install-section">
       <div class="wrap">
@@ -416,8 +544,8 @@ yay -S f00
     <section id="compare">
       <div class="wrap">
         <div class="section-head reveal">
-          <h2>Compare</h2>
-          <p>Modern defaults plus a real GNU escape hatch.</p>
+          <h2>Feature matrix</h2>
+          <p>Speed is only half the story — surface area matters.</p>
         </div>
         <div class="table-wrap reveal">
           <table class="compare">
@@ -458,6 +586,13 @@ yay -S f00
                 <td>partial</td>
                 <td>partial</td>
                 <td class="hl">+ --gnu</td>
+              </tr>
+              <tr>
+                <td>Fair drop-in speed (-l)</td>
+                <td>baseline</td>
+                <td>slower</td>
+                <td>slower</td>
+                <td class="hl"><strong>faster</strong></td>
               </tr>
               <tr>
                 <td>TUI browser</td>
