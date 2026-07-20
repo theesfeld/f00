@@ -193,15 +193,41 @@ impl LongWidths {
             }
             w.nlink = w.nlink.max(decimal_digits(e.nlink));
             if config.show_owner {
-                w.owner = w.owner.max(e.owner_display(config.numeric_uid_gid).len());
+                let len = if config.numeric_uid_gid {
+                    decimal_digits(u64::from(e.uid))
+                } else {
+                    e.owner.len().max(1)
+                };
+                w.owner = w.owner.max(len);
             }
             if config.show_group {
-                w.group = w.group.max(e.group_display(config.numeric_uid_gid).len());
+                let len = if config.numeric_uid_gid {
+                    decimal_digits(u64::from(e.gid))
+                } else {
+                    e.group.len().max(1)
+                };
+                w.group = w.group.max(len);
             }
             if config.show_author {
-                w.author = w.author.max(e.author_display(config.numeric_uid_gid).len());
+                let len = if config.numeric_uid_gid {
+                    decimal_digits(u64::from(e.uid))
+                } else if !e.author.is_empty() {
+                    e.author.len()
+                } else {
+                    e.owner.len().max(1)
+                };
+                w.author = w.author.max(len);
             }
-            w.size = w.size.max(format_size_field(e, config).len());
+            // Digit-count for plain bytes; human / non-1 block sizes need format.
+            let size_len = if config.human_sizes
+                || config.si_sizes
+                || !matches!(config.block_size, f00_core::BlockSize::Bytes(1))
+            {
+                format_size_field(e, config).len()
+            } else {
+                decimal_digits(e.size)
+            };
+            w.size = w.size.max(size_len);
         }
         w
     }

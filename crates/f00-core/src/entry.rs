@@ -369,6 +369,21 @@ impl Entry {
             self.owner_display(numeric)
         }
     }
+
+    /// Fill owner/group/author (and optional SELinux context) after a cheap stat.
+    ///
+    /// Used so batch `statx` / io_uring can collect metadata first, then resolve
+    /// expensive fields without re-statting.
+    pub fn fill_expensive(&mut self, fill: MetaFill) {
+        if fill.resolve_names {
+            self.owner = resolve_owner_cached(self.uid);
+            self.group = resolve_group_cached(self.gid);
+            self.author = self.owner.clone();
+        }
+        if fill.read_context && self.context.is_empty() {
+            self.context = read_selinux_context(&self.path);
+        }
+    }
 }
 
 #[cfg(unix)]
