@@ -1,8 +1,13 @@
 //! Interactive TUI directory browser for **f00**.
 //!
-//! # CLI wiring (f00-cli)
+//! # Binary
 //!
-//! Gate the dependency behind a cargo feature (not in default features):
+//! This crate ships the **`f00-tui`** binary (dual-pane FM). Prefer that over
+//! embedding the browser into the main `f00` CLI.
+//!
+//! # Optional embed in f00-cli
+//!
+//! Gate the dependency behind cargo feature `tui` (not a default feature):
 //!
 //! ```toml
 //! # crates/f00-cli/Cargo.toml
@@ -10,39 +15,12 @@
 //! f00-tui = { workspace = true, optional = true }
 //!
 //! [features]
-//! default = ["git"]
-//! git = ["dep:f00-git"]
-//! tui = ["dep:f00-tui"]
-//! # optional: enable git status inside the browser too
-//! # tui = ["dep:f00-tui", "f00-tui/git"]
+//! default = ["git", "io-uring"]
+//! tui = ["dep:f00-tui", "f00-tui/git"]
 //! ```
 //!
-//! Add CLI flags such as `--browse` / `--tui`, then:
-//!
-//! ```rust,ignore
-//! #[cfg(feature = "tui")]
-//! {
-//!     if args.browse || args.tui {
-//!         let start = args
-//!             .paths
-//!             .first()
-//!             .cloned()
-//!             .unwrap_or_else(|| PathBuf::from("."));
-//!         let code = f00_tui::run_browser(
-//!             &start,
-//!             f00_tui::BrowserOptions {
-//!                 show_hidden: args.almost_all || args.all,
-//!                 icons: config.icons,
-//!                 git: cfg!(feature = "git") && config.show_git,
-//!             },
-//!         )?;
-//!         std::process::exit(code);
-//!     }
-//! }
-//! ```
-//!
-//! Without the `tui` feature, print a short message that the binary was built
-//! without browser support.
+//! Then `f00 --browse` can call [`run_browser`]. Without the feature, the CLI
+//! points users at the `f00-tui` binary.
 
 mod browser;
 mod helpers;

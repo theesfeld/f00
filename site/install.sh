@@ -11,11 +11,13 @@
 #   ADD_PATH         1 = ensure install dir on PATH via shell rc (default when missing)
 #                    0 = never edit shell rc (print snippet only)
 #   F00_INSTALL_LS   If set to 1, also symlink ls -> f00
+#   F00_INSTALL_TUI  If set to 0, skip installing f00-tui when present in the archive (default: install)
 #   F00_NO_COLOR     If set, disable ANSI colors
 set -euo pipefail
 
 REPO="theesfeld/f00"
 BINARY="f00"
+TUI_BINARY="f00-tui"
 GITHUB_API="https://api.github.com/repos/${REPO}"
 GITHUB_RELEASES="https://github.com/${REPO}/releases"
 
@@ -368,6 +370,24 @@ Is ${version} published? Check ${GITHUB_RELEASES}"
 
   ok "installed ${BINARY} to ${bin_dst}"
 
+  # Companion dual-pane browser (optional; present in v0.11+ release archives)
+  local tui_src=""
+  if [[ "${F00_INSTALL_TUI:-1}" != "0" ]]; then
+    tui_src="$(find "$extract_dir" -type f \( -name "$TUI_BINARY" -o -name "${TUI_BINARY}.exe" \) | head -1 || true)"
+  fi
+  local tui_dst=""
+  if [[ -n "${tui_src}" ]]; then
+    tui_dst="${install_dir}/${TUI_BINARY}"
+    if [[ "$os" == "windows" ]]; then
+      tui_dst="${install_dir}/${TUI_BINARY}.exe"
+    fi
+    install -m 755 "$tui_src" "$tui_dst" 2>/dev/null || {
+      cp "$tui_src" "$tui_dst"
+      chmod 755 "$tui_dst"
+    }
+    ok "installed ${TUI_BINARY} to ${tui_dst}"
+  fi
+
   # Migrate away from legacy ~/.f00/bin if present and we installed elsewhere.
   local legacy="${HOME}/.f00/bin/${BINARY}"
   if [[ -x "$legacy" && "$bin_dst" != "$legacy" ]]; then
@@ -395,12 +415,16 @@ Is ${version} published? Check ${GITHUB_RELEASES}"
   fi
 
   printf "\n${GREEN}${BOLD}Done.${RESET} Run ${BOLD}f00 --help${RESET} or ${BOLD}f00 -la${RESET}.\n" >&2
+  if [[ -n "${tui_dst}" ]]; then
+    printf "Dual-pane browser: ${BOLD}f00-tui${RESET} (or ${BOLD}f00 --browse${RESET} if built with --features tui).\n" >&2
+  fi
   printf "${DIM}Docs: https://f00.sh · https://github.com/${REPO}${RESET}\n" >&2
   printf "\n${BOLD}Using f00 as ls?${RESET} (optional — we never replace /bin/ls by default)\n" >&2
   printf "  Interactive alias (recommended):\n" >&2
   printf "    echo \"alias ls='f00'\" >> ~/.bashrc    # or ~/.zshrc\n" >&2
   printf "    echo \"alias ll='f00 -la'\" >> ~/.bashrc\n" >&2
   printf "  Coreutils-shaped:  alias ls='f00 --gnu'   or   export F00_GNU=1\n" >&2
+  printf "  Non-TTY (pipes) is script-safe by default; force modern with --no-gnu.\n" >&2
   if [[ "${F00_INSTALL_LS:-0}" != "1" ]]; then
     printf "  PATH symlink next time:  curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash\n" >&2
   else

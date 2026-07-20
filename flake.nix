@@ -1,4 +1,4 @@
-# Nix flake for f00 — build from source (stub; refine as packaging matures).
+# Nix flake for f00 — build from source.
 {
   description = "f00 — modern ls clone in Rust";
 
@@ -14,11 +14,12 @@
       in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
           pname = "f00";
-          version = "0.5.0";
+          version = "0.11.0-dev";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
-          # Binary package lives in the workspace package f00 (path crates/f00-cli).
-          buildAndTestSubdir = "crates/f00-cli";
+          # Workspace: build the lean CLI + separate TUI browser.
+          cargoBuildFlags = [ "-p" "f00" "-p" "f00-tui" ];
+          cargoTestFlags = [ "-p" "f00" "-p" "f00-tui" ];
           meta = with pkgs.lib; {
             description = "Modern, friendly directory lister (ls rewrite)";
             homepage = "https://f00.sh";
@@ -27,9 +28,16 @@
           };
         };
 
+        packages.f00-tui = self.packages.${system}.default;
+
         apps.default = {
           type = "app";
           program = "${self.packages.${system}.default}/bin/f00";
+        };
+
+        apps.f00-tui = {
+          type = "app";
+          program = "${self.packages.${system}.default}/bin/f00-tui";
         };
 
         devShells.default = pkgs.mkShell {

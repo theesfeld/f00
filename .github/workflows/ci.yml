@@ -53,3 +53,7 @@ jobs:
         run: cargo test --workspace --all-features
       - name: cargo test -p f00 --no-default-features
         run: cargo test -p f00 --no-default-features
+      - name: cargo test -p f00 --features full
+        run: cargo test -p f00 --features full
+      - name: cargo build -p f00-tui --release
+        run: cargo build -p f00-tui --release

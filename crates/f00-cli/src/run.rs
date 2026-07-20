@@ -368,7 +368,8 @@ pub fn run(args: Args) -> Result<i32> {
 pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
     let args = prepare_args(args, as_ls)?;
 
-    // Interactive browser (feature-gated).
+    // Interactive browser: prefer the separate `f00-tui` binary. Optional
+    // embed via `--features tui` keeps `f00 --browse` for single-binary installs.
     if args.browse {
         #[cfg(feature = "tui")]
         {
@@ -391,7 +392,11 @@ pub fn run_with_argv0(args: Args, as_ls: bool) -> Result<i32> {
         }
         #[cfg(not(feature = "tui"))]
         {
-            anyhow::bail!("TUI browser requires building with --features tui");
+            anyhow::bail!(
+                "interactive browser is the separate `f00-tui` binary \
+                 (install from the same release, or: cargo install f00-tui). \
+                 Embed with: cargo build -p f00 --features tui"
+            );
         }
     }
 
