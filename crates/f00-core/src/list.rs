@@ -284,23 +284,19 @@ fn stat_dir_entries(dir_entries: &[fs::DirEntry], opts: &ListOptions) -> Vec<Ent
     }
 
     // ── Portable / follow / fallback ─────────────────────────────────
-    let map_one = |item: &fs::DirEntry| {
-        // Defer expensive fill when we can batch it after.
-        let cheap = crate::entry::MetaFill {
-            resolve_names: false,
-            read_context: false,
-        };
-        let mut e = entry_from_dir_entry(item, follow, cheap, prefer_statx)?;
-        if fill.resolve_names || fill.read_context {
-            e.fill_expensive(fill);
-        }
-        Some(e)
+    let cheap = crate::entry::MetaFill {
+        resolve_names: false,
+        read_context: false,
     };
+    let map_one = |item: &fs::DirEntry| entry_from_dir_entry(item, follow, cheap, prefer_statx);
 
-    // Absolute-path io_uring fallback (e.g. open(parent) failed).
+    // Absolute-path io_uring fallback (serial only).
     #[cfg(all(target_os = "linux", feature = "io-uring"))]
     {
-        if opts.io_uring && !follow && dir_entries.len() >= crate::io_uring_stat::IO_URING_THRESHOLD
+        if opts.io_uring
+            && !follow
+            && !opts.use_parallel_stat(dir_entries.len())
+            && dir_entries.len() >= crate::io_uring_stat::IO_URING_THRESHOLD
         {
             let paths: Vec<_> = dir_entries.iter().map(|d| d.path()).collect();
             if let Some(mut entries) = crate::io_uring_stat::entries_from_paths_uring(&paths, fill)
@@ -313,23 +309,25 @@ fn stat_dir_entries(dir_entries: &[fs::DirEntry], opts: &ListOptions) -> Vec<Ent
         }
     }
 
-    if !opts.use_parallel_stat(dir_entries.len()) {
-        return dir_entries.iter().filter_map(map_one).collect();
-    }
-
-    let collect = || dir_entries.par_iter().filter_map(map_one).collect();
-
-    if opts.threads > 1 {
-        match rayon::ThreadPoolBuilder::new()
-            .num_threads(opts.threads)
-            .build()
-        {
-            Ok(pool) => pool.install(collect),
-            Err(_) => collect(),
-        }
+    let mut entries: Vec<Entry> = if !opts.use_parallel_stat(dir_entries.len()) {
+        dir_entries.iter().filter_map(map_one).collect()
     } else {
-        collect()
-    }
+        let collect = || dir_entries.par_iter().filter_map(map_one).collect();
+        if opts.threads > 1 {
+            match rayon::ThreadPoolBuilder::new()
+                .num_threads(opts.threads)
+                .build()
+            {
+                Ok(pool) => pool.install(collect),
+                Err(_) => collect(),
+            }
+        } else {
+            collect()
+        }
+    };
+    // Always used (including non-Linux) so the helper is not dead_code on macOS.
+    apply_expensive_fill(&mut entries, fill);
+    entries
 }
 
 /// Non-recursive directory listing.
