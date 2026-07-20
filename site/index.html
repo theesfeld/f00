@@ -57,13 +57,15 @@
   <main id="main">
     <!-- ═══ HERO ═══ -->
     <section class="hero">
+      <div class="hero-grid-bg" aria-hidden="true"></div>
       <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-glow hero-glow-2" aria-hidden="true"></div>
       <div class="wrap hero-grid">
         <div class="hero-copy reveal">
-          <p class="eyebrow">v<span data-version>0.11.0</span> · rust · daily-driver</p>
+          <p class="eyebrow"><span class="live-dot"></span> v<span data-version>0.11.0</span> · rust · daily-driver</p>
           <h1>
             <code class="mono">ls</code> that feels like
-            <span class="accent">today</span>
+            <span class="accent gradient-text">today</span>
           </h1>
           <p class="lead">
             <strong>f00</strong> is a daily-driver directory lister:
@@ -81,7 +83,7 @@
               </a>
             </p>
             <div class="install-row">
-              <div class="install-cmd">
+              <div class="install-cmd glow-cmd">
                 <span class="dollar">$</span>
                 <code id="install-line">curl -fsSL https://f00.sh/install.sh | bash</code>
               </div>
@@ -470,23 +472,27 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
         </div>
 
         <div class="install-shell reveal" role="region" aria-label="Install options">
-          <div class="demo-tabs" data-install-tabs role="tablist" aria-label="Install method">
+          <div class="demo-tabs install-tabs" data-install-tabs role="tablist" aria-label="Install method">
             <button type="button" role="tab" data-install-tab="curl" aria-selected="true" aria-controls="inst-curl" id="tab-curl">curl</button>
             <button type="button" role="tab" data-install-tab="nix" aria-selected="false" aria-controls="inst-nix" id="tab-nix" tabindex="-1">nix</button>
             <button type="button" role="tab" data-install-tab="cargo" aria-selected="false" aria-controls="inst-cargo" id="tab-cargo" tabindex="-1">cargo</button>
-            <button type="button" role="tab" data-install-tab="pkg" aria-selected="false" aria-controls="inst-pkg" id="tab-pkg" tabindex="-1">packages</button>
+            <button type="button" role="tab" data-install-tab="brew" aria-selected="false" aria-controls="inst-brew" id="tab-brew" tabindex="-1">brew</button>
+            <button type="button" role="tab" data-install-tab="aur" aria-selected="false" aria-controls="inst-aur" id="tab-aur" tabindex="-1">aur</button>
+            <button type="button" role="tab" data-install-tab="scoop" aria-selected="false" aria-controls="inst-scoop" id="tab-scoop" tabindex="-1">scoop</button>
+            <button type="button" role="tab" data-install-tab="winget" aria-selected="false" aria-controls="inst-winget" id="tab-winget" tabindex="-1">winget</button>
+            <button type="button" role="tab" data-install-tab="deb" aria-selected="false" aria-controls="inst-deb" id="tab-deb" tabindex="-1">deb/rpm</button>
           </div>
 
           <div class="install-pane" id="inst-curl" data-install-pane="curl" role="tabpanel" aria-labelledby="tab-curl">
             <div class="install-row install-row-lg">
-              <div class="install-cmd">
+              <div class="install-cmd glow-cmd">
                 <span class="dollar">$</span>
                 <code id="install-line-2">curl -fsSL https://f00.sh/install.sh | bash</code>
               </div>
               <button type="button" class="copy-btn" data-copy="#install-line-2">copy</button>
             </div>
             <p class="muted install-note">
-              Installs to <code class="mono">~/.local/bin</code> · ships <code class="mono">f00</code> + <code class="mono">f00-tui</code>
+              Recommended · <code class="mono">~/.local/bin</code> · <code class="mono">f00</code> + <code class="mono">f00-tui</code>
               · never touches <code class="mono">/bin/ls</code>
             </p>
             <div class="install-details">
@@ -506,41 +512,82 @@ f00 --check-update</code></pre>
 
           <div class="install-pane" id="inst-nix" data-install-pane="nix" role="tabpanel" aria-labelledby="tab-nix" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd">
+              <div class="install-cmd glow-cmd">
                 <span class="dollar">$</span>
                 <code id="install-nix">nix profile install github:theesfeld/f00</code>
               </div>
               <button type="button" class="copy-btn" data-copy="#install-nix">copy</button>
             </div>
-            <p class="muted install-note">First-class alongside install.sh · builds from source</p>
-            <pre class="code-block"><code>nix run github:theesfeld/f00 -- -la
-# or flake checkout: nix build .#default</code></pre>
+            <p class="muted install-note">First-class · builds from source</p>
+            <pre class="code-block"><code>nix run github:theesfeld/f00 -- -la</code></pre>
           </div>
 
           <div class="install-pane" id="inst-cargo" data-install-pane="cargo" role="tabpanel" aria-labelledby="tab-cargo" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd">
+              <div class="install-cmd glow-cmd">
                 <span class="dollar">$</span>
                 <code id="install-cargo">cargo install f00 --locked</code>
               </div>
               <button type="button" class="copy-btn" data-copy="#install-cargo">copy</button>
             </div>
-            <p class="muted install-note">crates.io · lean defaults (git + io-uring). TUI: <code class="mono">cargo install f00-tui --locked</code> when published as bin package, or build from the repo.</p>
+            <p class="muted install-note">crates.io · lean defaults (git + io-uring)</p>
             <pre class="code-block"><code>git clone https://github.com/theesfeld/f00.git
 cd f00 && cargo build --release -p f00 -p f00-tui</code></pre>
           </div>
 
-          <div class="install-pane" id="inst-pkg" data-install-pane="pkg" role="tabpanel" aria-labelledby="tab-pkg" hidden>
-            <p class="muted install-note">Convenience channels — may lag the GitHub release by a bit.</p>
-            <pre class="code-block"><code># Homebrew
-brew install theesfeld/tap/f00
+          <div class="install-pane" id="inst-brew" data-install-pane="brew" role="tabpanel" aria-labelledby="tab-brew" hidden>
+            <div class="install-row install-row-lg">
+              <div class="install-cmd glow-cmd">
+                <span class="dollar">$</span>
+                <code id="install-brew">brew install theesfeld/tap/f00</code>
+              </div>
+              <button type="button" class="copy-btn" data-copy="#install-brew">copy</button>
+            </div>
+            <p class="muted install-note">Homebrew · may lag GitHub Releases slightly · upgrade with <code class="mono">brew upgrade f00</code></p>
+          </div>
 
-# Arch (AUR)
-yay -S f00
+          <div class="install-pane" id="inst-aur" data-install-pane="aur" role="tabpanel" aria-labelledby="tab-aur" hidden>
+            <div class="install-row install-row-lg">
+              <div class="install-cmd glow-cmd">
+                <span class="dollar">$</span>
+                <code id="install-aur">yay -S f00</code>
+              </div>
+              <button type="button" class="copy-btn" data-copy="#install-aur">copy</button>
+            </div>
+            <p class="muted install-note">Arch AUR · also <code class="mono">paru -S f00</code></p>
+          </div>
 
-# Scoop / winget / deb / rpm
-# → https://github.com/theesfeld/f00/releases</code></pre>
-            <p class="muted">Prefer the package manager’s own upgrade path for these installs.</p>
+          <div class="install-pane" id="inst-scoop" data-install-pane="scoop" role="tabpanel" aria-labelledby="tab-scoop" hidden>
+            <div class="install-row install-row-lg">
+              <div class="install-cmd glow-cmd">
+                <span class="dollar">$</span>
+                <code id="install-scoop">scoop install f00</code>
+              </div>
+              <button type="button" class="copy-btn" data-copy="#install-scoop">copy</button>
+            </div>
+            <p class="muted install-note">Windows Scoop · first: <code class="mono">scoop bucket add theesfeld https://github.com/theesfeld/scoop-bucket</code></p>
+          </div>
+
+          <div class="install-pane" id="inst-winget" data-install-pane="winget" role="tabpanel" aria-labelledby="tab-winget" hidden>
+            <div class="install-row install-row-lg">
+              <div class="install-cmd glow-cmd">
+                <span class="dollar">$</span>
+                <code id="install-winget">winget install theesfeld.f00</code>
+              </div>
+              <button type="button" class="copy-btn" data-copy="#install-winget">copy</button>
+            </div>
+            <p class="muted install-note">Windows winget · available after catalog merge · may lag Releases</p>
+          </div>
+
+          <div class="install-pane" id="inst-deb" data-install-pane="deb" role="tabpanel" aria-labelledby="tab-deb" hidden>
+            <p class="muted install-note">Download from <a href="https://github.com/theesfeld/f00/releases">GitHub Releases</a></p>
+            <pre class="code-block"><code data-version-pin># Debian / Ubuntu
+curl -fsSL -O https://github.com/theesfeld/f00/releases/download/__VERSION__/f00_*_amd64.deb
+sudo dpkg -i f00_*_amd64.deb
+
+# Fedora / RHEL
+curl -fsSL -O https://github.com/theesfeld/f00/releases/download/__VERSION__/f00-*-1.x86_64.rpm
+sudo rpm -i f00-*.rpm</code></pre>
           </div>
         </div>
       </div>
