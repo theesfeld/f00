@@ -54,11 +54,11 @@ jobs:
 
       - name: Build (cargo)
         if: ${{ !matrix.cross }}
-        run: cargo build --release --locked --target ${{ matrix.target }} -p f00
+        run: cargo build --release --locked --target ${{ matrix.target }} -p f00 -p f00-tui
 
       - name: Build (cross)
         if: matrix.cross
-        run: cross build --release --locked --target ${{ matrix.target }} -p f00
+        run: cross build --release --locked --target ${{ matrix.target }} -p f00 -p f00-tui
 
       - name: Package (Unix)
         if: matrix.archive == 'tar.gz'
@@ -68,8 +68,13 @@ jobs:
           STAGE="dist/${{ env.BINARY }}-${{ matrix.target }}"
           mkdir -p "$STAGE"
           BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}"
+          TUI="target/${{ matrix.target }}/release/f00-tui"
           cp "$BIN" "$STAGE/${{ env.BINARY }}"
           chmod +x "$STAGE/${{ env.BINARY }}"
+          if [[ -f "$TUI" ]]; then
+            cp "$TUI" "$STAGE/f00-tui"
+            chmod +x "$STAGE/f00-tui"
+          fi
           for f in README.md LICENSE-MIT LICENSE-APACHE; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done
@@ -84,7 +89,11 @@ jobs:
           STAGE="dist/${{ env.BINARY }}-${{ matrix.target }}"
           mkdir -p "$STAGE"
           BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}.exe"
+          TUI="target/${{ matrix.target }}/release/f00-tui.exe"
           cp "$BIN" "$STAGE/${{ env.BINARY }}.exe"
+          if [[ -f "$TUI" ]]; then
+            cp "$TUI" "$STAGE/f00-tui.exe"
+          fi
           for f in README.md LICENSE-MIT LICENSE-APACHE; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done

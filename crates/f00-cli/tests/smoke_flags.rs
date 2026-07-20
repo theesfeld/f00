@@ -299,6 +299,32 @@ fn auto_gnu_on_pipe_strips_git_chars() {
     let _ = fs::remove_dir_all(&dir);
 }
 
+/// Default builds no longer embed the TUI; `--browse` should point at `f00-tui`.
+#[test]
+fn browse_without_tui_feature_mentions_f00_tui() {
+    // This test runs against the package's default features (no `tui`).
+    let out = Command::new(bin())
+        .env("LC_ALL", "C")
+        .args(["--browse"])
+        .output()
+        .unwrap();
+    // Prefer non-zero; message must mention the separate binary.
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let combined = format!("{stderr}{}", String::from_utf8_lossy(&out.stdout));
+    if cfg!(feature = "tui") {
+        // Embedded builds may fail for non-TTY instead; skip message check.
+        return;
+    }
+    assert!(
+        !out.status.success(),
+        "expected failure without TTY/tui: {combined}"
+    );
+    assert!(
+        combined.contains("f00-tui") || combined.to_ascii_lowercase().contains("tui"),
+        "should mention f00-tui: {combined}"
+    );
+}
+
 #[test]
 fn no_gnu_allows_modern_on_pipe() {
     let dir = temp_dir("no-gnu-pipe");

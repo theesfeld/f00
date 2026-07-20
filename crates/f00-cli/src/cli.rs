@@ -320,7 +320,7 @@ pub struct Args {
     #[arg(long = "config", value_name = "PATH")]
     pub config: Option<PathBuf>,
 
-    /// Interactive TUI directory browser (requires feature `tui`)
+    /// Interactive TUI directory browser (prefer `f00-tui`; embed with feature `tui`)
     #[arg(long = "browse", visible_alias = "tui")]
     pub browse: bool,
 

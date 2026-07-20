@@ -46,14 +46,19 @@ ureq = { workspace = true }
 zip = { workspace = true, optional = true }
 
 [features]
+# Lean daily-driver defaults: git annotations + Linux io_uring fast path.
+# Archives and embedded TUI are opt-in; prefer the separate `f00-tui` binary.
 # io-uring is a no-op off Linux (dep is target-gated in f00-core).
-default = ["git", "archives", "tui", "io-uring"]
+default = ["git", "io-uring"]
 git = ["dep:f00-git"]
 archives = ["dep:f00-archive"]
-tui = ["dep:f00-tui"]
+# Optional: embed `f00 --browse` (full dual-pane FM). Prefer installing `f00-tui`.
+tui = ["dep:f00-tui", "f00-tui/git"]
 plugins = ["dep:f00-plugin"]
 # Linux: enable io_uring batch metadata in f00-core
 io-uring = ["f00-core/io-uring"]
+# Full “kitchen sink” build (CI / power users)
+full = ["git", "io-uring", "archives", "tui", "plugins"]
 # zip needed for self-update extract on Windows
 # always compile zip on windows via target dep below
 
