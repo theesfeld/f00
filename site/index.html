@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>f00 — next-generation ls in Rust</title>
-  <meta name="description" content="f00 is a fast, cross-platform ls rewrite in Rust. Colors, icons, tree, JSON, git status, GNU mode. Install with curl | bash." />
+  <title>f00 — daily-driver ls replacement in Rust</title>
+  <meta name="description" content="f00 is a fast, daily-driver ls replacement: beautiful on a TTY, script-safe when piped. Colors, icons, git, GNU mode. Install with curl | bash." />
   <meta name="theme-color" content="#07090c" />
   <link rel="canonical" href="https://f00.sh/" />
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
@@ -13,17 +13,17 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://f00.sh/" />
-  <meta property="og:title" content="f00 — next-generation ls in Rust" />
-  <meta property="og:description" content="Fast cross-platform directory listings with modern UX and an optional GNU-compatible mode." />
+  <meta property="og:title" content="f00 — daily-driver ls replacement" />
+  <meta property="og:description" content="Fast listings: beautiful on a TTY, script-safe when piped. Full GNU surface when you need it." />
   <meta property="og:site_name" content="f00" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:image" content="https://f00.sh/assets/og.svg" />
-  <meta property="og:image:alt" content="f00 — next-generation ls in Rust" />
+  <meta property="og:image:alt" content="f00 — daily-driver ls replacement" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="f00 — next-generation ls in Rust" />
-  <meta name="twitter:description" content="Fast cross-platform directory listings. curl -fsSL https://f00.sh/install.sh | bash" />
+  <meta name="twitter:title" content="f00 — daily-driver ls replacement" />
+  <meta name="twitter:description" content="Fast listings: TTY chrome, script-safe pipes. curl -fsSL https://f00.sh/install.sh | bash" />
   <meta name="twitter:image" content="https://f00.sh/assets/og.svg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -60,10 +60,11 @@
             that <span class="accent">don’t suck</span>
           </h1>
           <p class="lead">
-            <strong>f00</strong> is a next-generation <code class="mono">ls</code> rewrite:
-            modern defaults that feel great, <strong>exact coreutils drop-in</strong> for
-            scripts (<code class="mono">--gnu</code> / <code class="mono">alias ls='f00 --gnu'</code>),
-            plus tree, JSON, icons, and git status when you want more than bare listing.
+            <strong>f00</strong> is a daily-driver <code class="mono">ls</code> replacement:
+            <strong>fast</strong>, <strong>beautiful on a TTY</strong>, and
+            <strong>script-safe when piped</strong> (auto GNU-equivalent on non-TTY).
+            Full coreutils flag surface, tree/JSON/icons/git, plus optional
+            <code class="mono">f00-tui</code> dual-pane browser.
           </p>
 
           <div class="install-block" id="install-hero-block">
@@ -91,10 +92,10 @@
           </div>
 
           <div class="hero-meta">
-            <span class="ok">listing · -la · color</span>
+            <span class="ok">TTY chrome · pipe-safe</span>
             <span class="ok">tree · json · icons</span>
-            <span class="ok">git · recursive · --gnu</span>
-            <span class="ok">self-update · --update</span>
+            <span class="ok">git · speed · --gnu</span>
+            <span class="ok">f00-tui · --update</span>
           </div>
         </div>
 
@@ -173,18 +174,23 @@
           </article>
           <article class="card">
             <span class="tag">shipped</span>
-            <h3>TUI dual-pane FM</h3>
-            <p><code class="mono">f00 --browse</code> dual panes (Tab), copy/move/delete, preview, sort, editor/pager.</p>
+            <h3>Script-safe pipes</h3>
+            <p>Non-TTY stdout auto-enables GNU-equivalent mode. Force modern with <code class="mono">--no-gnu</code>; force always with <code class="mono">--gnu</code>.</p>
+          </article>
+          <article class="card">
+            <span class="tag">shipped</span>
+            <h3>f00-tui browser</h3>
+            <p>Separate <code class="mono">f00-tui</code> binary: dual panes (Tab), copy/move/delete, preview, sort, editor/pager.</p>
           </article>
           <article class="card">
             <span class="tag">shipped</span>
             <h3>Linux speed</h3>
-            <p><code class="mono">statx</code> + optional <code class="mono">io_uring</code> batch metadata for large dirs (auto fallback).</p>
+            <p><code class="mono">statx</code> + <code class="mono">io_uring</code> batch metadata for large dirs (default on Linux; auto fallback).</p>
           </article>
           <article class="card">
-            <span class="tag">shipped</span>
+            <span class="tag">optional</span>
             <h3>Archives</h3>
-            <p>List inside zip/tar (and friends) without extracting to disk.</p>
+            <p>List inside zip/tar (and friends) without extracting — cargo feature <code class="mono">archives</code>.</p>
           </article>
           <article class="card">
             <span class="tag">shipped</span>
@@ -230,27 +236,22 @@ curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash</code></pre>
               The primary command is always <code class="mono">f00</code>.
             </p>
 
-            <h3>Package managers</h3>
-            <p>Same release assets; prefer the package manager’s upgrade for these installs.</p>
-            <pre><code># Homebrew
-brew install theesfeld/tap/f00
+            <h3>Nix</h3>
+            <pre><code>nix profile install github:theesfeld/f00
+# or: nix run github:theesfeld/f00 -- -la</code></pre>
 
-# crates.io
+            <h3>Other package managers</h3>
+            <p>Convenience channels (may lag). <strong>install.sh and Nix are first-class.</strong></p>
+            <pre><code># crates.io
 cargo install f00 --locked
+
+# Homebrew
+brew install theesfeld/tap/f00
 
 # Arch (AUR)
 yay -S f00
-# or: paru -S f00
 
-# Windows Scoop
-scoop bucket add theesfeld https://github.com/theesfeld/scoop-bucket
-scoop install f00
-
-# Windows winget (after first catalog merge)
-winget install theesfeld.f00
-
-# Nix
-nix profile install github:theesfeld/f00
+# Scoop / winget / deb / rpm — see GitHub Releases
 
 # Debian/Ubuntu (.deb from GitHub Releases)
 # curl -fsSL -O https://github.com/theesfeld/f00/releases/download/v0.10.5/f00_0.10.5_amd64.deb

@@ -57,3 +57,18 @@ jobs:
         run: cargo test -p f00 --features full
       - name: cargo build -p f00-tui --release
         run: cargo build -p f00-tui --release
+
+  # Criterion smoke: keep listing microbenches compiling and runnable (not a perf gate).
+  bench:
+    name: bench smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo bench (smoke)
+        run: >
+          cargo bench -p f00-core --bench list_bench --
+          --sample-size 10
+          --warm-up-time 1
+          --measurement-time 1
