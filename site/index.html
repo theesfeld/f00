@@ -32,6 +32,28 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
+  <!-- Scroll progress (document scroll is the product) -->
+  <div class="scroll-progress" aria-hidden="true"><i></i></div>
+
+  <!-- Ambient parallax stage -->
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-a" data-parallax="0.18"></div>
+    <div class="ambient-orb ambient-orb-b" data-parallax="0.10"></div>
+    <div class="ambient-orb ambient-orb-c" data-parallax="0.24"></div>
+    <div class="ambient-grid" data-parallax="0.06"></div>
+  </div>
+
+  <!-- Section orientation rail -->
+  <nav class="section-rail" aria-label="On this page">
+    <a href="#top" data-rail="top" title="Top"><span class="sr-only">Top</span></a>
+    <a href="#story" data-rail="story" title="Why"><span class="sr-only">Why</span></a>
+    <a href="#features" data-rail="features" title="Features"><span class="sr-only">Features</span></a>
+    <a href="#demos" data-rail="demos" title="Demos"><span class="sr-only">Demos</span></a>
+    <a href="#bench" data-rail="bench" title="Speed"><span class="sr-only">Speed</span></a>
+    <a href="#install" data-rail="install" title="Install"><span class="sr-only">Install</span></a>
+    <a href="#docs" data-rail="docs" title="Open source"><span class="sr-only">Open source</span></a>
+  </nav>
+
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="logo" href="/" aria-label="f00 home">
@@ -45,10 +67,10 @@
       </button>
 
       <nav class="site-nav nav" id="site-nav" aria-label="Primary">
-        <a href="#story">Why</a>
-        <a href="#bench">Speed</a>
-        <a href="#demos">Demos</a>
-        <a href="#install">Install</a>
+        <a href="#story" data-nav="story">Why</a>
+        <a href="#bench" data-nav="bench">Speed</a>
+        <a href="#demos" data-nav="demos">Demos</a>
+        <a href="#install" data-nav="install">Install</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/theesfeld/f00">GitHub</a>
       </nav>
     </div>
@@ -56,8 +78,8 @@
 
   <main id="main">
     <!-- ═══ HERO ═══ -->
-    <section class="hero">
-      <div class="hero-grid-bg" aria-hidden="true"></div>
+    <section class="hero" id="top" data-section="top">
+      <div class="hero-grid-bg" aria-hidden="true" data-parallax="0.12"></div>
       <div class="hero-glow" aria-hidden="true"></div>
       <div class="hero-glow hero-glow-2" aria-hidden="true"></div>
       <div class="wrap hero-grid">
@@ -92,7 +114,7 @@
           </div>
 
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#install">Install</a>
+            <a class="btn btn-primary" href="#install" data-magnetic>Install</a>
             <a class="btn btn-ghost" href="#demos">See demos</a>
             <a class="btn btn-ghost" href="https://github.com/theesfeld/f00">Source</a>
           </div>
@@ -106,7 +128,7 @@
           </ul>
         </div>
 
-        <aside class="term hero-term reveal delay-1" aria-label="Example f00 output">
+        <aside class="term hero-term reveal delay-1" aria-label="Example f00 output" data-tilt>
           <div class="term-bar">
             <i></i><i></i><i></i>
             <span class="term-title">f00 -la --icons --git</span>
@@ -119,10 +141,14 @@
 <span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="m">-</span><span class="y">r</span><span class="m">--</span><span class="y">r</span><span class="m">--</span>  <span class="y">glenda</span>  <span class="g">2.1K</span>  <span class="d">Jul 19</span>  <span class="m"> .gitignore</span></pre>
         </aside>
       </div>
+      <a class="scroll-cue" href="#story" aria-label="Scroll to why">
+        <span class="scroll-cue-line" aria-hidden="true"></span>
+        <span class="scroll-cue-label">scroll</span>
+      </a>
     </section>
 
     <!-- ═══ SCROLL STORY ═══ -->
-    <section id="story" class="story">
+    <section id="story" class="story" data-section="story">
       <div class="wrap story-grid">
         <div class="story-rail">
           <article class="story-beat reveal" data-story-beat="pretty">
@@ -169,7 +195,7 @@
               <span class="term-title">scroll · live preview</span>
             </div>
 
-            <div class="story-panel" data-story-panel="pretty">
+            <div class="story-panel is-active" data-story-panel="pretty">
               <pre class="term-body"><span class="c">$</span> <span class="w">f00 -la --icons --git</span>
 <span class="d">d</span><span class="y">r</span><span class="x">w</span><span class="g">x</span>…  <span class="g">4.2K</span>  <span class="d"> crates</span>
 <span class="m">-</span><span class="y">r</span><span class="x">w</span>…  <span class="g">1.8K</span>  <span class="w"> README.md</span>  <span class="y">[M]</span>
@@ -216,34 +242,34 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ FEATURES (tight) ═══ -->
-    <section id="features" class="features-section">
+    <section id="features" class="features-section" data-section="features">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>What ships</h2>
           <p>No vapor. Optional pieces stay optional.</p>
         </div>
         <div class="features-tight">
-          <article class="card reveal">
+          <article class="card reveal" data-tilt>
             <h3>GNU surface + auto safety</h3>
             <p>Full flag set. Non-TTY ≈ <code class="mono">--gnu</code>. Escape hatch: <code class="mono">--no-gnu</code>.</p>
           </article>
-          <article class="card reveal delay-1">
+          <article class="card reveal delay-1" data-tilt>
             <h3>JSON · tree · CSV</h3>
             <p>JSON is a first-class surface (rich fields). Tree for humans. CSV/TSV for tables.</p>
           </article>
-          <article class="card reveal delay-2">
+          <article class="card reveal delay-2" data-tilt>
             <h3>Icons · git · LS_COLORS</h3>
             <p>Nerd Font icons, git column, modern long colors — TTY smart defaults.</p>
           </article>
-          <article class="card reveal">
+          <article class="card reveal" data-tilt>
             <h3>f00-tui</h3>
             <p>Separate dual-pane browser binary in the same release tarball.</p>
           </article>
-          <article class="card reveal delay-1">
+          <article class="card reveal delay-1" data-tilt>
             <h3>Self-update</h3>
             <p><code class="mono">f00 --update</code> / <code class="mono">--check-update</code> via GitHub Releases + checksums.</p>
           </article>
-          <article class="card reveal delay-2">
+          <article class="card reveal delay-2" data-tilt>
             <h3>Lean defaults</h3>
             <p>Default cargo features: git + io-uring. Archives / plugins / embedded TUI opt-in.</p>
           </article>
@@ -252,7 +278,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ DEMOS ═══ -->
-    <section id="demos" class="demos-section">
+    <section id="demos" class="demos-section" data-section="demos">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>Interactive demos</h2>
@@ -329,7 +355,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ BENCHMARKS ═══ -->
-    <section id="bench" class="bench-section">
+    <section id="bench" class="bench-section" data-section="bench">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>Speed</h2>
@@ -464,7 +490,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ INSTALL ═══ -->
-    <section id="install" class="install-section">
+    <section id="install" class="install-section" data-section="install">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>Install</h2>
@@ -594,7 +620,7 @@ sudo rpm -i f00-*.rpm</code></pre>
     </section>
 
     <!-- ═══ FOOT ═══ -->
-    <section id="docs" class="docs-section">
+    <section id="docs" class="docs-section" data-section="docs">
       <div class="wrap docs-row reveal">
         <div>
           <h2>Open source</h2>
@@ -605,7 +631,7 @@ sudo rpm -i f00-*.rpm</code></pre>
           </p>
         </div>
         <div class="docs-actions">
-          <a class="btn btn-primary" href="https://github.com/theesfeld/f00">Star on GitHub</a>
+          <a class="btn btn-primary" href="https://github.com/theesfeld/f00" data-magnetic>Star on GitHub</a>
           <a class="btn btn-ghost" href="https://github.com/theesfeld/f00/releases">Releases</a>
           <a class="btn btn-ghost" href="/install.sh">install.sh</a>
         </div>
