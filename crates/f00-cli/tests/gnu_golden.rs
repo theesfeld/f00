@@ -341,9 +341,37 @@ fn optional_ls_name_parity() {
 
 #[cfg(unix)]
 fn which_ls() -> Option<PathBuf> {
+    /// True if `path` looks like GNU/BSD coreutils `ls`, not f00/eza/lsd drop-ins.
+    fn is_coreutils_ls(path: &Path) -> bool {
+        let Ok(out) = Command::new(path)
+            .env("LC_ALL", "C")
+            .args(["--version"])
+            .output()
+        else {
+            // BSD ls has no --version; allow path-based candidates only.
+            return path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n == "ls" || n == "ls.exe");
+        };
+        let text = String::from_utf8_lossy(&out.stdout);
+        let err = String::from_utf8_lossy(&out.stderr);
+        let blob = format!("{text}{err}").to_ascii_lowercase();
+        // Reject modern drop-ins that may sit earlier on PATH as `ls`.
+        if blob.contains("f00")
+            || blob.contains("eza")
+            || blob.contains("lsd")
+            || blob.contains("exa")
+        {
+            return false;
+        }
+        // GNU coreutils prints "ls (GNU coreutils)"
+        out.status.success() && (blob.contains("coreutils") || blob.contains("gnu"))
+    }
+
     for candidate in ["/bin/ls", "/usr/bin/ls"] {
         let p = PathBuf::from(candidate);
-        if p.is_file() {
+        if p.is_file() && is_coreutils_ls(&p) {
             return Some(p);
         }
     }
@@ -354,7 +382,7 @@ fn which_ls() -> Option<PathBuf> {
         .and_then(|o| {
             if o.status.success() {
                 let s = String::from_utf8_lossy(&o.stdout).trim().to_string();
-                if s.is_empty() {
+                if s.is_empty() || !is_coreutils_ls(Path::new(&s)) {
                     None
                 } else {
                     Some(PathBuf::from(s))
