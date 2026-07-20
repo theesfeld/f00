@@ -252,6 +252,7 @@ fn smoke_json_color_always_is_pretty_highlighted() {
     let _ = fs::remove_dir_all(&dir);
 }
 
+#[test]
 fn smoke_json_short_j() {
     let (dir, cfg) = smoke_fixture("json-j");
     let out = f00(&cfg).args(["-j"]).arg(&dir).output().unwrap();
