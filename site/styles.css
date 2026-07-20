@@ -670,13 +670,61 @@ pre,
 
 /* ── benchmarks ─────────────────────────────────────────── */
 
-.bench-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  margin: 0 0 1.5rem;
+.lead-tight {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text-dim);
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin: 0 0 1.25rem;
+}
+
+.rule-card {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+
+.rule-card p {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+}
+
+.rule-kicker {
+  display: block;
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+
+.bench-shell {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  margin-bottom: 1rem;
+}
+
+.bench-pane {
+  padding: 1.15rem 1.25rem 1.35rem;
+}
+
+.bench-pane[hidden] {
+  display: none;
+}
+
+.bench-pane-lead {
+  margin: 0 0 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
   color: var(--text-mute);
 }
 
@@ -684,7 +732,27 @@ pre,
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+}
+
+.bench-grid.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+.bench-foot {
+  margin: 0;
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+}
+
+.plain-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-dim);
+  font-size: 0.94rem;
+}
+
+.plain-list li {
+  margin: 0.35rem 0;
 }
 
 .bench-card {
@@ -805,17 +873,19 @@ pre,
 }
 
 @media (max-width: 920px) {
-  .bench-grid {
+  .bench-grid,
+  .bench-grid.two,
+  .rules-grid {
     grid-template-columns: 1fr;
   }
 
   .bar-row {
-    grid-template-columns: 1fr;
-    gap: 0.2rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.6rem;
   }
 
-  .bar-val {
-    text-align: left;
+  .bar-label {
+    grid-column: 1 / -1;
   }
 }
 

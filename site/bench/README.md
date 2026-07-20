@@ -2,12 +2,12 @@
 
 Reproduced with [hyperfine](https://github.com/sharkdp/hyperfine) on a warm directory of **20 000** small files.
 
-## Fairness
+## Two tracks (do not mix)
 
-| Opponent | f00 flags |
-|----------|-----------|
-| **coreutils `ls`** | **`f00 --gnu`** (or non-TTY auto) — no icons/git chrome |
-| eza / lsd | product mode as noted (`--icons`, etc.) |
+| Track | Opponent | f00 command |
+|-------|----------|-------------|
+| **A · drop-in** | coreutils `ls` | **`f00 --gnu`** only |
+| **B · modern** | eza / lsd | **product `f00`** (no `--gnu`) |
 
 Colors forced off (`--color=never`) for all tools.
 
@@ -15,8 +15,9 @@ Colors forced off (`--color=never`) for all tools.
 
 ```bash
 cargo build -p f00 --release
-# install eza, lsd, hyperfine; use real coreutils (not an f00 symlink named ls)
+# real coreutils binary (not an f00 symlink named ls)
+# eza, lsd, hyperfine on PATH
 ./scripts/bench-compare.sh 20000
 ```
 
-Numbers on the site were measured on Linux x86_64 with coreutils 9.11, eza 0.23, lsd 1.2, f00 0.11.
+Numbers on the site: Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.11.

@@ -190,6 +190,7 @@
 
   wireTabs("[data-demo-tabs]", "data-demo-tab", "data-demo-pane");
   wireTabs("[data-install-tabs]", "data-install-tab", "data-install-pane");
+  wireTabs("[data-bench-tabs]", "data-bench-tab", "data-bench-pane");
 
   /* ── header shadow on scroll ─────────────────────────── */
   const header = document.querySelector(".site-header");
