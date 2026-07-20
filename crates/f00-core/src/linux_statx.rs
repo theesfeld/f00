@@ -1,11 +1,12 @@
-//! Linux `statx(2)` for multi-field metadata in one syscall (path C).
+//! Linux `statx(2)` for multi-field metadata in one syscall.
 //!
-//! Used when [`crate::ListOptions::linux_statx`] is set and we are not
-//! following symlinks. On failure, callers fall back to `std::fs`.
+//! Hot path: open the parent directory once and call `statx` with **dirfd +
+//! relative names** (far fewer path walks than absolute `AT_FDCWD` each time).
 
 #![cfg(target_os = "linux")]
 
-use std::ffi::CString;
+use std::ffi::{CString, OsStr};
+use std::os::fd::{AsRawFd, BorrowedFd};
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::time::{Duration, SystemTime};
@@ -13,7 +14,21 @@ use std::time::{Duration, SystemTime};
 use crate::entry::{Entry, EntryKind, GitStatus, MetaFill};
 use crate::error::{Error, Result};
 
-/// Build an entry via `statx` (no symlink follow).
+/// Shared `statx` mask for full listing metadata.
+pub const STATX_MASK: u32 = libc::STATX_TYPE
+    | libc::STATX_MODE
+    | libc::STATX_NLINK
+    | libc::STATX_UID
+    | libc::STATX_GID
+    | libc::STATX_SIZE
+    | libc::STATX_BLOCKS
+    | libc::STATX_MTIME
+    | libc::STATX_ATIME
+    | libc::STATX_CTIME
+    | libc::STATX_BTIME
+    | libc::STATX_INO;
+
+/// Build an entry via absolute-path `statx` (no symlink follow).
 pub fn entry_from_statx(path: &Path, depth: usize, fill: MetaFill) -> Result<Entry> {
     let c_path = CString::new(path.as_os_str().as_bytes()).map_err(|_| {
         Error::Io(std::io::Error::new(
@@ -21,30 +36,14 @@ pub fn entry_from_statx(path: &Path, depth: usize, fill: MetaFill) -> Result<Ent
             "path contains NUL",
         ))
     })?;
-
     let mut buf: libc::statx = unsafe { std::mem::zeroed() };
-    let mask = libc::STATX_TYPE
-        | libc::STATX_MODE
-        | libc::STATX_NLINK
-        | libc::STATX_UID
-        | libc::STATX_GID
-        | libc::STATX_SIZE
-        | libc::STATX_BLOCKS
-        | libc::STATX_MTIME
-        | libc::STATX_ATIME
-        | libc::STATX_CTIME
-        | libc::STATX_BTIME
-        | libc::STATX_INO;
-
-    // Raw syscall avoids hard-linking the `statx` glibc symbol (breaks some
-    // cross/old-glibc toolchains, e.g. aarch64 via cross).
     let rc = unsafe {
         libc::syscall(
             libc::SYS_statx,
             libc::AT_FDCWD,
             c_path.as_ptr(),
             libc::AT_SYMLINK_NOFOLLOW,
-            mask,
+            STATX_MASK,
             &mut buf as *mut libc::statx,
         )
     };
@@ -54,23 +53,57 @@ pub fn entry_from_statx(path: &Path, depth: usize, fill: MetaFill) -> Result<Ent
             source: std::io::Error::last_os_error(),
         });
     }
-
     entry_from_statx_buf(path, depth, &buf, fill)
 }
 
-/// Convert a filled `statx` buffer (from `statx(2)` or io_uring) into an [`Entry`].
+/// `statx` relative to an open directory fd (no symlink follow).
+///
+/// `name` is the directory entry name only (not a path with separators).
+/// `full_path` is the display/storage path for the resulting [`Entry`].
+pub fn entry_from_statx_at(
+    dir: BorrowedFd<'_>,
+    name: &OsStr,
+    full_path: &Path,
+    depth: usize,
+    fill: MetaFill,
+) -> Result<Entry> {
+    let c_name = CString::new(name.as_bytes()).map_err(|_| {
+        Error::Io(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "name contains NUL",
+        ))
+    })?;
+    let mut buf: libc::statx = unsafe { std::mem::zeroed() };
+    let rc = unsafe {
+        libc::syscall(
+            libc::SYS_statx,
+            dir.as_raw_fd(),
+            c_name.as_ptr(),
+            libc::AT_SYMLINK_NOFOLLOW,
+            STATX_MASK,
+            &mut buf as *mut libc::statx,
+        )
+    };
+    if rc != 0 {
+        return Err(Error::Metadata {
+            path: full_path.to_path_buf(),
+            source: std::io::Error::last_os_error(),
+        });
+    }
+    entry_from_statx_buf(full_path, depth, &buf, fill)
+}
+
+/// Convert a filled `statx` buffer into an [`Entry`].
+///
+/// When `fill.resolve_names` / `read_context` is set, names/context are filled
+/// here. Callers that batch I/O may pass `MetaFill::default()` and call
+/// [`Entry::fill_expensive`] afterward.
 pub fn entry_from_statx_buf(
     path: &Path,
     depth: usize,
     buf: &libc::statx,
     fill: MetaFill,
 ) -> Result<Entry> {
-    // For name resolution / SELinux, reuse the std-based builder.
-    if fill.resolve_names || fill.read_context {
-        return Entry::from_path_with(path, depth, fill);
-    }
-
-    // stx_mode is u16; promote for bitwise ops with S_IF* (u32 on Linux).
     let mode_full = u32::from(buf.stx_mode);
     let file_type = mode_full & libc::S_IFMT;
     let kind = match file_type {
@@ -91,7 +124,7 @@ pub fn entry_from_statx_buf(
         None
     };
 
-    Ok(Entry {
+    let mut entry = Entry {
         path: path.to_path_buf(),
         name,
         kind,
@@ -119,7 +152,13 @@ pub fn entry_from_statx_buf(
         group: String::new(),
         author: String::new(),
         context: String::new(),
-    })
+    };
+
+    if fill.resolve_names || fill.read_context {
+        entry.fill_expensive(fill);
+    }
+
+    Ok(entry)
 }
 
 fn stx_time(t: libc::statx_timestamp) -> Option<SystemTime> {

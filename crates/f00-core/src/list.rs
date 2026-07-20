@@ -144,7 +144,7 @@ fn meta_fill_from(opts: &ListOptions) -> crate::entry::MetaFill {
     }
 }
 
-/// Build an [`Entry`] from a readdir item.
+/// Build an [`Entry`] from a readdir item (absolute path fallback).
 fn entry_from_dir_entry(
     item: &fs::DirEntry,
     follow_links: bool,
@@ -176,26 +176,137 @@ fn entry_from_dir_entry(
     }
 }
 
+/// After cheap batch stats, resolve owner/group/SELinux when needed.
+///
+/// Serial on purpose: name resolution uses a process-wide `Mutex` cache; parallel
+/// fill thrashes the lock on large directories and is slower overall.
+fn apply_expensive_fill(entries: &mut [Entry], fill: crate::entry::MetaFill) {
+    if !fill.resolve_names && !fill.read_context {
+        return;
+    }
+    for e in entries.iter_mut() {
+        e.fill_expensive(fill);
+    }
+}
+
 /// Stat directory children, optionally in parallel with rayon (or io_uring).
+///
+/// Linux hot path: open the directory once and use **dirfd + relative** `statx`
+/// (and io_uring batching when enabled). Expensive name/context fill runs after.
 fn stat_dir_entries(dir_entries: &[fs::DirEntry], opts: &ListOptions) -> Vec<Entry> {
     let follow = opts.follow_links;
     let fill = meta_fill_from(opts);
     let prefer_statx = opts.linux_statx;
-    let map_one = |item: &fs::DirEntry| entry_from_dir_entry(item, follow, fill, prefer_statx);
 
-    // Linux + feature: batch statx via io_uring for large dirs (no follow).
+    // ── Linux: dirfd-relative batch path ─────────────────────────────
+    #[cfg(target_os = "linux")]
+    {
+        if !follow && prefer_statx && !dir_entries.is_empty() {
+            if let Some(parent) = dir_entries[0].path().parent() {
+                if let Ok(dir_file) = fs::File::open(parent) {
+                    use std::os::fd::AsFd;
+
+                    let names: Vec<std::ffi::OsString> =
+                        dir_entries.iter().map(|d| d.file_name()).collect();
+                    let full_paths: Vec<PathBuf> = dir_entries.iter().map(|d| d.path()).collect();
+                    let use_par = opts.use_parallel_stat(dir_entries.len());
+
+                    // Multi-threaded: dirfd + rayon `statx` wins on modern SSDs.
+                    // Single-threaded / forced serial: prefer io_uring batching.
+                    #[cfg(feature = "io-uring")]
+                    {
+                        if opts.io_uring
+                            && !use_par
+                            && dir_entries.len() >= crate::io_uring_stat::IO_URING_THRESHOLD
+                        {
+                            if let Some(mut entries) = crate::io_uring_stat::entries_from_dir_uring(
+                                dir_file.as_fd(),
+                                &names,
+                                &full_paths,
+                                fill,
+                            ) {
+                                if entries.len() * 10 >= dir_entries.len() * 8 {
+                                    apply_expensive_fill(&mut entries, fill);
+                                    return entries;
+                                }
+                            }
+                        }
+                    }
+
+                    // Relative `statx` via dirfd (parallel when allowed).
+                    let dir_fd = dir_file.as_fd();
+                    let map_rel = |i: usize| {
+                        let name = &names[i];
+                        let path = &full_paths[i];
+                        crate::linux_statx::entry_from_statx_at(
+                            dir_fd,
+                            name,
+                            path,
+                            0,
+                            crate::entry::MetaFill {
+                                resolve_names: false,
+                                read_context: false,
+                            },
+                        )
+                        .ok()
+                    };
+
+                    let mut entries: Vec<Entry> = if use_par {
+                        let collect = || {
+                            (0..dir_entries.len())
+                                .into_par_iter()
+                                .filter_map(map_rel)
+                                .collect()
+                        };
+                        if opts.threads > 1 {
+                            match rayon::ThreadPoolBuilder::new()
+                                .num_threads(opts.threads)
+                                .build()
+                            {
+                                Ok(pool) => pool.install(collect),
+                                Err(_) => collect(),
+                            }
+                        } else {
+                            collect()
+                        }
+                    } else {
+                        (0..dir_entries.len()).filter_map(map_rel).collect()
+                    };
+
+                    if entries.len() * 10 >= dir_entries.len() * 8 {
+                        apply_expensive_fill(&mut entries, fill);
+                        return entries;
+                    }
+                    // else fall through to absolute-path path
+                }
+            }
+        }
+    }
+
+    // ── Portable / follow / fallback ─────────────────────────────────
+    let map_one = |item: &fs::DirEntry| {
+        // Defer expensive fill when we can batch it after.
+        let cheap = crate::entry::MetaFill {
+            resolve_names: false,
+            read_context: false,
+        };
+        let mut e = entry_from_dir_entry(item, follow, cheap, prefer_statx)?;
+        if fill.resolve_names || fill.read_context {
+            e.fill_expensive(fill);
+        }
+        Some(e)
+    };
+
+    // Absolute-path io_uring fallback (e.g. open(parent) failed).
     #[cfg(all(target_os = "linux", feature = "io-uring"))]
     {
-        if opts.io_uring
-            && !follow
-            && dir_entries.len() >= crate::io_uring_stat::IO_URING_THRESHOLD
-            && !fill.resolve_names
-            && !fill.read_context
+        if opts.io_uring && !follow && dir_entries.len() >= crate::io_uring_stat::IO_URING_THRESHOLD
         {
             let paths: Vec<_> = dir_entries.iter().map(|d| d.path()).collect();
-            if let Some(entries) = crate::io_uring_stat::entries_from_paths_uring(&paths, fill) {
-                // Preserve "same count roughly" — if many failures, fall back.
+            if let Some(mut entries) = crate::io_uring_stat::entries_from_paths_uring(&paths, fill)
+            {
                 if entries.len() * 10 >= paths.len() * 8 {
+                    apply_expensive_fill(&mut entries, fill);
                     return entries;
                 }
             }
@@ -260,7 +371,8 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
         source,
     })?;
 
-    let mut dir_entries = Vec::new();
+    // Hint capacity from common large-dir case; readdir does not expose size.
+    let mut dir_entries = Vec::with_capacity(256);
     for item in read {
         let item = item.map_err(|source| Error::ReadDir {
             path: path.to_path_buf(),
@@ -268,6 +380,7 @@ pub fn list_directory(path: &Path, opts: &ListOptions) -> Result<Listing> {
         })?;
         dir_entries.push(item);
     }
+    dir_entries.shrink_to_fit();
 
     if let Some(t0) = t_readdir {
         timing.readdir_ms = t0.elapsed().as_millis();

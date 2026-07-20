@@ -82,7 +82,8 @@ pub fn format_one_per_line_cfg(
     config: &Config,
 ) -> String {
     let ending = config.line_ending();
-    let mut out = String::new();
+    // Pre-size: ~48 bytes/line typical for short names.
+    let mut out = String::with_capacity(entries.len().saturating_mul(48).saturating_add(64));
     let mut dired: Vec<(usize, usize)> = Vec::new();
 
     let write_total = |out: &mut String, section: &[Entry]| {
@@ -95,13 +96,12 @@ pub fn format_one_per_line_cfg(
             .filter(|e| !e.is_dir_header)
             .map(|e| crate::human::block_display_with_unit(e.blocks, config.blocks_unit()))
             .fold(0u64, u64::saturating_add);
-        out.push_str(&format!("total {total}"));
+        use std::fmt::Write as _;
+        let _ = write!(out, "total {total}");
         out.push_str(ending);
     };
 
-    let write_entry = |out: &mut String, dired: &mut Vec<(usize, usize)>, entry: &Entry| {
-        let prepared = prepare_entries(std::slice::from_ref(entry), colorizer, config);
-        let p = &prepared[0];
+    let write_prepared = |out: &mut String, dired: &mut Vec<(usize, usize)>, p: &Prepared| {
         if config.dired {
             let start = out.len();
             out.push_str(&p.painted);
@@ -116,8 +116,10 @@ pub fn format_one_per_line_cfg(
     let has_headers = entries.iter().any(|e| e.is_dir_header);
     if !has_headers {
         write_total(&mut out, entries);
-        for entry in entries {
-            write_entry(&mut out, &mut dired, entry);
+        // Prepare once for the whole section (not per-entry).
+        let prepared = prepare_entries(entries, colorizer, config);
+        for p in &prepared {
+            write_prepared(&mut out, &mut dired, p);
         }
     } else {
         let mut i = 0;
@@ -136,8 +138,9 @@ pub fn format_one_per_line_cfg(
             }
             let section = &entries[start..i];
             write_total(&mut out, section);
-            for entry in section {
-                write_entry(&mut out, &mut dired, entry);
+            let prepared = prepare_entries(section, colorizer, config);
+            for p in &prepared {
+                write_prepared(&mut out, &mut dired, p);
             }
         }
     }
