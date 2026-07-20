@@ -10,12 +10,18 @@
 [![crates.io](https://img.shields.io/crates/v/f00?style=flat-square)](https://crates.io/crates/f00)
 [![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows%20%7C%20bsd-lightgrey?style=flat-square)](https://f00.sh)
 
-**f00** — a next-generation, cross-platform **coreutils `ls` clone** in Rust: modern UX by default, **exact GNU behavior under `--gnu`** for scripts, plus tree / JSON / icons / git.
+**f00** — a daily-driver **`ls` replacement** in Rust: **fast**, **beautiful on a TTY**, **script-safe when piped**, with full GNU flag surface and optional power features.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binary:** `f00` · **Latest:** v0.10.5
+| Surface | Behavior |
+|---------|----------|
+| **TTY** | Modern chrome: icons (auto), git (default), colors (auto) |
+| **Non-TTY** (pipes/CI) | **Script-safe by default** (GNU-equivalent; same as `--gnu`) |
+| **Force** | `--gnu` / `F00_GNU=1` · modern on pipes: `--no-gnu` / `F00_NO_GNU=1` |
+
+**Website:** [https://f00.sh](https://f00.sh) · **Binaries:** `f00` · `f00-tui` · **Latest:** v0.10.5 (0.11 focus cut in progress)
 
 <!-- agents:status:begin -->
-> **Status:** v0.10.5 packaging (deb/rpm · brew · AUR · scoop · winget) · Latest: `v0.10.5` · 0.x minors may include breaking changes
+> **Status:** [Phase #88](https://github.com/theesfeld/f00/issues/88) v0.11 focus cut · Latest release: `v0.10.5` · 0.x minors may include breaking changes · See [MIGRATION.md](MIGRATION.md)
 <!-- agents:status:end -->
 
 ---
@@ -28,29 +34,30 @@
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-Installs to **`~/.local/bin`** by default (override with `INSTALL_DIR`). The installer adds that dir to your shell rc when it is missing from `PATH` (`ADD_PATH=0` to skip).
+Installs **`f00`** (and **`f00-tui`** when present in the release) to **`~/.local/bin`** by default (`INSTALL_DIR` to override). Adds that dir to your shell rc when missing from `PATH` (`ADD_PATH=0` to skip). `F00_INSTALL_TUI=0` skips the browser binary.
 
 ```bash
 curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.5 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 ```
 
-### Package managers
+### Nix
+
+```bash
+nix profile install github:theesfeld/f00
+# or: nix run github:theesfeld/f00 -- -la
+```
+
+### Other package managers (community / convenience)
+
+These track GitHub Releases when maintained; **install.sh and Nix are the first-class paths**. Prefer the package manager’s upgrade command when you use one; use `f00 --update` for installs from `install.sh`.
 
 | Channel | Command |
 |---------|---------|
-| **Homebrew** | `brew install theesfeld/tap/f00` |
 | **crates.io** | `cargo install f00 --locked` |
-| **AUR** | `yay -S f00` (or `paru -S f00`) |
-| **Scoop** | `scoop bucket add theesfeld https://github.com/theesfeld/scoop-bucket` then `scoop install f00` |
-| **Winget** | `winget install theesfeld.f00` (after first merge into winget-pkgs) |
-| **Nix** | `nix profile install github:theesfeld/f00` |
-| **deb** | Download `f00_*_amd64.deb` / `*_arm64.deb` from [Releases](https://github.com/theesfeld/f00/releases), then `sudo dpkg -i f00_*.deb` |
-| **rpm** | Download `f00-*.x86_64.rpm` / `*.aarch64.rpm` from [Releases](https://github.com/theesfeld/f00/releases), then `sudo rpm -i f00-*.rpm` |
-
-Package manifests track GitHub Releases automatically. Prefer the package manager’s upgrade command for brew/apt/rpm/AUR/Scoop; use `f00 --update` for installs from `install.sh`.
-
-Local Homebrew formula (from a clone): `brew install --formula ./Formula/f00.rb`
+| **Homebrew** | `brew install theesfeld/tap/f00` |
+| **AUR** | `yay -S f00` |
+| **Scoop / winget / deb / rpm** | See [Releases](https://github.com/theesfeld/f00/releases) |
 
 **We never replace system `/bin/ls` by default.** The primary command is always `f00`.
 
@@ -111,23 +118,27 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **TOML config** | Shipped | XDG / AppData |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
 | **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
-| **TUI browser** | Shipped | `f00 --browse` — dual-pane FM, **syntax-colored preview**, sort, `$EDITOR`/`$PAGER` |
-| **Archives** | Shipped | zip / tar / tar.gz as virtual dirs |
+| **TUI browser** | Shipped | Separate **`f00-tui`** binary — dual-pane FM, syntax preview, `$EDITOR`/`$PAGER` |
+| **Archives** | Opt-in feature | zip / tar / tar.gz as virtual dirs (`--features archives`) |
 | **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
 | **Self-update** | Shipped | `--update` / `--check-update` via GitHub Releases |
-| **Plugins** | Shipped (opt-in) | Feature `plugins` · ABI v1 · decorate hooks · #27 |
+| **Plugins** | Opt-in feature | Feature `plugins` · ABI v1 · decorate hooks |
 
 ---
 
 ## Usage
 
 ```bash
-# Classic listing
+# Classic listing (TTY: modern chrome)
 f00 -la
 
-# Drop-in GNU shape (scripts)
+# Pipes are script-safe by default (auto GNU-equivalent)
+f00 -la /tmp | grep foo
+
+# Force GNU always / force modern on a pipe
 f00 --gnu -lah /tmp
 F00_GNU=1 f00 -la
+f00 --no-gnu -la | cat
 
 # Quoting / NUL / version sort / width
 f00 -bQ -1 .
@@ -146,16 +157,17 @@ f00 -j                 # short for --json (not used by GNU ls)
 f00 --csv
 f00 --tsv
 
-# Archives (auto when path is zip/tar)
+# Archives (opt-in feature `archives`; auto when path is zip/tar)
 f00 project.zip
 f00 --archive=false project.zip   # treat as plain file
 
 # Ignore files
 f00 --ignore-files
 
-# Interactive browser (dual-pane when wide enough)
-f00 --browse
-f00 --tui ~/src
+# Interactive dual-pane browser (separate binary)
+f00-tui
+f00-tui ~/src
+# Optional embed: cargo build -p f00 --features tui && f00 --browse
 
 # Icons (auto on TTY; force on/off) — needs a Nerd Font for glyphs
 f00 -la --icons              # same as --icons=always
@@ -214,7 +226,7 @@ f00 --generate-man | man -l -
 ./scripts/gen-man.sh
 ```
 
-### TUI keys (`--browse`)
+### TUI keys (`f00-tui`)
 
 | Key | Action |
 |-----|--------|
@@ -237,7 +249,8 @@ f00 --generate-man | man -l -
 
 `-aA` `-l1Cmx` `-h` `--si` `-Rr` `-tSXvUf` `-d` `-Fp` `--file-type` `-BI` `--hide` `-LH` `-goGn` `-is` `-uc` `-vw` `-Z` `--zero` `-D` `--dired` `-bQNq` `--quoting-style` `--time-style` `--block-size` `--author` `--hyperlink` `--indicator-style` `--format` `--sort` `--time` `--group-directories-first` `--full-time` `--color` **`--gnu`**
 
-Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-safe.
+Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-safe.  
+**Non-TTY stdout auto-enables the same mode** unless `--no-gnu` / `F00_NO_GNU=1`.
 
 ---
 
@@ -245,16 +258,18 @@ Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-saf
 
 | Feature | Default | Description |
 |---------|---------|-------------|
-| `git` | yes | Git status column |
-| `archives` | yes | zip/tar listing |
-| `tui` | yes | `--browse` / `--tui` |
-| `io-uring` | yes | Linux batch metadata via io_uring (no-op off Linux) |
+| `git` | **yes** | Git status column |
+| `io-uring` | **yes** | Linux batch metadata via io_uring (no-op off Linux) |
+| `archives` | no | zip/tar virtual directory listing |
+| `tui` | no | Embed `f00 --browse` (prefer **`f00-tui`** binary) |
 | `plugins` | no | Dynamic plugin host (`--list-plugins`) |
+| `full` | no | `git` + `io-uring` + `archives` + `tui` + `plugins` |
 
 ```bash
-cargo build -p f00 --release
-cargo build -p f00 --no-default-features   # minimal
-cargo build -p f00 --features "git,archives,tui,io-uring,plugins"
+cargo build -p f00 --release                 # lean daily-driver
+cargo build -p f00-tui --release             # dual-pane browser
+cargo build -p f00 --no-default-features     # minimal
+cargo build -p f00 --features full           # kitchen sink
 ```
 
 ---
@@ -285,10 +300,12 @@ dirs_first = true
 | `f00-compat` | GNU helpers |
 | `f00-git` | git status |
 | `f00-archive` | zip/tar virtual listing |
-| `f00-tui` | interactive browser |
+| `f00-tui` | dual-pane browser library + binary `f00-tui` |
 | `f00-plugin` | plugin host ABI |
 | `f00-plugin-hello` | example cdylib plugin |
 | `f00` (path `crates/f00-cli`) | binary `f00` (crates.io) |
+
+Upgrading from 0.10? See **[MIGRATION.md](MIGRATION.md)**.
 
 ---
 
@@ -297,8 +314,9 @@ dirs_first = true
 ```bash
 git clone https://github.com/theesfeld/f00
 cd f00
-cargo build --release -p f00
+cargo build --release -p f00 -p f00-tui
 ./target/release/f00 --version
+./target/release/f00-tui --version
 ```
 
 ---
@@ -308,10 +326,12 @@ cargo build --release -p f00
 | | GNU `ls` | eza | lsd | **f00** |
 |--|----------|-----|-----|---------|
 | Language | C | Rust | Rust | Rust |
-| Full coreutils flags | Native | Partial | Partial | **Shipped** (+ `--gnu`) |
-| Icons / git | No | Yes | Yes | Yes |
-| TUI | No | No | No | **Yes** |
-| Archives | No | No | No | **Yes** |
+| Full coreutils flags | Native | Partial | Partial | **Shipped** (+ auto non-TTY / `--gnu`) |
+| Icons / git | No | Yes | Yes | Yes (TTY) |
+| Script-safe pipes | Yes | Partial | Partial | **Yes (default)** |
+| Speed focus | — | Good | Good | **Flagship** |
+| TUI | No | No | No | **`f00-tui`** |
+| Archives | No | No | No | Opt-in feature |
 | Windows | Weak | Strong | Strong | First-class |
 
 ---

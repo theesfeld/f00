@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Auto script-safe mode** when stdout is not a TTY (GNU-equivalent without requiring `--gnu`)
+- **`--no-gnu`** / **`F00_NO_GNU`** to force modern product chrome on pipes
+- Standalone **`f00-tui`** binary for the dual-pane browser
+- Cargo feature **`full`** (`git` + `io-uring` + `archives` + `tui` + `plugins`)
+- CI **bench smoke** for `f00-core` criterion `list_bench`
+- **[MIGRATION.md](MIGRATION.md)** for 0.10 → 0.11
+
+### Changed
+- **Default Cargo features** for `f00`: `git` + `io-uring` only (`archives` and embedded `tui` are opt-in)
+- Interactive browser **de-emphasized** in favor of `f00-tui`; `f00 --browse` requires `--features tui` or use the companion binary
+- Installer installs `f00-tui` when present in the release archive (`F00_INSTALL_TUI=0` to skip)
+- README / site: daily-driver positioning; **install.sh + Nix** first-class; other package managers secondary
+
 ## [0.10.5] - 2026-07-17
 
 ### Added
