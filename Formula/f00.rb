@@ -17,22 +17,22 @@ class F00 < Formula
   on_macos do
     on_arm do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-apple-darwin.tar.gz"
-      sha256 "13a199e9a7dbf173bbc01d80b8d4ae6d05d92e6c8fc4b2fb5279e35b2ec62fad"
+      sha256 "71efaa2a2b8b28a262a3a4b7a3d06921b9f549d6d6e4681dd844cbd3a97f408e"
     end
     on_intel do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-apple-darwin.tar.gz"
-      sha256 "8855d7e9c3ffcc06b06da7103948d13c9fa2f600063f649d445d246ca17183b8"
+      sha256 "5d5888bb6c253aacaafd19776e186d34437ef15c5ef8b8dba906956aeea7321a"
     end
   end
 
   on_linux do
     on_arm do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "2e868d2b1d0b23c6c1fefbb782fe356c0dd1f8924bb48f44040b05a0cbadfe38"
+      sha256 "a3a8630236196a61d409e259910d96a50eff9e01e11b4eacee8053b7de892cfb"
     end
     on_intel do
       url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "444a44569e2bd79e843b62ed08769d7aa8c0da572d1b5e8716d5e5ec1beaa7ac"
+      sha256 "7645b256021778840b0ed1e10da180f6ce46ddd46032e384055a56a05191d7b0"
     end
   end
 

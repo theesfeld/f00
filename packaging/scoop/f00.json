@@ -6,7 +6,7 @@
   "architecture": {
     "64bit": {
       "url": "https://github.com/theesfeld/f00/releases/download/v0.11.0/f00-x86_64-pc-windows-msvc.zip",
-      "hash": "8d5bcfbf045deb8a402e805808113509d05449bffc785208287e1531ae1701aa",
+      "hash": "6274099c268af13a5765b0638e5a8dc093f7d76d0ae8f57788dca55614e05e2d",
       "extract_dir": "f00-x86_64-pc-windows-msvc"
     }
   },
