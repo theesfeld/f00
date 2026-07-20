@@ -114,7 +114,8 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |
 | **Icons** | Shipped | Nerd Font glyphs (eza-style special dirs + file types); `--icons[=auto\|always\|never]` (default: auto on TTY) |
-| **JSON / CSV / TSV / tree** | Shipped | Machine formats |
+| **JSON** | **Core** | Rich metadata (`--json` / `-j`); **pretty + colored** when color is on; compact plain when color is off (pipes) |
+| **CSV / TSV / tree** | Shipped | Machine formats + tree view |
 | **TOML config** | Shipped | XDG / AppData |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
 | **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
@@ -151,9 +152,11 @@ f00 -l --time-style=long-iso
 f00 --hide='*.o' -1
 f00 --hyperlink=auto -1
 
-# Machine output (rich metadata: inode, times, owner, permissions, …)
-f00 --json
+# JSON is a core surface (rich metadata: inode, times, owner, permissions, …)
+f00 --json             # TTY + color: pretty, syntax-colored
 f00 -j                 # short for --json (not used by GNU ls)
+f00 --json --color=always | less -R
+f00 --json --color=never | jq '.[].name'   # compact, no ANSI
 f00 --csv
 f00 --tsv
 

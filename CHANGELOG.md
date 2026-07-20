@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Colored pretty JSON** when color mode is on (`--json` / `-j`): syntax-highlighted keys, strings, numbers, literals; compact plain JSON when color is off (pipe-safe)
+
+### Changed
+- Document JSON as a **core** f00 surface (not a secondary machine format)
+
 ## [0.11.0] - 2026-07-20
 
 ### Added

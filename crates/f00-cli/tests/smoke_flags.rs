@@ -189,9 +189,14 @@ fn smoke_sort_time() {
 #[test]
 fn smoke_json() {
     let (dir, cfg) = smoke_fixture("json");
+    // Default helper forces --color=never → compact plain JSON (pipe-safe).
     let out = f00(&cfg).args(["--json"]).arg(&dir).output().unwrap();
     assert_eq!(out.status.code(), Some(0));
     let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        !stdout.contains('\u{1b}'),
+        "color=never must not emit ANSI in JSON"
+    );
     let v: serde_json::Value = serde_json::from_str(stdout.trim()).expect("json");
     assert!(v.is_array(), "{stdout}");
     let names: Vec<_> = v
@@ -204,6 +209,46 @@ fn smoke_json() {
     let first = v.as_array().unwrap().first().unwrap();
     assert!(first.get("inode").is_some(), "{first}");
     assert!(first.get("permissions").is_some(), "{first}");
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn smoke_json_color_always_is_pretty_highlighted() {
+    let (dir, cfg) = smoke_fixture("json-color");
+    let out = Command::new(bin())
+        .env("LC_ALL", "C")
+        .args(["--color=always", "--git=false", "--json", "--config"])
+        .arg(&cfg)
+        .arg(&dir)
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(0), "{:?}", out);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains('\n'), "pretty JSON expected: {stdout}");
+    assert!(
+        stdout.contains('\u{1b}'),
+        "color=always should syntax-highlight JSON: {stdout:?}"
+    );
+    // Strip CSI and re-parse
+    let mut plain = String::new();
+    let mut chars = stdout.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\u{1b}' {
+            if chars.peek() == Some(&'[') {
+                chars.next();
+                for x in chars.by_ref() {
+                    if x.is_ascii_alphabetic() {
+                        break;
+                    }
+                }
+            }
+        } else {
+            plain.push(c);
+        }
+    }
+    let v: serde_json::Value =
+        serde_json::from_str(plain.trim()).expect("colored json strips to valid");
+    assert!(v.is_array());
     let _ = fs::remove_dir_all(&dir);
 }
 

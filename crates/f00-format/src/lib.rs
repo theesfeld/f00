@@ -22,7 +22,7 @@ pub use human::{
 };
 pub use hyperlink::hyperlink_name;
 pub use icons::{icon_for, icon_prefix};
-pub use json::format_json;
+pub use json::{colorize_json, format_json, format_json_pretty, strip_ansi};
 pub use long::{
     format_long, format_long_line, format_long_line_simple, format_long_simple, format_time_style,
 };
@@ -46,13 +46,14 @@ pub fn format_listings(
     let colorizer = Colorizer::new(config.color_enabled());
     let multi = listings.len() > 1 || listings.iter().any(|l| l.root_is_dir && listings.len() > 1);
 
-    // JSON: combine all entries into one array.
+    // JSON is a core surface: combine all entries into one array.
+    // Pretty + syntax color when color mode is on; compact plain for pipes/scripts.
     if matches!(config.effective_output(), OutputMode::Json) {
         let mut all = Vec::new();
         for l in listings {
             all.extend(l.entries.iter().cloned());
         }
-        return format_json(&all).map_err(|e| e.to_string());
+        return format_json(&all, config.color_enabled()).map_err(|e| e.to_string());
     }
 
     // CSV/TSV: combine entries.
@@ -108,7 +109,7 @@ fn format_entries(
         OutputMode::Long => Ok(format_long(entries, colorizer, config)),
         OutputMode::OnePerLine => Ok(format_one_per_line_cfg(entries, colorizer, config)),
         OutputMode::Commas => Ok(format_commas(entries, colorizer, config)),
-        OutputMode::Json => format_json(entries).map_err(|e| e.to_string()),
+        OutputMode::Json => format_json(entries, config.color_enabled()).map_err(|e| e.to_string()),
         OutputMode::Tree => Ok(format_tree(entries, colorizer, icons, indicator)),
         OutputMode::Csv => Ok(format_csv(entries)),
         OutputMode::Tsv => Ok(format_tsv(entries)),
