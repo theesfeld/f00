@@ -144,6 +144,40 @@ fn meta_fill_from(opts: &ListOptions) -> crate::entry::MetaFill {
     }
 }
 
+/// Build a kind-only entry from readdir (uses `d_type` on Linux when available;
+/// may fall back to an internal `lstat` only when the type is unknown).
+fn entry_kind_only(item: &fs::DirEntry) -> Option<Entry> {
+    let file_type = item.file_type().ok()?;
+    let kind = EntryKind::from_file_type(file_type);
+    let name = item.file_name().to_string_lossy().into_owned();
+    let path = item.path();
+    Some(Entry {
+        path,
+        name,
+        kind,
+        size: 0,
+        modified: None,
+        created: None,
+        accessed: None,
+        changed: None,
+        mode: 0,
+        readonly: false,
+        symlink_target: None,
+        depth: 0,
+        git_status: crate::entry::GitStatus::Clean,
+        is_dir_header: false,
+        nlink: 0,
+        uid: 0,
+        gid: 0,
+        inode: 0,
+        blocks: 0,
+        owner: String::new(),
+        group: String::new(),
+        author: String::new(),
+        context: String::new(),
+    })
+}
+
 /// Build an [`Entry`] from a readdir item (absolute path fallback).
 fn entry_from_dir_entry(
     item: &fs::DirEntry,
@@ -193,10 +227,32 @@ fn apply_expensive_fill(entries: &mut [Entry], fill: crate::entry::MetaFill) {
 ///
 /// Linux hot path: open the directory once and use **dirfd + relative** `statx`
 /// (and io_uring batching when enabled). Expensive name/context fill runs after.
+///
+/// When [`ListOptions::use_kind_only`] is true, skip `stat` entirely and use
+/// readdir file type (`d_type` / `file_type()`).
 fn stat_dir_entries(dir_entries: &[fs::DirEntry], opts: &ListOptions) -> Vec<Entry> {
     let follow = opts.follow_links;
     let fill = meta_fill_from(opts);
     let prefer_statx = opts.linux_statx;
+
+    // ── Kind-only fast path (readdir d_type; no statx) ────────────────
+    if opts.use_kind_only() && !follow {
+        if !opts.use_parallel_stat(dir_entries.len()) {
+            return dir_entries.iter().filter_map(entry_kind_only).collect();
+        }
+        let collect = || dir_entries.par_iter().filter_map(entry_kind_only).collect();
+        return if opts.threads > 1 {
+            match rayon::ThreadPoolBuilder::new()
+                .num_threads(opts.threads)
+                .build()
+            {
+                Ok(pool) => pool.install(collect),
+                Err(_) => collect(),
+            }
+        } else {
+            collect()
+        };
+    }
 
     // ── Linux: dirfd-relative batch path ─────────────────────────────
     #[cfg(target_os = "linux")]

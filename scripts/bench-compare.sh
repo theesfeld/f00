@@ -12,10 +12,11 @@
 #   GNU time   — user/sys CPU seconds
 #
 # Fairness notes (printed in output):
+#   - Against coreutils, f00 always uses --gnu (fair drop-in; no icons/git).
 #   - Short listing: names only (no long metadata columns).
 #   - Long listing: -l style; colors forced off for all tools.
-#   - Icons/git: only eza + f00 (ls has none); separate scenario.
-#   - f00 default may enable git/icons on TTY; we pin flags per scenario.
+#   - Icons/git: only eza + f00 (ls has none); separate product scenario.
+#   - Prefer real coreutils (not an f00 symlink named ls).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
