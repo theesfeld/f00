@@ -209,4 +209,70 @@
   document.querySelectorAll("[data-year]").forEach((el) => {
     el.textContent = String(new Date().getFullYear());
   });
+
+  /* ── live GitHub popularity ──────────────────────────── */
+  const formatCount = (n) => {
+    if (typeof n !== "number" || Number.isNaN(n)) return "—";
+    if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
+    return String(n);
+  };
+
+  const setAll = (selector, value) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      node.textContent = value;
+    });
+  };
+
+  const fillBars = (stats) => {
+    const max = Math.max(
+      stats.stars,
+      stats.forks,
+      stats.watchers,
+      stats.issues,
+      1
+    );
+    const map = {
+      stars: stats.stars,
+      forks: stats.forks,
+      watchers: stats.watchers,
+      issues: stats.issues,
+    };
+    Object.entries(map).forEach(([key, value]) => {
+      document.querySelectorAll(`[data-stat-bar="${key}"]`).forEach((bar) => {
+        bar.style.setProperty("--fill", `${Math.round((value / max) * 100)}%`);
+      });
+    });
+  };
+
+  const applyGithub = (data) => {
+    const stats = {
+      stars: data.stargazers_count || 0,
+      forks: data.forks_count || 0,
+      watchers: data.subscribers_count || 0,
+      issues: data.open_issues_count || 0,
+    };
+    setAll("[data-github-stars]", formatCount(stats.stars));
+    setAll("[data-github-forks]", formatCount(stats.forks));
+    setAll("[data-github-watchers]", formatCount(stats.watchers));
+    setAll("[data-github-issues]", formatCount(stats.issues));
+    fillBars(stats);
+  };
+
+  applyGithub({
+    stargazers_count: 0,
+    forks_count: 0,
+    subscribers_count: 0,
+    open_issues_count: 0,
+  });
+
+  try {
+    fetch("https://api.github.com/repos/theesfeld/f00", {
+      headers: { Accept: "application/vnd.github+json" },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) applyGithub(data);
+      })
+      .catch(() => {});
+  } catch (_) {}
 })();
