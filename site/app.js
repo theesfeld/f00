@@ -25,8 +25,11 @@
       );
     });
     document.querySelectorAll("[data-version-pin]").forEach((el) => {
-      const base = el.getAttribute("data-version-pin") || "";
-      el.textContent = base.replace(/__VERSION__/g, tag);
+      if (!el.dataset.versionTemplate) {
+        el.dataset.versionTemplate =
+          el.getAttribute("data-version-pin") || el.textContent || "";
+      }
+      el.textContent = el.dataset.versionTemplate.replace(/__VERSION__/g, tag);
     });
   }
 
