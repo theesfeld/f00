@@ -14,7 +14,7 @@
       in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
           pname = "f00";
-          version = "0.11.0-dev";
+          version = "0.11.0";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
           # Workspace: build the lean CLI + separate TUI browser.

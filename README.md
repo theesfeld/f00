@@ -18,10 +18,10 @@
 | **Non-TTY** (pipes/CI) | **Script-safe by default** (GNU-equivalent; same as `--gnu`) |
 | **Force** | `--gnu` / `F00_GNU=1` · modern on pipes: `--no-gnu` / `F00_NO_GNU=1` |
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binaries:** `f00` · `f00-tui` · **Latest:** v0.10.5 (0.11 focus cut in progress)
+**Website:** [https://f00.sh](https://f00.sh) · **Binaries:** `f00` · `f00-tui` · **Latest:** v0.11.0
 
 <!-- agents:status:begin -->
-> **Status:** [Phase #88](https://github.com/theesfeld/f00/issues/88) v0.11 focus cut · Latest release: `v0.10.5` · 0.x minors may include breaking changes · See [MIGRATION.md](MIGRATION.md)
+> **Status:** v0.11.0 focus cut shipped · Phase: [#88](https://github.com/theesfeld/f00/issues/88) · Latest: `v0.11.0` · 0.x minors may include breaking changes · [MIGRATION.md](MIGRATION.md)
 <!-- agents:status:end -->
 
 ---
@@ -37,7 +37,7 @@ curl -fsSL https://f00.sh/install.sh | bash
 Installs **`f00`** (and **`f00-tui`** when present in the release) to **`~/.local/bin`** by default (`INSTALL_DIR` to override). Adds that dir to your shell rc when missing from `PATH` (`ADD_PATH=0` to skip). `F00_INSTALL_TUI=0` skips the browser binary.
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.10.5 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.11.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 ```
 
