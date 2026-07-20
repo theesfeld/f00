@@ -344,12 +344,12 @@ pub fn build_config(args: &Args) -> Config {
     }
 }
 
-/// Prepare args: load config, apply argv0 / env merges. Returns owned Args.
+/// Prepare args: load config, apply argv0 / env / non-TTY auto-GNU merges.
 pub fn prepare_args(mut args: Args, as_ls: bool) -> Result<Args> {
     let file = load_user_config(args.config.as_deref())?;
     resolve_args(&mut args, file.as_ref(), as_ls);
-    // Strict GNU disables git unless user re-enables after — config may set git=true;
-    // apply_gnu at build_config handles decorations. Also force git=false when --gnu.
+    // Strict / auto GNU disables decorations. Config may have set git=true;
+    // build_config also gates on `args.gnu`. Force git=false + icons never.
     if args.gnu {
         args.git = false;
         args.icons = crate::cli::IconsArg::Never;

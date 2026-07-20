@@ -245,6 +245,78 @@ fn smoke_tree() {
 // #15 git column polish (light)
 // ---------------------------------------------------------------------------
 
+/// Piped stdout is not a TTY → auto script-safe mode (same chrome as `--gnu`).
+#[test]
+fn auto_gnu_on_pipe_strips_git_chars() {
+    let dir = temp_dir("auto-gnu-pipe");
+    fs::write(dir.join("tracked.txt"), b"clean\n").unwrap();
+    let cfg = empty_config(&dir);
+
+    let _ = Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&dir)
+        .status();
+    let _ = Command::new("git")
+        .args([
+            "-c",
+            "user.email=t@t",
+            "-c",
+            "user.name=t",
+            "add",
+            "tracked.txt",
+        ])
+        .current_dir(&dir)
+        .status();
+    let _ = Command::new("git")
+        .args([
+            "-c",
+            "user.email=t@t",
+            "-c",
+            "user.name=t",
+            "commit",
+            "-qm",
+            "c",
+        ])
+        .current_dir(&dir)
+        .status();
+    fs::write(dir.join("tracked.txt"), b"dirty\n").unwrap();
+
+    // No --gnu, no --git=false: pipe should still auto-enable script-safe mode.
+    let out = Command::new(bin())
+        .env("LC_ALL", "C")
+        .args(["--color=never", "-l", "--config"])
+        .arg(&cfg)
+        .arg(&dir)
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        !stdout.contains(" M ") && !stdout.contains(" ? ") && !stdout.contains(" A "),
+        "non-TTY must auto-enable script-safe mode (no git chars): {stdout}"
+    );
+    assert!(stdout.contains("tracked.txt"), "{stdout}");
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn no_gnu_allows_modern_on_pipe() {
+    let dir = temp_dir("no-gnu-pipe");
+    fs::write(dir.join("a.txt"), b"x").unwrap();
+    let cfg = empty_config(&dir);
+    let out = Command::new(bin())
+        .env("LC_ALL", "C")
+        .args(["--no-gnu", "--color=never", "--git=false", "-1", "--config"])
+        .arg(&cfg)
+        .arg(&dir)
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(0), "{:?}", out);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("a.txt"), "{stdout}");
+    let _ = fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn gnu_mode_has_no_git_chars() {
     let dir = temp_dir("gnu-git");

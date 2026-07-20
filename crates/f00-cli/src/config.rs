@@ -232,9 +232,19 @@ pub fn merge_config_into_args(args: &mut Args, file: &FileConfig) {
     }
 }
 
-/// Apply env overrides (`F00_GNU`).
+/// Apply env overrides (`F00_GNU`, `F00_NO_GNU`).
+///
+/// `F00_NO_GNU` wins over `F00_GNU` when both are set (matches `--no-gnu` over `--gnu`).
 pub fn apply_env_overrides(args: &mut Args) {
-    if args.gnu {
+    if let Ok(v) = std::env::var("F00_NO_GNU") {
+        let v = v.to_ascii_lowercase();
+        if matches!(v.as_str(), "1" | "true" | "yes" | "on") {
+            args.no_gnu = true;
+            args.gnu = false;
+            return;
+        }
+    }
+    if args.gnu || args.no_gnu {
         return;
     }
     if let Ok(v) = std::env::var("F00_GNU") {
@@ -242,6 +252,24 @@ pub fn apply_env_overrides(args: &mut Args) {
         if matches!(v.as_str(), "1" | "true" | "yes" | "on") {
             args.gnu = true;
         }
+    }
+}
+
+/// Auto-enable script-safe / GNU mode when stdout is not a TTY.
+///
+/// Daily-driver product chrome (icons, git, modern sort) is for interactive
+/// terminals. Pipes, capture, and CI get coreutils-shaped output unless the
+/// user opts out with `--no-gnu` / `F00_NO_GNU=1`.
+pub fn apply_auto_gnu(args: &mut Args, is_stdout_tty: bool) {
+    if args.no_gnu {
+        args.gnu = false;
+        return;
+    }
+    if args.gnu {
+        return;
+    }
+    if !is_stdout_tty {
+        args.gnu = true;
     }
 }
 
@@ -275,12 +303,28 @@ pub fn invoked_as_ls_from(argv0: Option<std::ffi::OsString>) -> bool {
 
 /// Resolve effective args after clap parse.
 ///
-/// Order: argv0 soft defaults → config file → env (`F00_GNU`).
+/// Order: argv0 soft defaults → config file → env (`F00_GNU` / `F00_NO_GNU`) →
+/// auto GNU when stdout is not a TTY (unless `--no-gnu`).
 /// CLI flags already present in `args` win over config where merge logic allows.
 pub fn resolve_args(args: &mut Args, file: Option<&FileConfig>, as_ls: bool) {
+    resolve_args_with_tty(
+        args,
+        file,
+        as_ls,
+        std::io::IsTerminal::is_terminal(&std::io::stdout()),
+    );
+}
+
+/// Like [`resolve_args`] with an explicit TTY flag (for tests).
+pub fn resolve_args_with_tty(
+    args: &mut Args,
+    file: Option<&FileConfig>,
+    as_ls: bool,
+    is_stdout_tty: bool,
+) {
     if as_ls {
-        // Soft drop-in: keep full f00 chrome (icons/git). Only quiet dirs-first
-        // unless the user asked for it. Strict plain mode is `--gnu` only.
+        // Soft drop-in: keep full f00 chrome (icons/git) on a TTY. Only quiet
+        // dirs-first unless the user asked for it. Non-TTY auto-enables GNU.
         f00_compat::prefer_ls_defaults(
             &mut args.dirs_first,
             cli_has_long("--dirs-first") || cli_has_long("--group-directories-first"),
@@ -290,6 +334,7 @@ pub fn resolve_args(args: &mut Args, file: Option<&FileConfig>, as_ls: bool) {
         merge_config_into_args(args, file);
     }
     apply_env_overrides(args);
+    apply_auto_gnu(args, is_stdout_tty);
 }
 
 #[cfg(test)]
@@ -445,7 +490,8 @@ mod tests {
     fn resolve_ls_soft_mode_keeps_default_icons() {
         let mut args = empty_args();
         assert_eq!(args.icons, IconsArg::Auto);
-        resolve_args(&mut args, None, true);
+        // Soft ls chrome is for interactive TTYs; pin TTY so CI pipes do not force GNU.
+        resolve_args_with_tty(&mut args, None, true, true);
         assert_eq!(
             args.icons,
             IconsArg::Auto,
@@ -455,13 +501,54 @@ mod tests {
             !args.dirs_first,
             "soft ls still defaults dirs-first off like GNU"
         );
+        assert!(!args.gnu, "TTY soft ls must not auto-enable --gnu");
     }
 
     #[test]
     fn resolve_ls_config_can_set_icons_always() {
         let cfg = parse_config_str(r#"icons = true"#).unwrap();
         let mut args = empty_args();
-        resolve_args(&mut args, Some(&cfg), true);
+        resolve_args_with_tty(&mut args, Some(&cfg), true, true);
         assert_eq!(args.icons, IconsArg::Always);
+    }
+
+    #[test]
+    fn auto_gnu_when_not_tty() {
+        let mut args = empty_args();
+        apply_auto_gnu(&mut args, false);
+        assert!(args.gnu);
+    }
+
+    #[test]
+    fn no_auto_gnu_on_tty() {
+        let mut args = empty_args();
+        apply_auto_gnu(&mut args, true);
+        assert!(!args.gnu);
+    }
+
+    #[test]
+    fn no_gnu_opts_out_of_auto() {
+        let mut args = empty_args();
+        args.no_gnu = true;
+        apply_auto_gnu(&mut args, false);
+        assert!(!args.gnu);
+    }
+
+    #[test]
+    fn explicit_gnu_stays_on_tty() {
+        let mut args = empty_args();
+        args.gnu = true;
+        apply_auto_gnu(&mut args, true);
+        assert!(args.gnu);
+    }
+
+    #[test]
+    fn no_gnu_clears_explicit_gnu_flag_if_set() {
+        // clap conflicts_with prevents both on CLI; function still clears for env safety.
+        let mut args = empty_args();
+        args.gnu = true;
+        args.no_gnu = true;
+        apply_auto_gnu(&mut args, false);
+        assert!(!args.gnu);
     }
 }

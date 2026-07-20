@@ -123,9 +123,14 @@ pub struct Args {
     #[arg(long = "tree")]
     pub tree: bool,
 
-    /// Stricter GNU ls-compatible behavior
-    #[arg(long = "gnu")]
+    /// Stricter GNU ls-compatible behavior (also auto when stdout is not a TTY)
+    #[arg(long = "gnu", action = ArgAction::SetTrue)]
     pub gnu: bool,
+
+    /// Force modern product behavior even when stdout is not a TTY
+    /// (disables auto script-safe / GNU mode for pipes)
+    #[arg(long = "no-gnu", action = ArgAction::SetTrue, conflicts_with = "gnu")]
+    pub no_gnu: bool,
 
     /// Show file icons (auto/always/never; default: auto — TTY only, off under --gnu)
     #[arg(
@@ -395,6 +400,7 @@ impl Args {
             tsv: false,
             tree: false,
             gnu: false,
+            no_gnu: false,
             icons: IconsArg::Auto,
             classify: None,
             indicator_slash: false,
