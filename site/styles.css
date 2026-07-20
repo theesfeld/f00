@@ -661,8 +661,6 @@ pre,
 .demos-section,
 .bench-section,
 .install-section,
-#compare,
-#roadmap,
 .docs-section {
   padding: 4rem 0;
   border-bottom: 1px solid var(--border);
@@ -1053,51 +1051,6 @@ pre,
   color: var(--accent);
   background: rgba(62, 207, 142, 0.04);
   font-weight: 550;
-}
-
-/* ── roadmap ────────────────────────────────────────────── */
-
-.roadmap {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.roadmap li {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  padding: 1rem 1.15rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.roadmap .n {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  display: grid;
-  place-items: center;
-  border-radius: 6px;
-  background: var(--accent-dim);
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.roadmap strong {
-  display: block;
-  margin-bottom: 0.15rem;
-}
-
-.roadmap span {
-  color: var(--text-dim);
-  font-size: 0.92rem;
 }
 
 /* ── docs / footer ──────────────────────────────────────── */
