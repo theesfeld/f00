@@ -1,8 +1,8 @@
 /**
  * f00.sh — progressive enhancement.
- * Document scroll is the product: progress, parallax, story scrub,
- * orientation rail/nav, magnetic CTAs, light tilt.
- * Works offline without JS; this layer is polish only.
+ * Document scroll is the product: cinematic stage, continuous
+ * section enter/exit, parallax depth, story scrub, orientation,
+ * magnetic CTAs, light tilt. Works offline without JS.
  */
 (() => {
   "use strict";
@@ -15,8 +15,13 @@
     window.matchMedia && window.matchMedia("(pointer: fine)").matches;
 
   const root = document.documentElement;
+  const body = document.body;
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
   const lerp = (a, b, t) => a + (b - a) * t;
+  const smoothstep = (e0, e1, x) => {
+    const t = clamp((x - e0) / (e1 - e0), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
 
   /* ── version labels from GitHub latest ───────────────── */
   function setVersionLabels(tag) {
@@ -278,24 +283,38 @@
   } catch (_) {}
 
   /* ══════════════════════════════════════════════════════
-   * Scroll-linked motion engine
+   * Cinematic scroll engine
    * ══════════════════════════════════════════════════════ */
   const header = document.querySelector(".site-header");
   const hero = document.querySelector(".hero");
   const sections = [...document.querySelectorAll("[data-section]")];
+  const cinemaSections = [...document.querySelectorAll('[data-motion="cinema"]')];
   const navLinks = [...document.querySelectorAll("[data-nav]")];
   const railLinks = [...document.querySelectorAll("[data-rail]")];
   const parallaxNodes = [...document.querySelectorAll("[data-parallax]")];
 
+  const ATMOSPHERES = {
+    top: { a: "61, 255, 154", b: "125, 255, 224", c: "240, 193, 74" },
+    story: { a: "61, 255, 154", b: "90, 200, 255", c: "125, 255, 224" },
+    features: { a: "125, 255, 224", b: "61, 255, 154", c: "180, 255, 200" },
+    demos: { a: "100, 180, 255", b: "61, 255, 154", c: "125, 220, 255" },
+    bench: { a: "240, 193, 74", b: "61, 255, 154", c: "255, 160, 90" },
+    install: { a: "61, 255, 154", b: "255, 138, 101", c: "125, 255, 224" },
+    github: { a: "240, 193, 74", b: "255, 224, 138", c: "61, 255, 154" },
+    docs: { a: "143, 154, 171", b: "61, 255, 154", c: "125, 255, 224" },
+  };
+
   let ticking = false;
   let lastActiveId = "";
   let lastScrolled = null;
+  let lastAtmKey = "";
 
   function scrollMetrics() {
     const y = window.scrollY || window.pageYOffset || 0;
+    const vh = window.innerHeight || 1;
     const max = Math.max(
       1,
-      document.documentElement.scrollHeight - window.innerHeight
+      document.documentElement.scrollHeight - vh
     );
     const p = clamp(y / max, 0, 1);
 
@@ -305,7 +324,7 @@
       heroP = clamp(y / (h * 0.85), 0, 1);
     }
 
-    return { y, p, heroP };
+    return { y, p, heroP, vh };
   }
 
   function activeSectionId(y) {
@@ -321,6 +340,7 @@
   function setActiveOrientation(id) {
     if (id === lastActiveId) return;
     lastActiveId = id;
+    if (body) body.dataset.activeSection = id;
     navLinks.forEach((a) => {
       a.classList.toggle("is-active", a.getAttribute("data-nav") === id);
     });
@@ -329,12 +349,92 @@
     });
   }
 
+  function setAtmosphere(id) {
+    if (id === lastAtmKey) return;
+    lastAtmKey = id;
+    const atm = ATMOSPHERES[id] || ATMOSPHERES.top;
+    root.style.setProperty("--atm-a", atm.a);
+    root.style.setProperty("--atm-b", atm.b);
+    root.style.setProperty("--atm-c", atm.c);
+  }
+
+  /** Continuous enter → hold → exit for a cinema section */
+  function cinemaForRect(rect, vh) {
+    // Enter: top travels from below viewport → upper third
+    const enter = smoothstep(vh * 0.98, vh * 0.22, rect.top);
+    // Exit: bottom climbs through upper half toward top
+    const exit = smoothstep(vh * 0.08, vh * 0.58, rect.bottom);
+    const vis = clamp(enter * exit, 0, 1);
+
+    // Slide through: below center = positive (rise in), above = negative (lift out)
+    const anchor = rect.top + Math.min(rect.height * 0.28, vh * 0.22);
+    const slide = clamp((anchor - vh * 0.42) / vh, -1.15, 1.15) * 64;
+
+    const scale = 0.94 + vis * 0.06;
+    const blur = (1 - vis) * 9;
+
+    return { vis, slide, scale, blur };
+  }
+
+  function applyCinemaSections(vh) {
+    if (prefersReduced) {
+      cinemaSections.forEach((sec) => {
+        sec.style.setProperty("--sec-vis", "1");
+        sec.style.setProperty("--sec-slide", "0");
+        sec.style.setProperty("--sec-scale", "1");
+        sec.style.setProperty("--sec-blur", "0");
+      });
+      return;
+    }
+
+    cinemaSections.forEach((sec) => {
+      const rect = sec.getBoundingClientRect();
+      // Skip work when fully off-screen
+      if (rect.bottom < -80 || rect.top > vh + 80) {
+        sec.style.setProperty("--sec-vis", "0");
+        sec.style.setProperty("--sec-slide", rect.top > 0 ? "48" : "-40");
+        sec.style.setProperty("--sec-scale", "0.94");
+        sec.style.setProperty("--sec-blur", "8");
+        return;
+      }
+      const m = cinemaForRect(rect, vh);
+      sec.style.setProperty("--sec-vis", m.vis.toFixed(4));
+      sec.style.setProperty("--sec-slide", m.slide.toFixed(2));
+      sec.style.setProperty("--sec-scale", m.scale.toFixed(4));
+      sec.style.setProperty("--sec-blur", m.blur.toFixed(2));
+    });
+  }
+
+  function applyParallax(y) {
+    if (prefersReduced) return;
+    parallaxNodes.forEach((el) => {
+      const fy = parseFloat(el.getAttribute("data-parallax") || "0");
+      const fx = parseFloat(el.getAttribute("data-parallax-x") || "0");
+      const fr = parseFloat(el.getAttribute("data-parallax-r") || "0");
+      const baseRot = parseFloat(el.getAttribute("data-base-rot") || "0");
+      const skew = el.getAttribute("data-base-skew") || "";
+      const tx = y * fx;
+      const ty = y * fy;
+      const rot = baseRot + y * fr;
+      const parts = [
+        `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`,
+        `rotate(${rot.toFixed(3)}deg)`,
+      ];
+      if (skew) parts.push(skew);
+      el.style.transform = parts.join(" ");
+    });
+  }
+
   function applyScroll() {
     ticking = false;
-    const { y, p, heroP } = scrollMetrics();
+    const { y, p, heroP, vh } = scrollMetrics();
 
     root.style.setProperty("--scroll-p", p.toFixed(4));
     root.style.setProperty("--hero-p", heroP.toFixed(4));
+    root.style.setProperty(
+      "--atm-intensity",
+      (0.75 + p * 0.35).toFixed(3)
+    );
     if (hero) hero.style.setProperty("--hero-p", heroP.toFixed(4));
 
     if (header) {
@@ -345,15 +445,12 @@
       }
     }
 
-    if (!prefersReduced) {
-      parallaxNodes.forEach((el) => {
-        const factor = parseFloat(el.getAttribute("data-parallax") || "0.1");
-        const shift = y * factor;
-        el.style.transform = `translate3d(0, ${shift.toFixed(1)}px, 0)`;
-      });
-    }
+    applyParallax(y);
+    applyCinemaSections(vh);
 
-    setActiveOrientation(activeSectionId(y));
+    const active = activeSectionId(y);
+    setActiveOrientation(active);
+    setAtmosphere(active);
   }
 
   function onScroll() {

@@ -35,12 +35,26 @@
   <!-- Scroll progress (document scroll is the product) -->
   <div class="scroll-progress" aria-hidden="true"><i></i></div>
 
-  <!-- Ambient parallax stage -->
+  <!-- Ambient scroll stage — multi-layer, scrubbed by document scroll -->
   <div class="ambient" aria-hidden="true">
-    <div class="ambient-orb ambient-orb-a" data-parallax="0.18"></div>
-    <div class="ambient-orb ambient-orb-b" data-parallax="0.10"></div>
-    <div class="ambient-orb ambient-orb-c" data-parallax="0.24"></div>
-    <div class="ambient-grid" data-parallax="0.06"></div>
+    <div class="ambient-wash" data-parallax="0.03" data-parallax-x="0.015"></div>
+    <div class="ambient-aurora" data-parallax="0.14" data-parallax-x="-0.06" data-parallax-r="0.012"></div>
+    <div class="ambient-beams" data-parallax="0.22" data-parallax-x="0.09"></div>
+    <div class="ambient-shards">
+      <span class="shard s1" data-parallax="0.32" data-parallax-x="-0.14" data-parallax-r="0.02" data-base-rot="-18" data-base-skew="skewY(6deg)"></span>
+      <span class="shard s2" data-parallax="0.18" data-parallax-x="0.11" data-parallax-r="-0.015" data-base-rot="14" data-base-skew="skewY(-4deg)"></span>
+      <span class="shard s3" data-parallax="0.38" data-parallax-x="0.07" data-parallax-r="0.01" data-base-rot="8"></span>
+      <span class="shard s4" data-parallax="0.26" data-parallax-x="-0.09" data-parallax-r="-0.018" data-base-rot="-8" data-base-skew="skewX(8deg)"></span>
+      <span class="shard s5" data-parallax="0.2" data-parallax-x="0.05" data-parallax-r="0.008" data-base-rot="22"></span>
+    </div>
+    <div class="ambient-orb ambient-orb-a" data-parallax="0.2" data-parallax-x="0.05"></div>
+    <div class="ambient-orb ambient-orb-b" data-parallax="0.12" data-parallax-x="-0.07"></div>
+    <div class="ambient-orb ambient-orb-c" data-parallax="0.28" data-parallax-x="0.04"></div>
+    <div class="ambient-rings"></div>
+    <div class="ambient-grid" data-parallax="0.07" data-parallax-x="0.025"></div>
+    <div class="ambient-scan"></div>
+    <div class="ambient-noise"></div>
+    <div class="ambient-vignette"></div>
   </div>
 
   <!-- Section orientation rail -->
@@ -149,7 +163,7 @@
     </section>
 
     <!-- ═══ SCROLL STORY ═══ -->
-    <section id="story" class="story" data-section="story">
+    <section id="story" class="story" data-section="story" data-motion="cinema">
       <div class="wrap story-grid">
         <div class="story-rail">
           <article class="story-beat reveal" data-story-beat="pretty">
@@ -243,7 +257,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ FEATURES (tight) ═══ -->
-    <section id="features" class="features-section" data-section="features">
+    <section id="features" class="features-section" data-section="features" data-motion="cinema">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>What ships</h2>
@@ -279,7 +293,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ DEMOS ═══ -->
-    <section id="demos" class="demos-section" data-section="demos">
+    <section id="demos" class="demos-section" data-section="demos" data-motion="cinema">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>Interactive demos</h2>
@@ -356,7 +370,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ BENCHMARKS ═══ -->
-    <section id="bench" class="bench-section" data-section="bench">
+    <section id="bench" class="bench-section" data-section="bench" data-motion="cinema">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>Speed</h2>
@@ -491,7 +505,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
     </section>
 
     <!-- ═══ INSTALL ═══ -->
-    <section id="install" class="install-section" data-section="install">
+    <section id="install" class="install-section" data-section="install" data-motion="cinema">
       <div class="wrap">
         <div class="section-head reveal">
           <h2>Install</h2>
@@ -621,7 +635,7 @@ sudo rpm -i f00-*.rpm</code></pre>
     </section>
 
     <!-- ═══ GITHUB / OPEN SOURCE ═══ -->
-    <section id="github" class="github-section" data-section="github">
+    <section id="github" class="github-section" data-section="github" data-motion="cinema">
       <div class="wrap github-layout reveal">
         <div class="github-copy">
           <p class="eyebrow">Open source</p>
@@ -675,7 +689,7 @@ sudo rpm -i f00-*.rpm</code></pre>
       </div>
     </section>
 
-    <section id="docs" class="docs-section" data-section="docs">
+    <section id="docs" class="docs-section" data-section="docs" data-motion="cinema">
       <div class="wrap docs-row reveal">
         <div>
           <h2>License</h2>
