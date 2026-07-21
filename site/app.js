@@ -1,6 +1,7 @@
 /**
- * f00.sh front-end — progressive enhancement.
- * Scroll reveals, sticky story beats, interactive demos, install copy.
+ * f00.sh — progressive enhancement.
+ * Document scroll is the product: progress, parallax, story scrub,
+ * orientation rail/nav, magnetic CTAs, light tilt.
  * Works offline without JS; this layer is polish only.
  */
 (() => {
@@ -10,6 +11,12 @@
   const prefersReduced =
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer =
+    window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+
+  const root = document.documentElement;
+  const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+  const lerp = (a, b, t) => a + (b - a) * t;
 
   /* ── version labels from GitHub latest ───────────────── */
   function setVersionLabels(tag) {
@@ -50,7 +57,11 @@
     btn.addEventListener("click", () => {
       const sel = btn.getAttribute("data-copy");
       const target = sel ? document.querySelector(sel) : null;
-      const text = (target ? target.textContent : btn.getAttribute("data-copy-text") || "").trim();
+      const text = (
+        target
+          ? target.textContent
+          : btn.getAttribute("data-copy-text") || ""
+      ).trim();
       if (!text) return;
       const done = () => {
         const prev = btn.textContent;
@@ -99,7 +110,7 @@
     });
   }
 
-  /* ── scroll reveals (IO fallback; CSS scroll-timeline preferred) ── */
+  /* ── scroll reveals (IO) ─────────────────────────────── */
   if (!prefersReduced && "IntersectionObserver" in window) {
     const reveal = document.querySelectorAll(".reveal");
     const io = new IntersectionObserver(
@@ -120,14 +131,16 @@
     });
   }
 
-  /* ── sticky story: switch terminal as beats enter ────── */
+  /* ── sticky story: scrub terminal as beats enter ─────── */
   const stage = document.getElementById("story-stage");
   const beats = document.querySelectorAll("[data-story-beat]");
   const panels = document.querySelectorAll("[data-story-panel]");
   if (stage && beats.length && panels.length && "IntersectionObserver" in window) {
     const activate = (id) => {
       panels.forEach((p) => {
-        p.hidden = p.getAttribute("data-story-panel") !== id;
+        const on = p.getAttribute("data-story-panel") === id;
+        p.hidden = !on;
+        p.classList.toggle("is-active", on);
       });
       beats.forEach((b) => {
         b.classList.toggle(
@@ -136,12 +149,10 @@
         );
       });
     };
-    // default first
     activate(beats[0].getAttribute("data-story-beat"));
     if (!prefersReduced) {
       const sio = new IntersectionObserver(
         (entries) => {
-          // pick the most visible beat
           let best = null;
           let bestRatio = 0;
           entries.forEach((e) => {
@@ -152,17 +163,17 @@
           });
           if (best) activate(best.getAttribute("data-story-beat"));
         },
-        { rootMargin: "-20% 0px -35% 0px", threshold: [0.25, 0.5, 0.75, 1] }
+        { rootMargin: "-22% 0px -38% 0px", threshold: [0.2, 0.4, 0.6, 0.8, 1] }
       );
       beats.forEach((b) => sio.observe(b));
     }
   }
 
-  /* ── generic tabs (demos + install) ──────────────────── */
+  /* ── generic tabs (demos + install + bench) ──────────── */
   function wireTabs(rootSel, tabAttr, paneAttr) {
-    const root = document.querySelector(rootSel);
-    if (!root) return;
-    const tabs = [...root.querySelectorAll("[role=tab]")];
+    const rootEl = document.querySelector(rootSel);
+    if (!rootEl) return;
+    const tabs = [...rootEl.querySelectorAll("[role=tab]")];
     const panes = [...document.querySelectorAll(`[${paneAttr}]`)];
     const select = (name) => {
       tabs.forEach((t) => {
@@ -194,16 +205,6 @@
   wireTabs("[data-demo-tabs]", "data-demo-tab", "data-demo-pane");
   wireTabs("[data-install-tabs]", "data-install-tab", "data-install-pane");
   wireTabs("[data-bench-tabs]", "data-bench-tab", "data-bench-pane");
-
-  /* ── header shadow on scroll ─────────────────────────── */
-  const header = document.querySelector(".site-header");
-  if (header) {
-    const onScroll = () => {
-      header.classList.toggle("is-scrolled", window.scrollY > 8);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-  }
 
   /* ── year ────────────────────────────────────────────── */
   document.querySelectorAll("[data-year]").forEach((el) => {
@@ -275,4 +276,206 @@
       })
       .catch(() => {});
   } catch (_) {}
+
+  /* ══════════════════════════════════════════════════════
+   * Scroll-linked motion engine
+   * ══════════════════════════════════════════════════════ */
+  const header = document.querySelector(".site-header");
+  const hero = document.querySelector(".hero");
+  const sections = [...document.querySelectorAll("[data-section]")];
+  const navLinks = [...document.querySelectorAll("[data-nav]")];
+  const railLinks = [...document.querySelectorAll("[data-rail]")];
+  const parallaxNodes = [...document.querySelectorAll("[data-parallax]")];
+
+  let ticking = false;
+  let lastActiveId = "";
+  let lastScrolled = null;
+
+  function scrollMetrics() {
+    const y = window.scrollY || window.pageYOffset || 0;
+    const max = Math.max(
+      1,
+      document.documentElement.scrollHeight - window.innerHeight
+    );
+    const p = clamp(y / max, 0, 1);
+
+    let heroP = 0;
+    if (hero) {
+      const h = hero.offsetHeight || 1;
+      heroP = clamp(y / (h * 0.85), 0, 1);
+    }
+
+    return { y, p, heroP };
+  }
+
+  function activeSectionId(y) {
+    const probe = y + window.innerHeight * 0.28;
+    let current = sections[0] ? sections[0].getAttribute("data-section") : "top";
+    for (const sec of sections) {
+      const top = sec.offsetTop;
+      if (top <= probe) current = sec.getAttribute("data-section");
+    }
+    return current;
+  }
+
+  function setActiveOrientation(id) {
+    if (id === lastActiveId) return;
+    lastActiveId = id;
+    navLinks.forEach((a) => {
+      a.classList.toggle("is-active", a.getAttribute("data-nav") === id);
+    });
+    railLinks.forEach((a) => {
+      a.classList.toggle("is-active", a.getAttribute("data-rail") === id);
+    });
+  }
+
+  function applyScroll() {
+    ticking = false;
+    const { y, p, heroP } = scrollMetrics();
+
+    root.style.setProperty("--scroll-p", p.toFixed(4));
+    root.style.setProperty("--hero-p", heroP.toFixed(4));
+    if (hero) hero.style.setProperty("--hero-p", heroP.toFixed(4));
+
+    if (header) {
+      const scrolled = y > 8;
+      if (scrolled !== lastScrolled) {
+        lastScrolled = scrolled;
+        header.classList.toggle("is-scrolled", scrolled);
+      }
+    }
+
+    if (!prefersReduced) {
+      parallaxNodes.forEach((el) => {
+        const factor = parseFloat(el.getAttribute("data-parallax") || "0.1");
+        const shift = y * factor;
+        el.style.transform = `translate3d(0, ${shift.toFixed(1)}px, 0)`;
+      });
+    }
+
+    setActiveOrientation(activeSectionId(y));
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(applyScroll);
+  }
+
+  applyScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+
+  /* ── magnetic CTAs ───────────────────────────────────── */
+  if (!prefersReduced && finePointer) {
+    document.querySelectorAll("[data-magnetic]").forEach((el) => {
+      const strength = 14;
+      let raf = 0;
+      let tx = 0;
+      let ty = 0;
+      let cx = 0;
+      let cy = 0;
+
+      const tick = () => {
+        cx = lerp(cx, tx, 0.18);
+        cy = lerp(cy, ty, 0.18);
+        el.style.transform = `translate3d(${cx.toFixed(2)}px, ${cy.toFixed(2)}px, 0)`;
+        if (Math.abs(cx - tx) > 0.05 || Math.abs(cy - ty) > 0.05) {
+          raf = requestAnimationFrame(tick);
+        } else {
+          raf = 0;
+        }
+      };
+
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        const dx = e.clientX - (r.left + r.width / 2);
+        const dy = e.clientY - (r.top + r.height / 2);
+        tx = clamp(dx / (r.width / 2), -1, 1) * strength;
+        ty = clamp(dy / (r.height / 2), -1, 1) * strength;
+        if (!raf) raf = requestAnimationFrame(tick);
+      });
+
+      el.addEventListener("pointerleave", () => {
+        tx = 0;
+        ty = 0;
+        if (!raf) raf = requestAnimationFrame(tick);
+      });
+    });
+  }
+
+  /* ── light tilt / hot focus ──────────────────────────── */
+  if (!prefersReduced && finePointer) {
+    document.querySelectorAll("[data-tilt]").forEach((el) => {
+      const max = el.classList.contains("hero-term") ? 5 : 7;
+      let raf = 0;
+      let rx = 0;
+      let ry = 0;
+      let tx = 0;
+      let ty = 0;
+
+      const tick = () => {
+        rx = lerp(rx, tx, 0.16);
+        ry = lerp(ry, ty, 0.16);
+        if (el.classList.contains("hero-term")) {
+          el.style.transform = `perspective(900px) rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg)`;
+        } else {
+          el.style.transform = `perspective(800px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateZ(0)`;
+        }
+        if (Math.abs(rx - tx) > 0.05 || Math.abs(ry - ty) > 0.05) {
+          raf = requestAnimationFrame(tick);
+        } else {
+          raf = 0;
+        }
+      };
+
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        ty = px * max * 2;
+        tx = -py * max * 2;
+        if (!raf) raf = requestAnimationFrame(tick);
+      });
+
+      el.addEventListener("pointerleave", () => {
+        tx = 0;
+        ty = el.classList.contains("hero-term") ? -4 : 0;
+        const settle = () => {
+          rx = lerp(rx, tx, 0.16);
+          ry = lerp(ry, ty, 0.16);
+          if (Math.abs(rx - tx) > 0.08 || Math.abs(ry - ty) > 0.08) {
+            if (el.classList.contains("hero-term")) {
+              el.style.transform = `perspective(900px) rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg)`;
+            } else {
+              el.style.transform = `perspective(800px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+            }
+            raf = requestAnimationFrame(settle);
+          } else {
+            el.style.transform = "";
+            raf = 0;
+          }
+        };
+        if (!raf) raf = requestAnimationFrame(settle);
+      });
+    });
+  }
+
+  /* ── bench shell also counts as reveal for bar fill ──── */
+  const benchShell = document.querySelector(".bench-shell");
+  if (benchShell && "IntersectionObserver" in window) {
+    const bio = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-visible");
+            bio.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+    bio.observe(benchShell);
+    if (prefersReduced) benchShell.classList.add("is-visible");
+  }
 })();
