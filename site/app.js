@@ -6,7 +6,7 @@
 (() => {
   "use strict";
 
-  const FALLBACK_VERSION = "v0.11.0";
+  const FALLBACK_VERSION = "v0.12.0";
 
   /* ── version labels from GitHub latest ───────────────── */
   function setVersionLabels(tag) {

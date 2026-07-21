@@ -1,6 +1,6 @@
 .\" Manual page for f00(1)
 .\" Source of truth: man/f00.1 (tracked). clap --generate-man is a developer dump only.
-.TH F00 1 "July 2026" "f00 0.11.0" "User Commands"
+.TH F00 1 "July 2026" "f00 0.12.0" "User Commands"
 .SH NAME
 f00 \- fully compliant ls utility written in Rust (coreutils drop-in + modern listings)
 .SH SYNOPSIS
@@ -415,26 +415,47 @@ ANSI palette, so
 .RB \*(lq blue\*(rq
 directories track the theme's blue, and so on.
 .SS Long-format metadata (permissions, dates, sizes, owners, git)
-There is no OS-level standard that names \*(lqpermission color\*(rq or \*(lqdate color\*(rq.
-Modern tools commonly use:
-.IP \(bu 2
-.B ANSI palette indexes
-(0\(en15) so terminal themes apply; and/or
-.IP \(bu 2
-.B EZA_COLORS
+f00 paints metadata with the
+.B terminal ANSI palette
+(so themes such as Dracula or Monokai apply) and optional maps:
+.TP
+\fBF00_COLORS\fR / \fBEZA_COLORS\fR / \fBEXA_COLORS\fR
+eza-compatible
+.BI key = ansi
+lists (colon-separated). Precedence:
+.B F00_COLORS
+, then
+.BR EZA_COLORS ,
+then
+.BR EXA_COLORS .
+Useful keys:
+.BR da
+(date),
+.BR sn
+(size),
+.BR uu
 /
-.B EXA_COLORS
-key=value maps for column roles (de facto standard from eza), for example
-.BR da =
-date,
-size/number keys,
-permission bit keys,
-user/group keys,
-git status keys.
-.P
-f00 should paint metadata only with theme-following mechanisms (palette and/or
-eza-compatible maps), never hardcoded truecolor RGB for UI chrome. See the
-project README and release notes for the exact env vars supported in your version.
+.BR gu
+(user/group),
+.BR ur
+/
+.BR uw
+/
+.BR ux
+(and group/other triples) for permission bits,
+.BR gm
+/
+.BR ga
+/
+.BR gd
+/
+.BR gv
+/
+.BR gt
+(git),
+.BR mp
+(meta/inode/nlink).
+Never uses hardcoded truecolor RGB for listing chrome.
 .SS JSON pretty mode
 When color is on, pretty JSON may use relative
 .B bold
@@ -570,7 +591,7 @@ to skip man page installation.
 .TP
 \fBF00_VERSION\fR
 Pin a release tag (for example
-.BR v0.11.0 ).
+.BR v0.12.0 ).
 .TP
 \fBF00_INSTALL_LS\fR
 Set to

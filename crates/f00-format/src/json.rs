@@ -266,14 +266,17 @@ pub fn format_json_pretty(entries: &[Entry]) -> Result<String, serde_json::Error
     serde_json::to_string_pretty(&items)
 }
 
-/// Light structural emphasis for pretty JSON without forcing named hues.
+/// Pretty JSON emphasis using the **ANSI palette** (theme-following: Dracula, Monokai, …).
 ///
-/// Keys are **bold**, punctuation is **dim**, values stay plain — inherits the
-/// terminal foreground / theme. Machines should use `--color=never` (compact path).
+/// Keys = cyan, strings = green, numbers = yellow, literals = purple, punct = dark gray.
+/// Machines should use `--color=never` (compact path).
 pub fn colorize_json(src: &str) -> String {
-    let key = Style::new().bold();
-    let punct = Style::new().dimmed();
-
+    use nu_ansi_term::Color;
+    let key = Style::new().fg(Color::Cyan).bold();
+    let string = Style::new().fg(Color::Green);
+    let number = Style::new().fg(Color::Yellow);
+    let literal = Style::new().fg(Color::Purple).bold();
+    let punct = Style::new().fg(Color::DarkGray);
     let mut out = String::with_capacity(src.len().saturating_mul(2));
     let bytes = src.as_bytes();
     let mut i = 0;
@@ -301,8 +304,36 @@ pub fn colorize_json(src: &str) -> String {
                 if j < bytes.len() && bytes[j] == b':' {
                     out.push_str(&key.paint(s).to_string());
                 } else {
-                    out.push_str(s);
+                    out.push_str(&string.paint(s).to_string());
                 }
+            }
+            b'-' | b'0'..=b'9' => {
+                let start = i;
+                if bytes[i] == b'-' {
+                    i += 1;
+                }
+                while i < bytes.len() && bytes[i].is_ascii_digit() {
+                    i += 1;
+                }
+                if i < bytes.len() && bytes[i] == b'.' {
+                    i += 1;
+                    while i < bytes.len() && bytes[i].is_ascii_digit() {
+                        i += 1;
+                    }
+                }
+                out.push_str(&number.paint(&src[start..i]).to_string());
+            }
+            b't' if src[i..].starts_with("true") => {
+                out.push_str(&literal.paint("true").to_string());
+                i += 4;
+            }
+            b'f' if src[i..].starts_with("false") => {
+                out.push_str(&literal.paint("false").to_string());
+                i += 5;
+            }
+            b'n' if src[i..].starts_with("null") => {
+                out.push_str(&literal.paint("null").to_string());
+                i += 4;
             }
             b'{' | b'}' | b'[' | b']' | b':' | b',' => {
                 out.push_str(&punct.paint(&src[i..i + 1]).to_string());

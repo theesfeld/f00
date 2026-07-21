@@ -20,4 +20,4 @@ cargo build -p f00 --release
 ./scripts/bench-compare.sh 20000
 ```
 
-Numbers on the site: Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.11.
+Numbers on the site: Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.12.

@@ -9,14 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-07-21
+
 ### Added
-- **Colored pretty JSON** when color mode is on (`--json` / `-j`): syntax-highlighted keys, strings, numbers, literals; compact plain JSON when color is off (pipe-safe)
+- **`--json-full`**: full-metadata JSON (type detail, devices, unix times, xattrs, flags) alongside compact **`-j` / `--json`**
+- **Theme inheritance for long-format chrome:** ANSI palette (follows Dracula/Monokai/etc.) plus optional **`F00_COLORS` / `EZA_COLORS` / `EXA_COLORS`** (eza-compatible keys: `da`, `sn`, `uu`, `gu`, `ur`/`uw`/`ux`, git `gm`/`ga`/…)
+- **Comprehensive man page** `man/f00.1` installed by `install.sh` to `~/.local/share/man/man1` (shipped in release archives)
+- **CI hard rule:** `scripts/check-man-sync.sh` — man page must match live CLI flags + Cargo version
+- Expanded **GNU byte-parity** matrix under `--gnu` vs coreutils
 
 ### Changed
-- Document JSON as a **core** f00 surface (not a secondary machine format)
-- **Faster large-directory listing (Linux):** open the dir once and `statx` with **dirfd + relative names**; multi-thread rayon by default; io_uring reserved for serial (`--threads 1`); owner/group resolved after batch stat (no re-stat); short-list format prepares the whole section once. No feature loss.
-- **Kind-only readdir path:** when short listing needs only names + kind (no color/classify/size/time sort), use readdir `d_type` / `file_type()` and skip `statx`.
-- **Site:** public hyperfine benches with **two tracks** — coreutils ↔ `f00 --gnu`, eza/lsd ↔ product `f00`.
+- **Filenames** color only via **`LS_COLORS`** (no private forced-dot palette)
+- Pretty JSON uses ANSI palette roles (theme-following)
+- Help / README / site: flag taxonomy (GNU · modern · f00-only); product-first site copy
+- Shell quoting: mid-name `~` (`file~`) matches GNU
+- Version **0.11.0 → 0.12.0**
+
+### Fixed
+- Clippy/fmt and parity cases for portable CI (unstable dir order, invalid GNU `--sort=name`)
 
 ## [0.11.0] - 2026-07-20
 
