@@ -124,6 +124,8 @@ pub fn entry_from_statx_buf(
         None
     };
 
+    let dev = makdev(buf.stx_dev_major, buf.stx_dev_minor);
+    let rdev = makdev(buf.stx_rdev_major, buf.stx_rdev_minor);
     let mut entry = Entry {
         path: path.to_path_buf(),
         name,
@@ -137,7 +139,8 @@ pub fn entry_from_statx_buf(
         },
         accessed: stx_time(buf.stx_atime),
         changed: stx_time(buf.stx_ctime),
-        mode: mode_full & 0o7777,
+        // Keep type bits so FIFO/socket/device classification and JSON mode_full work.
+        mode: mode_full,
         readonly: mode_full & 0o200 == 0,
         symlink_target,
         depth,
@@ -148,6 +151,9 @@ pub fn entry_from_statx_buf(
         gid: buf.stx_gid,
         inode: buf.stx_ino,
         blocks: buf.stx_blocks,
+        dev,
+        rdev,
+        blksize: u64::from(buf.stx_blksize),
         owner: String::new(),
         group: String::new(),
         author: String::new(),
@@ -165,5 +171,18 @@ fn stx_time(t: libc::statx_timestamp) -> Option<SystemTime> {
     if t.tv_sec < 0 {
         return None;
     }
-    Some(SystemTime::UNIX_EPOCH + Duration::new(t.tv_sec as u64, t.tv_nsec))
+    Some(SystemTime::UNIX_EPOCH + Duration::new(t.tv_sec as u64, t.tv_nsec as u32))
+}
+
+fn makdev(major: u32, minor: u32) -> u64 {
+    // Linux makedev: ((major & 0xfff) << 8) | (minor & 0xff) | ...
+    // Prefer libc when available.
+    #[cfg(target_os = "linux")]
+    {
+        libc::makedev(major, minor)
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        ((u64::from(major) & 0xfff) << 8) | (u64::from(minor) & 0xff)
+    }
 }

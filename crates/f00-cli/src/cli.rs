@@ -111,6 +111,10 @@ pub struct Args {
     #[arg(short = 'j', long = "json")]
     pub json: bool,
 
+    /// Emit full-metadata JSON (implies `--json`; richer than compact `-j`)
+    #[arg(long = "json-full")]
+    pub json_full: bool,
+
     /// Emit CSV
     #[arg(long = "csv")]
     pub csv: bool,
@@ -396,6 +400,7 @@ impl Args {
             change_time: false,
             color: ColorArg::Auto,
             json: false,
+            json_full: false,
             csv: false,
             tsv: false,
             tree: false,
