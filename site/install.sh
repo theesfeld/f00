@@ -12,6 +12,8 @@
 #                    0 = never edit shell rc (print snippet only)
 #   F00_INSTALL_LS   If set to 1, also symlink ls -> f00
 #   F00_INSTALL_TUI  If set to 0, skip installing f00-tui when present in the archive (default: install)
+#   F00_INSTALL_MAN  If set to 0, skip installing the man page (default: install when present)
+#   MAN_DIR          Override man page directory (default: ~/.local/share/man/man1 or $XDG_DATA_HOME/man/man1)
 #   F00_NO_COLOR     If set, disable ANSI colors
 set -euo pipefail
 
@@ -162,7 +164,19 @@ asset_name() {
   fi
 }
 
-# ── install dir ─────────────────────────────────────────────────────────────
+# ── install dirs ────────────────────────────────────────────────────────────
+pick_man_dir() {
+  if [[ -n "${MAN_DIR:-}" ]]; then
+    echo "$MAN_DIR"
+    return
+  fi
+  if [[ -n "${XDG_DATA_HOME:-}" ]]; then
+    echo "${XDG_DATA_HOME}/man/man1"
+  else
+    echo "${HOME}/.local/share/man/man1"
+  fi
+}
+
 pick_install_dir() {
   if [[ -n "${INSTALL_DIR:-}" ]]; then
     echo "$INSTALL_DIR"
@@ -386,6 +400,29 @@ Is ${version} published? Check ${GITHUB_RELEASES}"
       chmod 755 "$tui_dst"
     }
     ok "installed ${TUI_BINARY} to ${tui_dst}"
+  fi
+
+  # Man page (f00.1) — present in release archives from the 0.12 train onward.
+  # Skip on Windows; opt out with F00_INSTALL_MAN=0.
+  if [[ "$os" != "windows" && "${F00_INSTALL_MAN:-1}" != "0" ]]; then
+    local man_src=""
+    man_src="$(find "$extract_dir" -type f \( -name 'f00.1' -o -path '*/man/f00.1' \) | head -1 || true)"
+    if [[ -n "$man_src" ]]; then
+      local man_dir man_dst
+      man_dir="$(pick_man_dir)"
+      mkdir -p "$man_dir"
+      man_dst="${man_dir}/f00.1"
+      install -m 644 "$man_src" "$man_dst" 2>/dev/null || {
+        cp "$man_src" "$man_dst"
+        chmod 644 "$man_dst"
+      }
+      ok "installed man page to ${man_dst}"
+      if ! man -w f00 >/dev/null 2>&1; then
+        warn "man cannot find f00 yet; try: export MANPATH=\"${man_dir%/man1}${MANPATH:+:\$MANPATH}\""
+      fi
+    else
+      warn "man page not in archive (older release); see https://github.com/${REPO}/blob/main/man/f00.1"
+    fi
   fi
 
   # Migrate away from legacy ~/.f00/bin if present and we installed elsewhere.

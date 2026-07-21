@@ -16,6 +16,10 @@ contents:
     dst: /usr/bin/f00
     file_info:
       mode: 0755
+  - src: ${MAN_PATH}
+    dst: /usr/share/man/man1/f00.1
+    file_info:
+      mode: 0644
 overrides:
   deb:
     depends: []

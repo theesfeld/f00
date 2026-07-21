@@ -20,12 +20,13 @@ WORKDIR="$(mktemp -d)"
 trap 'rm -rf "${WORKDIR}"' EXIT
 
 render_nfpm() {
-  local arch="$1" bin_path="$2" cfg="$3"
+  local arch="$1" bin_path="$2" man_path="$3" cfg="$4"
   # Avoid envsubst dependency; only substitute known placeholders.
   sed \
     -e "s|\${VERSION}|${VERSION}|g" \
     -e "s|\${ARCH}|${arch}|g" \
     -e "s|\${BIN_PATH}|${bin_path}|g" \
+    -e "s|\${MAN_PATH}|${man_path}|g" \
     "${TEMPLATE}" > "${cfg}"
 }
 
@@ -50,8 +51,18 @@ build_one() {
   fi
   chmod +x "${bin}"
 
+  local man=""
+  man="$(find "${stage}" -type f -name f00.1 | head -n1 || true)"
+  if [[ -z "${man}" || ! -f "${man}" ]]; then
+    man="${ROOT}/man/f00.1"
+  fi
+  if [[ ! -f "${man}" ]]; then
+    echo "man page f00.1 not found" >&2
+    return 1
+  fi
+
   local cfg="${WORKDIR}/nfpm-${arch}.yaml"
-  render_nfpm "${arch}" "${bin}" "${cfg}"
+  render_nfpm "${arch}" "${bin}" "${man}" "${cfg}"
 
   nfpm package --config "${cfg}" --packager deb --target "${OUT}"
   nfpm package --config "${cfg}" --packager rpm --target "${OUT}"
