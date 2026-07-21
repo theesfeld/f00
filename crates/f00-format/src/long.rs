@@ -258,12 +258,20 @@ pub fn format_long(entries: &[Entry], colorizer: &Colorizer, config: &Config) ->
         if config.zero || !config.emit_block_total {
             return;
         }
-        let total: u64 = section
+        // Sum allocated 512-byte blocks, then format like GNU `ls -s` / `-sh`.
+        let total_512: u64 = section
             .iter()
             .filter(|e| !e.is_dir_header)
-            .map(|e| crate::human::block_display_with_unit(e.blocks, config.blocks_unit()))
+            .map(|e| e.blocks)
             .fold(0u64, u64::saturating_add);
-        out.push_str(&format!("total {total}"));
+        let total_str = if config.human_sizes || config.si_sizes {
+            // GNU humanizes the *disk usage* (blocks * 512), not the rounded unit count.
+            let bytes = total_512.saturating_mul(512);
+            crate::human::format_size_bytes(bytes, config.block_size, true, config.si_sizes)
+        } else {
+            crate::human::block_display_with_unit(total_512, config.blocks_unit()).to_string()
+        };
+        out.push_str(&format!("total {total_str}"));
         out.push_str(ending);
     };
 
