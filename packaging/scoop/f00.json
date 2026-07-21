@@ -1,12 +1,12 @@
 {
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Modern, friendly directory lister (ls rewrite in Rust)",
   "homepage": "https://f00.sh",
   "license": "MIT OR Apache-2.0",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/theesfeld/f00/releases/download/v0.11.0/f00-x86_64-pc-windows-msvc.zip",
-      "hash": "6274099c268af13a5765b0638e5a8dc093f7d76d0ae8f57788dca55614e05e2d",
+      "url": "https://github.com/theesfeld/f00/releases/download/v0.12.0/f00-x86_64-pc-windows-msvc.zip",
+      "hash": "a52bf0d7d1a5195134dafbd299ab7ba55b9c1a056178f086651de96a34f8edd6",
       "extract_dir": "f00-x86_64-pc-windows-msvc"
     }
   },
