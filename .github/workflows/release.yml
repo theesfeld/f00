@@ -78,6 +78,12 @@ jobs:
           for f in README.md LICENSE-MIT LICENSE-APACHE; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done
+          # Comprehensive man page (install.sh places under man/man1).
+          if [[ -f man/f00.1 ]]; then
+            mkdir -p "$STAGE/man"
+            cp man/f00.1 "$STAGE/man/f00.1"
+            cp man/f00.1 "$STAGE/f00.1"
+          fi
           tar -C dist -czf "dist/${{ env.BINARY }}-${{ matrix.target }}.tar.gz" "${{ env.BINARY }}-${{ matrix.target }}"
           echo "ASSET=dist/${{ env.BINARY }}-${{ matrix.target }}.tar.gz" >> "$GITHUB_ENV"
 
@@ -97,6 +103,11 @@ jobs:
           for f in README.md LICENSE-MIT LICENSE-APACHE; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done
+          # Include man page for completeness (install.sh skips man on Windows).
+          if [[ -f man/f00.1 ]]; then
+            mkdir -p "$STAGE/man"
+            cp man/f00.1 "$STAGE/man/f00.1"
+          fi
           (cd dist && 7z a -tzip "${{ env.BINARY }}-${{ matrix.target }}.zip" "${{ env.BINARY }}-${{ matrix.target }}")
           echo "ASSET=dist/${{ env.BINARY }}-${{ matrix.target }}.zip" >> "$GITHUB_ENV"
 

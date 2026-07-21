@@ -36,11 +36,13 @@ curl -fsSL https://f00.sh/install.sh | bash
 
 Installs **`f00`** (and **`f00-tui`** when present in the release) to **`~/.local/bin`** by default (`INSTALL_DIR` to override). Adds that dir to your shell rc when missing from `PATH` (`ADD_PATH=0` to skip). `F00_INSTALL_TUI=0` skips the browser binary.
 
+Also installs the man page **`f00(1)`** to **`~/.local/share/man/man1/f00.1`** (or `$XDG_DATA_HOME/man/man1`) when the release archive includes it. Override with `MAN_DIR=…`; skip with `F00_INSTALL_MAN=0`. Then: `man f00`.
+
+**Hard rule:** `man/f00.1` must always match the live product (flags, version, documented surfaces). CI runs `scripts/check-man-sync.sh` on every PR. Update the man page in the **same** change that alters CLI behavior or `Cargo.toml` version.
 ```bash
 curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.11.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 ```
-
 ### Nix
 
 ```bash

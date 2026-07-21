@@ -1,293 +1,654 @@
-.ie \n(.g .ds Aq \(aq
-.el .ds Aq '
-.TH f00 1  "f00 0.5.0" 
+.\" Manual page for f00(1)
+.\" Source of truth: man/f00.1 (tracked). clap --generate-man is a developer dump only.
+.TH F00 1 "July 2026" "f00 0.11.0" "User Commands"
 .SH NAME
-f00 \- List directory contents with a friendly default UI
+f00 \- fully compliant ls utility written in Rust (coreutils drop-in + modern listings)
 .SH SYNOPSIS
-\fBf00\fR [\fB\-\-help\fR] [\fB\-a\fR|\fB\-\-all\fR] [\fB\-A\fR|\fB\-\-almost\-all\fR] [\fB\-l \fR] [\fB\-1 \fR] [\fB\-C \fR] [\fB\-m \fR] [\fB\-h\fR|\fB\-\-human\-readable\fR] [\fB\-\-si\fR] [\fB\-R\fR|\fB\-\-recursive\fR] [\fB\-r\fR|\fB\-\-reverse\fR] [\fB\-t \fR] [\fB\-S \fR] [\fB\-X \fR] [\fB\-v \fR] [\fB\-U \fR] [\fB\-\-sort\fR] [\fB\-\-time\fR] [\fB\-u \fR] [\fB\-c \fR] [\fB\-\-color\fR] [\fB\-\-json\fR] [\fB\-\-csv\fR] [\fB\-\-tsv\fR] [\fB\-\-tree\fR] [\fB\-\-gnu\fR] [\fB\-\-icons\fR] [\fB\-F\fR|\fB\-\-classify\fR] [\fB\-p \fR] [\fB\-\-file\-type\fR] [\fB\-\-indicator\-style\fR] [\fB\-\-group\-directories\-first\fR] [\fB\-d\fR|\fB\-\-directory\fR] [\fB\-B\fR|\fB\-\-ignore\-backups\fR] [\fB\-I\fR|\fB\-\-ignore\fR] [\fB\-\-hide\fR] [\fB\-L\fR|\fB\-\-dereference\fR] [\fB\-H\fR|\fB\-\-dereference\-command\-line\fR] [\fB\-\-dereference\-command\-line\-symlink\-to\-dir\fR] [\fB\-g \fR] [\fB\-o \fR] [\fB\-G\fR|\fB\-\-no\-group\fR] [\fB\-n\fR|\fB\-\-numeric\-uid\-gid\fR] [\fB\-i\fR|\fB\-\-inode\fR] [\fB\-s\fR|\fB\-\-size\fR] [\fB\-k\fR|\fB\-\-kibibytes\fR] [\fB\-\-block\-size\fR] [\fB\-\-full\-time\fR] [\fB\-\-time\-style\fR] [\fB\-q\fR|\fB\-\-hide\-control\-chars\fR] [\fB\-\-show\-control\-chars\fR] [\fB\-b\fR|\fB\-\-escape\fR] [\fB\-Q\fR|\fB\-\-quote\-name\fR] [\fB\-N\fR|\fB\-\-literal\fR] [\fB\-\-quoting\-style\fR] [\fB\-x \fR] [\fB\-f \fR] [\fB\-\-format\fR] [\fB\-T\fR|\fB\-\-tabsize\fR] [\fB\-w\fR|\fB\-\-width\fR] [\fB\-Z\fR|\fB\-\-context\fR] [\fB\-\-zero\fR] [\fB\-D\fR|\fB\-\-dired\fR] [\fB\-\-author\fR] [\fB\-\-hyperlink\fR] [\fB\-\-max\-depth\fR] [\fB\-\-git\fR] [\fB\-\-config\fR] [\fB\-\-browse\fR] [\fB\-\-ignore\-files\fR] [\fB\-\-no\-ignore\fR] [\fB\-\-archive\fR] [\fB\-\-threads\fR] [\fB\-\-profile\fR] [\fB\-\-update\fR] [\fB\-\-check\-update\fR] [\fB\-\-list\-plugins\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fIPATHS\fR] 
+.B f00
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.P
+.B f00
+\-\-json | \-\-json\-full | \-\-tree | \-\-csv | \-\-tsv
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.P
+.B f00
+\-\-update | \-\-check\-update | update | check\-update
+.P
+.B f00\-tui
+.br
+.B f00
+\-\-browse
 .SH DESCRIPTION
-List directory contents with a friendly default UI
-.SH OPTIONS
+.B f00
+lists directory contents. It is written entirely in
+.B Rust
+and aims to be:
+.IP \(bu 2
+a
+.B drop-in
+for GNU coreutils
+.BR ls (1)
+when run with
+.B \-\-gnu
+(or automatically when stdout is not a TTY);
+.IP \(bu 2
+a modern daily listing tool that
+.B meets and exceeds
+.BR eza (1)
+and
+.BR lsd (1)
+on a TTY (icons, git status, tree, rich JSON) without giving up coreutils flag coverage.
+.P
+Default interactive (TTY) behavior uses modern listing defaults: colors when available,
+icons (auto), and git status when compiled with git support.
+Non\-TTY stdout (pipes, scripts, CI) automatically enables
+.B script-safe / GNU-equivalent
+behavior unless
+.B \-\-no\-gnu
+is given.
+.P
+The primary command is always
+.BR f00 .
+The installer never replaces system
+.IR /bin/ls
+by default. Optional aliases or
+.B F00_INSTALL_LS=1
+may put
+.B ls \(-> f00
+on your PATH only.
+.SH OUTPUT MODES
 .TP
-\fB\-\-help\fR
-Print help
-.TP
-\fB\-a\fR, \fB\-\-all\fR
-Do not ignore entries starting with `.`
-.TP
-\fB\-A\fR, \fB\-\-almost\-all\fR
-Do not list implied `.` and `..` (show other hidden files)
-.TP
-\fB\-l\fR
-Use a long listing format
+\fBDefault / columns\fR
+Multi-column listing on a TTY (like
+.BR ls ).
 .TP
 \fB\-1\fR
-List one file per line
+One name per line.
 .TP
-\fB\-C\fR
-List entries by columns
+\fB\-l\fR
+Long listing (permissions, links, owner, group, size, time, name).
 .TP
-\fB\-m\fR
-Fill width with a comma separated list of entries
-.TP
-\fB\-h\fR, \fB\-\-human\-readable\fR
-With \-l and \-s, print sizes like 1K 234M 2G etc
-.TP
-\fB\-\-si\fR
-Likewise, but use powers of 1000 not 1024
-.TP
-\fB\-R\fR, \fB\-\-recursive\fR
-List subdirectories recursively
-.TP
-\fB\-r\fR, \fB\-\-reverse\fR
-Reverse sort order
-.TP
-\fB\-t\fR
-Sort by time, newest first
-.TP
-\fB\-S\fR
-Sort by file size, largest first
-.TP
-\fB\-X\fR
-Sort alphabetically by entry extension
-.TP
-\fB\-v\fR
-Natural sort of (version) numbers within text (`strverscmp`)
-.TP
-\fB\-U\fR
-Do not sort; list entries in directory order
-.TP
-\fB\-\-sort\fR \fI<WORD>\fR
-Sort by WORD (name, size, time, extension, version, none)
-.TP
-\fB\-\-time\fR \fI<WORD>\fR
-Use time WORD for display/sort: mtime, atime, ctime, birth
-.TP
-\fB\-u\fR
-Sort by, and show, access time
-.TP
-\fB\-c\fR
-Sort by, and show, ctime (status change) when possible
-.TP
-\fB\-\-color\fR[=\fI<WHEN>\fR] [default: auto]
-Colorize output
-.br
-
-.br
-\fIPossible values:\fR
-.RS 14
-.IP \(bu 2
-auto
-.IP \(bu 2
-always
-.IP \(bu 2
-never
-.RE
-.TP
-\fB\-\-json\fR
-Emit structured JSON
-.TP
-\fB\-\-csv\fR
-Emit CSV
-.TP
-\fB\-\-tsv\fR
-Emit TSV
+\fB\-C\fR / \fB\-x\fR / \fB\-m\fR
+Column / across / comma-separated formats.
 .TP
 \fB\-\-tree\fR
-Show entries as a tree
+Directory tree view.
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+Compact JSON array of entries (script-friendly when color is off).
+.TP
+\fB\-\-json\-full\fR
+Full-metadata JSON (implies JSON mode). Includes type detail, device ids,
+unix timestamps, xattrs when available, executable/hidden flags, and related fields.
+.TP
+\fB\-\-csv\fR / \fB\-\-tsv\fR
+Tabular machine formats.
+.SH FLAG TAXONOMY
+Flags fall into three groups.
+.SS 1. GNU coreutils surface
+.B f00
+accepts the GNU
+.B ls
+option surface used for drop-in scripting and compatibility, including (not exhaustive):
+.P
+.B \-a \-A \-l \-1 \-C \-m \-x \-h \-\-si \-R \-r \-t \-S \-X \-v \-U \-f
+.br
+.B \-u \-c \-\-sort \-\-time \-\-time\-style \-\-full\-time
+.br
+.B \-d \-F \-p \-\-file\-type \-\-indicator\-style \-\-classify
+.br
+.B \-B \-I \-\-hide \-L \-H \-\-dereference\-command\-line\-symlink\-to\-dir
+.br
+.B \-g \-o \-G \-n \-i \-s \-k \-\-block\-size \-\-author
+.br
+.B \-b \-Q \-N \-q \-\-quoting\-style \-\-show\-control\-chars \-\-hide\-control\-chars
+.br
+.B \-w \-T \-Z \-\-zero \-D \-\-dired \-\-hyperlink \-\-color \-\-format
+.br
+.B \-\-group\-directories\-first
+.P
+Under
+.B \-\-gnu
+(or auto non-TTY mode), decorations such as icons and git columns are off and
+output is shaped for coreutils-compatible scripting. Byte-level parity against
+system
+.B ls
+is tested in CI for a broad flag matrix.
+.SS 2. Modern listing (TTY \*(lqchrome\*(rq)
+.TP
+\fB\-\-icons\fR[=\fIWHEN\fR]
+Nerd Font icons (auto/always/never). Default: auto on TTY; off under
+.BR \-\-gnu .
+.TP
+\fB\-\-git\fR / \fB\-\-git=false\fR
+Show git status in long listings when the
+.B git
+feature is enabled (default on).
+.TP
+\fB\-\-color\fR[=\fIWHEN\fR]
+auto | always | never (GNU WHEN synonyms accepted).
+.TP
+\fB\-\-no\-gnu\fR
+Force modern behavior even when stdout is not a TTY (disables auto script-safe mode).
+.SS 3. f00\-only / functionality
+.TP
+\fB\-j\fR, \fB\-\-json\fR, \fB\-\-json\-full\fR
+Structured JSON (see
+.BR "JSON OUTPUT" ).
+.TP
+\fB\-\-tree\fR, \fB\-\-csv\fR, \fB\-\-tsv\fR
+Alternate structured views.
 .TP
 \fB\-\-gnu\fR
-Stricter GNU ls\-compatible behavior
+Force GNU / script-safe mode.
 .TP
-\fB\-\-icons\fR[=\fI<WHEN>\fR] [default: auto]
-Show file icons (auto/always/never; default: auto — TTY only, off under \-\-gnu)
-.br
-
-.br
-\fIPossible values:\fR
-.RS 14
-.IP \(bu 2
-auto
-.IP \(bu 2
-always
-.IP \(bu 2
-never
-.RE
+\fB\-\-max\-depth\fR=\fIN\fR
+Limit recursion / tree depth.
 .TP
-\fB\-F\fR, \fB\-\-classify\fR
-Append indicator (one of */=@|) to entries
+\fB\-\-ignore\-files\fR / \fB\-\-no\-ignore\fR
+Honor or ignore ignore-files (when supported).
 .TP
-\fB\-p\fR
-Append / indicator to directories
+\fB\-\-archive\fR
+List inside archive files when the archive feature is enabled.
 .TP
-\fB\-\-file\-type\fR
-Like \-F, except do not append \*(Aq*\*(Aq
+\fB\-\-threads\fR=\fIN\fR
+Parallelism for metadata (0 = auto).
 .TP
-\fB\-\-indicator\-style\fR \fI<WORD>\fR
-Append indicator with style WORD: none, slash, file\-type, classify
-.TP
-\fB\-\-group\-directories\-first\fR
-Group directories before files
-.TP
-\fB\-d\fR, \fB\-\-directory\fR
-List directories themselves, not their contents
-.TP
-\fB\-B\fR, \fB\-\-ignore\-backups\fR
-Do not list implied entries ending with ~
-.TP
-\fB\-I\fR, \fB\-\-ignore\fR \fI<PATTERN>\fR
-Do not list implied entries matching shell PATTERN (repeatable)
-.TP
-\fB\-\-hide\fR \fI<PATTERN>\fR
-Do not list implied entries matching shell PATTERN (unless \-a/\-A)
-.TP
-\fB\-L\fR, \fB\-\-dereference\fR
-When showing file information for a symbolic link, show info for the file it references
-.TP
-\fB\-H\fR, \fB\-\-dereference\-command\-line\fR
-Follow symbolic links listed on the command line
-.TP
-\fB\-\-dereference\-command\-line\-symlink\-to\-dir\fR
-Follow each command line symbolic link that points to a directory
-.TP
-\fB\-g\fR
-Like \-l, but do not list owner
-.TP
-\fB\-o\fR
-Like \-l, but do not list group information
-.TP
-\fB\-G\fR, \fB\-\-no\-group\fR
-In a long listing, don\*(Aqt print group names
-.TP
-\fB\-n\fR, \fB\-\-numeric\-uid\-gid\fR
-Like \-l, but list numeric user and group IDs
-.TP
-\fB\-i\fR, \fB\-\-inode\fR
-Print the index number of each file
-.TP
-\fB\-s\fR, \fB\-\-size\fR
-Print the allocated size of each file, in blocks
-.TP
-\fB\-k\fR, \fB\-\-kibibytes\fR
-Default to 1024\-byte blocks for filesystem disk usage (`\-s`)
-.TP
-\fB\-\-block\-size\fR \fI<SIZE>\fR
-Scale sizes by SIZE before printing (e.g. 1K, 1M, KB, MB)
-.TP
-\fB\-\-full\-time\fR
-Like \-l \-\-time\-style=full\-iso
-.TP
-\fB\-\-time\-style\fR \fI<TIME_STYLE>\fR
-Time/date format with \-l; also TIME_STYLE env
-.TP
-\fB\-q\fR, \fB\-\-hide\-control\-chars\fR
-Print ? instead of nongraphic characters
-.TP
-\fB\-\-show\-control\-chars\fR
-Show nongraphic characters as\-is (the default unless \-q)
-.TP
-\fB\-b\fR, \fB\-\-escape\fR
-Print C\-style escapes for nongraphic characters
-.TP
-\fB\-Q\fR, \fB\-\-quote\-name\fR
-Enclose entry names in double quotes
-.TP
-\fB\-N\fR, \fB\-\-literal\fR
-Print entry names without quoting
-.TP
-\fB\-\-quoting\-style\fR \fI<WORD>\fR
-Use quoting style WORD for entry names
-.TP
-\fB\-x\fR
-List entries by lines instead of by columns (row\-major)
-.TP
-\fB\-f\fR
-Same as \-a \-U (and disable decorations in GNU mode)
-.TP
-\fB\-\-format\fR \fI<WORD>\fR
-Across/commas/long/single\-column/vertical
-.TP
-\fB\-T\fR, \fB\-\-tabsize\fR \fI<COLS>\fR
-Assume tab stops at each COLS instead of 8 (stored for layout)
-.TP
-\fB\-w\fR, \fB\-\-width\fR \fI<COLS>\fR
-Set output width to COLS; 0 means no limit
-.TP
-\fB\-Z\fR, \fB\-\-context\fR
-Print any security context of each file (SELinux)
-.TP
-\fB\-\-zero\fR
-End each output line with NUL, not newline
-.TP
-\fB\-D\fR, \fB\-\-dired\fR
-Generate output designed for Emacs\*(Aq dired mode
-.TP
-\fB\-\-author\fR
-With \-l, print the author of each file
-.TP
-\fB\-\-hyperlink\fR[=\fI<WHEN>\fR]
-Hyperlink file names (auto/always/never)
-.TP
-\fB\-\-max\-depth\fR \fI<N>\fR
-Maximum recursion depth (with \-R / \-\-tree)
-.TP
-\fB\-\-git\fR \fI<GIT>\fR [default: true]
-Annotate with git status (requires feature `git`)
-.br
-
-.br
-\fIPossible values:\fR
-.RS 14
-.IP \(bu 2
-true
-.IP \(bu 2
-false
-.RE
-.TP
-\fB\-\-config\fR \fI<PATH>\fR
-Path to TOML config file (overrides default search path)
-.TP
-\fB\-\-browse\fR
-Interactive TUI directory browser (requires feature `tui`)
-.TP
-\fB\-\-ignore\-files\fR
-Honor `.gitignore` / `.f00ignore` when listing
-.TP
-\fB\-\-no\-ignore\fR
-Do not honor ignore files (overrides \-\-ignore\-files)
-.TP
-\fB\-\-archive\fR \fI<ARCHIVE>\fR [default: true]
-Auto\-list zip/tar archives as directories (default: true; off under \-\-gnu)
-.br
-
-.br
-\fIPossible values:\fR
-.RS 14
-.IP \(bu 2
-true
-.IP \(bu 2
-false
-.RE
-.TP
-\fB\-\-threads\fR \fI<N>\fR [default: 0]
-Parallel metadata threads: `0` = auto (rayon default), `1` = serial, `N>1` = fixed pool
+\fB\-\-io\-uring\fR
+Linux batch metadata (when built with io-uring).
 .TP
 \fB\-\-profile\fR
-Print phase timing breakdown to stderr (readdir/stat/sort/format/total)
+Print timing profile to stderr.
 .TP
-\fB\-\-update\fR
-Update f00 from the latest GitHub Release (checksum verified)
+\fB\-\-config\fR=\fIPATH\fR
+Load configuration file.
 .TP
-\fB\-\-check\-update\fR
-Check whether a newer release is available (no mutation); exit 1 if behind
+\fB\-\-browse\fR / \fB\-\-tui\fR
+Launch dual-pane browser (
+.B f00\-tui
+preferred as a separate binary).
+.TP
+\fB\-\-update\fR / \fB\-\-check\-update\fR
+Self-update from GitHub Releases (checksum verified).
 .TP
 \fB\-\-list\-plugins\fR
-List loaded plugins (requires feature `plugins`)
+List plugins when built with plugin support.
+.SH OPTIONS
+Many options match GNU
+.BR ls (1).
+Below are commonly used and f00-specific options. Run
+.B f00 \-\-help
+for the complete generated flag list.
+.SS Filtering and sorting
 .TP
-\fB\-V\fR, \fB\-\-version\fR
-Print version
+\fB\-a\fR, \fB\-\-all\fR
+Do not ignore entries starting with
+.BR . .
 .TP
-[\fIPATHS\fR]
-Paths to list (default: current directory)
-.SH VERSION
-v0.5.0
+\fB\-A\fR, \fB\-\-almost\-all\fR
+Do not list implied
+.B .
+and
+.BR .. .
+.TP
+\fB\-d\fR, \fB\-\-directory\fR
+List directories themselves, not their contents.
+.TP
+\fB\-R\fR, \fB\-\-recursive\fR
+List subdirectories recursively.
+.TP
+\fB\-r\fR, \fB\-\-reverse\fR
+Reverse sort order.
+.TP
+\fB\-t\fR
+Sort by time, newest first.
+.TP
+\fB\-S\fR
+Sort by size, largest first.
+.TP
+\fB\-X\fR
+Sort by extension.
+.TP
+\fB\-v\fR
+Natural (version) sort.
+.TP
+\fB\-U\fR
+Do not sort (directory order).
+.TP
+\fB\-f\fR
+Like
+.B \-aU
+(unsorted, show all).
+.TP
+\fB\-\-sort\fR=\fIWORD\fR
+name | size | time | extension | version | none | width
+.TP
+\fB\-\-time\fR=\fIWORD\fR
+mtime | atime | ctime | birth (and GNU synonyms).
+.TP
+\fB\-u\fR / \fB\-c\fR
+Use access time / status-change time for sort/display (GNU semantics).
+.TP
+\fB\-B\fR, \fB\-\-ignore\-backups\fR
+Ignore entries ending with
+.BR ~ .
+.TP
+\fB\-I\fR, \fB\-\-ignore\fR=\fIPATTERN\fR
+Ignore names matching shell pattern (repeatable).
+.TP
+\fB\-\-hide\fR=\fIPATTERN\fR
+Hide pattern unless
+.B \-a
+/
+.B \-A
+.
+.SS Long format and sizes
+.TP
+\fB\-l\fR
+Long listing.
+.TP
+\fB\-g\fR / \fB\-o\fR
+Long without owner / without group (GNU).
+.TP
+\fB\-G\fR, \fB\-\-no\-group\fR
+Do not list group.
+.TP
+\fB\-n\fR, \fB\-\-numeric\-uid\-gid\fR
+Numeric uid/gid.
+.TP
+\fB\-i\fR, \fB\-\-inode\fR
+Print inode number.
+.TP
+\fB\-s\fR, \fB\-\-size\fR
+Print allocated size in blocks.
+.TP
+\fB\-h\fR, \fB\-\-human\-readable\fR
+Human sizes (powers of 1024) with
+.B \-l
+/
+.BR \-s .
+.TP
+\fB\-\-si\fR
+Human sizes with powers of 1000.
+.TP
+\fB\-k\fR, \fB\-\-kibibytes\fR
+1024-byte blocks for
+.BR \-s .
+.TP
+\fB\-\-block\-size\fR=\fISIZE\fR
+Scale sizes by SIZE (GNU SIZE syntax).
+.TP
+\fB\-\-time\-style\fR=\fISTYLE\fR
+full-iso | long-iso | iso | locale | +FORMAT
+.TP
+\fB\-\-full\-time\fR
+Like
+.B \-\-time\-style=full\-iso
+.
+.TP
+\fB\-\-author\fR
+Print author (often same as owner on Linux).
+.TP
+\fB\-Z\fR, \fB\-\-context\fR
+Print SELinux security context when available.
+.SS Display and quoting
+.TP
+\fB\-F\fR, \fB\-\-classify\fR[=\fIWHEN\fR]
+Append file type indicators.
+.TP
+\fB\-p\fR
+Append
+.B /
+to directories.
+.TP
+\fB\-\-file\-type\fR
+Like
+.B \-F
+without
+.BR * .
+.TP
+\fB\-\-indicator\-style\fR=\fIWORD\fR
+none | slash | file-type | classify
+.TP
+\fB\-\-group\-directories\-first\fR
+List directories before files.
+.TP
+\fB\-b\fR, \fB\-\-escape\fR
+C-style escapes for nongraphic characters.
+.TP
+\fB\-Q\fR, \fB\-\-quote\-name\fR
+Enclose names in double quotes.
+.TP
+\fB\-N\fR, \fB\-\-literal\fR
+Print raw names.
+.TP
+\fB\-\-quoting\-style\fR=\fIWORD\fR
+literal | shell | shell-always | shell-escape | c | escape | ...
+.TP
+\fB\-w\fR, \fB\-\-width\fR=\fICOLS\fR
+Assume screen width COLS.
+.TP
+\fB\-T\fR, \fB\-\-tabsize\fR=\fICOLS\fR
+Assume tab stops every COLS columns.
+.TP
+\fB\-\-zero\fR
+End lines with NUL, not newline.
+.TP
+\fB\-D\fR, \fB\-\-dired\fR
+Emacs dired mode.
+.TP
+\fB\-\-hyperlink\fR[=\fIWHEN\fR]
+OSC 8 hyperlinks for names.
+.SS Dereference
+.TP
+\fB\-L\fR, \fB\-\-dereference\fR
+Follow symlinks when showing file information.
+.TP
+\fB\-H\fR, \fB\-\-dereference\-command\-line\fR
+Follow symlinks on the command line.
+.TP
+\fB\-\-dereference\-command\-line\-symlink\-to\-dir\fR
+Follow command-line symlinks that point to directories.
+.SS Compatibility and mode
+.TP
+\fB\-\-gnu\fR
+GNU / script-safe mode (no icons/git chrome).
+.TP
+\fB\-\-no\-gnu\fR
+Force modern mode on non-TTY stdout.
+.TP
+\fB\-\-color\fR[=\fIWHEN\fR]
+Colorize output (default: auto).
+.TP
+\fB\-\-icons\fR[=\fIWHEN\fR]
+File icons (default: auto).
+.TP
+\fB\-\-git\fR
+Enable/disable git column (boolean flag; default on when available).
+.SS Machine formats (f00)
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+Compact JSON.
+.TP
+\fB\-\-json\-full\fR
+Full metadata JSON.
+.TP
+\fB\-\-tree\fR
+Tree view.
+.TP
+\fB\-\-csv\fR / \fB\-\-tsv\fR
+CSV / TSV.
+.SS Self-update and misc
+.TP
+\fB\-\-update\fR
+Download and install the latest release binary (checksum verified).
+.TP
+\fB\-\-check\-update\fR
+Report whether a newer release is available (non-mutating).
+.TP
+\fB\-\-version\fR, \fB\-V\fR
+Print version.
+.TP
+\fB\-\-help\fR
+Print help (
+.B \-h
+is human-readable, as in GNU
+.BR ls ).
+.SH COLORS AND THEMES
+.B f00
+is designed to follow the
+.B terminal theme
+(for example Dracula or Monokai) rather than invent a private RGB palette.
+.SS File names:
+.B LS_COLORS
+Names (and type indicators such as directories, executables, symlinks) are colored
+using the
+.B LS_COLORS
+environment variable via the same conventions as GNU
+.BR ls
+/
+.BR dircolors (1).
+If
+.B LS_COLORS
+is unset, the standard dircolors defaults apply. Your terminal theme remaps the
+ANSI palette, so
+.RB \*(lq blue\*(rq
+directories track the theme's blue, and so on.
+.SS Long-format metadata (permissions, dates, sizes, owners, git)
+There is no OS-level standard that names \*(lqpermission color\*(rq or \*(lqdate color\*(rq.
+Modern tools commonly use:
+.IP \(bu 2
+.B ANSI palette indexes
+(0\(en15) so terminal themes apply; and/or
+.IP \(bu 2
+.B EZA_COLORS
+/
+.B EXA_COLORS
+key=value maps for column roles (de facto standard from eza), for example
+.BR da =
+date,
+size/number keys,
+permission bit keys,
+user/group keys,
+git status keys.
+.P
+f00 should paint metadata only with theme-following mechanisms (palette and/or
+eza-compatible maps), never hardcoded truecolor RGB for UI chrome. See the
+project README and release notes for the exact env vars supported in your version.
+.SS JSON pretty mode
+When color is on, pretty JSON may use relative
+.B bold
+/
+.B dim
+emphasis so structure is readable without forcing a private hue palette.
+Use
+.B \-\-color=never
+(or a pipe) for machine-parseable compact JSON without ANSI.
+.SH JSON OUTPUT
+.SS Compact (\fB\-j\fR / \fB\-\-json\fR)
+One JSON array. Each object includes core fields such as:
+name, path, kind, size, mode / mode_octal, permissions, readonly,
+timestamps (when known), inode, nlink, blocks, uid, gid, owner, group,
+symlink_target, extension, git_status, depth.
+.P
+With color off (default for pipes): single-line compact JSON for
+.BR jq (1).
+With color on: pretty-printed for humans.
+.SS Full (\fB\-\-json\-full\fR)
+All compact fields plus practical full metadata, including for example:
+type_detail, full mode bits, device major/minor, rdev, blksize,
+unix epoch timestamps, is_file / is_dir / is_symlink / is_executable / is_hidden,
+absolute_path, author, SELinux context when available, and xattr names
+(Linux). Prefer
+.B \-\-json\-full
+for tooling that needs a complete record; keep
+.B \-j
+for speed and smaller payloads.
+.SH TREE OUTPUT
+.B f00 \-\-tree
+[\fIPATH\fR]
+prints a hierarchical listing. Combine with filters, depth limits, and color/icons
+as appropriate. Example:
+.P
+.nf
+.RS
+f00 \-\-tree crates
+f00 \-\-tree \-\-max\-depth=2 .
+.RE
+.fi
+.SH ENVIRONMENT
+.TP
+\fBLS_COLORS\fR
+File name / type colors (dircolors format).
+.TP
+\fBNO_COLOR\fR
+When set, disable color (common CLI convention).
+.TP
+\fBF00_GNU\fR / \fBF00_NO_GNU\fR
+Force GNU mode / force modern mode (overrides auto non-TTY detection when set).
+.TP
+\fBQUOTING_STYLE\fR
+Default quoting style (GNU).
+.TP
+\fBTIME_STYLE\fR
+Default
+.B \-\-time\-style
+(GNU).
+.TP
+\fBCOLUMNS\fR
+Assumed terminal width when not a TTY / not overridden by
+.BR \-w .
+.TP
+\fBGITHUB_TOKEN\fR / \fBGH_TOKEN\fR
+Optional token for update checks against the GitHub API when rate-limited.
+.TP
+\fBEZA_COLORS\fR / \fBEXA_COLORS\fR / \fBF00_COLORS\fR
+Reserved for eza-compatible metadata color maps when supported by the build.
+.SH FILES
+.TP
+\fI~/.config/f00/config.toml\fR
+Optional user configuration (see project docs).
+.TP
+\fI~/.local/bin/f00\fR
+Default install location for the binary.
+.TP
+\fI~/.local/share/man/man1/f00.1\fR
+Default man page location when installed by
+.BR install.sh .
+.SH EXIT STATUS
+.TP
+\fB0\fR
+Success.
+.TP
+\fB1\fR
+Minor problems (for example, cannot access a subdirectory while listing others).
+.TP
+\fB2\fR
+Serious trouble (for example, invalid usage or cannot access a command-line argument).
+.P
+Aligned with GNU
+.B ls
+exit conventions where applicable.
+.SH INSTALLATION
+Recommended:
+.P
+.nf
+.RS
+curl \-fsSL https://f00.sh/install.sh | bash
+.RE
+.fi
+.P
+Installs
+.B f00
+(and
+.B f00\-tui
+when present) to
+.B ~/.local/bin
+by default, and installs this man page to
+.B ~/.local/share/man/man1/f00.1
+when included in the release archive.
+.P
+Useful installer environment variables:
+.TP
+\fBINSTALL_DIR\fR
+Binary install directory (default:
+.BR ~/.local/bin ).
+.TP
+\fBMAN_DIR\fR
+Man page directory (default:
+.BR ~/.local/share/man/man1 ,
+or
+.B $XDG_DATA_HOME/man/man1
+when
+.B XDG_DATA_HOME
+is set).
+.TP
+\fBF00_INSTALL_MAN\fR
+Set to
+.B 0
+to skip man page installation.
+.TP
+\fBF00_VERSION\fR
+Pin a release tag (for example
+.BR v0.11.0 ).
+.TP
+\fBF00_INSTALL_LS\fR
+Set to
+.B 1
+to also symlink
+.B ls \(-> f00
+in the install directory (never overwrites a non-symlink).
+.TP
+\fBF00_INSTALL_TUI\fR
+Set to
+.B 0
+to skip
+.BR f00\-tui .
+.P
+After install, ensure man can find user pages, for example:
+.P
+.nf
+.RS
+export MANPATH="$HOME/.local/share/man${MANPATH:+:$MANPATH}"
+man f00
+.RE
+.fi
+.P
+Many systems already search
+.BR ~/.local/share/man .
+.SH UPDATING
+.P
+.nf
+.RS
+f00 \-\-check\-update
+f00 \-\-update
+.RE
+.fi
+.P
+Or re-run the installer. Package-manager installs should use that manager's
+upgrade path (for example
+.BR "brew upgrade f00" ,
+.BR "nix profile upgrade" ).
+.SH EXAMPLES
+.TP
+List current directory with modern TTY defaults:
+.B f00 \-la
+.TP
+Strict coreutils-shaped long listing:
+.B f00 \-\-gnu \-lah
+.TP
+Drop-in alias for scripts that need GNU behavior:
+.B alias ls='f00 \-\-gnu'
+.TP
+Tree of a crate tree:
+.B f00 \-\-tree crates
+.TP
+Compact JSON for
+.BR jq :
+.B f00 \-j \-\-color=never | jq '.[].name'
+.TP
+Full metadata JSON:
+.B f00 \-\-json\-full README.md
+.TP
+Pipe-safe by default (auto GNU-equivalent):
+.B f00 \-la /tmp | head
+.SH SEE ALSO
+.BR ls (1),
+.BR dircolors (1),
+.BR jq (1),
+.BR eza (1),
+.BR lsd (1)
+.P
+Website:
+.I https://f00.sh
+.br
+Source:
+.I https://github.com/theesfeld/f00
+.SH BUGS
+Report issues at
+.IR https://github.com/theesfeld/f00/issues .
+.SH AUTHORS
+f00 contributors. See the project repository.
+.SH COPYRIGHT
+Licensed under MIT OR Apache-2.0.
+.\" end of man page

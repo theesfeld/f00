@@ -72,3 +72,14 @@ jobs:
           --sample-size 10
           --warm-up-time 1
           --measurement-time 1
+
+  # Hard rule: man/f00.1 always matches the live CLI / product surface.
+  man-sync:
+    name: man page sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: check man/f00.1 vs f00 --help + version
+        run: scripts/check-man-sync.sh

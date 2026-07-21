@@ -22,6 +22,14 @@ package() {
     dir="f00-aarch64-unknown-linux-gnu"
   fi
   install -Dm755 "${srcdir}/${dir}/f00" "${pkgdir}/usr/bin/f00"
+  if [[ -x "${srcdir}/${dir}/f00-tui" ]]; then
+    install -Dm755 "${srcdir}/${dir}/f00-tui" "${pkgdir}/usr/bin/f00-tui"
+  fi
+  if [[ -f "${srcdir}/${dir}/f00.1" ]]; then
+    install -Dm644 "${srcdir}/${dir}/f00.1" "${pkgdir}/usr/share/man/man1/f00.1"
+  elif [[ -f "${srcdir}/${dir}/man/f00.1" ]]; then
+    install -Dm644 "${srcdir}/${dir}/man/f00.1" "${pkgdir}/usr/share/man/man1/f00.1"
+  fi
   if [[ -f "${srcdir}/${dir}/LICENSE-MIT" ]]; then
     install -Dm644 "${srcdir}/${dir}/LICENSE-MIT" \
       "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE-MIT"
