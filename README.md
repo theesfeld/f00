@@ -18,10 +18,10 @@
 | **Non-TTY** (pipes/CI) | **Script-safe by default** (GNU-equivalent; same as `--gnu`) |
 | **Force** | `--gnu` / `F00_GNU=1` · modern on pipes: `--no-gnu` / `F00_NO_GNU=1` |
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binaries:** `f00` · `f00-tui` · **Latest:** v0.11.0
+**Website:** [https://f00.sh](https://f00.sh) · **Binaries:** `f00` · `f00-tui` · **Latest:** v0.12.0
 
 <!-- agents:status:begin -->
-> **Status:** v0.11.0 focus cut shipped · Phase: [#88](https://github.com/theesfeld/f00/issues/88) · Latest: `v0.11.0` · 0.x minors may include breaking changes · [MIGRATION.md](MIGRATION.md)
+> **Status:** **v0.12.0** shipped · Phase: [#121](https://github.com/theesfeld/f00/issues/121) · Latest: `v0.12.0` · 0.x minors may include breaking changes · man: `man f00` · [MIGRATION.md](MIGRATION.md)
 <!-- agents:status:end -->
 
 ---
@@ -40,7 +40,7 @@ Also installs the man page **`f00(1)`** to **`~/.local/share/man/man1/f00.1`** (
 
 **Hard rule:** `man/f00.1` must always match the live product (flags, version, documented surfaces). CI runs `scripts/check-man-sync.sh` on every PR. Update the man page in the **same** change that alters CLI behavior or `Cargo.toml` version.
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.11.0 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.12.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
 ```
 ### Nix
@@ -116,8 +116,9 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |
 | **Icons** | Shipped | Nerd Font glyphs (eza-style special dirs + file types); `--icons[=auto\|always\|never]` (default: auto on TTY) |
-| **JSON** | **Core** | Rich metadata (`--json` / `-j`); **pretty + colored** when color is on; compact plain when color is off (pipes) |
+| **JSON** | **Core** | Compact `-j` / `--json`; full metadata via **`--json-full`**; pretty + ANSI theme colors on TTY; compact plain when color is off |
 | **CSV / TSV / tree** | Shipped | Machine formats + tree view |
+| **Colors** | Shipped | Names: **`LS_COLORS`**. Long metadata: terminal **ANSI palette** + optional **`F00_COLORS` / `EZA_COLORS` / `EXA_COLORS`** |
 | **TOML config** | Shipped | XDG / AppData |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
 | **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
@@ -250,13 +251,18 @@ f00 --generate-man | man -l -
 
 ---
 
-## GNU surface (highlights)
+## Flag groups
 
-`-aA` `-l1Cmx` `-h` `--si` `-Rr` `-tSXvUf` `-d` `-Fp` `--file-type` `-BI` `--hide` `-LH` `-goGn` `-is` `-uc` `-vw` `-Z` `--zero` `-D` `--dired` `-bQNq` `--quoting-style` `--time-style` `--block-size` `--author` `--hyperlink` `--indicator-style` `--format` `--sort` `--time` `--group-directories-first` `--full-time` `--color` **`--gnu`**
+| Group | Examples | Notes |
+|-------|----------|--------|
+| **GNU coreutils** | `-aA -l1Cmx -h --si -Rr -tSXvUf -d -Fp -BI -LH -goGn -is -uc -Z --zero -D --dired --quoting-style --time-style --block-size --author --hyperlink --format --sort --time --group-directories-first --full-time --color` | Full surface; **`--gnu`** / auto non-TTY for script-safe output |
+| **Modern TTY** | `--icons` · `--git` · `--color` | Default on a TTY; off under `--gnu` |
+| **f00-only** | `-j` / `--json` · **`--json-full`** · `--tree` · `--csv`/`--tsv` · `--update` · `--browse` / `f00-tui` | Beyond coreutils |
 
 Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-safe.  
 **Non-TTY stdout auto-enables the same mode** unless `--no-gnu` / `F00_NO_GNU=1`.
 
+Manual: **`man f00`** (installed with `install.sh` into `~/.local/share/man/man1`).
 ---
 
 ## Cargo features

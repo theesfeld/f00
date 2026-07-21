@@ -2,13 +2,25 @@ use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, ValueEnum};
 
-/// f00 — a modern, friendly directory lister
+/// f00 — fully compliant ls in Rust (coreutils drop-in + modern listings)
 #[derive(Debug, Clone, Parser)]
 #[command(
     name = "f00",
     version,
-    about = "List directory contents with a friendly default UI",
-    long_about = None,
+    about = "Fully compliant ls in Rust: coreutils drop-in (--gnu), modern TTY listings, JSON/tree",
+    long_about = "\
+f00 lists directory contents. Written in Rust.
+
+Flag groups:
+  GNU coreutils surface  — full ls flag set; use --gnu (or auto non-TTY) for script-safe output
+  Modern TTY             — --icons, --git, --color (default on a TTY)
+  f00-only               — --json / --json-full, --tree, --csv/--tsv, --update, --browse
+
+Names follow LS_COLORS. Long-format metadata uses the terminal ANSI palette and optional
+F00_COLORS / EZA_COLORS / EXA_COLORS (eza-compatible keys: da, sn, uu, gu, ur, …).
+
+See man f00(1) and https://f00.sh
+",
     // Free `-h` for human-readable (GNU ls style); keep `--help`.
     disable_help_flag = true
 )]

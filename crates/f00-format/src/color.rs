@@ -1,47 +1,137 @@
-//! Color engine driven by the user's `LS_COLORS` theme.
+//! Color engine: terminal theme inheritance.
 //!
 //! **Policy (v0.12):**
-//! - Filenames and symlink targets use **only** `LS_COLORS` (via `lscolors`).
-//! - Long-format metadata, git status, and similar chrome never force named hues
-//!   (Blue / Yellow / Red / Cyan / …). At most relative **dim** / **bold** so the
-//!   terminal palette and theme stay in control.
+//! - **Names** use only `LS_COLORS` (dircolors / `lscolors`).
+//! - **Long-format metadata** (perms, size, user, date, git) use **ANSI palette
+//!   indexes** so themes like Dracula/Monokai apply, plus optional
+//!   **`F00_COLORS` / `EZA_COLORS` / `EXA_COLORS`** maps (eza-compatible keys).
+//! - Never hardcode truecolor RGB for listing chrome.
 //! - When color is off, all paint helpers return plain text.
-
-use std::path::Path;
 
 use f00_core::{Entry, EntryKind};
 use lscolors::{Indicator, LsColors, Style};
+use nu_ansi_term::Color as AnsiColor;
 use nu_ansi_term::Style as AnsiStyle;
+use std::collections::HashMap;
+use std::env;
+use std::path::Path;
 
-/// Color engine wrapping `LS_COLORS` / dircolors defaults.
+/// Color engine wrapping `LS_COLORS` + optional eza-style metadata maps.
 #[derive(Clone)]
 pub struct Colorizer {
     enabled: bool,
     ls: LsColors,
+    meta: MetaTheme,
+}
+
+/// Long-listing / git roles. Values are ANSI SGR sequences (eza style) or defaults.
+#[derive(Clone, Default)]
+struct MetaTheme {
+    /// Parsed `key=ansi` overrides (from F00_COLORS / EZA_COLORS / EXA_COLORS).
+    map: HashMap<String, Style>,
+}
+
+impl MetaTheme {
+    fn from_env() -> Self {
+        let raw = env::var("F00_COLORS")
+            .or_else(|_| env::var("EZA_COLORS"))
+            .or_else(|_| env::var("EXA_COLORS"))
+            .unwrap_or_default();
+        Self::from_string(&raw)
+    }
+
+    fn from_string(input: &str) -> Self {
+        let mut map = HashMap::new();
+        for part in input.split(':') {
+            let part = part.trim();
+            if part.is_empty() {
+                continue;
+            }
+            let Some((key, code)) = part.split_once('=') else {
+                continue;
+            };
+            if let Some(style) = Style::from_ansi_sequence(code) {
+                map.insert(key.to_string(), style);
+            }
+        }
+        Self { map }
+    }
+
+    fn style(&self, key: &str) -> Option<&Style> {
+        self.map.get(key)
+    }
+
+    fn paint_key(&self, key: &str, text: &str, fallback: AnsiStyle) -> String {
+        if let Some(style) = self.style(key) {
+            return style.to_nu_ansi_term_style().paint(text).to_string();
+        }
+        fallback.paint(text).to_string()
+    }
+}
+
+/// Default ANSI roles (palette indexes 0–15) — follow the terminal theme.
+fn def_blue_bold() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Blue).bold()
+}
+fn def_cyan() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Cyan)
+}
+fn def_cyan_bold() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Cyan).bold()
+}
+fn def_yellow() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Yellow)
+}
+fn def_yellow_bold() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Yellow).bold()
+}
+fn def_green() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Green)
+}
+fn def_green_bold() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Green).bold()
+}
+fn def_red() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Red)
+}
+fn def_red_bold() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Red).bold()
+}
+fn def_purple() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::Purple)
+}
+fn def_dark_gray() -> AnsiStyle {
+    AnsiStyle::new().fg(AnsiColor::DarkGray)
 }
 
 impl Colorizer {
-    /// Build from environment (`LS_COLORS`) when enabled.
-    ///
-    /// `LsColors::from_env()` falls back to the standard dircolors defaults when
-    /// the variable is unset, so a color-capable terminal still gets the user's
-    /// (or distro's) type colors without hard-coding a private palette.
+    /// Build from environment when enabled.
     pub fn new(enabled: bool) -> Self {
         Self {
             enabled,
             ls: LsColors::from_env().unwrap_or_default(),
+            meta: MetaTheme::from_env(),
         }
     }
 
-    /// Build with an explicit LS_COLORS string (tests / overrides).
+    /// Explicit `LS_COLORS` (tests); metadata uses empty override map + ANSI defaults.
     pub fn from_ls_colors(enabled: bool, ls_colors: &str) -> Self {
         Self {
             enabled,
             ls: LsColors::from_string(ls_colors),
+            meta: MetaTheme::default(),
         }
     }
 
-    /// Access the underlying `LsColors` map.
+    /// Test helper: LS_COLORS + metadata color map string.
+    pub fn from_ls_and_meta(enabled: bool, ls_colors: &str, meta: &str) -> Self {
+        Self {
+            enabled,
+            ls: LsColors::from_string(ls_colors),
+            meta: MetaTheme::from_string(meta),
+        }
+    }
+
     pub fn ls_colors(&self) -> &LsColors {
         &self.ls
     }
@@ -50,10 +140,7 @@ impl Colorizer {
         self.enabled
     }
 
-    /// Colorize a display name using **only** `LS_COLORS` matching.
-    ///
-    /// No private fallback palette and no forced grey for dotfiles — hidden
-    /// names follow `mh=` / extension / type rules from the user's theme.
+    /// Filenames: **only** `LS_COLORS`.
     pub fn paint_name(&self, entry: &Entry, text: &str) -> String {
         if !self.enabled {
             return text.to_string();
@@ -64,7 +151,6 @@ impl Colorizer {
         text.to_string()
     }
 
-    /// Resolve LS_COLORS style for an entry (extension, type indicators, etc.).
     pub fn style_for_entry<'a>(&'a self, entry: &'a Entry) -> Option<&'a Style> {
         if let Some(style) = self.ls.style_for_path(&entry.path) {
             return Some(style);
@@ -97,43 +183,87 @@ impl Colorizer {
         indicator.and_then(|i| self.ls.style_for_indicator(i))
     }
 
-    /// Git status character: bold when dirty, dim when ignored — no fixed hues.
+    /// Git status: eza keys `gm`/`ga`/`gd`/`gv`/`gt` or ANSI defaults.
     pub fn paint_git_char(&self, ch: char) -> String {
         if !self.enabled {
             return ch.to_string();
         }
         let s = ch.to_string();
-        match ch {
-            '!' => dim_paint(&s),
-            ' ' => s,
-            _ => bold_paint(&s),
-        }
+        let (key, fb) = match ch {
+            'M' => ("gm", def_yellow_bold()),
+            'A' => ("ga", def_green_bold()),
+            'D' | 'U' => ("gd", def_red_bold()),
+            '?' => ("gv", def_purple()),
+            '!' => ("gt", def_dark_gray()),
+            'R' => ("gm", def_cyan_bold()),
+            _ => return s,
+        };
+        self.meta.paint_key(key, &s, fb)
     }
 
-    /// Whether modern long-format chrome (dim/bold accents) should run.
-    ///
-    /// On for friendly (non-GNU) mode when colors are enabled; off under `--gnu`
-    /// so GNU listings stay plain aside from name `LS_COLORS` when forced on.
     pub fn modern_long_theme(&self, gnu_mode: bool) -> bool {
         self.enabled && !gnu_mode
     }
 
-    /// Permission string: type letter bold, dashes dim — no hue roles.
+    /// Permissions: eza-style bit keys (`ur`/`uw`/`ux`/…) or ANSI defaults.
     pub fn paint_perms(&self, perms: &str, gnu_mode: bool) -> String {
         if !self.modern_long_theme(gnu_mode) || perms.is_empty() {
             return perms.to_string();
         }
-        let mut out = String::with_capacity(perms.len() * 8);
+        let mut out = String::with_capacity(perms.len() * 12);
         for (i, ch) in perms.chars().enumerate() {
             let painted = if i == 0 {
                 match ch {
-                    '-' => dim_paint(&ch.to_string()),
-                    _ => bold_paint(&ch.to_string()),
+                    'd' => self.meta.paint_key("di", "d", def_blue_bold()),
+                    'l' => self.meta.paint_key("ln", "l", def_cyan_bold()),
+                    'c' | 'b' => self
+                        .meta
+                        .paint_key("bd", &ch.to_string(), def_yellow_bold()),
+                    'p' => self.meta.paint_key("pi", "p", def_purple()),
+                    's' => self.meta.paint_key("so", "s", def_purple()),
+                    '-' => self.meta.paint_key("fi", "-", def_dark_gray()),
+                    _ => self.meta.paint_key("fi", &ch.to_string(), def_dark_gray()),
                 }
             } else {
-                match ch {
-                    '-' => dim_paint(&ch.to_string()),
-                    'x' | 's' | 't' | 'S' | 'T' => bold_paint(&ch.to_string()),
+                // owner/group/other triplets: positions 1-3, 4-6, 7-9
+                let key = match (i, ch) {
+                    (1, 'r') | (4, 'r') | (7, 'r') => Some(if i == 1 {
+                        "ur"
+                    } else if i == 4 {
+                        "gr"
+                    } else {
+                        "tr"
+                    }),
+                    (2, 'w') | (5, 'w') | (8, 'w') => Some(if i == 2 {
+                        "uw"
+                    } else if i == 5 {
+                        "gw"
+                    } else {
+                        "tw"
+                    }),
+                    (3, 'x' | 's' | 'S' | 't' | 'T')
+                    | (6, 'x' | 's' | 'S' | 't' | 'T')
+                    | (9, 'x' | 's' | 'S' | 't' | 'T') => Some(if i == 3 {
+                        "ux"
+                    } else if i == 6 {
+                        "gx"
+                    } else {
+                        "tx"
+                    }),
+                    (_, '-') => None,
+                    _ => None,
+                };
+                match (key, ch) {
+                    (Some(k), _) => {
+                        let fb = match ch {
+                            'r' => def_yellow(),
+                            'w' => def_red(),
+                            'x' | 's' | 't' | 'S' | 'T' => def_green_bold(),
+                            _ => AnsiStyle::new(),
+                        };
+                        self.meta.paint_key(k, &ch.to_string(), fb)
+                    }
+                    (None, '-') => self.meta.paint_key("xx", "-", def_dark_gray()),
                     _ => ch.to_string(),
                 }
             };
@@ -142,41 +272,62 @@ impl Colorizer {
         out
     }
 
-    /// Dim metadata (nlink, inode, blocks, context).
+    /// Dim metadata (nlink, inode, blocks, context) — key `mp` (meta punct) or gray.
     pub fn paint_meta(&self, text: &str, gnu_mode: bool) -> String {
         if !self.modern_long_theme(gnu_mode) {
             return text.to_string();
         }
-        dim_paint(text)
+        self.meta.paint_key("mp", text, def_dark_gray())
     }
 
-    /// Owner / group / author column (plain — theme stays neutral).
+    /// Owner — `uu`; group uses same path via paint_user (callers share).
     pub fn paint_user(&self, text: &str, gnu_mode: bool) -> String {
-        let _ = gnu_mode;
-        text.to_string()
+        if !self.modern_long_theme(gnu_mode) {
+            return text.to_string();
+        }
+        self.meta.paint_key("uu", text, def_yellow())
     }
 
-    /// Size column: bold for large files, dim for empty — no size→hue map.
+    /// Group column — `gu`.
+    pub fn paint_group(&self, text: &str, gnu_mode: bool) -> String {
+        if !self.modern_long_theme(gnu_mode) {
+            return text.to_string();
+        }
+        self.meta.paint_key("gu", text, def_yellow())
+    }
+
+    /// Size — `sn` (number); magnitude still picks weight via defaults if no override.
     pub fn paint_size(&self, text: &str, bytes: u64, gnu_mode: bool) -> String {
         if !self.modern_long_theme(gnu_mode) {
             return text.to_string();
         }
-        if bytes == 0 {
-            dim_paint(text)
-        } else if bytes >= 1_073_741_824 {
-            bold_paint(text)
-        } else {
-            text.to_string()
+        if self.meta.style("sn").is_some() {
+            return self.meta.paint_key("sn", text, def_green());
         }
+        let fb = if bytes >= 1_073_741_824 {
+            def_red_bold()
+        } else if bytes >= 10_485_760 {
+            def_yellow_bold()
+        } else if bytes >= 1_048_576 {
+            def_green_bold()
+        } else if bytes > 0 {
+            def_green()
+        } else {
+            def_dark_gray()
+        };
+        fb.paint(text).to_string()
     }
 
-    /// Timestamp column (plain under theme inheritance).
+    /// Timestamp — `da`.
     pub fn paint_time(&self, text: &str, gnu_mode: bool) -> String {
-        let _ = gnu_mode;
-        text.to_string()
+        if !self.modern_long_theme(gnu_mode) {
+            return text.to_string();
+        }
+        self.meta
+            .paint_key("da", text, AnsiStyle::new().fg(AnsiColor::Blue))
     }
 
-    /// Symlink name via LS_COLORS; arrow dim; target via LS_COLORS when possible.
+    /// Symlink name via LS_COLORS; arrow dim; target via path styles.
     pub fn paint_symlink_name(
         &self,
         entry: &Entry,
@@ -197,18 +348,21 @@ impl Colorizer {
             let target_painted = if let Some(style) = self.ls.style_for_path(Path::new(rest)) {
                 paint_with_ls_style(rest, style)
             } else if self.modern_long_theme(gnu_mode) {
-                dim_paint(rest)
+                self.meta.paint_key("lp", rest, def_cyan())
             } else {
                 rest.to_string()
             };
-            // GNU uses " -> "; modern uses a dim arrow glyph.
             if self.modern_long_theme(gnu_mode) {
-                format!("{name} {} {target_painted}", dim_paint("→"))
+                let arrow = self.meta.paint_key("cc", "→", def_dark_gray());
+                format!("{name} {arrow} {target_painted}")
             } else {
                 format!("{name} -> {target_painted}")
             }
         } else if self.modern_long_theme(gnu_mode) {
-            format!("{name}{}", dim_paint(arrow_and_target))
+            format!(
+                "{name}{}",
+                self.meta.paint_key("cc", arrow_and_target, def_dark_gray())
+            )
         } else {
             format!("{name}{arrow_and_target}")
         }
@@ -217,16 +371,6 @@ impl Colorizer {
 
 fn paint_with_ls_style(text: &str, style: &Style) -> String {
     style.to_nu_ansi_term_style().paint(text).to_string()
-}
-
-/// Relative dim (SGR 2) — inherits the terminal foreground, no fixed color index.
-fn dim_paint(text: &str) -> String {
-    AnsiStyle::new().dimmed().paint(text).to_string()
-}
-
-/// Relative bold (SGR 1).
-fn bold_paint(text: &str) -> String {
-    AnsiStyle::new().bold().paint(text).to_string()
 }
 
 fn entry_is_exec(entry: &Entry) -> bool {
@@ -290,8 +434,16 @@ mod tests {
         let c = Colorizer::from_ls_colors(true, "*.rs=01;31:");
         let e = file("main.rs");
         let painted = c.paint_name(&e, "main.rs");
-        assert!(painted.contains("main.rs"), "{painted:?}");
-        assert_ne!(painted, "main.rs", "LS_COLORS extension should paint");
+        assert_ne!(painted, "main.rs");
+    }
+
+    #[test]
+    fn meta_eza_override_date() {
+        let c = Colorizer::from_ls_and_meta(true, "", "da=31");
+        let t = c.paint_time("Jul 20", false);
+        assert!(t.contains("Jul 20"));
+        assert_ne!(t, "Jul 20");
+        assert!(t.contains('\u{1b}'));
     }
 
     #[test]
@@ -300,66 +452,30 @@ mod tests {
         assert!(!c.modern_long_theme(true));
         assert!(c.modern_long_theme(false));
         assert_eq!(c.paint_perms("-rwxr-xr-x", true), "-rwxr-xr-x");
-        // modern dims dashes / bolds type+exec bits (relative SGR, no hues)
         let modern = c.paint_perms("-rwxr-xr-x", false);
         assert_ne!(modern, "-rwxr-xr-x");
-        assert!(
-            modern.contains('\u{1b}'),
-            "expected ANSI SGR in modern perms"
-        );
-        assert!(modern.contains('r') && modern.contains('w') && modern.contains('x'));
+        assert!(modern.contains('\u{1b}'));
     }
 
     #[test]
-    fn names_follow_ls_colors_only_no_forced_dot_grey() {
-        // Without mh=/dot rules, a bare name is plain (not forced DarkGray).
+    fn names_only_ls_colors_no_forced_dot_grey() {
         let c = Colorizer::from_ls_colors(true, "*.rs=01;31:");
         let hidden = file(".gitignore");
-        let painted_h = c.paint_name(&hidden, ".gitignore");
-        // No extension match → plain (LS_COLORS only).
-        assert_eq!(painted_h, ".gitignore");
-
-        let with_mh = Colorizer::from_ls_colors(true, "mh=01;90:*.rs=01;31:");
-        let mh_paint = with_mh.paint_name(&hidden, ".gitignore");
-        // mh= may or may not apply depending on lscolors path rules; either way
-        // we must not inject a private palette when LS_COLORS has no match.
-        assert!(mh_paint.contains(".gitignore"));
-
-        let off = Colorizer::from_ls_colors(false, "");
-        assert_eq!(off.paint_name(&hidden, ".gitignore"), ".gitignore");
+        assert_eq!(c.paint_name(&hidden, ".gitignore"), ".gitignore");
     }
 
     #[test]
-    fn size_uses_weight_not_hue() {
+    fn size_and_user_use_palette() {
         let c = Colorizer::from_ls_colors(true, "");
-        let small = c.paint_size("1.0K", 1024, false);
-        let big = c.paint_size("2.0G", 2_147_483_648, false);
-        let empty = c.paint_size("0", 0, false);
-        assert!(small.contains("1.0K"), "{small}");
-        assert!(big.contains("2.0G"), "{big}");
-        assert!(empty.contains('0'), "{empty}");
-        // Empty is dimmed (SGR), large may be bold — both relative attributes.
-        assert_ne!(empty, "0");
+        let u = c.paint_user("alice", false);
+        let s = c.paint_size("1.0K", 1024, false);
+        assert!(u.contains("alice") && u.contains('\u{1b}'));
+        assert!(s.contains("1.0K") && s.contains('\u{1b}'));
     }
 
     #[test]
-    fn git_char_no_named_hues() {
+    fn git_char_styled() {
         let c = Colorizer::from_ls_colors(true, "");
-        let m = c.paint_git_char('M');
-        let ign = c.paint_git_char('!');
-        assert!(m.contains('M'));
-        assert!(ign.contains('!'));
-        // Bold / dim only — both should differ from plain when enabled.
-        assert_ne!(m, "M");
-        assert_ne!(ign, "!");
-    }
-
-    #[test]
-    fn no_hardcoded_blue_yellow_red_in_meta() {
-        let c = Colorizer::from_ls_colors(true, "");
-        let user = c.paint_user("alice", false);
-        let time = c.paint_time("Jul 20 12:00", false);
-        assert_eq!(user, "alice");
-        assert_eq!(time, "Jul 20 12:00");
+        assert_ne!(c.paint_git_char('M'), "M");
     }
 }

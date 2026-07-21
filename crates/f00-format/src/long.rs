@@ -121,7 +121,7 @@ pub fn format_long_line_dired(
     }
     if config.show_group {
         let s = format!("{:<w$}", group, w = widths.group);
-        parts.push(colorizer.paint_user(&s, gnu));
+        parts.push(colorizer.paint_group(&s, gnu));
     }
     if config.show_author {
         let s = format!("{:<w$}", author, w = widths.author);

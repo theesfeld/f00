@@ -59,7 +59,7 @@
     <section class="hero" id="top">
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">v<span data-version>0.11.0</span> · written in Rust</p>
+          <p class="eyebrow">v<span data-version>0.12.0</span> · written in Rust</p>
           <h1>
             A fully compliant <code class="mono">ls</code>,
             built in Rust
@@ -76,7 +76,7 @@
             <p class="install-version-label">
               Latest
               <a class="version-pill" data-version-href href="https://github.com/theesfeld/f00/releases/latest">
-                <strong data-version>v0.11.0</strong>
+                <strong data-version>v0.12.0</strong>
               </a>
             </p>
             <div class="install-row">
@@ -98,7 +98,8 @@
             <li>coreutils drop-in</li>
             <li>Rust</li>
             <li>tree</li>
-            <li>JSON</li>
+            <li>JSON · --json-full</li>
+            <li>theme-aware colors</li>
             <li>faster than eza / lsd</li>
           </ul>
         </div>
@@ -162,9 +163,10 @@
             <h3>Tree and JSON that are real surfaces</h3>
             <p>
               <code class="mono">--tree</code> for hierarchy at a glance.
-              <code class="mono">--json</code> / <code class="mono">-j</code>
-              for tooling: rich fields, pretty and colored on a TTY, compact
-              plain JSON for <code class="mono">jq</code> when color is off.
+              Compact <code class="mono">-j</code> for scripts, or
+              <code class="mono">--json-full</code> for the complete metadata
+              object. Pretty ANSI colors on a TTY; plain for
+              <code class="mono">jq</code> when color is off.
             </p>
           </article>
         </div>
@@ -242,7 +244,7 @@
           </article>
           <article class="card">
             <h3>JSON</h3>
-            <p>First-class <code class="mono">--json</code> / <code class="mono">-j</code> with size, mode, inode, owner, git status, and more.</p>
+            <p>Compact <code class="mono">-j</code> / <code class="mono">--json</code> for scripts; <code class="mono">--json-full</code> for every practical metadata field (devices, times, xattrs, flags).</p>
           </article>
           <article class="card">
             <h3>Tree</h3>
@@ -250,7 +252,7 @@
           </article>
           <article class="card">
             <h3>Icons · git · colors</h3>
-            <p>Nerd Font icons, git column, long-format colors — on by default when stdout is a TTY.</p>
+            <p>Names via <code class="mono">LS_COLORS</code>. Long columns follow your terminal theme (ANSI palette) and optional <code class="mono">EZA_COLORS</code> / <code class="mono">F00_COLORS</code>.</p>
           </article>
           <article class="card">
             <h3>f00-tui</h3>
@@ -466,7 +468,7 @@
         </div>
 
         <p class="bench-foot muted">
-          Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.11 ·
+          Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.12 ·
           raw: <a href="/bench/hyperfine-20k.md">markdown</a> ·
           <a href="/bench/hyperfine-20k.json">json</a> ·
           <a href="/bench/">method</a>
@@ -666,7 +668,7 @@ sudo rpm -i f00-*.rpm</code></pre>
         <strong>f00</strong> — fully compliant <code class="mono">ls</code> in Rust.
         Latest:
         <a href="https://github.com/theesfeld/f00/releases/latest" data-version-href>
-          <span data-version>v0.11.0</span>
+          <span data-version>v0.12.0</span>
         </a>.
         © <span data-year>2026</span> · MIT OR Apache-2.0
       </div>
