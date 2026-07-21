@@ -159,6 +159,12 @@ pub struct Entry {
     pub inode: u64,
     /// Allocated blocks in 512-byte units (GNU `ls -s` style) when known.
     pub blocks: u64,
+    /// Device ID containing the file (`st_dev` / `stx_dev`).
+    pub dev: u64,
+    /// Device ID (if special file) (`st_rdev` / `stx_rdev`).
+    pub rdev: u64,
+    /// Preferred I/O block size (`st_blksize` / `stx_blksize`) when known.
+    pub blksize: u64,
     /// Owner name (or numeric string).
     pub owner: String,
     /// Group name (or numeric string).
@@ -231,7 +237,7 @@ impl Entry {
         };
 
         let mode = file_mode(meta);
-        let (nlink, uid, gid, inode, blocks) = meta_ids(meta);
+        let (nlink, uid, gid, inode, blocks, dev, rdev, blksize) = meta_ids(meta);
         let (owner, group) = if fill.resolve_names {
             (resolve_owner_cached(uid), resolve_group_cached(gid))
         } else {
@@ -264,6 +270,9 @@ impl Entry {
             gid,
             inode,
             blocks,
+            dev,
+            rdev,
+            blksize,
             author: owner.clone(),
             owner,
             group,
@@ -295,6 +304,9 @@ impl Entry {
             gid: 0,
             inode: 0,
             blocks: 0,
+            dev: 0,
+            rdev: 0,
+            blksize: 0,
             owner: String::new(),
             group: String::new(),
             author: String::new(),
@@ -308,6 +320,67 @@ impl Entry {
 
     pub fn is_dir(&self) -> bool {
         self.kind == EntryKind::Directory
+    }
+
+    /// Fine-grained type string for machine formats (`file`, `fifo`, `socket`, …).
+    pub fn type_detail(&self) -> &'static str {
+        match self.kind {
+            EntryKind::File => "file",
+            EntryKind::Directory => "directory",
+            EntryKind::Symlink => "symlink",
+            EntryKind::Other => {
+                #[cfg(unix)]
+                {
+                    match self.mode & 0o170000 {
+                        0o010000 => "fifo",
+                        0o140000 => "socket",
+                        0o060000 => "block_device",
+                        0o020000 => "character_device",
+                        _ => "other",
+                    }
+                }
+                #[cfg(not(unix))]
+                {
+                    "other"
+                }
+            }
+        }
+    }
+
+    pub fn is_executable(&self) -> bool {
+        #[cfg(unix)]
+        {
+            self.mode & 0o111 != 0
+        }
+        #[cfg(not(unix))]
+        {
+            false
+        }
+    }
+
+    /// `(major, minor)` for `st_dev`.
+    pub fn dev_major_minor(&self) -> (u32, u32) {
+        dev_major_minor(self.dev)
+    }
+
+    /// `(major, minor)` for `st_rdev` (special files).
+    pub fn rdev_major_minor(&self) -> (u32, u32) {
+        dev_major_minor(self.rdev)
+    }
+
+    /// Extended attribute names (`listxattr`); empty when unsupported or none.
+    pub fn xattr_names(&self) -> Vec<String> {
+        list_xattr_names(&self.path)
+    }
+
+    /// Permission bits only (no file-type nibble), as octal string without leading type.
+    pub fn mode_perms_octal(&self) -> String {
+        format!("{:o}", self.mode & 0o7777)
+    }
+
+    /// Full mode including type bits when available.
+    pub fn mode_full_octal(&self) -> String {
+        format!("{:o}", self.mode)
     }
 
     pub fn modified_datetime(&self) -> Option<DateTime<Local>> {
@@ -398,7 +471,7 @@ fn file_mode(_meta: &Metadata) -> u32 {
 }
 
 #[cfg(unix)]
-fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64) {
+fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64, u64, u64, u64) {
     use std::os::unix::fs::MetadataExt;
     (
         meta.nlink(),
@@ -406,14 +479,17 @@ fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64) {
         meta.gid(),
         meta.ino(),
         meta.blocks(),
+        meta.dev(),
+        meta.rdev(),
+        meta.blksize(),
     )
 }
 
 #[cfg(not(unix))]
-fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64) {
+fn meta_ids(meta: &Metadata) -> (u64, u32, u32, u64, u64, u64, u64, u64) {
     let size = meta.len();
     let blocks = size.div_ceil(512);
-    (1, 0, 0, 0, blocks)
+    (1, 0, 0, 0, blocks, 0, 0, 0)
 }
 
 #[cfg(unix)]
@@ -438,6 +514,64 @@ fn ctime_of(meta: &Metadata) -> Option<SystemTime> {
 fn ctime_of(meta: &Metadata) -> Option<SystemTime> {
     // Windows has no ctime-as-status-change; fall back to modified.
     meta.modified().ok()
+}
+
+fn dev_major_minor(dev: u64) -> (u32, u32) {
+    #[cfg(target_os = "linux")]
+    {
+        (
+            libc::major(dev as libc::dev_t) as u32,
+            libc::minor(dev as libc::dev_t) as u32,
+        )
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        // Portable-ish fallback (historical 8+8 encoding).
+        (((dev >> 8) & 0xff) as u32, (dev & 0xff) as u32)
+    }
+}
+
+fn list_xattr_names(path: &Path) -> Vec<String> {
+    #[cfg(target_os = "linux")]
+    {
+        list_xattr_names_linux(path).unwrap_or_default()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = path;
+        Vec::new()
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn list_xattr_names_linux(path: &Path) -> Option<Vec<String>> {
+    use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt;
+
+    let c_path = CString::new(path.as_os_str().as_bytes()).ok()?;
+    let size = unsafe { libc::llistxattr(c_path.as_ptr(), std::ptr::null_mut(), 0) };
+    if size < 0 {
+        return None;
+    }
+    if size == 0 {
+        return Some(Vec::new());
+    }
+    let mut buf = vec![0u8; size as usize];
+    let n = unsafe { libc::llistxattr(c_path.as_ptr(), buf.as_mut_ptr().cast(), buf.len()) };
+    if n < 0 {
+        return None;
+    }
+    buf.truncate(n as usize);
+    let mut out = Vec::new();
+    for chunk in buf.split(|&b| b == 0) {
+        if chunk.is_empty() {
+            continue;
+        }
+        if let Ok(s) = std::str::from_utf8(chunk) {
+            out.push(s.to_string());
+        }
+    }
+    Some(out)
 }
 
 /// Best-effort SELinux context via `security.selinux` xattr.

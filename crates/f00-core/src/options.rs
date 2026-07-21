@@ -526,6 +526,8 @@ pub struct Config {
     /// Print GNU `total N` before directory content listings (`-l` / `-s`).
     /// False when listing a single non-directory operand (or `-d` on a dir).
     pub emit_block_total: bool,
+    /// When output is JSON: emit the full metadata schema (`--json-full`).
+    pub json_full: bool,
 }
 
 impl Default for Config {
@@ -560,6 +562,7 @@ impl Default for Config {
             dired: false,
             time_style: TimeStyle::Locale,
             emit_block_total: true,
+            json_full: false,
         }
     }
 }
