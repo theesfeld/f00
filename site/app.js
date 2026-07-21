@@ -211,6 +211,72 @@
     el.textContent = String(new Date().getFullYear());
   });
 
+  /* ── live GitHub popularity ──────────────────────────── */
+  const formatCount = (n) => {
+    if (typeof n !== "number" || Number.isNaN(n)) return "—";
+    if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
+    return String(n);
+  };
+
+  const setAll = (selector, value) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      node.textContent = value;
+    });
+  };
+
+  const fillBars = (stats) => {
+    const max = Math.max(
+      stats.stars,
+      stats.forks,
+      stats.watchers,
+      stats.issues,
+      1
+    );
+    const map = {
+      stars: stats.stars,
+      forks: stats.forks,
+      watchers: stats.watchers,
+      issues: stats.issues,
+    };
+    Object.entries(map).forEach(([key, value]) => {
+      document.querySelectorAll(`[data-stat-bar="${key}"]`).forEach((bar) => {
+        bar.style.setProperty("--fill", `${Math.round((value / max) * 100)}%`);
+      });
+    });
+  };
+
+  const applyGithub = (data) => {
+    const stats = {
+      stars: data.stargazers_count || 0,
+      forks: data.forks_count || 0,
+      watchers: data.subscribers_count || 0,
+      issues: data.open_issues_count || 0,
+    };
+    setAll("[data-github-stars]", formatCount(stats.stars));
+    setAll("[data-github-forks]", formatCount(stats.forks));
+    setAll("[data-github-watchers]", formatCount(stats.watchers));
+    setAll("[data-github-issues]", formatCount(stats.issues));
+    fillBars(stats);
+  };
+
+  applyGithub({
+    stargazers_count: 0,
+    forks_count: 0,
+    subscribers_count: 0,
+    open_issues_count: 0,
+  });
+
+  try {
+    fetch("https://api.github.com/repos/theesfeld/f00", {
+      headers: { Accept: "application/vnd.github+json" },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) applyGithub(data);
+      })
+      .catch(() => {});
+  } catch (_) {}
+
   /* ══════════════════════════════════════════════════════
    * Scroll-linked motion engine
    * ══════════════════════════════════════════════════════ */
@@ -222,7 +288,6 @@
   const parallaxNodes = [...document.querySelectorAll("[data-parallax]")];
 
   let ticking = false;
-  let lastY = window.scrollY;
 
   function scrollMetrics() {
     const y = window.scrollY || window.pageYOffset || 0;
@@ -263,7 +328,6 @@
   function applyScroll() {
     ticking = false;
     const { y, p, heroP } = scrollMetrics();
-    lastY = y;
 
     root.style.setProperty("--scroll-p", p.toFixed(4));
     root.style.setProperty("--hero-p", heroP.toFixed(4));
@@ -273,7 +337,6 @@
       header.classList.toggle("is-scrolled", y > 8);
     }
 
-    // Ambient / element parallax
     if (!prefersReduced) {
       parallaxNodes.forEach((el) => {
         const factor = parseFloat(el.getAttribute("data-parallax") || "0.1");
@@ -343,14 +406,6 @@
       let tx = 0;
       let ty = 0;
 
-      const base = () => {
-        // Preserve hero perspective baseline when idle
-        if (el.classList.contains("hero-term")) {
-          return `perspective(900px) rotateY(${(-4 + parseFloat(getComputedStyle(hero || root).getPropertyValue("--hero-p") || 0) * 4).toFixed(2)}deg) rotateX(2deg)`;
-        }
-        return "perspective(800px) rotateX(0deg) rotateY(0deg)";
-      };
-
       const tick = () => {
         rx = lerp(rx, tx, 0.16);
         ry = lerp(ry, ty, 0.16);
@@ -378,7 +433,6 @@
       el.addEventListener("pointerleave", () => {
         tx = 0;
         ty = el.classList.contains("hero-term") ? -4 : 0;
-        // ease back; clear inline after settle so CSS --hero-p can drive
         const settle = () => {
           rx = lerp(rx, tx, 0.16);
           ry = lerp(ry, ty, 0.16);

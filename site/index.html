@@ -51,7 +51,8 @@
     <a href="#demos" data-rail="demos" title="Demos"><span class="sr-only">Demos</span></a>
     <a href="#bench" data-rail="bench" title="Speed"><span class="sr-only">Speed</span></a>
     <a href="#install" data-rail="install" title="Install"><span class="sr-only">Install</span></a>
-    <a href="#docs" data-rail="docs" title="Open source"><span class="sr-only">Open source</span></a>
+    <a href="#github" data-rail="github" title="GitHub"><span class="sr-only">GitHub</span></a>
+    <a href="#docs" data-rail="docs" title="License"><span class="sr-only">License</span></a>
   </nav>
 
   <header class="site-header">
@@ -619,11 +620,65 @@ sudo rpm -i f00-*.rpm</code></pre>
       </div>
     </section>
 
-    <!-- ═══ FOOT ═══ -->
+    <!-- ═══ GITHUB / OPEN SOURCE ═══ -->
+    <section id="github" class="github-section" data-section="github">
+      <div class="wrap github-layout reveal">
+        <div class="github-copy">
+          <p class="eyebrow">Open source</p>
+          <h2>Star on GitHub.</h2>
+          <p>
+            Roadmaps, issues, release trains, and evidence live on GitHub —
+            not on this page. If f00 is useful to you, a star helps others find it.
+          </p>
+          <a
+            class="btn star-btn"
+            href="https://github.com/theesfeld/f00"
+            rel="noopener"
+            data-magnetic
+          >
+            <span aria-hidden="true">★</span>
+            Star theesfeld/f00
+            <span class="star-count" data-github-stars>—</span>
+          </a>
+          <p class="github-issues-note">
+            <strong data-github-issues>—</strong> open Issues right now are mostly
+            <em>roadmap and release bookkeeping</em> (one Issue per unit of work),
+            not twenty concurrent fires. Process trackers stay on
+            <a href="https://github.com/theesfeld/f00/issues">GitHub Issues</a>.
+          </p>
+        </div>
+        <div class="github-stats" aria-label="GitHub popularity">
+          <div class="stat-card" data-tilt>
+            <span class="stat-value" data-github-stars>—</span>
+            <span class="stat-label">Stars</span>
+            <div class="stat-bar" data-stat-bar="stars" style="--fill: 0%"></div>
+          </div>
+          <div class="stat-card" data-tilt>
+            <span class="stat-value" data-github-forks>—</span>
+            <span class="stat-label">Forks</span>
+            <div class="stat-bar" data-stat-bar="forks" style="--fill: 0%"></div>
+          </div>
+          <div class="stat-card" data-tilt>
+            <span class="stat-value" data-github-watchers>—</span>
+            <span class="stat-label">Watchers</span>
+            <div class="stat-bar" data-stat-bar="watchers" style="--fill: 0%"></div>
+          </div>
+          <div class="stat-card" data-tilt>
+            <span class="stat-value" data-github-issues>—</span>
+            <span class="stat-label">Open issues</span>
+            <div class="stat-bar" data-stat-bar="issues" style="--fill: 0%"></div>
+          </div>
+          <p class="stat-footnote">
+            Live from the GitHub API. Bars are relative to the largest of these four counts.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <section id="docs" class="docs-section" data-section="docs">
       <div class="wrap docs-row reveal">
         <div>
-          <h2>Open source</h2>
+          <h2>License</h2>
           <p class="muted">
             MIT OR Apache-2.0 ·
             <a href="https://github.com/theesfeld/f00">github.com/theesfeld/f00</a> ·
@@ -631,7 +686,6 @@ sudo rpm -i f00-*.rpm</code></pre>
           </p>
         </div>
         <div class="docs-actions">
-          <a class="btn btn-primary" href="https://github.com/theesfeld/f00" data-magnetic>Star on GitHub</a>
           <a class="btn btn-ghost" href="https://github.com/theesfeld/f00/releases">Releases</a>
           <a class="btn btn-ghost" href="/install.sh">install.sh</a>
         </div>
