@@ -171,7 +171,7 @@ fn stx_time(t: libc::statx_timestamp) -> Option<SystemTime> {
     if t.tv_sec < 0 {
         return None;
     }
-    Some(SystemTime::UNIX_EPOCH + Duration::new(t.tv_sec as u64, t.tv_nsec as u32))
+    Some(SystemTime::UNIX_EPOCH + Duration::new(t.tv_sec as u64, t.tv_nsec))
 }
 
 fn makdev(major: u32, minor: u32) -> u64 {

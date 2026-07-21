@@ -194,36 +194,17 @@ impl Colorizer {
         }
 
         if let Some(rest) = arrow_and_target.strip_prefix(" -> ") {
-            let arrow = if self.modern_long_theme(gnu_mode) {
-                dim_paint("→")
-            } else {
-                "->".to_string()
-            };
             let target_painted = if let Some(style) = self.ls.style_for_path(Path::new(rest)) {
                 paint_with_ls_style(rest, style)
-            } else if let Some(style) = self.ls.style_for_indicator(Indicator::SymbolicLink) {
-                // Orphan / unknown target: still allow ln= if path match failed.
-                let _ = style;
-                if self.modern_long_theme(gnu_mode) {
-                    dim_paint(rest)
-                } else {
-                    rest.to_string()
-                }
             } else if self.modern_long_theme(gnu_mode) {
                 dim_paint(rest)
             } else {
                 rest.to_string()
             };
-            let sep = if self.modern_long_theme(gnu_mode) {
-                format!(" {arrow} ")
-            } else {
-                format!(" {arrow} ")
-            };
-            // gnu uses " -> "; modern uses dim arrow
+            // GNU uses " -> "; modern uses a dim arrow glyph.
             if self.modern_long_theme(gnu_mode) {
-                format!("{name} {arrow} {target_painted}")
+                format!("{name} {} {target_painted}", dim_paint("→"))
             } else {
-                let _ = sep;
                 format!("{name} -> {target_painted}")
             }
         } else if self.modern_long_theme(gnu_mode) {
@@ -322,7 +303,10 @@ mod tests {
         // modern dims dashes / bolds type+exec bits (relative SGR, no hues)
         let modern = c.paint_perms("-rwxr-xr-x", false);
         assert_ne!(modern, "-rwxr-xr-x");
-        assert!(modern.contains('\u{1b}'), "expected ANSI SGR in modern perms");
+        assert!(
+            modern.contains('\u{1b}'),
+            "expected ANSI SGR in modern perms"
+        );
         assert!(modern.contains('r') && modern.contains('w') && modern.contains('x'));
     }
 
