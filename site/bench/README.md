@@ -7,7 +7,7 @@ Reproduced with [hyperfine](https://github.com/sharkdp/hyperfine) on a warm dire
 | Track | Opponent | f00 command |
 |-------|----------|-------------|
 | **A · drop-in** | coreutils `ls` | **`f00 --gnu`** only |
-| **B · modern** | eza / lsd | **product `f00`** (no `--gnu`) |
+| **B · modern** | eza / lsd | default **`f00`** (no `--gnu`) |
 
 Colors forced off (`--color=never`) for all tools.
 
