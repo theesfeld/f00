@@ -10,11 +10,11 @@
 [![crates.io](https://img.shields.io/crates/v/f00?style=flat-square)](https://crates.io/crates/f00)
 [![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows%20%7C%20bsd-lightgrey?style=flat-square)](https://f00.sh)
 
-**f00** — a daily-driver **`ls` replacement** in Rust: **fast**, **beautiful on a TTY**, **script-safe when piped**, with full GNU flag surface and optional power features.
+**f00** is a fully compliant **`ls`** utility written entirely in **Rust**. It is a drop-in for GNU coreutils `ls`, and it meets and exceeds **eza** and **lsd** for modern listings (icons, git, tree, rich **JSON**) without giving up coreutils flag coverage.
 
 | Surface | Behavior |
 |---------|----------|
-| **TTY** | Modern chrome: icons (auto), git (default), colors (auto) |
+| **TTY** | Icons (auto), git (default), colors (auto) |
 | **Non-TTY** (pipes/CI) | **Script-safe by default** (GNU-equivalent; same as `--gnu`) |
 | **Force** | `--gnu` / `F00_GNU=1` · modern on pipes: `--no-gnu` / `F00_NO_GNU=1` |
 
@@ -68,11 +68,11 @@ Most people should keep typing **`f00`**. If you want muscle memory for `ls`, pi
 **1. Shell alias (recommended for interactive use)**
 
 ```bash
-# modern product defaults (icons, git, …)
+# modern defaults (icons, git, …)
 echo "alias ls='f00'" >> ~/.bashrc    # or ~/.zshrc
 echo "alias ll='f00 -la'" >> ~/.bashrc
 
-# coreutils-shaped (no icons/git; better for scripts / boring output)
+# coreutils-shaped (no icons/git; better for scripts)
 # echo "alias ls='f00 --gnu'" >> ~/.bashrc
 # or: export F00_GNU=1
 ```
@@ -89,7 +89,7 @@ Creates `…/bin/ls` → `f00` next to the binary. Anything that finds `ls` on y
 
 **3. Soft drop-in when the binary is named `ls`**
 
-If you symlink or rename so argv0 is `ls`, f00 keeps **full product chrome** on a TTY (icons, git, modern colors) — same as `f00`. Dirs-first stays off by default (like GNU). **Strict plain coreutils** still needs `--gnu` or `F00_GNU=1`.
+If you symlink or rename so argv0 is `ls`, f00 keeps full TTY defaults (icons, git, modern colors) — same as `f00`. Dirs-first stays off by default (like GNU). **Strict plain coreutils** still needs `--gnu` or `F00_GNU=1`.
 
 More detail: [f00.sh#as-ls](https://f00.sh/#as-ls)
 
@@ -130,7 +130,7 @@ f00 --check-update    # or: f00 check-update  (exit 1 if behind)
 ## Usage
 
 ```bash
-# Classic listing (TTY: modern chrome)
+# Classic listing (TTY: icons, git, colors)
 f00 -la
 
 # Pipes are script-safe by default (auto GNU-equivalent)
@@ -269,7 +269,7 @@ Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-saf
 | `full` | no | `git` + `io-uring` + `archives` + `tui` + `plugins` |
 
 ```bash
-cargo build -p f00 --release                 # lean daily-driver
+cargo build -p f00 --release                 # default features
 cargo build -p f00-tui --release             # dual-pane browser
 cargo build -p f00 --no-default-features     # minimal
 cargo build -p f00 --features full           # kitchen sink
@@ -332,7 +332,7 @@ cargo build --release -p f00 -p f00-tui
 | Full coreutils flags | Native | Partial | Partial | **Shipped** (+ auto non-TTY / `--gnu`) |
 | Icons / git | No | Yes | Yes | Yes (TTY) |
 | Script-safe pipes | Yes | Partial | Partial | **Yes (default)** |
-| Speed focus | — | Good | Good | **Flagship** |
+| Speed (measured) | — | Good | Good | **Beats eza/lsd** |
 | TUI | No | No | No | **`f00-tui`** |
 | Archives | No | No | No | Opt-in feature |
 | Windows | Weak | Strong | Strong | First-class |

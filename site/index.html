@@ -3,24 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>f00 — daily-driver ls replacement</title>
-  <meta name="description" content="f00 is a fast daily-driver ls replacement: beautiful on a TTY, script-safe when piped. JSON, icons, git, GNU mode, f00-tui." />
-  <meta name="theme-color" content="#07090c" />
+  <title>f00 — Rust ls for coreutils, eza, and lsd users</title>
+  <meta name="description" content="f00 is a fully compliant ls utility written in Rust. Drop-in for coreutils ls; meets and exceeds eza and lsd. Icons, git, tree, and rich JSON." />
+  <meta name="theme-color" content="#0a0c0f" />
   <link rel="canonical" href="https://f00.sh/" />
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="assets/logo.svg" />
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://f00.sh/" />
-  <meta property="og:title" content="f00 — daily-driver ls replacement" />
-  <meta property="og:description" content="Fast listings: beautiful on a TTY, script-safe when piped. Full GNU surface when you need it." />
+  <meta property="og:title" content="f00 — Rust ls for coreutils, eza, and lsd users" />
+  <meta property="og:description" content="Fully compliant ls in Rust. Drop-in for coreutils; meets and exceeds eza and lsd. Tree and JSON included." />
   <meta property="og:site_name" content="f00" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:image" content="https://f00.sh/assets/og.svg" />
-  <meta property="og:image:alt" content="f00 — daily-driver ls replacement" />
+  <meta property="og:image:alt" content="f00 — ls utility in Rust" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="f00 — daily-driver ls replacement" />
+  <meta name="twitter:title" content="f00 — Rust ls for coreutils, eza, and lsd users" />
   <meta name="twitter:description" content="curl -fsSL https://f00.sh/install.sh | bash" />
   <meta name="twitter:image" content="https://f00.sh/assets/og.svg" />
 
@@ -32,48 +32,11 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <!-- Scroll progress (document scroll is the product) -->
-  <div class="scroll-progress" aria-hidden="true"><i></i></div>
-
-  <!-- Ambient scroll stage — multi-layer, scrubbed by document scroll -->
-  <div class="ambient" aria-hidden="true">
-    <div class="ambient-wash" data-parallax="0.03" data-parallax-x="0.015"></div>
-    <div class="ambient-aurora" data-parallax="0.14" data-parallax-x="-0.06" data-parallax-r="0.012"></div>
-    <div class="ambient-beams" data-parallax="0.22" data-parallax-x="0.09"></div>
-    <div class="ambient-shards">
-      <span class="shard s1" data-parallax="0.32" data-parallax-x="-0.14" data-parallax-r="0.02" data-base-rot="-18" data-base-skew="skewY(6deg)"></span>
-      <span class="shard s2" data-parallax="0.18" data-parallax-x="0.11" data-parallax-r="-0.015" data-base-rot="14" data-base-skew="skewY(-4deg)"></span>
-      <span class="shard s3" data-parallax="0.38" data-parallax-x="0.07" data-parallax-r="0.01" data-base-rot="8"></span>
-      <span class="shard s4" data-parallax="0.26" data-parallax-x="-0.09" data-parallax-r="-0.018" data-base-rot="-8" data-base-skew="skewX(8deg)"></span>
-      <span class="shard s5" data-parallax="0.2" data-parallax-x="0.05" data-parallax-r="0.008" data-base-rot="22"></span>
-    </div>
-    <div class="ambient-orb ambient-orb-a" data-parallax="0.2" data-parallax-x="0.05"></div>
-    <div class="ambient-orb ambient-orb-b" data-parallax="0.12" data-parallax-x="-0.07"></div>
-    <div class="ambient-orb ambient-orb-c" data-parallax="0.28" data-parallax-x="0.04"></div>
-    <div class="ambient-rings"></div>
-    <div class="ambient-grid" data-parallax="0.07" data-parallax-x="0.025"></div>
-    <div class="ambient-scan"></div>
-    <div class="ambient-noise"></div>
-    <div class="ambient-vignette"></div>
-  </div>
-
-  <!-- Section orientation rail -->
-  <nav class="section-rail" aria-label="On this page">
-    <a href="#top" data-rail="top" title="Top"><span class="sr-only">Top</span></a>
-    <a href="#story" data-rail="story" title="Why"><span class="sr-only">Why</span></a>
-    <a href="#features" data-rail="features" title="Features"><span class="sr-only">Features</span></a>
-    <a href="#demos" data-rail="demos" title="Demos"><span class="sr-only">Demos</span></a>
-    <a href="#bench" data-rail="bench" title="Speed"><span class="sr-only">Speed</span></a>
-    <a href="#install" data-rail="install" title="Install"><span class="sr-only">Install</span></a>
-    <a href="#github" data-rail="github" title="GitHub"><span class="sr-only">GitHub</span></a>
-    <a href="#docs" data-rail="docs" title="License"><span class="sr-only">License</span></a>
-  </nav>
-
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="logo" href="/" aria-label="f00 home">
         <img class="logo-mark" src="assets/logo.svg" width="32" height="32" alt="" />
-        <span class="logo-text"><span class="prompt">$</span> f00<span class="dot">.sh</span></span>
+        <span class="logo-text">f00<span class="dot">.sh</span></span>
       </a>
 
       <button type="button" class="menu-button" aria-expanded="false" aria-controls="site-nav">
@@ -82,34 +45,31 @@
       </button>
 
       <nav class="site-nav nav" id="site-nav" aria-label="Primary">
-        <a href="#story" data-nav="story">Why</a>
-        <a href="#bench" data-nav="bench">Speed</a>
-        <a href="#demos" data-nav="demos">Demos</a>
-        <a href="#install" data-nav="install">Install</a>
+        <a href="#why">Why f00</a>
+        <a href="#demos">Demos</a>
+        <a href="#speed">Speed</a>
+        <a href="#install">Install</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/theesfeld/f00">GitHub</a>
       </nav>
     </div>
   </header>
 
   <main id="main">
-    <!-- ═══ HERO ═══ -->
-    <section class="hero" id="top" data-section="top">
-      <div class="hero-grid-bg" aria-hidden="true" data-parallax="0.12"></div>
-      <div class="hero-glow" aria-hidden="true"></div>
-      <div class="hero-glow hero-glow-2" aria-hidden="true"></div>
+    <!-- Hero -->
+    <section class="hero" id="top">
       <div class="wrap hero-grid">
-        <div class="hero-copy reveal">
-          <p class="eyebrow"><span class="live-dot"></span> v<span data-version>0.11.0</span> · rust · daily-driver</p>
+        <div class="hero-copy">
+          <p class="eyebrow">v<span data-version>0.11.0</span> · written in Rust</p>
           <h1>
-            <code class="mono">ls</code> that feels like
-            <span class="accent gradient-text">today</span>
+            A fully compliant <code class="mono">ls</code>,
+            built in Rust
           </h1>
           <p class="lead">
-            <strong>f00</strong> is a daily-driver directory lister:
-            <strong>fast</strong>, <strong>beautiful on a TTY</strong>, and
-            <strong>script-safe when piped</strong>. Full GNU flag surface,
-            rich <strong>JSON</strong>, icons, git — plus optional
-            <code class="mono">f00-tui</code>.
+            <strong>f00</strong> is a drop-in replacement for GNU coreutils
+            <code class="mono">ls</code>. It also meets and exceeds what
+            <strong>eza</strong> and <strong>lsd</strong> offer for modern
+            listings — icons, git status, tree view, and rich
+            <strong>JSON</strong> — without giving up coreutils flag coverage.
           </p>
 
           <div class="install-block">
@@ -120,7 +80,7 @@
               </a>
             </p>
             <div class="install-row">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-line">curl -fsSL https://f00.sh/install.sh | bash</code>
               </div>
@@ -129,26 +89,26 @@
           </div>
 
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#install" data-magnetic>Install</a>
-            <a class="btn btn-ghost" href="#demos">See demos</a>
+            <a class="btn btn-primary" href="#install">Install</a>
+            <a class="btn btn-ghost" href="#demos">Demos</a>
             <a class="btn btn-ghost" href="https://github.com/theesfeld/f00">Source</a>
           </div>
 
           <ul class="hero-pills" aria-label="Highlights">
-            <li>TTY chrome</li>
-            <li>Pipe-safe default</li>
-            <li>JSON core</li>
-            <li>f00-tui</li>
-            <li>--update</li>
+            <li>coreutils drop-in</li>
+            <li>Rust</li>
+            <li>tree</li>
+            <li>JSON</li>
+            <li>faster than eza / lsd</li>
           </ul>
         </div>
 
-        <aside class="term hero-term reveal delay-1" aria-label="Example f00 output" data-tilt>
+        <aside class="term hero-term" aria-label="Example f00 output">
           <div class="term-bar">
             <i></i><i></i><i></i>
             <span class="term-title">f00 -la --icons --git</span>
           </div>
-          <pre class="term-body term-type"><span class="d">d</span><span class="y">r</span><span class="x">w</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span>  <span class="y">glenda</span>  <span class="g">4.2K</span>  <span class="d">Jul 20</span>  <span class="d"> src</span>     <span class="y">[M]</span>
+          <pre class="term-body"><span class="d">d</span><span class="y">r</span><span class="x">w</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span>  <span class="y">glenda</span>  <span class="g">4.2K</span>  <span class="d">Jul 20</span>  <span class="d"> src</span>     <span class="y">[M]</span>
 <span class="d">d</span><span class="y">r</span><span class="x">w</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span>  <span class="y">glenda</span>  <span class="g">4.2K</span>  <span class="d">Jul 20</span>  <span class="d"> crates</span>
 <span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="m">-</span><span class="y">r</span><span class="m">--</span><span class="y">r</span><span class="m">--</span>  <span class="y">glenda</span>  <span class="g">1.8K</span>  <span class="d">Jul 20</span>  <span class="w"> README.md</span>
 <span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="m">-</span><span class="y">r</span><span class="m">--</span><span class="y">r</span><span class="m">--</span>  <span class="y">glenda</span>  <span class="g">412B</span>  <span class="d">Jul 20</span>  <span class="w"> Cargo.toml</span>
@@ -156,151 +116,163 @@
 <span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="m">-</span><span class="y">r</span><span class="m">--</span><span class="y">r</span><span class="m">--</span>  <span class="y">glenda</span>  <span class="g">2.1K</span>  <span class="d">Jul 19</span>  <span class="m"> .gitignore</span></pre>
         </aside>
       </div>
-      <a class="scroll-cue" href="#story" aria-label="Scroll to why">
-        <span class="scroll-cue-line" aria-hidden="true"></span>
-        <span class="scroll-cue-label">scroll</span>
-      </a>
     </section>
 
-    <!-- ═══ SCROLL STORY ═══ -->
-    <section id="story" class="story" data-section="story" data-motion="cinema">
-      <div class="wrap story-grid">
-        <div class="story-rail">
-          <article class="story-beat reveal" data-story-beat="pretty">
-            <span class="beat-n">01</span>
-            <h2>Pretty where it matters</h2>
+    <!-- Why -->
+    <section id="why" class="why-section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Why f00</h2>
+          <p>
+            One binary that covers the coreutils job <em>and</em> the modern
+            listing tools — implemented entirely in Rust.
+          </p>
+        </div>
+
+        <div class="why-grid">
+          <article class="card">
+            <h3>Drop-in for coreutils <code class="mono">ls</code></h3>
             <p>
-              On a TTY: icons, git status, modern long-format colors.
-              Feels like a product — not a 1990s dump of names.
+              Full GNU flag surface. Use <code class="mono">f00 --gnu</code>
+              (or <code class="mono">alias ls='f00 --gnu'</code>) when you need
+              script-shaped, coreutils-compatible output. Pipes and non-TTY
+              stdout switch to that safe mode automatically.
             </p>
           </article>
-          <article class="story-beat reveal" data-story-beat="safe">
-            <span class="beat-n">02</span>
-            <h2>Safe in pipes</h2>
+          <article class="card">
+            <h3>Meets and exceeds eza and lsd</h3>
             <p>
-              Non-TTY stdout auto-enables script-safe / GNU-equivalent mode.
-              No icon garbage in your CI logs. Force modern with
-              <code class="mono">--no-gnu</code> when you want it.
+              Icons, git status, modern long listings, and tree view on a TTY —
+              plus better wall times than eza and lsd on the common short and
+              long workloads we measure. You keep the extras without giving up
+              coreutils coverage.
             </p>
           </article>
-          <article class="story-beat reveal" data-story-beat="json">
-            <span class="beat-n">03</span>
-            <h2>JSON is core</h2>
+          <article class="card">
+            <h3>Written in Rust</h3>
             <p>
-              <code class="mono">--json</code> / <code class="mono">-j</code> with rich metadata.
-              Pretty and syntax-colored when color is on; compact plain for
-              <code class="mono">jq</code> when color is off.
+              Memory-safe systems code: parallel metadata, Linux
+              <code class="mono">statx</code> and optional
+              <code class="mono">io_uring</code>, a clear crate layout, and a
+              single static-friendly binary. Rust is not a footnote — it is how
+              f00 is built.
             </p>
           </article>
-          <article class="story-beat reveal" data-story-beat="speed">
-            <span class="beat-n">04</span>
-            <h2>Speed is the product</h2>
+          <article class="card">
+            <h3>Tree and JSON that are real surfaces</h3>
             <p>
-              Parallel metadata, cheap short paths, Linux
-              <code class="mono">statx</code> + <code class="mono">io_uring</code>.
-              Profile with <code class="mono">--profile</code>.
+              <code class="mono">--tree</code> for hierarchy at a glance.
+              <code class="mono">--json</code> / <code class="mono">-j</code>
+              for tooling: rich fields, pretty and colored on a TTY, compact
+              plain JSON for <code class="mono">jq</code> when color is off.
             </p>
           </article>
         </div>
 
-        <div class="story-sticky" id="story-stage" aria-live="polite">
-          <div class="term story-term">
-            <div class="term-bar">
-              <i></i><i></i><i></i>
-              <span class="term-title">scroll · live preview</span>
-            </div>
-
-            <div class="story-panel is-active" data-story-panel="pretty">
-              <pre class="term-body"><span class="c">$</span> <span class="w">f00 -la --icons --git</span>
-<span class="d">d</span><span class="y">r</span><span class="x">w</span><span class="g">x</span>…  <span class="g">4.2K</span>  <span class="d"> crates</span>
-<span class="m">-</span><span class="y">r</span><span class="x">w</span>…  <span class="g">1.8K</span>  <span class="w"> README.md</span>  <span class="y">[M]</span>
-<span class="m">-</span><span class="y">r</span><span class="x">w</span>…  <span class="g">12K</span>   <span class="g"> install.sh</span>
-<span class="cy">l</span><span class="y">r</span><span class="x">w</span>…  <span class="m">11</span>    <span class="cy"> target</span> <span class="m">→</span> <span class="cy">/tmp/…</span></pre>
-            </div>
-
-            <div class="story-panel" data-story-panel="safe" hidden>
-              <pre class="term-body"><span class="c">$</span> <span class="w">f00 -la /tmp | head</span>
-<span class="m"># non-TTY → script-safe (like --gnu)</span>
-total 48
--rw-r--r--  1 u  g  1024 Jul 20 12:01 alpha.txt
--rw-r--r--  1 u  g   512 Jul 20 12:01 beta.rs
-drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
-
-<span class="c">$</span> <span class="w">f00 --no-gnu -la | cat</span>  <span class="m"># force modern</span></pre>
-            </div>
-
-            <div class="story-panel" data-story-panel="json" hidden>
-              <pre class="term-body"><span class="c">$</span> <span class="w">f00 -j README.md</span>  <span class="m"># color on → pretty</span>
-[
-  {
-    <span class="jk">"name"</span>: <span class="js">"README.md"</span>,
-    <span class="jk">"kind"</span>: <span class="js">"file"</span>,
-    <span class="jk">"size"</span>: <span class="jn">11240</span>,
-    <span class="jk">"permissions"</span>: <span class="js">"-rw-r--r--"</span>,
-    <span class="jk">"inode"</span>: <span class="jn">1830123</span>,
-    <span class="jk">"git_status"</span>: <span class="js">"clean"</span>
-  }
-]</pre>
-            </div>
-
-            <div class="story-panel" data-story-panel="speed" hidden>
-              <pre class="term-body"><span class="c">$</span> <span class="w">f00 --profile -1 /usr/bin</span>
-…
-<span class="m">readdir_ms=</span><span class="jn">2.1</span>  <span class="m">stat_ms=</span><span class="jn">18.4</span>
-<span class="m">sort_ms=</span><span class="jn">0.9</span>   <span class="m">format_ms=</span><span class="jn">1.2</span>
-<span class="m">total_ms=</span><span class="jn">22.8</span>  <span class="m">threads=auto</span>  <span class="m">io_uring=on</span></pre>
-            </div>
-          </div>
-          <p class="story-hint">Scroll the beats — the terminal follows.</p>
+        <div class="compare-wrap">
+          <table class="compare">
+            <thead>
+              <tr>
+                <th></th>
+                <th>GNU <code class="mono">ls</code></th>
+                <th>eza</th>
+                <th>lsd</th>
+                <th><strong>f00</strong></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Language</th>
+                <td>C</td>
+                <td>Rust</td>
+                <td>Rust</td>
+                <td><strong>Rust</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">Full coreutils flags</th>
+                <td>Yes</td>
+                <td>Partial</td>
+                <td>Partial</td>
+                <td><strong>Yes</strong> (+ <code class="mono">--gnu</code>)</td>
+              </tr>
+              <tr>
+                <th scope="row">Icons / git</th>
+                <td>No</td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td><strong>Yes</strong> (TTY)</td>
+              </tr>
+              <tr>
+                <th scope="row">Tree</th>
+                <td>No</td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td><strong>Yes</strong></td>
+              </tr>
+              <tr>
+                <th scope="row">JSON</th>
+                <td>No</td>
+                <td>No</td>
+                <td>No</td>
+                <td><strong>Yes</strong> (rich metadata)</td>
+              </tr>
+              <tr>
+                <th scope="row">Script-safe pipes</th>
+                <td>Yes</td>
+                <td>Partial</td>
+                <td>Partial</td>
+                <td><strong>Yes</strong> (default)</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
 
-    <!-- ═══ FEATURES (tight) ═══ -->
-    <section id="features" class="features-section" data-section="features" data-motion="cinema">
+    <!-- Features strip -->
+    <section id="features" class="features-section">
       <div class="wrap">
-        <div class="section-head reveal">
-          <h2>What ships</h2>
-          <p>No vapor. Optional pieces stay optional.</p>
+        <div class="section-head">
+          <h2>What you get</h2>
         </div>
         <div class="features-tight">
-          <article class="card reveal" data-tilt>
+          <article class="card">
             <h3>GNU surface + auto safety</h3>
-            <p>Full flag set. Non-TTY ≈ <code class="mono">--gnu</code>. Escape hatch: <code class="mono">--no-gnu</code>.</p>
+            <p>Full flag set. Non-TTY behaves like <code class="mono">--gnu</code>. Escape hatch: <code class="mono">--no-gnu</code>.</p>
           </article>
-          <article class="card reveal delay-1" data-tilt>
-            <h3>JSON · tree · CSV</h3>
-            <p>JSON is a first-class surface (rich fields). Tree for humans. CSV/TSV for tables.</p>
+          <article class="card">
+            <h3>JSON</h3>
+            <p>First-class <code class="mono">--json</code> / <code class="mono">-j</code> with size, mode, inode, owner, git status, and more.</p>
           </article>
-          <article class="card reveal delay-2" data-tilt>
-            <h3>Icons · git · LS_COLORS</h3>
-            <p>Nerd Font icons, git column, modern long colors — TTY smart defaults.</p>
+          <article class="card">
+            <h3>Tree</h3>
+            <p><code class="mono">--tree</code> for directory structure without a second tool.</p>
           </article>
-          <article class="card reveal" data-tilt>
+          <article class="card">
+            <h3>Icons · git · colors</h3>
+            <p>Nerd Font icons, git column, long-format colors — on by default when stdout is a TTY.</p>
+          </article>
+          <article class="card">
             <h3>f00-tui</h3>
-            <p>Separate dual-pane browser binary in the same release tarball.</p>
+            <p>Optional dual-pane browser binary in the same release tarball.</p>
           </article>
-          <article class="card reveal delay-1" data-tilt>
+          <article class="card">
             <h3>Self-update</h3>
-            <p><code class="mono">f00 --update</code> / <code class="mono">--check-update</code> via GitHub Releases + checksums.</p>
-          </article>
-          <article class="card reveal delay-2" data-tilt>
-            <h3>Lean defaults</h3>
-            <p>Default cargo features: git + io-uring. Archives / plugins / embedded TUI opt-in.</p>
+            <p><code class="mono">f00 --update</code> and <code class="mono">--check-update</code> from GitHub Releases with checksums.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- ═══ DEMOS ═══ -->
-    <section id="demos" class="demos-section" data-section="demos" data-motion="cinema">
+    <!-- Demos -->
+    <section id="demos" class="demos-section">
       <div class="wrap">
-        <div class="section-head reveal">
-          <h2>Interactive demos</h2>
-          <p>Click a mode — same terminal, different face of f00.</p>
+        <div class="section-head">
+          <h2>Demos</h2>
+          <p>Same tool, four faces: long listing, tree, JSON, and GNU mode.</p>
         </div>
 
-        <div class="demo-shell reveal" role="region" aria-label="Interactive demos">
+        <div class="demo-shell" role="region" aria-label="Demos">
           <div class="demo-tabs" data-demo-tabs role="tablist" aria-label="Demo modes">
             <button type="button" role="tab" data-demo-tab="long" aria-selected="true" aria-controls="pane-long" id="tab-long">long</button>
             <button type="button" role="tab" data-demo-tab="tree" aria-selected="false" aria-controls="pane-tree" id="tab-tree" tabindex="-1">tree</button>
@@ -319,7 +291,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
 <span class="d">d</span><span class="y">r</span><span class="x">w</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span>  <span class="y">glenda</span>  <span class="g">4.2K</span>  <span class="d">Jul 20</span>  <span class="d"> crates</span>
 <span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="m">-</span><span class="y">r</span><span class="m">--</span><span class="y">r</span><span class="m">--</span>  <span class="y">glenda</span>  <span class="g">1.8K</span>  <span class="d">Jul 20</span>  <span class="w"> README.md</span>
 <span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span><span class="y">r</span><span class="m">-</span><span class="g">x</span>  <span class="y">glenda</span>  <span class="g">12K</span>   <span class="d">Jul 20</span>  <span class="g"> install.sh</span>
-<span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="m">-</span><span class="y">r</span><span class="m">--</span><span class="y">r</span><span class="m">--</span>  <span class="y">glenda</span>  <span class="g">2.1K</span>  <span class="d">Jul 19</span>  <span class="w"> Cargo.toml</span>
+<span class="m">-</span><span class="y">r</span><span class="x">w</span><span class="m">-</span><span class="y">r</span><span class="m">--</span><span class="y">r</span><span class="m">--</span>  <span class="y">glenda</span>  <span class="g">2.1K</span>  <span class="d">Jul 20</span>  <span class="w"> Cargo.toml</span>
 <span class="cy">l</span><span class="y">r</span><span class="x">w</span><span class="g">x</span><span class="y">r</span><span class="x">w</span><span class="g">x</span><span class="y">r</span><span class="x">w</span><span class="g">x</span>  <span class="y">glenda</span>  <span class="m">  11</span>  <span class="d">Jul 19</span>  <span class="cy"> target</span> <span class="m">→</span> <span class="cy">/tmp/f00-target</span></pre>
             </div>
 
@@ -334,11 +306,11 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
 <span class="m">├──</span> <span class="d">f00-format</span>
 <span class="m">│   └──</span> <span class="d">src</span>
 <span class="m">│       └──</span> <span class="w">json.rs</span>
-<span class="m">└──</span> <span class="d">f00-tui</span>  <span class="m"># → binary f00-tui</span></pre>
+<span class="m">└──</span> <span class="d">f00-tui</span></pre>
             </div>
 
             <div id="pane-json" role="tabpanel" data-demo-pane="json" aria-labelledby="tab-json" hidden>
-              <pre class="term-body"><span class="c">$</span> <span class="w">f00 -j --color=always</span>  <span class="m"># pretty + colored</span>
+              <pre class="term-body"><span class="c">$</span> <span class="w">f00 -j --color=always</span>
 [
   {
     <span class="jk">"name"</span>: <span class="js">"README.md"</span>,
@@ -353,53 +325,53 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
   }
 ]
 
-<span class="c">$</span> <span class="w">f00 -j --color=never | jq '.[].name'</span>  <span class="m"># compact</span></pre>
+<span class="c">$</span> <span class="w">f00 -j --color=never | jq '.[].name'</span></pre>
             </div>
 
             <div id="pane-gnu" role="tabpanel" data-demo-pane="gnu" aria-labelledby="tab-gnu" hidden>
               <pre class="term-body"><span class="c">$</span> <span class="w">alias ls='f00 --gnu'</span>
 <span class="c">$</span> <span class="w">ls -lah --group-directories-first</span>
-<span class="c">$</span> <span class="w">ls -1v</span>          <span class="m"># strverscmp-like</span>
-<span class="c">$</span> <span class="w">ls -s1</span>          <span class="m"># total N + blocks</span>
-<span class="c">$</span> <span class="w">ls --color=tty</span>  <span class="m"># NixOS aliases work</span>
-<span class="m"># pipes auto-enable this shape without --gnu</span></pre>
+<span class="c">$</span> <span class="w">ls -1v</span>
+<span class="c">$</span> <span class="w">ls -s1</span>
+<span class="c">$</span> <span class="w">ls --color=tty</span>
+<span class="m"># non-TTY pipes use this shape automatically</span></pre>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ═══ BENCHMARKS ═══ -->
-    <section id="bench" class="bench-section" data-section="bench" data-motion="cinema">
+    <!-- Speed -->
+    <section id="speed" class="bench-section">
       <div class="wrap">
-        <div class="section-head reveal">
+        <div class="section-head">
           <h2>Speed</h2>
-          <p class="lead-tight">
-            Two tracks. Don’t mix them.
+          <p>
+            Two fair comparisons: coreutils shape vs modern tools.
+            Numbers from hyperfine on 20k files (colors off).
           </p>
         </div>
 
-        <div class="rules-grid reveal">
+        <div class="rules-grid">
           <div class="rule-card">
-            <span class="rule-kicker">Track A · drop-in</span>
+            <span class="rule-kicker">vs coreutils</span>
             <p><strong>coreutils <code class="mono">ls</code></strong> vs <strong><code class="mono">f00 --gnu</code></strong></p>
             <p class="muted">Same job: no icons, no git, script-shaped output.</p>
           </div>
           <div class="rule-card">
-            <span class="rule-kicker">Track B · modern tools</span>
-            <p><strong>eza / lsd</strong> vs <strong>product <code class="mono">f00</code></strong></p>
-            <p class="muted">Daily-driver defaults (no <code class="mono">--gnu</code>).</p>
+            <span class="rule-kicker">vs eza / lsd</span>
+            <p><strong>eza / lsd</strong> vs default <strong><code class="mono">f00</code></strong></p>
+            <p class="muted">Modern defaults (not <code class="mono">--gnu</code>).</p>
           </div>
         </div>
 
-        <div class="bench-shell reveal">
+        <div class="bench-shell">
           <div class="demo-tabs" data-bench-tabs role="tablist" aria-label="Benchmark tracks">
             <button type="button" role="tab" data-bench-tab="gnu" aria-selected="true" aria-controls="bench-gnu" id="tab-bench-gnu">vs coreutils</button>
             <button type="button" role="tab" data-bench-tab="modern" aria-selected="false" aria-controls="bench-modern" id="tab-bench-modern" tabindex="-1">vs eza / lsd</button>
             <button type="button" role="tab" data-bench-tab="unique" aria-selected="false" aria-controls="bench-unique" id="tab-bench-unique" tabindex="-1">f00-only</button>
           </div>
 
-          <!-- TRACK A -->
           <div id="bench-gnu" class="bench-pane" data-bench-pane="gnu" role="tabpanel" aria-labelledby="tab-bench-gnu">
             <p class="bench-pane-lead">
               <code class="mono">f00 --gnu</code> · 20k files · hyperfine 20× · colors off
@@ -421,15 +393,14 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
                   <div class="bar-row"><span class="bar-label">coreutils ls -1</span><span class="bar dim" style="--w:52%"></span><span class="bar-val">10.4 ms</span></div>
                   <div class="bar-row"><span class="bar-label">f00 --gnu -1</span><span class="bar" style="--w:100%"></span><span class="bar-val">20.1 ms</span></div>
                 </div>
-                <p class="muted">Getdents-tuned C still wins pure name dump. We’re closing the gap without stripping features.</p>
+                <p class="muted">Getdents-tuned C still wins pure name dump. Gap is closing without stripping features.</p>
               </article>
             </div>
           </div>
 
-          <!-- TRACK B -->
           <div id="bench-modern" class="bench-pane" data-bench-pane="modern" role="tabpanel" aria-labelledby="tab-bench-modern" hidden>
             <p class="bench-pane-lead">
-              product <code class="mono">f00</code> (not --gnu) · 20k files · hyperfine 20× · colors off
+              default <code class="mono">f00</code> · 20k files · hyperfine 20× · colors off
             </p>
             <div class="bench-grid two">
               <article class="bench-card hl-win">
@@ -454,7 +425,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
               </article>
               <article class="bench-card hl-win">
                 <h3><code class="mono">-l</code> + icons</h3>
-                <p class="bench-tag win">chrome still fast</p>
+                <p class="bench-tag win">still faster</p>
                 <div class="bench-bars">
                   <div class="bar-row"><span class="bar-label">f00 -l --icons</span><span class="bar" style="--w:73%"></span><span class="bar-val">40.8 ms</span></div>
                   <div class="bar-row"><span class="bar-label">eza -l --icons</span><span class="bar dim" style="--w:100%"></span><span class="bar-val">56.2 ms</span></div>
@@ -464,16 +435,15 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
               <article class="bench-card">
                 <h3>Summary</h3>
                 <p class="muted">
-                  Against modern Rust tools, product f00 wins the common cases —
-                  short, long, and icon long — without turning features off.
+                  Against eza and lsd, f00 wins short, long, and icon long on this
+                  workload — without turning features off.
                 </p>
               </article>
             </div>
           </div>
 
-          <!-- UNIQUE -->
           <div id="bench-unique" class="bench-pane" data-bench-pane="unique" role="tabpanel" aria-labelledby="tab-bench-unique" hidden>
-            <p class="bench-pane-lead">Surfaces the others don’t have.</p>
+            <p class="bench-pane-lead">Surfaces the others don’t ship.</p>
             <div class="bench-grid two">
               <article class="bench-card hl-win">
                 <h3>JSON <code class="mono">-j</code></h3>
@@ -481,13 +451,13 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
                 <div class="bench-bars">
                   <div class="bar-row"><span class="bar-label">f00 -j (20k)</span><span class="bar" style="--w:80%"></span><span class="bar-val">79.7 ms</span></div>
                 </div>
-                <p class="muted">Rich metadata JSON is a <strong>core</strong> product surface, not an afterthought.</p>
+                <p class="muted">Rich metadata JSON is a core surface, not a plugin or afterthought.</p>
               </article>
               <article class="bench-card">
                 <h3>Also unique</h3>
                 <ul class="plain-list">
                   <li><code class="mono">f00-tui</code> dual-pane browser</li>
-                  <li>Auto script-safe non-TTY (same as --gnu)</li>
+                  <li>Auto script-safe non-TTY (same as <code class="mono">--gnu</code>)</li>
                   <li>Full coreutils flag surface + <code class="mono">--update</code></li>
                 </ul>
               </article>
@@ -495,7 +465,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
           </div>
         </div>
 
-        <p class="bench-foot muted reveal">
+        <p class="bench-foot muted">
           Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.11 ·
           raw: <a href="/bench/hyperfine-20k.md">markdown</a> ·
           <a href="/bench/hyperfine-20k.json">json</a> ·
@@ -504,15 +474,15 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
       </div>
     </section>
 
-    <!-- ═══ INSTALL ═══ -->
-    <section id="install" class="install-section" data-section="install" data-motion="cinema">
+    <!-- Install -->
+    <section id="install" class="install-section">
       <div class="wrap">
-        <div class="section-head reveal">
+        <div class="section-head">
           <h2>Install</h2>
-          <p>One command. Options if you already live in another ecosystem.</p>
+          <p>One command, or your usual package manager.</p>
         </div>
 
-        <div class="install-shell reveal" role="region" aria-label="Install options">
+        <div class="install-shell" role="region" aria-label="Install options">
           <div class="demo-tabs install-tabs" data-install-tabs role="tablist" aria-label="Install method">
             <button type="button" role="tab" data-install-tab="curl" aria-selected="true" aria-controls="inst-curl" id="tab-curl">curl</button>
             <button type="button" role="tab" data-install-tab="nix" aria-selected="false" aria-controls="inst-nix" id="tab-nix" tabindex="-1">nix</button>
@@ -526,7 +496,7 @@ drwxr-xr-x  2 u  g  4096 Jul 20 11:58 subdir
 
           <div class="install-pane" id="inst-curl" data-install-pane="curl" role="tabpanel" aria-labelledby="tab-curl">
             <div class="install-row install-row-lg">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-line-2">curl -fsSL https://f00.sh/install.sh | bash</code>
               </div>
@@ -553,43 +523,43 @@ f00 --check-update</code></pre>
 
           <div class="install-pane" id="inst-nix" data-install-pane="nix" role="tabpanel" aria-labelledby="tab-nix" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-nix">nix profile install github:theesfeld/f00</code>
               </div>
               <button type="button" class="copy-btn" data-copy="#install-nix">copy</button>
             </div>
-            <p class="muted install-note">First-class · builds from source</p>
+            <p class="muted install-note">Builds from source via the flake</p>
             <pre class="code-block"><code>nix run github:theesfeld/f00 -- -la</code></pre>
           </div>
 
           <div class="install-pane" id="inst-cargo" data-install-pane="cargo" role="tabpanel" aria-labelledby="tab-cargo" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-cargo">cargo install f00 --locked</code>
               </div>
               <button type="button" class="copy-btn" data-copy="#install-cargo">copy</button>
             </div>
-            <p class="muted install-note">crates.io · lean defaults (git + io-uring)</p>
+            <p class="muted install-note">crates.io · defaults include git + io-uring</p>
             <pre class="code-block"><code>git clone https://github.com/theesfeld/f00.git
 cd f00 && cargo build --release -p f00 -p f00-tui</code></pre>
           </div>
 
           <div class="install-pane" id="inst-brew" data-install-pane="brew" role="tabpanel" aria-labelledby="tab-brew" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-brew">brew install theesfeld/tap/f00</code>
               </div>
               <button type="button" class="copy-btn" data-copy="#install-brew">copy</button>
             </div>
-            <p class="muted install-note">Homebrew · may lag GitHub Releases slightly · upgrade with <code class="mono">brew upgrade f00</code></p>
+            <p class="muted install-note">Homebrew · may lag GitHub Releases · upgrade with <code class="mono">brew upgrade f00</code></p>
           </div>
 
           <div class="install-pane" id="inst-aur" data-install-pane="aur" role="tabpanel" aria-labelledby="tab-aur" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-aur">yay -S f00</code>
               </div>
@@ -600,7 +570,7 @@ cd f00 && cargo build --release -p f00 -p f00-tui</code></pre>
 
           <div class="install-pane" id="inst-scoop" data-install-pane="scoop" role="tabpanel" aria-labelledby="tab-scoop" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-scoop">scoop install f00</code>
               </div>
@@ -611,13 +581,13 @@ cd f00 && cargo build --release -p f00 -p f00-tui</code></pre>
 
           <div class="install-pane" id="inst-winget" data-install-pane="winget" role="tabpanel" aria-labelledby="tab-winget" hidden>
             <div class="install-row install-row-lg">
-              <div class="install-cmd glow-cmd">
+              <div class="install-cmd">
                 <span class="dollar">$</span>
                 <code id="install-winget">winget install theesfeld.f00</code>
               </div>
               <button type="button" class="copy-btn" data-copy="#install-winget">copy</button>
             </div>
-            <p class="muted install-note">Windows winget · available after catalog merge · may lag Releases</p>
+            <p class="muted install-note">Windows winget · may lag Releases</p>
           </div>
 
           <div class="install-pane" id="inst-deb" data-install-pane="deb" role="tabpanel" aria-labelledby="tab-deb" hidden>
@@ -634,63 +604,46 @@ sudo rpm -i f00-*.rpm</code></pre>
       </div>
     </section>
 
-    <!-- ═══ GITHUB / OPEN SOURCE ═══ -->
-    <section id="github" class="github-section" data-section="github" data-motion="cinema">
-      <div class="wrap github-layout reveal">
+    <!-- GitHub -->
+    <section id="github" class="github-section">
+      <div class="wrap github-layout">
         <div class="github-copy">
           <p class="eyebrow">Open source</p>
-          <h2>Star on GitHub.</h2>
+          <h2>GitHub</h2>
           <p>
-            Roadmaps, issues, release trains, and evidence live on GitHub —
-            not on this page. If f00 is useful to you, a star helps others find it.
+            Issues, releases, and source live on GitHub. If f00 is useful to you,
+            a star helps others find it.
           </p>
-          <a
-            class="btn star-btn"
-            href="https://github.com/theesfeld/f00"
-            rel="noopener"
-            data-magnetic
-          >
+          <a class="btn star-btn" href="https://github.com/theesfeld/f00" rel="noopener">
             <span aria-hidden="true">★</span>
             Star theesfeld/f00
             <span class="star-count" data-github-stars>—</span>
           </a>
-          <p class="github-issues-note">
-            <strong data-github-issues>—</strong> open Issues right now are mostly
-            <em>roadmap and release bookkeeping</em> (one Issue per unit of work),
-            not twenty concurrent fires. Process trackers stay on
-            <a href="https://github.com/theesfeld/f00/issues">GitHub Issues</a>.
-          </p>
         </div>
-        <div class="github-stats" aria-label="GitHub popularity">
-          <div class="stat-card" data-tilt>
+        <div class="github-stats" aria-label="GitHub stats">
+          <div class="stat-card">
             <span class="stat-value" data-github-stars>—</span>
             <span class="stat-label">Stars</span>
-            <div class="stat-bar" data-stat-bar="stars" style="--fill: 0%"></div>
           </div>
-          <div class="stat-card" data-tilt>
+          <div class="stat-card">
             <span class="stat-value" data-github-forks>—</span>
             <span class="stat-label">Forks</span>
-            <div class="stat-bar" data-stat-bar="forks" style="--fill: 0%"></div>
           </div>
-          <div class="stat-card" data-tilt>
+          <div class="stat-card">
             <span class="stat-value" data-github-watchers>—</span>
             <span class="stat-label">Watchers</span>
-            <div class="stat-bar" data-stat-bar="watchers" style="--fill: 0%"></div>
           </div>
-          <div class="stat-card" data-tilt>
+          <div class="stat-card">
             <span class="stat-value" data-github-issues>—</span>
             <span class="stat-label">Open issues</span>
-            <div class="stat-bar" data-stat-bar="issues" style="--fill: 0%"></div>
           </div>
-          <p class="stat-footnote">
-            Live from the GitHub API. Bars are relative to the largest of these four counts.
-          </p>
+          <p class="stat-footnote">Live from the GitHub API.</p>
         </div>
       </div>
     </section>
 
-    <section id="docs" class="docs-section" data-section="docs" data-motion="cinema">
-      <div class="wrap docs-row reveal">
+    <section id="docs" class="docs-section">
+      <div class="wrap docs-row">
         <div>
           <h2>License</h2>
           <p class="muted">
@@ -710,7 +663,7 @@ sudo rpm -i f00-*.rpm</code></pre>
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <div class="copy">
-        <strong>f00</strong> — daily-driver <code class="mono">ls</code>.
+        <strong>f00</strong> — fully compliant <code class="mono">ls</code> in Rust.
         Latest:
         <a href="https://github.com/theesfeld/f00/releases/latest" data-version-href>
           <span data-version>v0.11.0</span>
@@ -718,7 +671,7 @@ sudo rpm -i f00-*.rpm</code></pre>
         © <span data-year>2026</span> · MIT OR Apache-2.0
       </div>
       <nav aria-label="Footer">
-        <a href="#bench">Speed</a>
+        <a href="#speed">Speed</a>
         <a href="#install">Install</a>
         <a href="/install.sh">install.sh</a>
         <a href="https://github.com/theesfeld/f00/releases">Releases</a>
