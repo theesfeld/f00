@@ -324,7 +324,7 @@
       heroP = clamp(y / (h * 0.85), 0, 1);
     }
 
-    return { y, p, heroP, vh };
+    return { y, p, heroP, vh, max };
   }
 
   function activeSectionId(y) {
@@ -358,17 +358,27 @@
     root.style.setProperty("--atm-c", atm.c);
   }
 
-  /** Continuous enter → hold → exit for a cinema section */
-  function cinemaForRect(rect, vh) {
-    // Enter: top travels from below viewport → upper third
-    const enter = smoothstep(vh * 0.98, vh * 0.22, rect.top);
-    // Exit: bottom climbs through upper half toward top
-    const exit = smoothstep(vh * 0.08, vh * 0.58, rect.bottom);
+  /**
+   * Continuous enter → hold → exit for a cinema section.
+   * enterOnly: no exit fade (finale blocks that can't scroll past hold zone).
+   */
+  function cinemaForRect(rect, vh, enterOnly) {
+    // Enter: full cinema needs top near upper third; enter-only finishes earlier
+    // so short end sections can resolve without more document height.
+    const enterEnd = enterOnly ? vh * 0.7 : vh * 0.22;
+    const enter = smoothstep(vh * 0.98, enterEnd, rect.top);
+    // Exit: bottom climbs through upper half — skipped for finale sections
+    const exit = enterOnly
+      ? 1
+      : smoothstep(vh * 0.08, vh * 0.58, rect.bottom);
     const vis = clamp(enter * exit, 0, 1);
 
-    // Slide through: below center = positive (rise in), above = negative (lift out)
+    // Slide: full cinema through; enter-only only rises in (never lifts out)
     const anchor = rect.top + Math.min(rect.height * 0.28, vh * 0.22);
-    const slide = clamp((anchor - vh * 0.42) / vh, -1.15, 1.15) * 64;
+    let slide = clamp((anchor - vh * 0.42) / vh, -1.15, 1.15) * 64;
+    if (enterOnly) {
+      slide = Math.max(0, slide) * (1 - vis);
+    }
 
     const scale = 0.94 + vis * 0.06;
     const blur = (1 - vis) * 9;
@@ -376,7 +386,7 @@
     return { vis, slide, scale, blur };
   }
 
-  function applyCinemaSections(vh) {
+  function applyCinemaSections(vh, y, maxScroll) {
     if (prefersReduced) {
       cinemaSections.forEach((sec) => {
         sec.style.setProperty("--sec-vis", "1");
@@ -387,8 +397,14 @@
       return;
     }
 
-    cinemaSections.forEach((sec) => {
+    const n = cinemaSections.length;
+    const nearEnd = maxScroll <= 1 || y >= maxScroll - 4;
+
+    cinemaSections.forEach((sec, i) => {
       const rect = sec.getBoundingClientRect();
+      // Last two sections: enter-only so page end never soft-exits
+      const enterOnly = i >= n - 2;
+
       // Skip work when fully off-screen
       if (rect.bottom < -80 || rect.top > vh + 80) {
         sec.style.setProperty("--sec-vis", "0");
@@ -397,7 +413,14 @@
         sec.style.setProperty("--sec-blur", "8");
         return;
       }
-      const m = cinemaForRect(rect, vh);
+
+      let m = cinemaForRect(rect, vh, enterOnly);
+
+      // At max scroll, pin finale sections fully sharp if any of them is on-screen
+      if (enterOnly && nearEnd && rect.bottom > 0 && rect.top < vh) {
+        m = { vis: 1, slide: 0, scale: 1, blur: 0 };
+      }
+
       sec.style.setProperty("--sec-vis", m.vis.toFixed(4));
       sec.style.setProperty("--sec-slide", m.slide.toFixed(2));
       sec.style.setProperty("--sec-scale", m.scale.toFixed(4));
@@ -427,7 +450,7 @@
 
   function applyScroll() {
     ticking = false;
-    const { y, p, heroP, vh } = scrollMetrics();
+    const { y, p, heroP, vh, max } = scrollMetrics();
 
     root.style.setProperty("--scroll-p", p.toFixed(4));
     root.style.setProperty("--hero-p", heroP.toFixed(4));
@@ -446,7 +469,7 @@
     }
 
     applyParallax(y);
-    applyCinemaSections(vh);
+    applyCinemaSections(vh, y, max);
 
     const active = activeSectionId(y);
     setActiveOrientation(active);
