@@ -5,7 +5,7 @@
 //! - Compact single-line when color is off (pipes, scripts, `--color=never`)
 
 use f00_core::Entry;
-use nu_ansi_term::{Color, Style};
+use nu_ansi_term::Style;
 use serde::Serialize;
 
 use crate::perms::format_permissions;
@@ -121,27 +121,21 @@ pub fn format_json_pretty(entries: &[Entry]) -> Result<String, serde_json::Error
     serde_json::to_string_pretty(&items)
 }
 
-/// Apply lightweight ANSI syntax highlighting to pretty-printed JSON text.
+/// Light structural emphasis for pretty JSON without forcing named hues.
 ///
-/// Does not re-parse as a tree — walks the pretty output so structure stays intact.
-/// Output remains human-oriented; strip ANSI for machines (`--color=never` path avoids this).
+/// Keys are **bold**, punctuation is **dim**, values stay plain — inherits the
+/// terminal foreground / theme. Machines should use `--color=never` (compact path).
 pub fn colorize_json(src: &str) -> String {
-    let key = Style::new().fg(Color::Cyan);
-    let string = Style::new().fg(Color::Green);
-    let number = Style::new().fg(Color::Yellow);
-    let literal = Style::new().fg(Color::Purple).bold();
-    let punct = Style::new().fg(Color::DarkGray);
+    let key = Style::new().bold();
+    let punct = Style::new().dimmed();
 
     let mut out = String::with_capacity(src.len().saturating_mul(2));
     let bytes = src.as_bytes();
     let mut i = 0;
-    // After a string that was a key (followed by ':'), don't recolor the same way —
-    // we detect keys as: string immediately followed by optional space and ':'.
     while i < bytes.len() {
         let c = bytes[i];
         match c {
             b'"' => {
-                // Scan string (with escapes).
                 let start = i;
                 i += 1;
                 while i < bytes.len() {
@@ -155,7 +149,6 @@ pub fn colorize_json(src: &str) -> String {
                     }
                 }
                 let s = &src[start..i];
-                // Peek for key: whitespace then ':'
                 let mut j = i;
                 while j < bytes.len() && matches!(bytes[j], b' ' | b'\t') {
                     j += 1;
@@ -163,52 +156,14 @@ pub fn colorize_json(src: &str) -> String {
                 if j < bytes.len() && bytes[j] == b':' {
                     out.push_str(&key.paint(s).to_string());
                 } else {
-                    out.push_str(&string.paint(s).to_string());
+                    out.push_str(s);
                 }
-            }
-            b'-' | b'0'..=b'9' => {
-                let start = i;
-                if bytes[i] == b'-' {
-                    i += 1;
-                }
-                while i < bytes.len() && bytes[i].is_ascii_digit() {
-                    i += 1;
-                }
-                if i < bytes.len() && bytes[i] == b'.' {
-                    i += 1;
-                    while i < bytes.len() && bytes[i].is_ascii_digit() {
-                        i += 1;
-                    }
-                }
-                if i < bytes.len() && matches!(bytes[i], b'e' | b'E') {
-                    i += 1;
-                    if i < bytes.len() && matches!(bytes[i], b'+' | b'-') {
-                        i += 1;
-                    }
-                    while i < bytes.len() && bytes[i].is_ascii_digit() {
-                        i += 1;
-                    }
-                }
-                out.push_str(&number.paint(&src[start..i]).to_string());
-            }
-            b't' if src[i..].starts_with("true") => {
-                out.push_str(&literal.paint("true").to_string());
-                i += 4;
-            }
-            b'f' if src[i..].starts_with("false") => {
-                out.push_str(&literal.paint("false").to_string());
-                i += 5;
-            }
-            b'n' if src[i..].starts_with("null") => {
-                out.push_str(&literal.paint("null").to_string());
-                i += 4;
             }
             b'{' | b'}' | b'[' | b']' | b':' | b',' => {
                 out.push_str(&punct.paint(&src[i..i + 1]).to_string());
                 i += 1;
             }
             _ => {
-                // whitespace and anything else
                 out.push(src[i..].chars().next().unwrap_or('\0'));
                 i += src[i..].chars().next().map(|ch| ch.len_utf8()).unwrap_or(1);
             }
