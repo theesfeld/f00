@@ -7,19 +7,19 @@ use clap::{ArgAction, Parser, ValueEnum};
 #[command(
     name = "f00",
     version,
-    about = "Fully compliant ls in Rust: coreutils drop-in (--gnu), modern TTY listings, JSON/tree",
+    about = "List directory contents (ls program written in Rust)",
     long_about = "\
-f00 lists directory contents. Written in Rust.
+f00 lists directory contents. The program is written in Rust.
 
-Flag groups:
-  GNU coreutils surface  — full ls flag set; use --gnu (or auto non-TTY) for script-safe output
-  Modern TTY             — --icons, --git, --color (default on a TTY)
-  f00-only               — --json / --json-full, --tree, --csv/--tsv, --update, --browse
+Option groups:
+  GNU coreutils  — full ls option set; use --gnu (or non-TTY) for script-safe output
+  Modern TTY     — --icons, --git, --color (default on a TTY)
+  f00-only       — --json / --json-full, --tree, --csv/--tsv, --update, --browse
 
-Names follow LS_COLORS. Long-format metadata uses the terminal ANSI palette and optional
-F00_COLORS / EZA_COLORS / EXA_COLORS (eza-compatible keys: da, sn, uu, gu, ur, …).
+File names use LS_COLORS. Long listing columns use the terminal ANSI palette.
+Optional maps: F00_COLORS, EZA_COLORS, EXA_COLORS (keys such as da, sn, uu, gu, ur).
 
-See man f00(1) and https://f00.sh
+Read man f00(1). Website: https://f00.sh
 ",
     // Free `-h` for human-readable (GNU ls style); keep `--help`.
     disable_help_flag = true

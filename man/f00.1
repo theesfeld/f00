@@ -2,7 +2,7 @@
 .\" Source of truth: man/f00.1 (tracked). clap --generate-man is a developer dump only.
 .TH F00 1 "July 2026" "f00 0.12.0" "User Commands"
 .SH NAME
-f00 \- fully compliant ls utility written in Rust (coreutils drop-in + modern listings)
+f00 \- list directory contents (ls program written in Rust)
 .SH SYNOPSIS
 .B f00
 [\fIOPTION\fR]... [\fIFILE\fR]...
@@ -20,46 +20,45 @@ f00 \- fully compliant ls utility written in Rust (coreutils drop-in + modern li
 \-\-browse
 .SH DESCRIPTION
 .B f00
-lists directory contents. It is written entirely in
-.B Rust
-and aims to be:
-.IP \(bu 2
-a
-.B drop-in
-for GNU coreutils
-.BR ls (1)
-when run with
-.B \-\-gnu
-(or automatically when stdout is not a TTY);
-.IP \(bu 2
-a modern daily listing tool that
-.B meets and exceeds
+lists directory contents.
+The program is written in
+.BR Rust .
+.P
+Use
+.B f00 \-\-gnu
+as a drop-in for GNU coreutils
+.BR ls (1).
+If stdout is not a TTY, f00 enables the same script-safe mode by default.
+Use
+.B \-\-no\-gnu
+to force modern output on a pipe.
+.P
+On a TTY, f00 can show icons, git status, colors, tree view, and JSON.
+f00 keeps the GNU
+.B ls
+option set.
+On measured short and long workloads, f00 is faster than
 .BR eza (1)
 and
-.BR lsd (1)
-on a TTY (icons, git status, tree, rich JSON) without giving up coreutils flag coverage.
+.BR lsd (1).
+See
+.I https://f00.sh
+for benchmark method and numbers.
 .P
-Default interactive (TTY) behavior uses modern listing defaults: colors when available,
-icons (auto), and git status when compiled with git support.
-Non\-TTY stdout (pipes, scripts, CI) automatically enables
-.B script-safe / GNU-equivalent
-behavior unless
-.B \-\-no\-gnu
-is given.
-.P
-The primary command is always
+The primary command name is
 .BR f00 .
-The installer never replaces system
-.IR /bin/ls
-by default. Optional aliases or
+The installer does not replace system
+.I /bin/ls
+by default.
+Optional aliases or
 .B F00_INSTALL_LS=1
-may put
+can put
 .B ls \(-> f00
-on your PATH only.
+on PATH only.
 .SH OUTPUT MODES
 .TP
 \fBDefault / columns\fR
-Multi-column listing on a TTY (like
+Multi-column listing on a TTY (same style as
 .BR ls ).
 .TP
 \fB\-1\fR
@@ -69,27 +68,30 @@ One name per line.
 Long listing (permissions, links, owner, group, size, time, name).
 .TP
 \fB\-C\fR / \fB\-x\fR / \fB\-m\fR
-Column / across / comma-separated formats.
+Column, across, or comma-separated formats.
 .TP
 \fB\-\-tree\fR
-Directory tree view.
+Directory tree.
 .TP
 \fB\-j\fR, \fB\-\-json\fR
-Compact JSON array of entries (script-friendly when color is off).
+Compact JSON array.
+With color off, output is plain text for
+.BR jq (1).
 .TP
 \fB\-\-json\-full\fR
-Full-metadata JSON (implies JSON mode). Includes type detail, device ids,
-unix timestamps, xattrs when available, executable/hidden flags, and related fields.
+Full metadata JSON (implies JSON mode).
+Fields include type detail, device ids, unix times, xattrs when available,
+and executable/hidden flags.
 .TP
 \fB\-\-csv\fR / \fB\-\-tsv\fR
-Tabular machine formats.
+CSV or TSV table output.
 .SH FLAG TAXONOMY
-Flags fall into three groups.
+Options fall into three groups.
 .SS 1. GNU coreutils surface
 .B f00
 accepts the GNU
 .B ls
-option surface used for drop-in scripting and compatibility, including (not exhaustive):
+options, including (not a full list):
 .P
 .B \-a \-A \-l \-1 \-C \-m \-x \-h \-\-si \-R \-r \-t \-S \-X \-v \-U \-f
 .br
@@ -107,78 +109,80 @@ option surface used for drop-in scripting and compatibility, including (not exha
 .br
 .B \-\-group\-directories\-first
 .P
-Under
+With
 .B \-\-gnu
-(or auto non-TTY mode), decorations such as icons and git columns are off and
-output is shaped for coreutils-compatible scripting. Byte-level parity against
-system
+(or auto non-TTY mode), icons and git columns are off.
+Output is for scripts.
+CI tests byte-level parity against system
 .B ls
-is tested in CI for a broad flag matrix.
-.SS 2. Modern listing (TTY \*(lqchrome\*(rq)
+for many option combinations.
+.SS 2. Modern listing (TTY)
 .TP
 \fB\-\-icons\fR[=\fIWHEN\fR]
-Nerd Font icons (auto/always/never). Default: auto on TTY; off under
+Nerd Font icons (auto/always/never). Default: auto on TTY. Off under
 .BR \-\-gnu .
 .TP
 \fB\-\-git\fR / \fB\-\-git=false\fR
 Show git status in long listings when the
 .B git
-feature is enabled (default on).
+feature is built in (default on).
 .TP
 \fB\-\-color\fR[=\fIWHEN\fR]
-auto | always | never (GNU WHEN synonyms accepted).
+auto | always | never (GNU WHEN synonyms are accepted).
 .TP
 \fB\-\-no\-gnu\fR
-Force modern behavior even when stdout is not a TTY (disables auto script-safe mode).
-.SS 3. f00\-only / functionality
+Force modern output when stdout is not a TTY.
+.SS 3. f00\-only options
 .TP
 \fB\-j\fR, \fB\-\-json\fR, \fB\-\-json\-full\fR
-Structured JSON (see
+JSON output (see
 .BR "JSON OUTPUT" ).
 .TP
 \fB\-\-tree\fR, \fB\-\-csv\fR, \fB\-\-tsv\fR
-Alternate structured views.
+Tree, CSV, or TSV output.
 .TP
 \fB\-\-gnu\fR
 Force GNU / script-safe mode.
 .TP
 \fB\-\-max\-depth\fR=\fIN\fR
-Limit recursion / tree depth.
+Limit recursion and tree depth.
 .TP
 \fB\-\-ignore\-files\fR / \fB\-\-no\-ignore\fR
-Honor or ignore ignore-files (when supported).
+Use or ignore ignore-files (when supported).
 .TP
 \fB\-\-archive\fR
 List inside archive files when the archive feature is enabled.
 .TP
 \fB\-\-threads\fR=\fIN\fR
-Parallelism for metadata (0 = auto).
+Metadata threads (0 = auto).
 .TP
 \fB\-\-io\-uring\fR
 Linux batch metadata (when built with io-uring).
 .TP
 \fB\-\-profile\fR
-Print timing profile to stderr.
+Print timing data to stderr.
 .TP
 \fB\-\-config\fR=\fIPATH\fR
-Load configuration file.
+Load a configuration file.
 .TP
 \fB\-\-browse\fR / \fB\-\-tui\fR
-Launch dual-pane browser (
+Start the dual-pane browser.
+Prefer the
 .B f00\-tui
-preferred as a separate binary).
+binary when present.
 .TP
 \fB\-\-update\fR / \fB\-\-check\-update\fR
-Self-update from GitHub Releases (checksum verified).
+Update from GitHub Releases (checksum verified).
 .TP
 \fB\-\-list\-plugins\fR
-List plugins when built with plugin support.
+List plugins when plugins are built in.
 .SH OPTIONS
 Many options match GNU
 .BR ls (1).
-Below are commonly used and f00-specific options. Run
+This section lists common and f00-specific options.
+Run
 .B f00 \-\-help
-for the complete generated flag list.
+for the full option list.
 .SS Filtering and sorting
 .TP
 \fB\-a\fR, \fB\-\-all\fR
@@ -396,24 +400,21 @@ is human-readable, as in GNU
 .BR ls ).
 .SH COLORS AND THEMES
 .B f00
-is designed to follow the
-.B terminal theme
-(for example Dracula or Monokai) rather than invent a private RGB palette.
+uses the terminal theme.
+It does not invent a private RGB palette for listing colors.
 .SS File names:
 .B LS_COLORS
-Names (and type indicators such as directories, executables, symlinks) are colored
-using the
+File names and type indicators use the
 .B LS_COLORS
-environment variable via the same conventions as GNU
+environment variable (same rules as GNU
 .BR ls
-/
-.BR dircolors (1).
+and
+.BR dircolors (1)).
 If
 .B LS_COLORS
-is unset, the standard dircolors defaults apply. Your terminal theme remaps the
-ANSI palette, so
-.RB \*(lq blue\*(rq
-directories track the theme's blue, and so on.
+is unset, standard dircolors defaults apply.
+The terminal maps ANSI colors to the active theme (for example Dracula or Monokai).
+
 .SS Long-format metadata (permissions, dates, sizes, owners, git)
 f00 paints metadata with the
 .B terminal ANSI palette
@@ -457,39 +458,40 @@ Useful keys:
 (meta/inode/nlink).
 Never uses hardcoded truecolor RGB for listing chrome.
 .SS JSON pretty mode
-When color is on, pretty JSON may use relative
-.B bold
-/
-.B dim
-emphasis so structure is readable without forcing a private hue palette.
+When color is on, pretty JSON uses ANSI palette colors (cyan keys, green strings,
+yellow numbers).
 Use
 .B \-\-color=never
-(or a pipe) for machine-parseable compact JSON without ANSI.
+or a pipe for compact JSON without ANSI.
 .SH JSON OUTPUT
 .SS Compact (\fB\-j\fR / \fB\-\-json\fR)
-One JSON array. Each object includes core fields such as:
+Output is one JSON array.
+Each object includes core fields:
 name, path, kind, size, mode / mode_octal, permissions, readonly,
-timestamps (when known), inode, nlink, blocks, uid, gid, owner, group,
+timestamps when known, inode, nlink, blocks, uid, gid, owner, group,
 symlink_target, extension, git_status, depth.
 .P
 With color off (default for pipes): single-line compact JSON for
 .BR jq (1).
-With color on: pretty-printed for humans.
+With color on: pretty-printed JSON.
 .SS Full (\fB\-\-json\-full\fR)
-All compact fields plus practical full metadata, including for example:
+Includes compact fields plus full metadata, for example:
 type_detail, full mode bits, device major/minor, rdev, blksize,
 unix epoch timestamps, is_file / is_dir / is_symlink / is_executable / is_hidden,
 absolute_path, author, SELinux context when available, and xattr names
-(Linux). Prefer
+(Linux).
+Use
 .B \-\-json\-full
-for tooling that needs a complete record; keep
+when you need the full record.
+Use
 .B \-j
-for speed and smaller payloads.
+for smaller, faster output.
 .SH TREE OUTPUT
 .B f00 \-\-tree
 [\fIPATH\fR]
-prints a hierarchical listing. Combine with filters, depth limits, and color/icons
-as appropriate. Example:
+shows a directory tree.
+You can combine tree with filters, depth limits, color, and icons.
+Example:
 .P
 .nf
 .RS
@@ -551,7 +553,7 @@ Aligned with GNU
 .B ls
 exit conventions where applicable.
 .SH INSTALLATION
-Recommended:
+Recommended install command:
 .P
 .nf
 .RS
@@ -559,17 +561,19 @@ curl \-fsSL https://f00.sh/install.sh | bash
 .RE
 .fi
 .P
-Installs
+The installer installs
 .B f00
-(and
-.B f00\-tui
-when present) to
+to
 .B ~/.local/bin
-by default, and installs this man page to
+by default.
+It installs
+.B f00\-tui
+when the archive includes it.
+It installs this man page to
 .B ~/.local/share/man/man1/f00.1
-when included in the release archive.
+when the archive includes the man page.
 .P
-Useful installer environment variables:
+Installer environment variables:
 .TP
 \fBINSTALL_DIR\fR
 Binary install directory (default:
@@ -598,7 +602,8 @@ Set to
 .B 1
 to also symlink
 .B ls \(-> f00
-in the install directory (never overwrites a non-symlink).
+in the install directory.
+This does not overwrite a non-symlink.
 .TP
 \fBF00_INSTALL_TUI\fR
 Set to
@@ -606,7 +611,11 @@ Set to
 to skip
 .BR f00\-tui .
 .P
-After install, ensure man can find user pages, for example:
+If
+.B man
+does not find the page, set
+.BR MANPATH ,
+for example:
 .P
 .nf
 .RS
@@ -626,22 +635,25 @@ f00 \-\-update
 .RE
 .fi
 .P
-Or re-run the installer. Package-manager installs should use that manager's
-upgrade path (for example
-.BR "brew upgrade f00" ,
+You can also re-run the installer.
+For package-manager installs, use that manager upgrade command
+(for example
+.BR "brew upgrade f00"
+or
 .BR "nix profile upgrade" ).
 .SH EXAMPLES
 .TP
-List current directory with modern TTY defaults:
+List the current directory (TTY defaults):
 .B f00 \-la
 .TP
-Strict coreutils-shaped long listing:
+Long listing in GNU style:
 .B f00 \-\-gnu \-lah
 .TP
-Drop-in alias for scripts that need GNU behavior:
+Alias for GNU-style
+.BR ls :
 .B alias ls='f00 \-\-gnu'
 .TP
-Tree of a crate tree:
+Show a tree:
 .B f00 \-\-tree crates
 .TP
 Compact JSON for
@@ -651,7 +663,7 @@ Compact JSON for
 Full metadata JSON:
 .B f00 \-\-json\-full README.md
 .TP
-Pipe-safe by default (auto GNU-equivalent):
+Pipe (script-safe by default):
 .B f00 \-la /tmp | head
 .SH SEE ALSO
 .BR ls (1),
@@ -666,10 +678,11 @@ Website:
 Source:
 .I https://github.com/theesfeld/f00
 .SH BUGS
-Report issues at
+Report defects at
 .IR https://github.com/theesfeld/f00/issues .
 .SH AUTHORS
-f00 contributors. See the project repository.
+f00 contributors.
+See the project repository.
 .SH COPYRIGHT
-Licensed under MIT OR Apache-2.0.
+License: MIT OR Apache-2.0.
 .\" end of man page

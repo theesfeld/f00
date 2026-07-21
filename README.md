@@ -10,39 +10,47 @@
 [![crates.io](https://img.shields.io/crates/v/f00?style=flat-square)](https://crates.io/crates/f00)
 [![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows%20%7C%20bsd-lightgrey?style=flat-square)](https://f00.sh)
 
-**f00** is a fully compliant **`ls`** utility written entirely in **Rust**. It is a drop-in for GNU coreutils `ls`, and it meets and exceeds **eza** and **lsd** for modern listings (icons, git, tree, rich **JSON**) without giving up coreutils flag coverage.
+**f00** lists directory contents. The program is written in **Rust**.
 
-| Surface | Behavior |
-|---------|----------|
-| **TTY** | Icons (auto), git (default), colors (auto) |
-| **Non-TTY** (pipes/CI) | **Script-safe by default** (GNU-equivalent; same as `--gnu`) |
-| **Force** | `--gnu` / `F00_GNU=1` · modern on pipes: `--no-gnu` / `F00_NO_GNU=1` |
+Use **`f00 --gnu`** as a drop-in for GNU coreutils **`ls`**. On a TTY, f00 also shows icons, git status, tree view, and JSON. On measured short and long workloads, f00 is faster than **eza** and **lsd**.
 
-**Website:** [https://f00.sh](https://f00.sh) · **Binaries:** `f00` · `f00-tui` · **Latest:** v0.12.0
+| Output | Behavior |
+|--------|----------|
+| **TTY** | Icons (auto), git (default on), colors (auto) |
+| **Non-TTY** (pipe / CI) | Script-safe mode by default (same as `--gnu`) |
+| **Force** | Always GNU: `--gnu` or `F00_GNU=1`. Always modern on a pipe: `--no-gnu` or `F00_NO_GNU=1` |
+
+**Website:** [https://f00.sh](https://f00.sh) · **Programs:** `f00`, `f00-tui` · **Version:** v0.12.0 · **Manual:** `man f00`
 
 <!-- agents:status:begin -->
-> **Status:** **v0.12.0** shipped · Phase: [#121](https://github.com/theesfeld/f00/issues/121) · Latest: `v0.12.0` · 0.x minors may include breaking changes · man: `man f00` · [MIGRATION.md](MIGRATION.md)
+> **Status:** **v0.12.0** · Latest release: [`v0.12.0`](https://github.com/theesfeld/f00/releases/tag/v0.12.0) · 0.x minor versions can include breaking changes · [MIGRATION.md](MIGRATION.md)
 <!-- agents:status:end -->
 
 ---
 
 ## Install
 
-### Quick install (recommended)
+### Install with the installer (recommended)
 
 ```bash
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-Installs **`f00`** (and **`f00-tui`** when present in the release) to **`~/.local/bin`** by default (`INSTALL_DIR` to override). Adds that dir to your shell rc when missing from `PATH` (`ADD_PATH=0` to skip). `F00_INSTALL_TUI=0` skips the browser binary.
+The installer does this:
 
-Also installs the man page **`f00(1)`** to **`~/.local/share/man/man1/f00.1`** (or `$XDG_DATA_HOME/man/man1`) when the release archive includes it. Override with `MAN_DIR=…`; skip with `F00_INSTALL_MAN=0`. Then: `man f00`.
+1. Installs **`f00`** to **`~/.local/bin`** (override with `INSTALL_DIR`).
+2. Installs **`f00-tui`** when the release archive includes it (`F00_INSTALL_TUI=0` skips it).
+3. Installs **`f00(1)`** to **`~/.local/share/man/man1/f00.1`** (or `$XDG_DATA_HOME/man/man1`) when the archive includes the man page. Override with `MAN_DIR`. Skip with `F00_INSTALL_MAN=0`.
+4. Adds the install directory to your shell configuration if it is not on `PATH` (`ADD_PATH=0` skips this).
 
-**Hard rule:** `man/f00.1` must always match the live product (flags, version, documented surfaces). CI runs `scripts/check-man-sync.sh` on every PR. Update the man page in the **same** change that alters CLI behavior or `Cargo.toml` version.
 ```bash
 curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.12.0 bash
 curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
+man f00
 ```
+
+**Note for maintainers:** `man/f00.1` must match the live program. CI runs `scripts/check-man-sync.sh`. Update the man page in the same change as CLI or version updates.
+
 ### Nix
 
 ```bash
@@ -50,9 +58,9 @@ nix profile install github:theesfeld/f00
 # or: nix run github:theesfeld/f00 -- -la
 ```
 
-### Other package managers (community / convenience)
+### Other package managers
 
-These track GitHub Releases when maintained; **install.sh and Nix are the first-class paths**. Prefer the package manager’s upgrade command when you use one; use `f00 --update` for installs from `install.sh`.
+The primary install paths are **install.sh** and **Nix**. Other channels track GitHub Releases when maintained.
 
 | Channel | Command |
 |---------|---------|
@@ -61,72 +69,71 @@ These track GitHub Releases when maintained; **install.sh and Nix are the first-
 | **AUR** | `yay -S f00` |
 | **Scoop / winget / deb / rpm** | See [Releases](https://github.com/theesfeld/f00/releases) |
 
-**We never replace system `/bin/ls` by default.** The primary command is always `f00`.
+Use the package manager upgrade command for package installs. Use `f00 --update` for installer installs.
 
-### Using f00 as `ls`
+**Default:** f00 does **not** replace system `/bin/ls`. The primary command name is **`f00`**.
 
-Most people should keep typing **`f00`**. If you want muscle memory for `ls`, pick one opt-in path:
+### Use f00 as `ls` (optional)
 
-**1. Shell alias (recommended for interactive use)**
+Keep the command name **`f00`** unless you need the name `ls`.
+
+**1. Shell alias (interactive shells)**
 
 ```bash
-# modern defaults (icons, git, …)
+# Modern defaults (icons, git)
 echo "alias ls='f00'" >> ~/.bashrc    # or ~/.zshrc
 echo "alias ll='f00 -la'" >> ~/.bashrc
 
-# coreutils-shaped (no icons/git; better for scripts)
+# GNU-style output (no icons/git; better for scripts)
 # echo "alias ls='f00 --gnu'" >> ~/.bashrc
 # or: export F00_GNU=1
 ```
 
-Aliases only affect interactive shells. Non-interactive scripts keep using `/bin/ls` unless they call your alias-enabled shell.
+Aliases apply only in interactive shells. Scripts keep system `/bin/ls` unless they use your shell with aliases.
 
-**2. Optional PATH symlink (installer opt-in)**
+**2. PATH symlink (installer option)**
 
 ```bash
 curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash
 ```
 
-Creates `…/bin/ls` → `f00` next to the binary. Anything that finds `ls` on your `PATH` (before `/bin`) will run f00. Does **not** overwrite `/bin/ls`.
+This creates `ls` → `f00` in the install directory. It does **not** overwrite `/bin/ls`.
 
-**3. Soft drop-in when the binary is named `ls`**
+**3. Binary named `ls`**
 
-If you symlink or rename so argv0 is `ls`, f00 keeps full TTY defaults (icons, git, modern colors) — same as `f00`. Dirs-first stays off by default (like GNU). **Strict plain coreutils** still needs `--gnu` or `F00_GNU=1`.
-
-More detail: [f00.sh#as-ls](https://f00.sh/#as-ls)
+If the binary name is `ls` (symlink or rename), TTY defaults stay the same as `f00` (icons, git, colors). Directory-first sort stays off by default (like GNU). For strict coreutils-style output, use `--gnu` or `F00_GNU=1`.
 
 ### Update
 
 ```bash
 f00 --update          # or: f00 update
-f00 --check-update    # or: f00 check-update  (exit 1 if behind)
+f00 --check-update    # or: f00 check-update  (exit code 1 if a newer release exists)
 ```
 
 ---
 
-## Features
+## Features (v0.12.0)
 
 | Area | Status | Notes |
 |------|--------|--------|
-| **GNU coreutils `ls`** | Shipped | Flag surface + **`--gnu` behavior parity** (CI tests vs system `ls`) |
-| **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` + `QUOTING_STYLE` |
-| **LS_COLORS** | Shipped | Via `lscolors` / env; **dotfiles** dimmed (darker grey) when color is on |
-
-| **Speed** | Shipped | Parallel `stat` (rayon), cheap short path, uid cache, Linux `statx` + **io_uring** batch, `--threads`, `--profile` |
+| **GNU coreutils `ls` options** | Shipped | Full option surface. **`--gnu`** parity tested in CI against system `ls` |
+| **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` and `QUOTING_STYLE` |
+| **File name colors** | Shipped | **`LS_COLORS`** (dircolors / `lscolors`) |
+| **Long listing colors** | Shipped | Terminal ANSI palette. Optional **`F00_COLORS` / `EZA_COLORS` / `EXA_COLORS`** |
+| **Speed** | Shipped | Parallel metadata (rayon), Linux `statx`, optional **io_uring**, `--threads`, `--profile` |
 | **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
 | **Git status** | Shipped | Default feature |
-| **Icons** | Shipped | Nerd Font glyphs (eza-style special dirs + file types); `--icons[=auto\|always\|never]` (default: auto on TTY) |
-| **JSON** | **Core** | Compact `-j` / `--json`; full metadata via **`--json-full`**; pretty + ANSI theme colors on TTY; compact plain when color is off |
-| **CSV / TSV / tree** | Shipped | Machine formats + tree view |
-| **Colors** | Shipped | Names: **`LS_COLORS`**. Long metadata: terminal **ANSI palette** + optional **`F00_COLORS` / `EZA_COLORS` / `EXA_COLORS`** |
-| **TOML config** | Shipped | XDG / AppData |
+| **Icons** | Shipped | Nerd Font glyphs; `--icons[=auto\|always\|never]` (default: auto on TTY) |
+| **JSON** | Shipped | Compact `-j` / `--json`. Full metadata: **`--json-full`**. Pretty ANSI colors on TTY. Plain when color is off |
+| **CSV / TSV / tree** | Shipped | `--csv`, `--tsv`, `--tree` |
+| **TOML config** | Shipped | XDG / AppData paths |
 | **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
-| **Man page** | Shipped | `f00 --generate-man` · committed `man/f00.1` |
-| **TUI browser** | Shipped | Separate **`f00-tui`** binary — dual-pane FM, syntax preview, `$EDITOR`/`$PAGER` |
-| **Archives** | Opt-in feature | zip / tar / tar.gz as virtual dirs (`--features archives`) |
-| **Ignore files** | Shipped | `--ignore-files` → `.gitignore` / `.f00ignore` |
-| **Self-update** | Shipped | `--update` / `--check-update` via GitHub Releases |
-| **Plugins** | Opt-in feature | Feature `plugins` · ABI v1 · decorate hooks |
+| **Man page** | Shipped | Tracked **`man/f00.1`**. Installed by `install.sh`. CI checks sync with CLI |
+| **TUI browser** | Shipped | Separate binary **`f00-tui`** |
+| **Archives** | Opt-in | zip / tar / tar.gz as virtual directories (`--features archives`) |
+| **Ignore files** | Shipped | `--ignore-files` (`.gitignore` / `.f00ignore`) |
+| **Self-update** | Shipped | `--update` / `--check-update` from GitHub Releases |
+| **Plugins** | Opt-in | Feature `plugins` |
 
 ---
 
@@ -155,10 +162,10 @@ f00 -l --time-style=long-iso
 f00 --hide='*.o' -1
 f00 --hyperlink=auto -1
 
-# JSON is a core surface (rich metadata: inode, times, owner, permissions, …)
-f00 --json             # TTY + color: pretty, syntax-colored
-f00 -j                 # short for --json (not used by GNU ls)
-f00 --json --color=always | less -R
+# JSON (compact and full)
+f00 --json             # TTY + color: pretty output
+f00 -j                 # short form of --json
+f00 --json-full        # full metadata fields
 f00 --json --color=never | jq '.[].name'   # compact, no ANSI
 f00 --csv
 f00 --tsv
@@ -251,19 +258,18 @@ f00 --generate-man | man -l -
 
 ---
 
-## Flag groups
+## Option groups
 
 | Group | Examples | Notes |
 |-------|----------|--------|
-| **GNU coreutils** | `-aA -l1Cmx -h --si -Rr -tSXvUf -d -Fp -BI -LH -goGn -is -uc -Z --zero -D --dired --quoting-style --time-style --block-size --author --hyperlink --format --sort --time --group-directories-first --full-time --color` | Full surface; **`--gnu`** / auto non-TTY for script-safe output |
-| **Modern TTY** | `--icons` · `--git` · `--color` | Default on a TTY; off under `--gnu` |
-| **f00-only** | `-j` / `--json` · **`--json-full`** · `--tree` · `--csv`/`--tsv` · `--update` · `--browse` / `f00-tui` | Beyond coreutils |
+| **GNU coreutils** | `-aA -l1Cmx -h --si -Rr -tSXvUf -d -Fp -BI -LH -goGn -is -uc -Z --zero -D --dired --quoting-style --time-style --block-size --author --hyperlink --format --sort --time --group-directories-first --full-time --color` | Full option set. Use **`--gnu`** or non-TTY for script-safe output |
+| **Modern TTY** | `--icons` · `--git` · `--color` | Default on a TTY. Off under `--gnu` |
+| **f00-only** | `-j` / `--json` · **`--json-full`** · `--tree` · `--csv` / `--tsv` · `--update` · `--browse` / `f00-tui` | Not in GNU `ls` |
 
-Strict `--gnu` / `F00_GNU=1`: no icons/git decorations, classic sort, script-safe.  
-**Non-TTY stdout auto-enables the same mode** unless `--no-gnu` / `F00_NO_GNU=1`.
+With **`--gnu`** or **`F00_GNU=1`**: no icons, no git column, script-safe output.  
+If stdout is not a TTY, f00 uses the same mode unless you set **`--no-gnu`** or **`F00_NO_GNU=1`**.
 
-Manual: **`man f00`** (installed with `install.sh` into `~/.local/share/man/man1`).
----
+Read the manual: **`man f00`**.---
 
 ## Cargo features
 
