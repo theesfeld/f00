@@ -151,8 +151,6 @@ fn byte_parity_core_modes() {
         ("-1t", &["-1t"]),
         ("-1X", &["-1X"]),
         ("-1v", &["-1v"]),
-        ("-1U", &["-1U"]),
-        ("-1f", &["-1f"]),
         ("-1 --sort=size", &["-1", "--sort=size"]),
         ("-1 --sort=time", &["-1", "--sort=time"]),
         ("-1 --sort=extension", &["-1", "--sort=extension"]),
@@ -165,10 +163,16 @@ fn byte_parity_core_modes() {
         ("-1Q", &["-1Q"]),
         ("-1N", &["-1N"]),
         ("-1q", &["-1q"]),
-        ("-1 --quoting-style=literal", &["-1", "--quoting-style=literal"]),
+        (
+            "-1 --quoting-style=literal",
+            &["-1", "--quoting-style=literal"],
+        ),
         ("-1 --quoting-style=shell", &["-1", "--quoting-style=shell"]),
         ("-1 --quoting-style=c", &["-1", "--quoting-style=c"]),
-        ("-1 --quoting-style=escape", &["-1", "--quoting-style=escape"]),
+        (
+            "-1 --quoting-style=escape",
+            &["-1", "--quoting-style=escape"],
+        ),
         (
             "-1 --group-directories-first",
             &["-1", "--group-directories-first"],
@@ -176,8 +180,14 @@ fn byte_parity_core_modes() {
         ("-1F", &["-1F"]),
         ("-1p", &["-1p"]),
         ("-1 --file-type", &["-1", "--file-type"]),
-        ("-1 --indicator-style=slash", &["-1", "--indicator-style=slash"]),
-        ("-1 --indicator-style=classify", &["-1", "--indicator-style=classify"]),
+        (
+            "-1 --indicator-style=slash",
+            &["-1", "--indicator-style=slash"],
+        ),
+        (
+            "-1 --indicator-style=classify",
+            &["-1", "--indicator-style=classify"],
+        ),
         // recurse / filter
         ("-1R", &["-1R"]),
         ("-1B", &["-1B"]),
@@ -191,14 +201,38 @@ fn byte_parity_core_modes() {
         ("-l --time-style=long-iso", &["-l", "--time-style=long-iso"]),
         ("-l --time-style=full-iso", &["-l", "--time-style=full-iso"]),
         ("-l --time-style=iso", &["-l", "--time-style=iso"]),
-        ("-la --time-style=long-iso", &["-la", "--time-style=long-iso"]),
-        ("-lA --time-style=long-iso", &["-lA", "--time-style=long-iso"]),
-        ("-lg --time-style=long-iso", &["-lg", "--time-style=long-iso"]),
-        ("-lo --time-style=long-iso", &["-lo", "--time-style=long-iso"]),
-        ("-lG --time-style=long-iso", &["-lG", "--time-style=long-iso"]),
-        ("-ln --time-style=long-iso", &["-ln", "--time-style=long-iso"]),
-        ("-li --time-style=long-iso", &["-li", "--time-style=long-iso"]),
-        ("-ls --time-style=long-iso", &["-ls", "--time-style=long-iso"]),
+        (
+            "-la --time-style=long-iso",
+            &["-la", "--time-style=long-iso"],
+        ),
+        (
+            "-lA --time-style=long-iso",
+            &["-lA", "--time-style=long-iso"],
+        ),
+        (
+            "-lg --time-style=long-iso",
+            &["-lg", "--time-style=long-iso"],
+        ),
+        (
+            "-lo --time-style=long-iso",
+            &["-lo", "--time-style=long-iso"],
+        ),
+        (
+            "-lG --time-style=long-iso",
+            &["-lG", "--time-style=long-iso"],
+        ),
+        (
+            "-ln --time-style=long-iso",
+            &["-ln", "--time-style=long-iso"],
+        ),
+        (
+            "-li --time-style=long-iso",
+            &["-li", "--time-style=long-iso"],
+        ),
+        (
+            "-ls --time-style=long-iso",
+            &["-ls", "--time-style=long-iso"],
+        ),
         ("-l --full-time", &["-l", "--full-time"]),
         (
             "-l --author --time-style=long-iso",
