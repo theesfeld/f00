@@ -157,7 +157,7 @@ fn byte_parity_core_modes() {
         ("-1 --sort=version", &["-1", "--sort=version"]),
         ("-1 --sort=none", &["-1", "--sort=none"]),
         ("-1 --sort=width", &["-1", "--sort=width"]),
-        ("-1 --sort=name", &["-1", "--sort=name"]),
+        // note: GNU does not accept `--sort=name` (name is the default)
         // indicators / quoting
         ("-1b", &["-1b"]),
         ("-1Q", &["-1Q"]),
