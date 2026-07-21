@@ -75,7 +75,7 @@ fn resolve_output(args: &Args) -> OutputMode {
         OutputMode::Csv
     } else if args.tsv {
         OutputMode::Tsv
-    } else if args.json {
+    } else if args.json || args.json_full {
         OutputMode::Json
     } else if args.tree {
         OutputMode::Tree
@@ -289,8 +289,9 @@ pub fn build_config(args: &Args) -> Config {
     let needs_names = (matches!(output, OutputMode::Long)
         && ((show_owner && !args.numeric_uid_gid) || (show_group && !args.numeric_uid_gid)))
         || (machine && !args.numeric_uid_gid);
-    list.resolve_owner_group = needs_names || args.author;
-    list.read_selinux = args.context;
+    list.resolve_owner_group = needs_names || args.author || args.json_full;
+    // Full JSON always tries SELinux context when present; `-Z` still controls display elsewhere.
+    list.read_selinux = args.context || args.json_full;
     list.linux_statx = true;
     list.io_uring = args.io_uring && cfg!(feature = "io-uring");
     // Tree does not use section headers; skip them for less work and cleaner depths.
@@ -371,6 +372,7 @@ pub fn build_config(args: &Args) -> Config {
         time_style: resolve_time_style(args),
         // Per-listing override in format_listings for file operands.
         emit_block_total: true,
+        json_full: args.json_full,
     }
 }
 

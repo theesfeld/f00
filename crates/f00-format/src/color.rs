@@ -1,12 +1,19 @@
-//! Color engine using the `lscolors` crate fully from `LS_COLORS`.
+//! Color engine driven by the user's `LS_COLORS` theme.
+//!
+//! **Policy (v0.12):**
+//! - Filenames and symlink targets use **only** `LS_COLORS` (via `lscolors`).
+//! - Long-format metadata, git status, and similar chrome never force named hues
+//!   (Blue / Yellow / Red / Cyan / …). At most relative **dim** / **bold** so the
+//!   terminal palette and theme stay in control.
+//! - When color is off, all paint helpers return plain text.
 
 use std::path::Path;
 
 use f00_core::{Entry, EntryKind};
-use lscolors::{LsColors, Style};
-use nu_ansi_term::Color;
+use lscolors::{Indicator, LsColors, Style};
+use nu_ansi_term::Style as AnsiStyle;
 
-/// Color engine wrapping `LS_COLORS` / defaults.
+/// Color engine wrapping `LS_COLORS` / dircolors defaults.
 #[derive(Clone)]
 pub struct Colorizer {
     enabled: bool,
@@ -15,6 +22,10 @@ pub struct Colorizer {
 
 impl Colorizer {
     /// Build from environment (`LS_COLORS`) when enabled.
+    ///
+    /// `LsColors::from_env()` falls back to the standard dircolors defaults when
+    /// the variable is unset, so a color-capable terminal still gets the user's
+    /// (or distro's) type colors without hard-coding a private palette.
     pub fn new(enabled: bool) -> Self {
         Self {
             enabled,
@@ -39,47 +50,28 @@ impl Colorizer {
         self.enabled
     }
 
-    /// Colorize a display name for an entry using full LS_COLORS matching.
+    /// Colorize a display name using **only** `LS_COLORS` matching.
     ///
-    /// Hidden / dotfile names (leading `.`) are painted **darker grey** so they
-    /// recede next to normal entries (eza-style). Applies whenever colors are on,
-    /// including under `--gnu` when color is forced on.
+    /// No private fallback palette and no forced grey for dotfiles — hidden
+    /// names follow `mh=` / extension / type rules from the user's theme.
     pub fn paint_name(&self, entry: &Entry, text: &str) -> String {
         if !self.enabled {
             return text.to_string();
         }
-
-        if is_dotfile_name(&entry.name) {
-            return Color::DarkGray.paint(text).to_string();
-        }
-
-        // Prefer path + metadata style when possible.
         if let Some(style) = self.style_for_entry(entry) {
             return paint_with_ls_style(text, style);
         }
-
-        // Fallback by kind
-        match entry.kind {
-            EntryKind::Directory => Color::Blue.bold().paint(text).to_string(),
-            EntryKind::Symlink => Color::Cyan.paint(text).to_string(),
-            EntryKind::File if entry_is_exec(entry) => Color::Green.bold().paint(text).to_string(),
-            EntryKind::File => text.to_string(),
-            EntryKind::Other => Color::Yellow.paint(text).to_string(),
-        }
+        text.to_string()
     }
 
     /// Resolve LS_COLORS style for an entry (extension, type indicators, etc.).
     pub fn style_for_entry<'a>(&'a self, entry: &'a Entry) -> Option<&'a Style> {
-        // Try path with metadata-like hints via style_for_path first.
         if let Some(style) = self.ls.style_for_path(&entry.path) {
             return Some(style);
         }
-        // Extension / name patterns
         if let Some(style) = self.ls.style_for_path(Path::new(&entry.name)) {
             return Some(style);
         }
-        // Indicator by kind
-        use lscolors::Indicator;
         let indicator = match entry.kind {
             EntryKind::Directory => Some(Indicator::Directory),
             EntryKind::Symlink => Some(Indicator::SymbolicLink),
@@ -105,30 +97,28 @@ impl Colorizer {
         indicator.and_then(|i| self.ls.style_for_indicator(i))
     }
 
+    /// Git status character: bold when dirty, dim when ignored — no fixed hues.
     pub fn paint_git_char(&self, ch: char) -> String {
         if !self.enabled {
             return ch.to_string();
         }
         let s = ch.to_string();
         match ch {
-            'M' => Color::Yellow.bold().paint(s).to_string(),
-            'A' => Color::Green.bold().paint(s).to_string(),
-            'D' | 'U' => Color::Red.bold().paint(s).to_string(),
-            '?' => Color::Purple.paint(s).to_string(),
-            '!' => Color::DarkGray.paint(s).to_string(),
-            'R' => Color::Cyan.bold().paint(s).to_string(),
-            _ => s,
+            '!' => dim_paint(&s),
+            ' ' => s,
+            _ => bold_paint(&s),
         }
     }
 
-    /// Whether modern multi-column long-format theming should run.
+    /// Whether modern long-format chrome (dim/bold accents) should run.
     ///
-    /// On for friendly (non-GNU) mode when colors are enabled; off under `--gnu`.
+    /// On for friendly (non-GNU) mode when colors are enabled; off under `--gnu`
+    /// so GNU listings stay plain aside from name `LS_COLORS` when forced on.
     pub fn modern_long_theme(&self, gnu_mode: bool) -> bool {
         self.enabled && !gnu_mode
     }
 
-    /// Permission string (e.g. `-rwxr-xr-x`) with type letter + rwx tinting.
+    /// Permission string: type letter bold, dashes dim — no hue roles.
     pub fn paint_perms(&self, perms: &str, gnu_mode: bool) -> String {
         if !self.modern_long_theme(gnu_mode) || perms.is_empty() {
             return perms.to_string();
@@ -137,20 +127,13 @@ impl Colorizer {
         for (i, ch) in perms.chars().enumerate() {
             let painted = if i == 0 {
                 match ch {
-                    'd' => Color::Blue.bold().paint(ch.to_string()).to_string(),
-                    'l' => Color::Cyan.bold().paint(ch.to_string()).to_string(),
-                    'c' | 'b' => Color::Yellow.bold().paint(ch.to_string()).to_string(),
-                    'p' | 's' => Color::Purple.paint(ch.to_string()).to_string(),
-                    _ => Color::DarkGray.paint(ch.to_string()).to_string(),
+                    '-' => dim_paint(&ch.to_string()),
+                    _ => bold_paint(&ch.to_string()),
                 }
             } else {
                 match ch {
-                    'r' => Color::Yellow.paint(ch.to_string()).to_string(),
-                    'w' => Color::Red.paint(ch.to_string()).to_string(),
-                    'x' | 's' | 't' | 'S' | 'T' => {
-                        Color::Green.bold().paint(ch.to_string()).to_string()
-                    }
-                    '-' => Color::DarkGray.paint(ch.to_string()).to_string(),
+                    '-' => dim_paint(&ch.to_string()),
+                    'x' | 's' | 't' | 'S' | 'T' => bold_paint(&ch.to_string()),
                     _ => ch.to_string(),
                 }
             };
@@ -164,48 +147,36 @@ impl Colorizer {
         if !self.modern_long_theme(gnu_mode) {
             return text.to_string();
         }
-        Color::DarkGray.paint(text).to_string()
+        dim_paint(text)
     }
 
-    /// Owner / group / author column.
+    /// Owner / group / author column (plain — theme stays neutral).
     pub fn paint_user(&self, text: &str, gnu_mode: bool) -> String {
-        if !self.modern_long_theme(gnu_mode) {
-            return text.to_string();
-        }
-        Color::Yellow.paint(text).to_string()
+        let _ = gnu_mode;
+        text.to_string()
     }
 
-    /// Size column: green → yellow → red by magnitude (bytes).
+    /// Size column: bold for large files, dim for empty — no size→hue map.
     pub fn paint_size(&self, text: &str, bytes: u64, gnu_mode: bool) -> String {
         if !self.modern_long_theme(gnu_mode) {
             return text.to_string();
         }
-        let style = if bytes >= 1_073_741_824 {
-            // ≥ 1 GiB
-            Color::Red.bold()
-        } else if bytes >= 10_485_760 {
-            // ≥ 10 MiB
-            Color::Yellow.bold()
-        } else if bytes >= 1_048_576 {
-            // ≥ 1 MiB
-            Color::Green.bold()
-        } else if bytes > 0 {
-            Color::Green.normal()
+        if bytes == 0 {
+            dim_paint(text)
+        } else if bytes >= 1_073_741_824 {
+            bold_paint(text)
         } else {
-            Color::DarkGray.normal()
-        };
-        style.paint(text).to_string()
-    }
-
-    /// Timestamp column.
-    pub fn paint_time(&self, text: &str, gnu_mode: bool) -> String {
-        if !self.modern_long_theme(gnu_mode) {
-            return text.to_string();
+            text.to_string()
         }
-        Color::Blue.paint(text).to_string()
     }
 
-    /// Symlink name + arrow + target (name via LS_COLORS / cyan; target dim cyan).
+    /// Timestamp column (plain under theme inheritance).
+    pub fn paint_time(&self, text: &str, gnu_mode: bool) -> String {
+        let _ = gnu_mode;
+        text.to_string()
+    }
+
+    /// Symlink name via LS_COLORS; arrow dim; target via LS_COLORS when possible.
     pub fn paint_symlink_name(
         &self,
         entry: &Entry,
@@ -213,25 +184,34 @@ impl Colorizer {
         arrow_and_target: &str,
         gnu_mode: bool,
     ) -> String {
-        if !self.modern_long_theme(gnu_mode) {
-            let full = format!("{icon_and_name}{arrow_and_target}");
-            return self.paint_name(entry, &full);
+        if !self.enabled {
+            return format!("{icon_and_name}{arrow_and_target}");
         }
+
         let name = self.paint_name(entry, icon_and_name);
         if arrow_and_target.is_empty() {
             return name;
         }
-        // Split " -> target" style
-        let target = if let Some(rest) = arrow_and_target.strip_prefix(" -> ") {
-            format!(
-                " {} {}",
-                Color::DarkGray.paint("→"),
-                Color::Cyan.dimmed().paint(rest)
-            )
+
+        if let Some(rest) = arrow_and_target.strip_prefix(" -> ") {
+            let target_painted = if let Some(style) = self.ls.style_for_path(Path::new(rest)) {
+                paint_with_ls_style(rest, style)
+            } else if self.modern_long_theme(gnu_mode) {
+                dim_paint(rest)
+            } else {
+                rest.to_string()
+            };
+            // GNU uses " -> "; modern uses a dim arrow glyph.
+            if self.modern_long_theme(gnu_mode) {
+                format!("{name} {} {target_painted}", dim_paint("→"))
+            } else {
+                format!("{name} -> {target_painted}")
+            }
+        } else if self.modern_long_theme(gnu_mode) {
+            format!("{name}{}", dim_paint(arrow_and_target))
         } else {
-            Color::DarkGray.paint(arrow_and_target).to_string()
-        };
-        format!("{name}{target}")
+            format!("{name}{arrow_and_target}")
+        }
     }
 }
 
@@ -239,9 +219,14 @@ fn paint_with_ls_style(text: &str, style: &Style) -> String {
     style.to_nu_ansi_term_style().paint(text).to_string()
 }
 
-/// Dotfiles / hidden entries: basename starts with `.` (includes `.` and `..`).
-fn is_dotfile_name(name: &str) -> bool {
-    name.starts_with('.')
+/// Relative dim (SGR 2) — inherits the terminal foreground, no fixed color index.
+fn dim_paint(text: &str) -> String {
+    AnsiStyle::new().dimmed().paint(text).to_string()
+}
+
+/// Relative bold (SGR 1).
+fn bold_paint(text: &str) -> String {
+    AnsiStyle::new().bold().paint(text).to_string()
 }
 
 fn entry_is_exec(entry: &Entry) -> bool {
@@ -283,6 +268,9 @@ mod tests {
             gid: 0,
             inode: 0,
             blocks: 0,
+            dev: 0,
+            rdev: 0,
+            blksize: 0,
             owner: "u".into(),
             group: "g".into(),
             author: "u".into(),
@@ -302,10 +290,8 @@ mod tests {
         let c = Colorizer::from_ls_colors(true, "*.rs=01;31:");
         let e = file("main.rs");
         let painted = c.paint_name(&e, "main.rs");
-        // Should contain ANSI CSI when style applies.
         assert!(painted.contains("main.rs"), "{painted:?}");
-        // Style applied → not equal plain (or equal if style empty — accept either with style present)
-        let _ = c.style_for_entry(&e);
+        assert_ne!(painted, "main.rs", "LS_COLORS extension should paint");
     }
 
     #[test]
@@ -314,47 +300,66 @@ mod tests {
         assert!(!c.modern_long_theme(true));
         assert!(c.modern_long_theme(false));
         assert_eq!(c.paint_perms("-rwxr-xr-x", true), "-rwxr-xr-x");
-        assert_ne!(c.paint_perms("-rwxr-xr-x", false), "-rwxr-xr-x");
+        // modern dims dashes / bolds type+exec bits (relative SGR, no hues)
+        let modern = c.paint_perms("-rwxr-xr-x", false);
+        assert_ne!(modern, "-rwxr-xr-x");
+        assert!(
+            modern.contains('\u{1b}'),
+            "expected ANSI SGR in modern perms"
+        );
+        assert!(modern.contains('r') && modern.contains('w') && modern.contains('x'));
     }
 
     #[test]
-    fn hidden_dotfiles_paint_dark_grey() {
+    fn names_follow_ls_colors_only_no_forced_dot_grey() {
+        // Without mh=/dot rules, a bare name is plain (not forced DarkGray).
         let c = Colorizer::from_ls_colors(true, "*.rs=01;31:");
         let hidden = file(".gitignore");
-        let normal = file("README.md");
         let painted_h = c.paint_name(&hidden, ".gitignore");
-        let painted_n = c.paint_name(&normal, "README.md");
-        assert!(
-            painted_h.contains(".gitignore"),
-            "name preserved: {painted_h:?}"
-        );
-        // Dark gray uses an ANSI sequence; plain name alone would not.
-        assert_ne!(
-            painted_h, ".gitignore",
-            "hidden name should be styled, got {painted_h:?}"
-        );
-        // Hidden styling is independent of LS_COLORS extension rules.
-        assert!(
-            painted_h.contains('\u{1b}') || painted_h != painted_n,
-            "expected ANSI or distinct paint for hidden vs normal"
-        );
+        // No extension match → plain (LS_COLORS only).
+        assert_eq!(painted_h, ".gitignore");
+
+        let with_mh = Colorizer::from_ls_colors(true, "mh=01;90:*.rs=01;31:");
+        let mh_paint = with_mh.paint_name(&hidden, ".gitignore");
+        // mh= may or may not apply depending on lscolors path rules; either way
+        // we must not inject a private palette when LS_COLORS has no match.
+        assert!(mh_paint.contains(".gitignore"));
+
         let off = Colorizer::from_ls_colors(false, "");
         assert_eq!(off.paint_name(&hidden, ".gitignore"), ".gitignore");
-        assert!(is_dotfile_name("."));
-        assert!(is_dotfile_name(".."));
-        assert!(is_dotfile_name(".config"));
-        assert!(!is_dotfile_name("config"));
     }
 
     #[test]
-    fn modern_size_tints() {
+    fn size_uses_weight_not_hue() {
         let c = Colorizer::from_ls_colors(true, "");
         let small = c.paint_size("1.0K", 1024, false);
         let big = c.paint_size("2.0G", 2_147_483_648, false);
+        let empty = c.paint_size("0", 0, false);
         assert!(small.contains("1.0K"), "{small}");
         assert!(big.contains("2.0G"), "{big}");
-        // Different colors → different escape sequences (or at least styled).
-        assert!(small.contains('\u{1b}') || small != "1.0K");
-        assert!(big.contains('\u{1b}') || big != "2.0G");
+        assert!(empty.contains('0'), "{empty}");
+        // Empty is dimmed (SGR), large may be bold — both relative attributes.
+        assert_ne!(empty, "0");
+    }
+
+    #[test]
+    fn git_char_no_named_hues() {
+        let c = Colorizer::from_ls_colors(true, "");
+        let m = c.paint_git_char('M');
+        let ign = c.paint_git_char('!');
+        assert!(m.contains('M'));
+        assert!(ign.contains('!'));
+        // Bold / dim only — both should differ from plain when enabled.
+        assert_ne!(m, "M");
+        assert_ne!(ign, "!");
+    }
+
+    #[test]
+    fn no_hardcoded_blue_yellow_red_in_meta() {
+        let c = Colorizer::from_ls_colors(true, "");
+        let user = c.paint_user("alice", false);
+        let time = c.paint_time("Jul 20 12:00", false);
+        assert_eq!(user, "alice");
+        assert_eq!(time, "Jul 20 12:00");
     }
 }
