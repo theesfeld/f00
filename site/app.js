@@ -288,6 +288,8 @@
   const parallaxNodes = [...document.querySelectorAll("[data-parallax]")];
 
   let ticking = false;
+  let lastActiveId = "";
+  let lastScrolled = null;
 
   function scrollMetrics() {
     const y = window.scrollY || window.pageYOffset || 0;
@@ -317,6 +319,8 @@
   }
 
   function setActiveOrientation(id) {
+    if (id === lastActiveId) return;
+    lastActiveId = id;
     navLinks.forEach((a) => {
       a.classList.toggle("is-active", a.getAttribute("data-nav") === id);
     });
@@ -334,7 +338,11 @@
     if (hero) hero.style.setProperty("--hero-p", heroP.toFixed(4));
 
     if (header) {
-      header.classList.toggle("is-scrolled", y > 8);
+      const scrolled = y > 8;
+      if (scrolled !== lastScrolled) {
+        lastScrolled = scrolled;
+        header.classList.toggle("is-scrolled", scrolled);
+      }
     }
 
     if (!prefersReduced) {
