@@ -47,6 +47,8 @@ fn is_nongraphic(c: char) -> bool {
 }
 
 fn is_shell_special(c: char) -> bool {
+    // Note: `~` is only shell-special at the start of a word (home expansion).
+    // Mid-name tildes (e.g. `file~` backups) must not force quotes — match GNU ls.
     matches!(
         c,
         ' ' | '\t'
@@ -69,7 +71,6 @@ fn is_shell_special(c: char) -> bool {
             | '['
             | ']'
             | '#'
-            | '~'
             | '='
             | '%'
             | '{'
@@ -78,11 +79,15 @@ fn is_shell_special(c: char) -> bool {
 }
 
 fn needs_shell_quote(name: &str) -> bool {
-    name.is_empty() || name.chars().any(is_shell_special) || name.starts_with('-')
+    name.is_empty()
+        || name.chars().any(is_shell_special)
+        || name.starts_with('-')
+        || name.starts_with('~')
 }
 
 fn needs_shell_escape(name: &str) -> bool {
     name.is_empty()
+        || name.starts_with('~')
         || name
             .chars()
             .any(|c| is_shell_special(c) || is_nongraphic(c))

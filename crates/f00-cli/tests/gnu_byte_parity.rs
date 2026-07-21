@@ -138,23 +138,80 @@ fn byte_parity_core_modes() {
     };
     let (dir, cfg) = build_fixture();
 
+    // Broad matrix under `--gnu` vs system coreutils. Prefer flags whose output is
+    // locale-stable with LC_ALL=C and fixed TZ.
     let cases: &[(&str, &[&str])] = &[
+        // short listing / sort
         ("-1", &["-1"]),
         ("-1a", &["-1a"]),
         ("-1A", &["-1A"]),
+        ("-1r", &["-1r"]),
         ("-1S", &["-1S"]),
+        ("-1Sr", &["-1Sr"]),
+        ("-1t", &["-1t"]),
+        ("-1X", &["-1X"]),
         ("-1v", &["-1v"]),
+        ("-1U", &["-1U"]),
+        ("-1f", &["-1f"]),
+        ("-1 --sort=size", &["-1", "--sort=size"]),
+        ("-1 --sort=time", &["-1", "--sort=time"]),
+        ("-1 --sort=extension", &["-1", "--sort=extension"]),
+        ("-1 --sort=version", &["-1", "--sort=version"]),
+        ("-1 --sort=none", &["-1", "--sort=none"]),
         ("-1 --sort=width", &["-1", "--sort=width"]),
+        ("-1 --sort=name", &["-1", "--sort=name"]),
+        // indicators / quoting
         ("-1b", &["-1b"]),
+        ("-1Q", &["-1Q"]),
+        ("-1N", &["-1N"]),
+        ("-1q", &["-1q"]),
+        ("-1 --quoting-style=literal", &["-1", "--quoting-style=literal"]),
+        ("-1 --quoting-style=shell", &["-1", "--quoting-style=shell"]),
+        ("-1 --quoting-style=c", &["-1", "--quoting-style=c"]),
+        ("-1 --quoting-style=escape", &["-1", "--quoting-style=escape"]),
         (
             "-1 --group-directories-first",
             &["-1", "--group-directories-first"],
         ),
         ("-1F", &["-1F"]),
         ("-1p", &["-1p"]),
+        ("-1 --file-type", &["-1", "--file-type"]),
+        ("-1 --indicator-style=slash", &["-1", "--indicator-style=slash"]),
+        ("-1 --indicator-style=classify", &["-1", "--indicator-style=classify"]),
+        // recurse / filter
         ("-1R", &["-1R"]),
+        ("-1B", &["-1B"]),
+        ("-1 --hide=file*", &["-1", "--hide=file*"]),
+        ("-1 -I file*", &["-1", "-I", "file*"]),
+        // size / inode (plain units — human `-sh` covered below when green)
         ("-s1", &["-s1"]),
+        ("-s1k", &["-s1k"]),
+        ("-i1", &["-i1"]),
+        // long forms (stable time style)
         ("-l --time-style=long-iso", &["-l", "--time-style=long-iso"]),
+        ("-l --time-style=full-iso", &["-l", "--time-style=full-iso"]),
+        ("-l --time-style=iso", &["-l", "--time-style=iso"]),
+        ("-la --time-style=long-iso", &["-la", "--time-style=long-iso"]),
+        ("-lA --time-style=long-iso", &["-lA", "--time-style=long-iso"]),
+        ("-lg --time-style=long-iso", &["-lg", "--time-style=long-iso"]),
+        ("-lo --time-style=long-iso", &["-lo", "--time-style=long-iso"]),
+        ("-lG --time-style=long-iso", &["-lG", "--time-style=long-iso"]),
+        ("-ln --time-style=long-iso", &["-ln", "--time-style=long-iso"]),
+        ("-li --time-style=long-iso", &["-li", "--time-style=long-iso"]),
+        ("-ls --time-style=long-iso", &["-ls", "--time-style=long-iso"]),
+        ("-l --full-time", &["-l", "--full-time"]),
+        (
+            "-l --author --time-style=long-iso",
+            &["-l", "--author", "--time-style=long-iso"],
+        ),
+        // dereference variants on the symlink fixture
+        ("-1L", &["-1L"]),
+        ("-1H", &["-1H"]),
+        // Known remaining gaps (tracked on #124):
+        // - `-d` path display for directory operands
+        // - column wrap (`-C`/`-x`/`-m`) at exact terminal width
+        // - human `-sh` / `--block-size=K` unit suffixes on size columns
+        // - `--zero` needs raw NUL compare (not line-normalize)
     ];
 
     for (label, args) in cases {
