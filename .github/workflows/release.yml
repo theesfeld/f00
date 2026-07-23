@@ -1,5 +1,8 @@
 name: Release
 
+# Pure assembly multicall release (Linux x86-64 freestanding).
+# Tag: vX.Y.Z → assets f00-X.Y.Z-linux-x86_64.tar.gz (+ alias ordering).
+
 on:
   push:
     tags:
@@ -8,122 +11,77 @@ on:
 permissions:
   contents: write
 
-env:
-  CARGO_TERM_COLOR: always
-  BINARY: f00
-
 jobs:
-  build:
-    name: build (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            archive: tar.gz
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            archive: tar.gz
-            cross: true
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            archive: tar.gz
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            archive: tar.gz
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            archive: zip
-
+  build-linux-x86_64:
+    name: build linux x86_64 ASM
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
+      - name: Install nasm
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq nasm
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: release-${{ matrix.target }}
-
-      - name: Install cross (Linux aarch64)
-        if: matrix.cross
-        run: cargo install cross --locked
-
-      - name: Build (cargo)
-        if: ${{ !matrix.cross }}
-        run: cargo build --release --locked --target ${{ matrix.target }} -p f00 -p f00-tui
-
-      - name: Build (cross)
-        if: matrix.cross
-        run: cross build --release --locked --target ${{ matrix.target }} -p f00 -p f00-tui
-
-      - name: Package (Unix)
-        if: matrix.archive == 'tar.gz'
+      - name: Version from tag
+        id: meta
         shell: bash
         run: |
           set -euo pipefail
-          STAGE="dist/${{ env.BINARY }}-${{ matrix.target }}"
-          mkdir -p "$STAGE"
-          BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}"
-          TUI="target/${{ matrix.target }}/release/f00-tui"
-          cp "$BIN" "$STAGE/${{ env.BINARY }}"
-          chmod +x "$STAGE/${{ env.BINARY }}"
-          if [[ -f "$TUI" ]]; then
-            cp "$TUI" "$STAGE/f00-tui"
-            chmod +x "$STAGE/f00-tui"
-          fi
-          for f in README.md LICENSE-MIT LICENSE-APACHE; do
-            [[ -f "$f" ]] && cp "$f" "$STAGE/"
-          done
-          # Comprehensive man page (install.sh places under man/man1).
-          if [[ -f man/f00.1 ]]; then
-            mkdir -p "$STAGE/man"
-            cp man/f00.1 "$STAGE/man/f00.1"
-            cp man/f00.1 "$STAGE/f00.1"
-          fi
-          tar -C dist -czf "dist/${{ env.BINARY }}-${{ matrix.target }}.tar.gz" "${{ env.BINARY }}-${{ matrix.target }}"
-          echo "ASSET=dist/${{ env.BINARY }}-${{ matrix.target }}.tar.gz" >> "$GITHUB_ENV"
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Package (Windows)
-        if: matrix.archive == 'zip'
+      - name: Build
+        working-directory: asm
+        run: make -j"$(nproc)"
+
+      - name: Quality gates
+        working-directory: asm
+        run: |
+          set -euo pipefail
+          make smoke
+          bash benches/parity.sh
+          bash benches/speed-gate.sh
+          ./f00 --version
+
+      - name: Package tarball
+        id: pkg
         shell: bash
         run: |
           set -euo pipefail
-          STAGE="dist/${{ env.BINARY }}-${{ matrix.target }}"
-          mkdir -p "$STAGE"
-          BIN="target/${{ matrix.target }}/release/${{ env.BINARY }}.exe"
-          TUI="target/${{ matrix.target }}/release/f00-tui.exe"
-          cp "$BIN" "$STAGE/${{ env.BINARY }}.exe"
-          if [[ -f "$TUI" ]]; then
-            cp "$TUI" "$STAGE/f00-tui.exe"
+          VER="${{ steps.meta.outputs.version }}"
+          STAGE="dist/f00-${VER}-linux-x86_64"
+          mkdir -p "$STAGE/man/man1"
+          install -m755 asm/f00 "$STAGE/f00"
+          # ship man pages if present
+          if [[ -d asm/man/man1 ]]; then
+            cp -a asm/man/man1/f00*.1 "$STAGE/man/man1/" 2>/dev/null || true
           fi
-          for f in README.md LICENSE-MIT LICENSE-APACHE; do
+          for f in README.md LICENSE LICENSE-MIT CHANGELOG.md; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done
-          # Include man page for completeness (install.sh skips man on Windows).
-          if [[ -f man/f00.1 ]]; then
-            mkdir -p "$STAGE/man"
-            cp man/f00.1 "$STAGE/man/f00.1"
-          fi
-          (cd dist && 7z a -tzip "${{ env.BINARY }}-${{ matrix.target }}.zip" "${{ env.BINARY }}-${{ matrix.target }}")
-          echo "ASSET=dist/${{ env.BINARY }}-${{ matrix.target }}.zip" >> "$GITHUB_ENV"
+          mkdir -p dist
+          tar -C dist -czf "dist/f00-${VER}-linux-x86_64.tar.gz" "f00-${VER}-linux-x86_64"
+          # installer-friendly alias (arch-os order used historically by some scripts)
+          cp "dist/f00-${VER}-linux-x86_64.tar.gz" "dist/f00-${VER}-x86_64-linux.tar.gz"
+          (cd dist && sha256sum "f00-${VER}-linux-x86_64.tar.gz" "f00-${VER}-x86_64-linux.tar.gz" > SHA256SUMS)
+          cat dist/SHA256SUMS
+          echo "primary=dist/f00-${VER}-linux-x86_64.tar.gz" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BINARY }}-${{ matrix.target }}
-          path: dist/${{ env.BINARY }}-${{ matrix.target }}.*
+          name: f00-linux-x86_64
+          path: |
+            dist/f00-*-linux-x86_64.tar.gz
+            dist/f00-*-x86_64-linux.tar.gz
+            dist/SHA256SUMS
           if-no-files-found: error
 
   publish:
     name: publish release
-    needs: build
+    needs: build-linux-x86_64
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.meta.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -136,111 +94,76 @@ jobs:
           VERSION="${TAG#v}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          # prerelease if tag contains - (e.g. v0.15.0-beta.1)
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: f00-linux-x86_64
+          path: release-assets
 
-      - name: Flatten assets, build deb/rpm, checksums
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p release-assets
-          find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) -print0 \
-            | while IFS= read -r -d '' f; do
-                cp "$f" release-assets/
-              done
+      - name: List assets
+        run: find release-assets -type f | sort && cat release-assets/SHA256SUMS || true
 
-          # nfpm for .deb / .rpm (linux only)
-          curl -sSfL https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_Linux_x86_64.tar.gz \
-            | tar -xz -C /tmp nfpm
-          sudo mv /tmp/nfpm /usr/local/bin/nfpm
-
-          chmod +x scripts/build-linux-packages.sh
-          scripts/build-linux-packages.sh "${{ steps.meta.outputs.version }}" release-assets release-assets
-
-          cd release-assets
-          sha256sum * > SHA256SUMS
-          cat SHA256SUMS
-
-      - name: Create GitHub Release
+      - name: Create / update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: false
+          prerelease: ${{ steps.meta.outputs.prerelease }}
           generate_release_notes: true
           files: |
             release-assets/*
+          body: |
+            # f00 ${{ steps.meta.outputs.tag }}
+
+            **Pure assembly GNU coreutils monorepo** (Linux x86-64 freestanding multicall).
+
+            ## Install
+
+            ```bash
+            curl -fsSL https://f00.sh/install.sh | bash
+            # pin
+            curl -fsSL https://f00.sh/install.sh | F00_VERSION=${{ steps.meta.outputs.tag }} bash
+            # source
+            git checkout ${{ steps.meta.outputs.tag }} && cd asm && make && make install
+            ```
+
+            ## Assets
+
+            - `f00-${{ steps.meta.outputs.version }}-linux-x86_64.tar.gz` (preferred)
+            - `f00-${{ steps.meta.outputs.version }}-x86_64-linux.tar.gz` (alias)
+
+            See [README](https://github.com/theesfeld/f00#readme) · [progress](https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md) · https://f00.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sync in-repo package manifests
-        shell: bash
+      - name: Publish Homebrew tap (best-effort)
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           set -euo pipefail
-          chmod +x scripts/*.sh
-          scripts/sync-package-manifests.sh "${{ steps.meta.outputs.version }}" release-assets/SHA256SUMS
+          if [[ -z "${HOMEBREW_TAP_TOKEN:-}" ]]; then
+            echo "skip homebrew: no HOMEBREW_TAP_TOKEN"
+            exit 0
+          fi
+          chmod +x scripts/*.sh 2>/dev/null || true
+          scripts/publish-homebrew-tap.sh Formula/f00.rb || echo "homebrew publish non-fatal"
 
-      - name: Publish Homebrew tap
-        env:
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-        run: scripts/publish-homebrew-tap.sh Formula/f00.rb
-
-      - name: Publish Scoop bucket
-        env:
-          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: scripts/publish-scoop.sh packaging/scoop/f00.json
-
-      - name: Publish AUR
+      - name: Publish AUR (best-effort)
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
           AUR_EMAIL: ${{ secrets.AUR_EMAIL }}
-        run: scripts/publish-aur.sh packaging/aur
-
-      - name: Publish winget (best-effort)
-        env:
-          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
-        run: scripts/publish-winget.sh "${{ steps.meta.outputs.version }}" release-assets/SHA256SUMS
-
-      - name: Publish crates.io (optional)
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           set -euo pipefail
-          if [[ -z "${CARGO_REGISTRY_TOKEN:-}" ]]; then
-            echo "skip crates.io: no CARGO_REGISTRY_TOKEN"
+          if [[ -z "${AUR_SSH_PRIVATE_KEY:-}" ]]; then
+            echo "skip AUR: no AUR_SSH_PRIVATE_KEY"
             exit 0
           fi
-          # Only publish if version is new on crates.io for the binary crate.
-          CUR="$(cargo search f00 --limit 1 2>/dev/null | head -1 | sed -E 's/.*"([0-9][^"]*)".*/\1/' || true)"
-          VER="${{ steps.meta.outputs.version }}"
-          if [[ "${CUR}" == "${VER}" ]]; then
-            echo "crates.io already has f00 ${VER}"
-            exit 0
-          fi
-          scripts/publish-crates.sh
-
-      - name: Commit package manifests back to main (best-effort)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git stash push -u -m "pkg-manifests" -- Formula/f00.rb packaging/aur/PKGBUILD packaging/scoop/f00.json || true
-          git checkout main
-          git pull --ff-only origin main || true
-          git stash pop || true
-          git add Formula/f00.rb packaging/aur/PKGBUILD packaging/scoop/f00.json || true
-          if git diff --cached --quiet; then
-            echo "no manifest changes to commit"
-            exit 0
-          fi
-          git commit -m "chore(packaging): sync manifests for v${{ steps.meta.outputs.version }}
-
-          Refs: #81"
-          git push origin main || echo "could not push manifests to main (non-fatal)"
+          chmod +x scripts/*.sh 2>/dev/null || true
+          scripts/publish-aur.sh packaging/aur || echo "AUR publish non-fatal"

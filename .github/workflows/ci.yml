@@ -6,80 +6,54 @@ on:
   pull_request:
     branches: [main, master]
 
-env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: -D warnings
-
 jobs:
-  fmt:
-    name: fmt
+  asm-linux:
+    name: pure ASM (linux x86_64)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-      - name: cargo fmt
-        run: cargo fmt --all -- --check
 
-  clippy-test:
-    name: clippy + test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
-      - name: cargo clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: cargo test
-        run: cargo test --workspace
-      - name: cargo build --release
-        run: cargo build --release --workspace
+      - name: Install nasm
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq nasm
 
-  features:
-    name: feature matrix
+      - name: Build multicall
+        working-directory: asm
+        run: make -j"$(nproc)"
+
+      - name: Smoke
+        working-directory: asm
+        run: make smoke
+
+      - name: Parity (--core vs GNU)
+        working-directory: asm
+        run: bash benches/parity.sh
+
+      - name: Speed gate vs coreutils
+        working-directory: asm
+        run: bash benches/speed-gate.sh
+
+      - name: Version surface
+        working-directory: asm
+        run: |
+          set -euo pipefail
+          ./f00 --version
+          ./f00-ls --version
+          test -x ./f00
+          # util link count (UTILS + f00-[ + test)
+          n=$(find . -maxdepth 1 -type l -name 'f00-*' | wc -l)
+          echo "f00-* links: $n"
+          test "$n" -ge 100
+
+  man-present:
+    name: man pages present
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: cargo test --workspace --all-features
-        run: cargo test --workspace --all-features
-      - name: cargo test -p f00 --no-default-features
-        run: cargo test -p f00 --no-default-features
-      - name: cargo test -p f00 --features full
-        run: cargo test -p f00 --features full
-      - name: cargo build -p f00-tui --release
-        run: cargo build -p f00-tui --release
-
-  # Criterion smoke: keep listing microbenches compiling and runnable (not a perf gate).
-  bench:
-    name: bench smoke
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: cargo bench (smoke)
-        run: >
-          cargo bench -p f00-core --bench list_bench --
-          --sample-size 10
-          --warm-up-time 1
-          --measurement-time 1
-
-  # Hard rule: man/f00.1 always matches the live CLI / product surface.
-  man-sync:
-    name: man page sync
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: check man/f00.1 vs f00 --help + version
-        run: scripts/check-man-sync.sh
+      - name: Check man tree
+        run: |
+          set -euo pipefail
+          test -f asm/man/man1/f00.1
+          test -f asm/man/man1/f00-ls.1
+          n=$(find asm/man/man1 -name 'f00*.1' | wc -l)
+          echo "man pages: $n"
+          test "$n" -ge 100
