@@ -458,9 +458,10 @@ cmp_out "numfmt --to=iec 1048576" \
 cmp_out "numfmt --from=iec 1.5M" \
   "$ROOT/f00-numfmt" --core --from=iec 1.5M ::: \
   "$CORE/numfmt" --from=iec 1.5M
+# Use 1e6 (→ 1.0M): SI kilo letter case differs across coreutils builds (k vs K).
 cmp_out "numfmt stdin --to=si" \
-  bash -c "echo 1000 | \"$ROOT/f00-numfmt\" --core --to=si" ::: \
-  bash -c "echo 1000 | \"$CORE/numfmt\" --to=si"
+  bash -c "echo 1000000 | \"$ROOT/f00-numfmt\" --core --to=si" ::: \
+  bash -c "echo 1000000 | \"$CORE/numfmt\" --to=si"
 
 # --- summary ---
 log
