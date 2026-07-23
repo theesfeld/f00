@@ -1,364 +1,370 @@
 # f00
 
-<p align="left">
-  <img src="site/assets/logo.svg" width="96" height="96" alt="f00 logo" />
-</p>
+**f00** is a **complete GNU coreutils replacement monorepo**, implemented as a **pure x86-64 Linux freestanding assembly** multicall suite. No libc. One static binary. MIT.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/theesfeld/f00/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/theesfeld/f00/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue?style=flat-square)](https://github.com/theesfeld/f00#license)
-[![Release](https://img.shields.io/github/v/release/theesfeld/f00?style=flat-square&include_prereleases&label=release)](https://github.com/theesfeld/f00/releases)
-[![crates.io](https://img.shields.io/crates/v/f00?style=flat-square)](https://crates.io/crates/f00)
-[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows%20%7C%20bsd-lightgrey?style=flat-square)](https://f00.sh)
-
-**f00** lists directory contents. The program is written in **Rust**.
-
-Use **`f00 --gnu`** as a drop-in for GNU coreutils **`ls`**. On a TTY, f00 also shows icons, git status, tree view, and JSON. On measured short and long workloads, f00 is faster than **eza** and **lsd**.
-
-| Output | Behavior |
-|--------|----------|
-| **TTY** | Icons (auto), git (default on), colors (auto) |
-| **Non-TTY** (pipe / CI) | Script-safe mode by default (same as `--gnu`) |
-| **Force** | Always GNU: `--gnu` or `F00_GNU=1`. Always modern on a pipe: `--no-gnu` or `F00_NO_GNU=1` |
-
-**Website:** [https://f00.sh](https://f00.sh) · **Programs:** `f00`, `f00-tui` · **Version:** v0.12.0 · **Manual:** `man f00`
-
-<!-- agents:status:begin -->
-> **Status:** **v0.12.0** · Latest release: [`v0.12.0`](https://github.com/theesfeld/f00/releases/tag/v0.12.0) · 0.x minor versions can include breaking changes · [MIGRATION.md](MIGRATION.md)
-<!-- agents:status:end -->
-
----
-
-## Install
-
-### Install with the installer (recommended)
+| | |
+|---|---|
+| **Product** | Drop-in `f00-*` tools + optional short names (`ls`, `cat`, …) |
+| **Default** | Modern (color, richer layout, `--json` / `--csv`) |
+| **Scripts** | `--core` — strict coreutils-compatible presentation |
+| **Engine** | Pure ASM multicall · ~600K static |
+| **License** | MIT |
+| **Status** | **Beta** `v0.15.0-beta.1` |
+| **Site** | [https://f00.sh](https://f00.sh) |
+| **Repo** | [github.com/theesfeld/f00](https://github.com/theesfeld/f00) |
 
 ```bash
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-The installer does this:
+---
 
-1. Installs **`f00`** to **`~/.local/bin`** (override with `INSTALL_DIR`).
-2. Installs **`f00-tui`** when the release archive includes it (`F00_INSTALL_TUI=0` skips it).
-3. Installs **`f00(1)`** to **`~/.local/share/man/man1/f00.1`** (or `$XDG_DATA_HOME/man/man1`) when the archive includes the man page. Override with `MAN_DIR`. Skip with `F00_INSTALL_MAN=0`.
-4. Adds the install directory to your shell configuration if it is not on `PATH` (`ADD_PATH=0` skips this).
+## Product laws
+
+1. **Clone first.** Every GNU coreutils tool has a `f00-*` counterpart. Under **`--core`**, flags, inputs, outputs, and exit codes target 1:1 coreutils behavior for scripts.
+2. **Modern on top.** Default mode is never a subset of GNU: color on TTY, better layout, `--json` / `--csv` with rich metadata, interactivity where it fits.
+3. **Faster always.** Freestanding ASM must beat coreutils on the core path. Slow and correct is not done.
+4. **One binary.** Multicall dispatch by `argv0` (`f00-ls`, `ls`, `f00-cat`, …).
+
+---
+
+## Feature parity (ecosystem)
+
+| Area | GNU coreutils | **f00 (ASM)** | uutils (Rust) | busybox | toybox |
+|------|---------------|---------------|---------------|---------|--------|
+| All coreutils *names* | Yes | **Scoreboard below** | Growing | Subset | Subset |
+| Script drop-in | Yes | **`--core`** | Flags vary | Reduced | Reduced |
+| Modern default UX | No | **Yes** | Partial | Minimal | Minimal |
+| Suite-wide `--json`/`--csv` | No | **Yes (f00/v1)** | Limited | No | No |
+| Pure freestanding ASM | No | **Yes** | No | C | C |
+| Multicall single binary | No* | **Yes** | Optional | Yes | Yes |
+
+\*coreutils ships many separate binaries.
+
+### Suite modern surface (every util)
+
+| Capability | Default | `--core` |
+|------------|---------|----------|
+| Color (TTY) | **On** (respects `NO_COLOR`) | Off |
+| `--json` | Rich `f00/v1` metadata | Available |
+| `--csv` | Same facts, tabular | Available |
+| Help | Coreutils flags + Modern flags | Same structure |
+| Speed | Optimized | **Must beat coreutils** |
+
+---
+
+## Coreutils replacement progress
+
+**Goal: replace every GNU coreutils program.** This table is the scoreboard.
+
+<!-- progress: total=106 shipped=106 core_full=22 core_partial=84 core_missing=0 -->
+**Progress (goal = replace every coreutil):** **106/106** tools shipped · **`--core` depth:** 22 full · 84 partial · 0 missing
+
+| Status | Count | Meaning |
+|--------|------:|---------|
+| shipped | 106/106 | Multicall name exists as `f00-*` |
+| `--core` **full** | 22 | Tracked flags match for common cases |
+| `--core` partial | 84 | Tool works; some GNU flags still deepening |
+| `--core` **missing** | 0 | Not yet in multicall |
+
+Legend — **speed:** `win` = measured faster under `--core`; `win*` = hash-family; `TBD` = not on formal speed-gate yet; `—` = not shipped.
+
+| # | coreutils | f00 | shipped | `--core` depth | modern | speed vs GNU |
+|--:|:----------|:----|:--------|:---------------|:-------|:-------------|
+| 1 | `arch` | `f00-arch` | yes | **full** | yes | TBD |
+| 2 | `b2sum` | `f00-b2sum` | yes | partial | yes | win |
+| 3 | `base32` | `f00-base32` | yes | partial | yes | TBD |
+| 4 | `base64` | `f00-base64` | yes | partial | yes | TBD |
+| 5 | `basename` | `f00-basename` | yes | **full** | yes | win |
+| 6 | `basenc` | `f00-basenc` | yes | partial | yes | TBD |
+| 7 | `cat` | `f00-cat` | yes | **full** | deep | win |
+| 8 | `chcon` | `f00-chcon` | yes | partial | yes | TBD |
+| 9 | `chgrp` | `f00-chgrp` | yes | partial | yes | TBD |
+| 10 | `chmod` | `f00-chmod` | yes | partial | yes | TBD |
+| 11 | `chown` | `f00-chown` | yes | partial | yes | TBD |
+| 12 | `chroot` | `f00-chroot` | yes | partial | yes | TBD |
+| 13 | `cksum` | `f00-cksum` | yes | partial | yes | TBD |
+| 14 | `comm` | `f00-comm` | yes | partial | yes | TBD |
+| 15 | `cp` | `f00-cp` | yes | partial | yes | TBD |
+| 16 | `csplit` | `f00-csplit` | yes | partial | yes | TBD |
+| 17 | `cut` | `f00-cut` | yes | partial | yes | TBD |
+| 18 | `date` | `f00-date` | yes | partial | yes | TBD |
+| 19 | `dd` | `f00-dd` | yes | partial | yes | TBD |
+| 20 | `df` | `f00-df` | yes | partial | yes | TBD |
+| 21 | `dir` | `f00-dir` | yes | partial | yes | TBD |
+| 22 | `dircolors` | `f00-dircolors` | yes | partial | yes | TBD |
+| 23 | `dirname` | `f00-dirname` | yes | **full** | yes | TBD |
+| 24 | `du` | `f00-du` | yes | partial | yes | TBD |
+| 25 | `echo` | `f00-echo` | yes | **full** | yes | TBD |
+| 26 | `env` | `f00-env` | yes | partial | yes | TBD |
+| 27 | `expand` | `f00-expand` | yes | partial | yes | TBD |
+| 28 | `expr` | `f00-expr` | yes | **full** | yes | TBD |
+| 29 | `factor` | `f00-factor` | yes | partial | yes | TBD |
+| 30 | `false` | `f00-false` | yes | **full** | yes | TBD |
+| 31 | `fmt` | `f00-fmt` | yes | partial | yes | TBD |
+| 32 | `fold` | `f00-fold` | yes | partial | yes | TBD |
+| 33 | `groups` | `f00-groups` | yes | **full** | yes | TBD |
+| 34 | `head` | `f00-head` | yes | partial | yes | win |
+| 35 | `hostid` | `f00-hostid` | yes | **full** | yes | TBD |
+| 36 | `id` | `f00-id` | yes | partial | yes | win |
+| 37 | `install` | `f00-install` | yes | **full** | yes | TBD |
+| 38 | `join` | `f00-join` | yes | partial | yes | TBD |
+| 39 | `link` | `f00-link` | yes | partial | yes | TBD |
+| 40 | `ln` | `f00-ln` | yes | partial | yes | TBD |
+| 41 | `logname` | `f00-logname` | yes | **full** | yes | TBD |
+| 42 | `ls` | `f00-ls` | yes | partial | deep | win |
+| 43 | `md5sum` | `f00-md5sum` | yes | partial | yes | win |
+| 44 | `mkdir` | `f00-mkdir` | yes | partial | yes | TBD |
+| 45 | `mkfifo` | `f00-mkfifo` | yes | partial | yes | TBD |
+| 46 | `mknod` | `f00-mknod` | yes | partial | yes | TBD |
+| 47 | `mktemp` | `f00-mktemp` | yes | partial | yes | TBD |
+| 48 | `mv` | `f00-mv` | yes | partial | yes | TBD |
+| 49 | `nice` | `f00-nice` | yes | partial | yes | TBD |
+| 50 | `nl` | `f00-nl` | yes | partial | yes | TBD |
+| 51 | `nohup` | `f00-nohup` | yes | partial | yes | TBD |
+| 52 | `nproc` | `f00-nproc` | yes | **full** | yes | win |
+| 53 | `numfmt` | `f00-numfmt` | yes | partial | yes | TBD |
+| 54 | `od` | `f00-od` | yes | partial | yes | TBD |
+| 55 | `paste` | `f00-paste` | yes | partial | yes | TBD |
+| 56 | `pathchk` | `f00-pathchk` | yes | partial | yes | TBD |
+| 57 | `pinky` | `f00-pinky` | yes | partial | yes | TBD |
+| 58 | `pr` | `f00-pr` | yes | partial | yes | TBD |
+| 59 | `printenv` | `f00-printenv` | yes | **full** | yes | TBD |
+| 60 | `printf` | `f00-printf` | yes | **full** | yes | TBD |
+| 61 | `ptx` | `f00-ptx` | yes | partial | yes | TBD |
+| 62 | `pwd` | `f00-pwd` | yes | **full** | yes | TBD |
+| 63 | `readlink` | `f00-readlink` | yes | partial | yes | TBD |
+| 64 | `realpath` | `f00-realpath` | yes | partial | yes | win |
+| 65 | `rm` | `f00-rm` | yes | partial | yes | TBD |
+| 66 | `rmdir` | `f00-rmdir` | yes | **full** | yes | TBD |
+| 67 | `runcon` | `f00-runcon` | yes | partial | yes | TBD |
+| 68 | `seq` | `f00-seq` | yes | partial | yes | win |
+| 69 | `sha1sum` | `f00-sha1sum` | yes | partial | yes | win* |
+| 70 | `sha224sum` | `f00-sha224sum` | yes | partial | yes | win* |
+| 71 | `sha256sum` | `f00-sha256sum` | yes | partial | yes | win |
+| 72 | `sha384sum` | `f00-sha384sum` | yes | partial | yes | win* |
+| 73 | `sha512sum` | `f00-sha512sum` | yes | partial | yes | win* |
+| 74 | `shred` | `f00-shred` | yes | partial | yes | TBD |
+| 75 | `shuf` | `f00-shuf` | yes | partial | yes | TBD |
+| 76 | `sleep` | `f00-sleep` | yes | **full** | yes | TBD |
+| 77 | `sort` | `f00-sort` | yes | partial | yes | win |
+| 78 | `split` | `f00-split` | yes | partial | yes | TBD |
+| 79 | `stat` | `f00-stat` | yes | partial | yes | TBD |
+| 80 | `stdbuf` | `f00-stdbuf` | yes | partial | yes | TBD |
+| 81 | `stty` | `f00-stty` | yes | partial | yes | TBD |
+| 82 | `sum` | `f00-sum` | yes | partial | yes | TBD |
+| 83 | `sync` | `f00-sync` | yes | partial | yes | TBD |
+| 84 | `tac` | `f00-tac` | yes | partial | yes | TBD |
+| 85 | `tail` | `f00-tail` | yes | partial | yes | win |
+| 86 | `tee` | `f00-tee` | yes | partial | yes | TBD |
+| 87 | `test` | `f00-test` | yes | **full** | yes | TBD |
+| 88 | `timeout` | `f00-timeout` | yes | partial | yes | TBD |
+| 89 | `touch` | `f00-touch` | yes | partial | yes | TBD |
+| 90 | `tr` | `f00-tr` | yes | partial | yes | TBD |
+| 91 | `true` | `f00-true` | yes | **full** | yes | win |
+| 92 | `truncate` | `f00-truncate` | yes | partial | yes | TBD |
+| 93 | `tsort` | `f00-tsort` | yes | partial | yes | TBD |
+| 94 | `tty` | `f00-tty` | yes | **full** | yes | TBD |
+| 95 | `uname` | `f00-uname` | yes | partial | yes | win |
+| 96 | `unexpand` | `f00-unexpand` | yes | partial | yes | TBD |
+| 97 | `uniq` | `f00-uniq` | yes | partial | yes | TBD |
+| 98 | `unlink` | `f00-unlink` | yes | partial | yes | TBD |
+| 99 | `uptime` | `f00-uptime` | yes | partial | yes | TBD |
+| 100 | `users` | `f00-users` | yes | partial | yes | TBD |
+| 101 | `vdir` | `f00-vdir` | yes | partial | yes | TBD |
+| 102 | `wc` | `f00-wc` | yes | partial | yes | win |
+| 103 | `who` | `f00-who` | yes | partial | yes | TBD |
+| 104 | `whoami` | `f00-whoami` | yes | **full** | yes | TBD |
+| 105 | `yes` | `f00-yes` | yes | **full** | yes | TBD |
+| 106 | `[` | `f00-[ / test` | yes | partial | yes | TBD |
+
+Also shipped (useful multicall extras; not always in the coreutils package): `f00-hostname`, `f00-kill`, `f00-rev`.
+
+Detailed per-flag matrix: [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md) · scoreboard source: [docs/COREUTILS-PROGRESS.md](docs/COREUTILS-PROGRESS.md)
+
+
+## Speed parity
+
+Warm cache, **spawn-inclusive**, median of 40 runs, `f00-* --core` vs `/usr/bin/*` on Linux x86-64 (representative host; re-run `make speed`).
+
+| Workload | coreutils | **f00 `--core`** | vs coreutils | Notes |
+|----------|-----------|------------------|--------------|--------|
+| `true` | 0.22 ms | **0.07 ms** | **~3.1×** | Multicall entry |
+| `basename` | 0.24 ms | **0.07 ms** | **~3.2×** | |
+| `wc -l` | 0.51 ms | **0.24 ms** | **~2.1×** | |
+| `cat` (small file) | 0.27 ms | **0.19 ms** | **~1.4×** | Bulk path |
+| `ls -1` | 0.29 ms | **0.21 ms** | **~1.4×** | |
+| `ls -la` | 0.99 ms | **0.23 ms** | **~4.3×** | Large win |
+| `md5sum` | 0.91 ms | **0.39 ms** | **~2.3×** | Pure ASM MD5 |
+| `seq 1…` | 0.24 ms | **0.13 ms** | **~1.8×** | |
+| `nproc` | 0.32 ms | **0.08 ms** | **~3.9×** | |
+| `id` | 1.33 ms | **0.13 ms** | **~10×** | |
+
+| Competitor class | Typical profile | f00 stance |
+|------------------|-----------------|------------|
+| **GNU coreutils** | libc, portable C | Beat on freestanding hot paths |
+| **uutils/coreutils** | Rust, safe/portable | f00 targets lower latency, not portability breadth |
+| **busybox / toybox** | Small embedded applets | f00 targets full desktop/server flag surface + modern UX |
+| **Single-tool rewrites** (eza, bat, …) | Deep one-tool UX | f00 ships **full suite** + deep `f00-ls` / `f00-cat` |
+
+Reproduce:
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.12.0 bash
-curl -fsSL https://f00.sh/install.sh | INSTALL_DIR=$HOME/bin bash
-man f00
-```
-
-**Note for maintainers:** `man/f00.1` must match the live program. CI runs `scripts/check-man-sync.sh`. Update the man page in the same change as CLI or version updates.
-
-### Nix
-
-```bash
-nix profile install github:theesfeld/f00
-# or: nix run github:theesfeld/f00 -- -la
-```
-
-### Other package managers
-
-The primary install paths are **install.sh** and **Nix**. Other channels track GitHub Releases when maintained.
-
-| Channel | Command |
-|---------|---------|
-| **crates.io** | `cargo install f00 --locked` |
-| **Homebrew** | `brew install theesfeld/tap/f00` |
-| **AUR** | `yay -S f00` |
-| **Scoop / winget / deb / rpm** | See [Releases](https://github.com/theesfeld/f00/releases) |
-
-Use the package manager upgrade command for package installs. Use `f00 --update` for installer installs.
-
-**Default:** f00 does **not** replace system `/bin/ls`. The primary command name is **`f00`**.
-
-### Use f00 as `ls` (optional)
-
-Keep the command name **`f00`** unless you need the name `ls`.
-
-**1. Shell alias (interactive shells)**
-
-```bash
-# Modern defaults (icons, git)
-echo "alias ls='f00'" >> ~/.bashrc    # or ~/.zshrc
-echo "alias ll='f00 -la'" >> ~/.bashrc
-
-# GNU-style output (no icons/git; better for scripts)
-# echo "alias ls='f00 --gnu'" >> ~/.bashrc
-# or: export F00_GNU=1
-```
-
-Aliases apply only in interactive shells. Scripts keep system `/bin/ls` unless they use your shell with aliases.
-
-**2. PATH symlink (installer option)**
-
-```bash
-curl -fsSL https://f00.sh/install.sh | F00_INSTALL_LS=1 bash
-```
-
-This creates `ls` → `f00` in the install directory. It does **not** overwrite `/bin/ls`.
-
-**3. Binary named `ls`**
-
-If the binary name is `ls` (symlink or rename), TTY defaults stay the same as `f00` (icons, git, colors). Directory-first sort stays off by default (like GNU). For strict coreutils-style output, use `--gnu` or `F00_GNU=1`.
-
-### Update
-
-```bash
-f00 --update          # or: f00 update
-f00 --check-update    # or: f00 check-update  (exit code 1 if a newer release exists)
+cd asm && make && make speed      # speed-gate vs coreutils
+bash benches/parity.sh            # functional --core diffs
 ```
 
 ---
 
-## Features (v0.12.0)
+## Install
 
-| Area | Status | Notes |
-|------|--------|--------|
-| **GNU coreutils `ls` options** | Shipped | Full option surface. **`--gnu`** parity tested in CI against system `ls` |
-| **Quoting** | Shipped | `-b` `-q` `-Q` `-N` `--quoting-style` and `QUOTING_STYLE` |
-| **File name colors** | Shipped | **`LS_COLORS`** (dircolors / `lscolors`) |
-| **Long listing colors** | Shipped | Terminal ANSI palette. Optional **`F00_COLORS` / `EZA_COLORS` / `EXA_COLORS`** |
-| **Speed** | Shipped | Parallel metadata (rayon), Linux `statx`, optional **io_uring**, `--threads`, `--profile` |
-| **Portability** | Shipped | Linux, macOS, Windows, FreeBSD |
-| **Git status** | Shipped | Default feature |
-| **Icons** | Shipped | Nerd Font glyphs; `--icons[=auto\|always\|never]` (default: auto on TTY) |
-| **JSON** | Shipped | Compact `-j` / `--json`. Full metadata: **`--json-full`**. Pretty ANSI colors on TTY. Plain when color is off |
-| **CSV / TSV / tree** | Shipped | `--csv`, `--tsv`, `--tree` |
-| **TOML config** | Shipped | XDG / AppData paths |
-| **Shell completions** | Shipped | `f00 --generate-completions SHELL` |
-| **Man page** | Shipped | Tracked **`man/f00.1`**. Installed by `install.sh`. CI checks sync with CLI |
-| **TUI browser** | Shipped | Separate binary **`f00-tui`** |
-| **Archives** | Opt-in | zip / tar / tar.gz as virtual directories (`--features archives`) |
-| **Ignore files** | Shipped | `--ignore-files` (`.gitignore` / `.f00ignore`) |
-| **Self-update** | Shipped | `--update` / `--check-update` from GitHub Releases |
-| **Plugins** | Opt-in | Feature `plugins` |
-
----
-
-## Usage
+### One-liner (recommended)
 
 ```bash
-# Classic listing (TTY: icons, git, colors)
-f00 -la
-
-# Pipes are script-safe by default (auto GNU-equivalent)
-f00 -la /tmp | grep foo
-
-# Force GNU always / force modern on a pipe
-f00 --gnu -lah /tmp
-F00_GNU=1 f00 -la
-f00 --no-gnu -la | cat
-
-# Quoting / NUL / version sort / width
-f00 -bQ -1 .
-f00 --zero -1 .
-f00 -v -1 .
-f00 -w 40 -C .
-
-# Time styles / hide / hyperlink
-f00 -l --time-style=long-iso
-f00 --hide='*.o' -1
-f00 --hyperlink=auto -1
-
-# JSON (compact and full)
-f00 --json             # TTY + color: pretty output
-f00 -j                 # short form of --json
-f00 --json-full        # full metadata fields
-f00 --json --color=never | jq '.[].name'   # compact, no ANSI
-f00 --csv
-f00 --tsv
-
-# Archives (opt-in feature `archives`; auto when path is zip/tar)
-f00 project.zip
-f00 --archive=false project.zip   # treat as plain file
-
-# Ignore files
-f00 --ignore-files
-
-# Interactive dual-pane browser (separate binary)
-f00-tui
-f00-tui ~/src
-# Optional embed: cargo build -p f00 --features tui && f00 --browse
-
-# Icons (auto on TTY; force on/off) — needs a Nerd Font for glyphs
-f00 -la --icons              # same as --icons=always
-f00 -la --icons=auto
-f00 -la --icons=never
-f00 -la --icons=always --git
-# Special dirs (Desktop/Downloads/Music/…) + file-type icons when icons on
-
-# Speed / profiling
-f00 --threads 0 -1 /large/dir   # parallel metadata (default; 0 = auto rayon)
-f00 --threads 1 -1 /large/dir   # force serial stats
-f00 --threads 8 -1 /large/dir   # fixed rayon pool size
-f00 --profile -la /large/dir    # stderr: readdir_ms stat_ms sort_ms format_ms total_ms
-f00 --io-uring=false -1 /large  # Linux: disable io_uring batch statx (default: on)
+curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-Large directories (**>32** entries) parallelize metadata collection with rayon. Sort order is unchanged. Benchmark:
+Installs multicall `f00` + all `f00-*` links into `~/.local/bin` (override with `INSTALL_DIR`).
 
-```bash
-# Comparative: GNU ls vs eza vs f00 (wall + CPU)
-./scripts/bench-compare.sh           # synthetic 2000 files
-./scripts/bench-compare.sh 5000
-./scripts/bench-compare.sh --dir ~   # real directory
-# Uses hyperfine when available; GNU time for user/sys CPU
-
-./scripts/bench-list.sh              # f00-only sequential vs parallel + --profile
-cargo bench -p f00-core --bench list_bench   # Criterion microbench
-```
-
-### Shell completions
-
-```bash
-# bash
-f00 --generate-completions bash > ~/.local/share/bash-completion/completions/f00
-
-# zsh (ensure fpath includes the directory)
-f00 --generate-completions zsh > ~/.zsh/completions/_f00
-
-# fish
-f00 --generate-completions fish > ~/.config/fish/completions/f00.fish
-
-# powershell / elvish
-f00 --generate-completions powershell
-f00 --generate-completions elvish
-```
-
-### Man page
-
-```bash
-# View generated man page
-f00 --generate-man | man -l -
-
-# Or install the committed page (packagers)
-# man/f00.1  →  $(mandir)/man1/f00.1
-# Regenerate after CLI changes:
-./scripts/gen-man.sh
-```
-
-### TUI keys (`f00-tui`)
-
-| Key | Action |
+| Env | Effect |
 |-----|--------|
-| `j`/`k` · arrows | Move (active pane) |
-| Enter | Open dir / print file path & quit |
-| `h`/`l` · Backspace | Parent / enter |
-| `Tab` | Switch active pane |
-| `\` / `\|` | Toggle dual-pane layout |
-| `c` / `m` / `d` | Copy / move / delete (marked or cursor) → other pane; confirm overlay |
-| Space | Mark · `y` print marks & quit (or confirm when overlay open) |
-| `/` | Filter · `Esc` clear / cancel confirm |
-| `s` / `S` | Cycle sort (name/size/mtime/ext) · reverse |
-| `p` | Toggle preview pane (single-pane only) |
-| `e` / `v` | Open in `$EDITOR` · view in `$PAGER` |
-| `.` | Toggle hidden · `r` refresh · `H` help · `q` quit |
-
----
-
-## Option groups
-
-| Group | Examples | Notes |
-|-------|----------|--------|
-| **GNU coreutils** | `-aA -l1Cmx -h --si -Rr -tSXvUf -d -Fp -BI -LH -goGn -is -uc -Z --zero -D --dired --quoting-style --time-style --block-size --author --hyperlink --format --sort --time --group-directories-first --full-time --color` | Full option set. Use **`--gnu`** or non-TTY for script-safe output |
-| **Modern TTY** | `--icons` · `--git` · `--color` | Default on a TTY. Off under `--gnu` |
-| **f00-only** | `-j` / `--json` · **`--json-full`** · `--tree` · `--csv` / `--tsv` · `--update` · `--browse` / `f00-tui` | Not in GNU `ls` |
-
-With **`--gnu`** or **`F00_GNU=1`**: no icons, no git column, script-safe output.  
-If stdout is not a TTY, f00 uses the same mode unless you set **`--no-gnu`** or **`F00_NO_GNU=1`**.
-
-Read the manual: **`man f00`**.---
-
-## Cargo features
-
-| Feature | Default | Description |
-|---------|---------|-------------|
-| `git` | **yes** | Git status column |
-| `io-uring` | **yes** | Linux batch metadata via io_uring (no-op off Linux) |
-| `archives` | no | zip/tar virtual directory listing |
-| `tui` | no | Embed `f00 --browse` (prefer **`f00-tui`** binary) |
-| `plugins` | no | Dynamic plugin host (`--list-plugins`) |
-| `full` | no | `git` + `io-uring` + `archives` + `tui` + `plugins` |
+| `INSTALL_DIR` | Target bin dir (default `~/.local/bin`) |
+| `F00_VERSION` | Release tag (default: latest; beta: `v0.15.0-beta.1`) |
+| `F00_LOCAL` | Path to local `asm/` build containing `./f00` (skip download) |
+| `F00_TOOLS` | `all` or comma list |
+| `F00_SUPERSEDE=1` | Also install short names (`ls`, `cat`, …) in `INSTALL_DIR` |
+| `F00_ALIAS=1` | Append shell aliases |
+| `F00_MAN=1` | Install man pages (default on) |
 
 ```bash
-cargo build -p f00 --release                 # default features
-cargo build -p f00-tui --release             # dual-pane browser
-cargo build -p f00 --no-default-features     # minimal
-cargo build -p f00 --features full           # kitchen sink
+# beta pin
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
+
+# from a local build
+curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
+
+# side-by-side + short names
+curl -fsSL https://f00.sh/install.sh | F00_SUPERSEDE=1 bash
 ```
 
----
-
-## Configuration
-
-Unix: `~/.config/f00/config.toml` (or `$F00_CONFIG` / `--config`)
-
-```toml
-[defaults]
-all = false
-long = false
-human = true
-icons = "auto"    # auto | always | never  (bool true/false also accepted)
-color = "auto"
-git = true
-dirs_first = true
-```
-
----
-
-## Crates
-
-| Crate | Role |
-|-------|------|
-| `f00-core` | readdir, sort, filter, ignore files |
-| `f00-format` | long/columns/tree/json/csv, quoting, colors |
-| `f00-compat` | GNU helpers |
-| `f00-git` | git status |
-| `f00-archive` | zip/tar virtual listing |
-| `f00-tui` | dual-pane browser library + binary `f00-tui` |
-| `f00-plugin` | plugin host ABI |
-| `f00-plugin-hello` | example cdylib plugin |
-| `f00` (path `crates/f00-cli`) | binary `f00` (crates.io) |
-
-Upgrading from 0.10? See **[MIGRATION.md](MIGRATION.md)**.
-
----
-
-## Building from source
+### From source
 
 ```bash
-git clone https://github.com/theesfeld/f00
-cd f00
-cargo build --release -p f00 -p f00-tui
-./target/release/f00 --version
-./target/release/f00-tui --version
+git clone https://github.com/theesfeld/f00.git
+cd f00/asm
+make            # needs nasm + ld
+make smoke
+make install    # ~/.local/bin + man pages
+```
+
+Requires: `nasm`, `ld` (binutils). Target: **Linux x86-64**.
+
+---
+
+## Package managers
+
+> **Beta note:** package recipes are migrating from the historical Rust `ls` product to the **ASM multicall suite**. Prefer the install script or source build for `v0.15.0-beta.1`. Distro packages will track stable tags.
+
+| Channel | Status | Command / notes |
+|---------|--------|-----------------|
+| **Install script** | **Primary** | `curl -fsSL https://f00.sh/install.sh \| bash` |
+| **From source** | Supported | `cd asm && make install` |
+| **AUR** | Updating | `packaging/aur/PKGBUILD` — rebuild for ASM static binary |
+| **Homebrew** | Updating | `Formula/f00.rb` — tap recipe (Linux bottle TBD) |
+| **nfpm (deb/rpm)** | Updating | `packaging/nfpm/f00.yaml` |
+| **Scoop / Winget** | Windows later | Manifests present; ASM product is Linux-first |
+| **Nix** | Experimental | `flake.nix` |
+
+Arch (after PKGBUILD points at ASM release assets):
+
+```bash
+# AUR helper example (when published)
+yay -S f00
+```
+
+Debian/Fedora (when release artifacts ship):
+
+```bash
+# illustrative — use published .deb / .rpm from GitHub Releases
+sudo dpkg -i f00_*_amd64.deb
+# or
+sudo rpm -Uvh f00-*.x86_64.rpm
 ```
 
 ---
 
-## Comparison
+## Beta `v0.15.0-beta.1`
 
-| | GNU `ls` | eza | lsd | **f00** |
-|--|----------|-----|-----|---------|
-| Language | C | Rust | Rust | Rust |
-| Full coreutils flags | Native | Partial | Partial | **Shipped** (+ auto non-TTY / `--gnu`) |
-| Icons / git | No | Yes | Yes | Yes (TTY) |
-| Script-safe pipes | Yes | Partial | Partial | **Yes (default)** |
-| Speed (measured) | — | Good | Good | **Beats eza/lsd** |
-| TUI | No | No | No | **`f00-tui`** |
-| Archives | No | No | No | Opt-in feature |
-| Windows | Weak | Strong | Strong | First-class |
+| | |
+|---|---|
+| **Tag** | `v0.15.0-beta.1` |
+| **What** | Full multicall coreutils *surface* in pure ASM; modern UX; speed-gate; parity harness |
+| **Not yet** | Every obscure GNU long-option on every util (tracked in [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md)); non-x86_64; macOS Darwin layer |
+| **Feedback** | [GitHub Issues](https://github.com/theesfeld/f00/issues) |
+
+```bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
+# or
+git fetch --tags && git checkout v0.15.0-beta.1 && cd asm && make
+```
+
+---
+
+## Quick start
+
+```bash
+f00-ls -la
+f00-ls --core -la          # script-safe
+f00-cat -n README.md       # modern line numbers on TTY
+f00-wc --json Makefile
+f00-sha256sum --core file
+f00-df -h                  # modern table
+f00-id --core              # match GNU id
+f00 --list-utils           # when argv0 is f00
+```
+
+---
+
+## Layout
+
+```
+asm/                 pure assembly product (canonical)
+  src/ls/            multicall sources + suite_*.asm modules
+  man/man1/          f00(1) + f00-*(1)
+  benches/           speed-gate, parity, smoke
+site/                f00.sh (GitHub Pages) + install.sh
+docs/                compliance, UX, modern features
+packaging/           AUR, nfpm, scoop, winget
+crates/              historical Rust f00-ls (reference only)
+```
+
+---
+
+## Documentation
+
+| Doc | |
+|-----|--|
+| [docs/COREUTILS-PROGRESS.md](docs/COREUTILS-PROGRESS.md) | **Scoreboard — every coreutil** (shipped / `--core` depth / modern / speed) |
+| [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md) | Per-flag full / partial / missing |
+| [docs/TERMINAL-UX.md](docs/TERMINAL-UX.md) | Color tokens, help structure, JSON envelope |
+| [docs/MODERN-FEATURES.md](docs/MODERN-FEATURES.md) | Modern extras survey |
+| [CHANGELOG.md](CHANGELOG.md) | Releases |
+| Man | `man f00` · `man f00-ls` · `man f00-cat` · … |
+
+---
+
+## Build & quality gates
+
+```bash
+cd asm
+make              # f00 + f00-* links
+make smoke        # functional smoke
+make speed        # must beat coreutils (+5% gate)
+make ux-check     # speed + parity
+```
 
 ---
 
 ## License
 
-MIT OR Apache-2.0
-
-## Links
-
-- Issues: https://github.com/theesfeld/f00/issues  
-- Design: `docs/superpowers/specs/2026-07-16-f00-design.md`  
-- Sync: `docs/SYNC.md`
+MIT — see [LICENSE](LICENSE).

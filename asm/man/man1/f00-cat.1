@@ -1,0 +1,29 @@
+.TH F00-CAT 1 "2026" "f00 0.15.0-beta.1" "User Commands"
+.SH NAME
+f00-cat \- concatenate files and print on the standard output (f00 suite)
+.SH SYNOPSIS
+.B f00-cat
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+Concatenate FILE(s) to standard output. Pure assembly. MIT.
+.PP
+Default is modern mode. \fB--core\fR selects strict GNU cat-compatible output.
+.SH COREUTILS FLAGS
+.B \-A \-b \-e \-E \-n \-s \-t \-T \-u \-v
+and long forms. See \fBf00-cat --help\fR.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils-compatible output
+.TP
+\fB\-\-headers\fR / \fB\-\-no\-headers\fR
+file banners when multiple files
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+detailed JSON summary
+.TP
+\fB\-\-csv\fR
+detailed CSV summary
+.SH SEE ALSO
+.BR cat (1),
+.BR f00-ls (1)

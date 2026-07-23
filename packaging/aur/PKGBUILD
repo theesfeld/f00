@@ -1,33 +1,43 @@
 # Maintainer: theesfeld
-# Auto-updated on release by GitHub Actions.
 pkgname=f00
-pkgver=0.12.0
+pkgver=0.15.0beta1
 pkgrel=1
-pkgdesc="Modern, friendly directory lister (ls rewrite in Rust)"
-arch=('x86_64' 'aarch64')
+pkgdesc="Pure assembly GNU coreutils replacement suite (multicall, freestanding)"
+arch=('x86_64')
 url="https://f00.sh"
-license=('MIT' 'Apache')
-depends=('glibc' 'gcc-libs')
+license=('MIT')
+depends=()
+makedepends=('nasm' 'binutils')
 provides=('f00')
-source_x86_64=("https://github.com/theesfeld/f00/releases/download/v${pkgver}/f00-x86_64-unknown-linux-gnu.tar.gz")
-source_aarch64=("https://github.com/theesfeld/f00/releases/download/v${pkgver}/f00-aarch64-unknown-linux-gnu.tar.gz")
-sha256sums_x86_64=('56cfe2cc177ff9f1b45303359762ef82e53c4154d5ea90c3fba13d1ba3f48b66')
-sha256sums_aarch64=('e426d203300fcd5ecc10b7a7bc33c73f2daa81cb38d9673c4b00b5a2a62e5d7e')
+conflicts=('f00')
+source=("https://github.com/theesfeld/f00/archive/refs/tags/v0.15.0-beta.1.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "${srcdir}/f00-0.15.0-beta.1/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
+  make
+}
 
 package() {
-  local dir
-  if [[ "${CARCH}" == "x86_64" ]]; then
-    dir="f00-x86_64-unknown-linux-gnu"
-  else
-    dir="f00-aarch64-unknown-linux-gnu"
+  cd "${srcdir}/f00-0.15.0-beta.1/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
+  install -Dm755 f00 "${pkgdir}/usr/bin/f00"
+  local u
+  for u in ls cat head tail wc true false yes id date uname md5sum sha256sum \
+           cp mv rm mkdir basename dirname pwd echo env sort uniq cut tr \
+           df du stat realpath readlink nproc whoami tty; do
+    ln -s f00 "${pkgdir}/usr/bin/f00-${u}"
+  done
+  # full link set
+  if [[ -f Makefile ]]; then
+    # install all f00-* from make links if present
+    for f in f00-*; do
+      [[ -L "$f" || -f "$f" ]] || continue
+      install -Dm755 f00 "${pkgdir}/usr/bin/${f}"
+    done
   fi
-  install -Dm755 "${srcdir}/${dir}/f00" "${pkgdir}/usr/bin/f00"
-  if [[ -f "${srcdir}/${dir}/LICENSE-MIT" ]]; then
-    install -Dm644 "${srcdir}/${dir}/LICENSE-MIT" \
-      "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE-MIT"
-  fi
-  if [[ -f "${srcdir}/${dir}/LICENSE-APACHE" ]]; then
-    install -Dm644 "${srcdir}/${dir}/LICENSE-APACHE" \
-      "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE-APACHE"
+  install -Dm644 ../LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE" 2>/dev/null || true
+  if [[ -d man/man1 ]]; then
+    install -Dm644 man/man1/f00.1 "${pkgdir}/usr/share/man/man1/f00.1"
+    install -Dm644 man/man1/f00-ls.1 "${pkgdir}/usr/share/man/man1/f00-ls.1" 2>/dev/null || true
   fi
 }

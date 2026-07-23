@@ -1,0 +1,45 @@
+.TH F00-LINK 1 "2026" "f00 0.15.0-beta.1" "User Commands"
+.SH NAME
+f00-link \- call the link function to create a link to a file (f00 suite)
+.SH SYNOPSIS
+.B f00-link
+[\fIOPTION\fR]... [\fIARG\fR]...
+.SH DESCRIPTION
+call the link function to create a link to a file.
+Part of the
+.B f00
+coreutils replacement suite (pure assembly multicall).
+.PP
+Default mode is modern.
+.B --core
+selects strict GNU coreutils
+.B link
+compatible behavior where applicable.
+.SH OPTIONS
+Common suite options:
+.TP
+\fB\-\-help\fR
+display help and exit
+.TP
+\fB\-\-version\fR
+output version information and exit
+.TP
+\fB\-\-core\fR
+strict coreutils-compatible mode
+.TP
+\fB\-\-json\fR
+JSON summary when supported
+.TP
+\fB\-\-csv\fR
+CSV summary when supported
+.PP
+See
+.B f00-link --help
+for the full flag list.
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR link (1),
+.BR f00 (1)
+.PP
+https://f00.sh

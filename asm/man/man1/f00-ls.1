@@ -1,0 +1,68 @@
+.TH F00-LS 1 "2026" "f00 0.15.0-beta.1" "User Commands"
+.SH NAME
+f00-ls \- list directory contents (f00 suite)
+.SH SYNOPSIS
+.B f00-ls
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+List information about FILEs (the current directory by default).
+Part of the
+.B f00
+coreutils replacement suite (pure assembly).
+.PP
+Default mode is
+.B modern
+(color, icons on a TTY, optional git).
+.B --core
+selects strict GNU coreutils
+.B ls
+compatible output.
+.SH COREUTILS FLAGS
+.TP
+\fB\-a\fR, \fB\-\-all\fR
+do not ignore entries starting with .
+.TP
+\fB\-l\fR
+use a long listing format
+.TP
+\fB\-h\fR, \fB\-\-human\-readable\fR
+with \-l and \-s, print sizes like 1K 234M 2G
+.TP
+\fB\-\-color\fR[=\fIWHEN\fR]
+colorize the output; WHEN is auto, always, or never
+.PP
+See
+.B f00-ls --help
+for the full coreutils-compatible flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils-compatible output (no icons/git/json defaults)
+.TP
+\fB\-\-no\-core\fR
+force modern mode even when stdout is not a TTY
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+detailed JSON listing (pretty and colored on a TTY)
+.TP
+\fB\-\-csv\fR
+detailed CSV listing
+.TP
+\fB\-\-tree\fR
+tree view
+.TP
+\fB\-\-git\fR
+annotate with git status
+.TP
+\fB\-\-icons\fR[=\fIWHEN\fR]
+Nerd Font icons
+.TP
+\fB\-\-browse\fR
+interactive dual-pane browser
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR ls (1),
+.BR f00 (1)
+.PP
+https://f00.sh

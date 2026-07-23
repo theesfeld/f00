@@ -1,47 +1,42 @@
-# Homebrew formula for f00.
+# Homebrew formula for f00 (pure assembly multicall coreutils suite).
 #
 # Install:
 #   brew install theesfeld/tap/f00
 #
-# Official installer (any platform):
+# Official installer (recommended):
 #   curl -fsSL https://f00.sh/install.sh | bash
+#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
 #
-# This file is auto-updated on release (Refs: packaging phase).
+# Linux x86-64 freestanding static binary. macOS bottles TBD (Darwin layer).
 
 class F00 < Formula
-  desc "Modern, friendly directory lister (ls rewrite in Rust)"
+  desc "Pure assembly GNU coreutils replacement suite (multicall, freestanding)"
   homepage "https://f00.sh"
-  version "0.12.0"
-  license any_of: ["MIT", "Apache-2.0"]
-
-  on_macos do
-    on_arm do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-apple-darwin.tar.gz"
-      sha256 "8ea1fd3b7348a316b5c8b5ea1763f7c11031e006c6e1460e6c2c084f64984dc5"
-    end
-    on_intel do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-apple-darwin.tar.gz"
-      sha256 "a65aa495099760a83340de996fd38478504eb7c54cce91c4ca80fdae88c81f50"
-    end
-  end
+  version "0.15.0-beta.1"
+  license "MIT"
 
   on_linux do
-    on_arm do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "e426d203300fcd5ecc10b7a7bc33c73f2daa81cb38d9673c4b00b5a2a62e5d7e"
-    end
     on_intel do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "56cfe2cc177ff9f1b45303359762ef82e53c4154d5ea90c3fba13d1ba3f48b66"
+      url "https://github.com/theesfeld/f00/releases/download/v0.15.0-beta.1/f00-0.15.0-beta.1-x86_64-linux.tar.gz"
+      sha256 "0dfe83594ae307d3ba6383ced90311ba5f91feecfd534370e3dd64e9f1ed24d2"
     end
   end
 
   def install
-    # Release tarball root is f00-<target-triple>/f00
-    bin.install Dir["f00-*/f00"].first
+    bin.install "f00"
+    # multicall links for common tools
+    %w[
+      ls cat head tail wc true false yes id date uname
+      basename dirname pwd echo env sort uniq cut tr
+      cp mv rm mkdir md5sum sha256sum nproc whoami tty
+      df du stat realpath
+    ].each do |u|
+      bin.install_symlink "f00" => "f00-#{u}"
+    end
+    man1.install Dir["man/man1/*.1"] if Dir.exist?("man/man1")
   end
 
   test do
-    assert_match "f00", shell_output("#{bin}/f00 --version")
+    assert_match "f00", shell_output("#{bin}/f00-ls --version")
   end
 end

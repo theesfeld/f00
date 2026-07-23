@@ -1,0 +1,49 @@
+.TH F00-ID 1 "2026" "f00 0.15.0-beta.1" "User Commands"
+.SH NAME
+f00\-id \- print real and effective user and group IDs (f00 suite)
+.SH SYNOPSIS
+.B f00\-id
+[\fIOPTION\fR]... [\fIUSER\fR]
+.SH DESCRIPTION
+Print user and group information for the specified USER, or for the
+current process if no USER is given. Pure assembly multicall. MIT.
+.PP
+Default is modern mode.
+.B \-\-core
+selects strict GNU id\-compatible output.
+.SH COREUTILS FLAGS
+.TP
+\fB\-u\fR, \fB\-\-user\fR
+print only the effective user ID
+.TP
+\fB\-g\fR, \fB\-\-group\fR
+print only the effective group ID
+.TP
+\fB\-G\fR, \fB\-\-groups\fR
+print all group IDs
+.TP
+\fB\-n\fR, \fB\-\-name\fR
+print a name instead of a number (for \-ugG)
+.PP
+See
+.B f00\-id \-\-help
+for the full flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils\-compatible output
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+JSON identity summary
+.TP
+\fB\-\-csv\fR
+CSV identity summary
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR id (1),
+.BR f00\-whoami (1),
+.BR f00\-groups (1),
+.BR f00 (1)
+.PP
+https://f00.sh

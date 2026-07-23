@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0-beta.1] - 2026-07-23
+
+### Beta — pure assembly coreutils monorepo
+
+#### Added
+- **Full multicall GNU coreutils *surface*** as freestanding x86-64 Linux ASM (no libc), ~600K static binary
+- Suite-wide **`--core`**, **`--json`** (`f00/v1` rich metadata), **`--csv`**, modern TTY color/UX
+- Terminal design system (`suite_ux.asm`), docs: `GNU-COMPLIANCE.md`, `TERMINAL-UX.md`
+- Quality gates: `make speed` (must beat coreutils), `benches/parity.sh`
+- Installer + GitHub Pages site aligned with monorepo README (STE100)
+- Man pages: `f00(1)` + `f00-*(1)` for the full util set
+
+#### Changed
+- Product focus: **ASM suite is canonical**; Rust crates retained as historical reference
+- README / site: feature parity tables, speed tables, package manager notes, beta install pin
+
+#### Known limitations (beta)
+- Not every obscure GNU long-option on every util is complete (see `docs/GNU-COMPLIANCE.md`)
+- Linux x86-64 first; Darwin/Windows later
+- Distro packages migrating off Rust ls packaging
+
+
 ## [0.12.0] - 2026-07-21
 
 ### Added

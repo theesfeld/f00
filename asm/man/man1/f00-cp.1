@@ -1,0 +1,52 @@
+.TH F00-CP 1 "2026" "f00 0.15.0-beta.1" "User Commands"
+.SH NAME
+f00\-cp \- copy files and directories (f00 suite)
+.SH SYNOPSIS
+.B f00\-cp
+[\fIOPTION\fR]... \fISRC\fR... \fIDST\fR
+.SH DESCRIPTION
+Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.
+Pure assembly multicall. MIT.
+.PP
+Default is modern mode.
+.B \-\-core
+selects strict GNU cp\-compatible behavior.
+.SH COREUTILS FLAGS
+.TP
+\fB\-r\fR, \fB\-R\fR, \fB\-\-recursive\fR
+copy directories recursively
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+explain what is being done
+.TP
+\fB\-f\fR, \fB\-\-force\fR
+if an existing destination cannot be opened, remove and try again
+.TP
+\fB\-i\fR, \fB\-\-interactive\fR
+prompt before overwrite
+.TP
+\fB\-a\fR, \fB\-\-archive\fR
+same as \-dR \-\-preserve=all (when supported)
+.PP
+See
+.B f00\-cp \-\-help
+for the full flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils\-compatible mode
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+JSON summary when supported
+.TP
+\fB\-\-csv\fR
+CSV summary when supported
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR cp (1),
+.BR f00\-mv (1),
+.BR f00\-rm (1),
+.BR f00 (1)
+.PP
+https://f00.sh

@@ -1,0 +1,49 @@
+.TH F00-HEAD 1 "2026" "f00 0.15.0-beta.1" "User Commands"
+.SH NAME
+f00\-head \- output the first part of files (f00 suite)
+.SH SYNOPSIS
+.B f00\-head
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+Print the first 10 lines of each FILE to standard output.
+With more than one FILE, precede each with a header.
+Pure assembly multicall. MIT.
+.PP
+Default is modern mode.
+.B \-\-core
+selects strict GNU head\-compatible output.
+.SH COREUTILS FLAGS
+.TP
+\fB\-n\fR, \fB\-\-lines\fR=\fIN\fR
+print the first N lines instead of the first 10
+.TP
+\fB\-c\fR, \fB\-\-bytes\fR=\fIN\fR
+print the first N bytes
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR, \fB\-\-silent\fR
+never print headers giving file names
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+always print headers giving file names
+.PP
+See
+.B f00\-head \-\-help
+for the full flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils\-compatible output
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+JSON summary when supported
+.TP
+\fB\-\-csv\fR
+CSV summary when supported
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR head (1),
+.BR f00\-tail (1),
+.BR f00 (1)
+.PP
+https://f00.sh

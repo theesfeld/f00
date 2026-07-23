@@ -1,0 +1,51 @@
+.TH F00-WC 1 "2026" "f00 0.15.0-beta.1" "User Commands"
+.SH NAME
+f00\-wc \- print newline, word, and byte counts (f00 suite)
+.SH SYNOPSIS
+.B f00\-wc
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+Print newline, word, and byte counts for each FILE, and a total line if
+more than one FILE is specified. With no FILE, or when FILE is \-,
+read standard input. Pure assembly multicall. MIT.
+.PP
+Default is modern mode.
+.B \-\-core
+selects strict GNU wc\-compatible output.
+.SH COREUTILS FLAGS
+.TP
+\fB\-c\fR, \fB\-\-bytes\fR
+print the byte counts
+.TP
+\fB\-m\fR, \fB\-\-chars\fR
+print the character counts
+.TP
+\fB\-l\fR, \fB\-\-lines\fR
+print the newline counts
+.TP
+\fB\-w\fR, \fB\-\-words\fR
+print the word counts
+.TP
+\fB\-L\fR, \fB\-\-max\-line\-length\fR
+print the maximum display width
+.PP
+See
+.B f00\-wc \-\-help
+for the full flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils\-compatible output
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+JSON counts
+.TP
+\fB\-\-csv\fR
+CSV counts
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR wc (1),
+.BR f00 (1)
+.PP
+https://f00.sh
