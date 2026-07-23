@@ -94,7 +94,7 @@ c_hdr:      db 27, "[1;34m", 0
 env_nocolor: db "NO_COLOR", 0
 j_schema:   db "{", 10, '  "schema": "f00/v1",', 10, 0
 j_suite:    db '  "suite": "f00",', 10, 0
-j_ver:      db '  "version": "0.15.0-beta.1",', 10, 0
+j_ver:      db '  "version": "0.15.0",', 10, 0
 j_util_a:   db '  "util": "', 0
 j_util_b:   db '",', 10, 0
 j_mode_m:   db '  "mode": "modern",', 10, 0

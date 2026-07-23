@@ -9,7 +9,7 @@
 | **Scripts** | `--core` — strict coreutils-compatible presentation |
 | **Engine** | Pure ASM multicall · ~600K static |
 | **License** | MIT |
-| **Status** | **Beta** `v0.15.0-beta.1` |
+| **Status** | **Released** `v0.15.0` |
 | **Site** | [https://f00.sh](https://f00.sh) |
 | **Repo** | [github.com/theesfeld/f00](https://github.com/theesfeld/f00) |
 
@@ -229,7 +229,7 @@ Installs multicall `f00` + all `f00-*` links into `~/.local/bin` (override with 
 | Env | Effect |
 |-----|--------|
 | `INSTALL_DIR` | Target bin dir (default `~/.local/bin`) |
-| `F00_VERSION` | Release tag (default: latest; beta: `v0.15.0-beta.1`) |
+| `F00_VERSION` | Release tag (default: latest) |
 | `F00_LOCAL` | Path to local `asm/` build containing `./f00` (skip download) |
 | `F00_TOOLS` | `all` or comma list |
 | `F00_SUPERSEDE=1` | Also install short names (`ls`, `cat`, …) in `INSTALL_DIR` |
@@ -237,8 +237,8 @@ Installs multicall `f00` + all `f00-*` links into `~/.local/bin` (override with 
 | `F00_MAN=1` | Install man pages (default on) |
 
 ```bash
-# beta pin
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
+# pin version
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
 
 # from a local build
 curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
@@ -263,7 +263,7 @@ Requires: `nasm`, `ld` (binutils). Target: **Linux x86-64**.
 
 ## Package managers
 
-> **Beta note:** package recipes are migrating from the historical Rust `ls` product to the **ASM multicall suite**. Prefer the install script or source build for `v0.15.0-beta.1`. Distro packages will track stable tags.
+> Package recipes ship the **ASM multicall suite**. Prefer the install script or `cd asm && make install` for v0.15.0.
 
 | Channel | Status | Command / notes |
 |---------|--------|-----------------|
@@ -293,19 +293,23 @@ sudo rpm -Uvh f00-*.x86_64.rpm
 
 ---
 
-## Beta `v0.15.0-beta.1`
+## Release `v0.15.0`
 
 | | |
 |---|---|
-| **Tag** | `v0.15.0-beta.1` |
-| **What** | Full multicall coreutils *surface* in pure ASM; modern UX; speed-gate; parity harness |
-| **Not yet** | Every obscure GNU long-option on every util (tracked in [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md)); non-x86_64; macOS Darwin layer |
+| **Tag** | `v0.15.0` |
+| **Status** | **Full-use** pure-ASM multicall coreutils suite (Linux x86-64) |
+| **Scoreboard** | **106/106** shipped · `--core` **full** · modern · speed **win** |
+| **Install** | `curl -fsSL https://f00.sh/install.sh \| bash` (tracks latest) |
+| **Platforms** | Linux x86-64 freestanding now; Darwin / multi-arch next |
 | **Feedback** | [GitHub Issues](https://github.com/theesfeld/f00/issues) |
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
-# or
-git fetch --tags && git checkout v0.15.0-beta.1 && cd asm && make
+curl -fsSL https://f00.sh/install.sh | bash
+# pin
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
+# source
+git fetch --tags && git checkout v0.15.0 && cd asm && make && make install
 ```
 
 ---

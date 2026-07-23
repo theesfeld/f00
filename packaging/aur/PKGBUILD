@@ -1,6 +1,6 @@
 # Maintainer: theesfeld
 pkgname=f00
-pkgver=0.15.0beta1
+pkgver=0.15.0
 pkgrel=1
 pkgdesc="Pure assembly GNU coreutils replacement suite (multicall, freestanding)"
 arch=('x86_64')
@@ -10,16 +10,16 @@ depends=()
 makedepends=('nasm' 'binutils')
 provides=('f00')
 conflicts=('f00')
-source=("https://github.com/theesfeld/f00/archive/refs/tags/v0.15.0-beta.1.tar.gz")
+source=("https://github.com/theesfeld/f00/archive/refs/tags/v0.15.0.tar.gz")
 sha256sums=('SKIP')
 
 build() {
-  cd "${srcdir}/f00-0.15.0-beta.1/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
+  cd "${srcdir}/f00-0.15.0/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
   make
 }
 
 package() {
-  cd "${srcdir}/f00-0.15.0-beta.1/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
+  cd "${srcdir}/f00-0.15.0/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
   install -Dm755 f00 "${pkgdir}/usr/bin/f00"
   local u
   for u in ls cat head tail wc true false yes id date uname md5sum sha256sum \

@@ -9,7 +9,7 @@
   <link rel="canonical" href="https://f00.sh/" />
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <meta property="og:title" content="f00 — pure assembly coreutils monorepo" />
-  <meta property="og:description" content="Drop-in f00-* tools. Modern defaults. --core for GNU-compatible scripts. Pure ASM multicall. Beta v0.15.0-beta.1." />
+  <meta property="og:description" content="Drop-in f00-* tools. Modern defaults. --core for GNU-compatible scripts. Pure ASM multicall. v0.15.0." />
   <meta property="og:url" content="https://f00.sh/" />
   <meta property="og:image" content="https://f00.sh/assets/og.svg" />
   <link rel="stylesheet" href="styles.css" />
@@ -28,7 +28,7 @@
         <a href="#speed">Speed</a>
         <a href="#install">Install</a>
         <a href="#packages">Packages</a>
-        <a href="#beta">Beta</a>
+        <a href="#release">Release</a>
         <a href="#matrix">Matrix</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/theesfeld/f00">GitHub</a>
       </nav>
@@ -39,7 +39,7 @@
     <section class="hero" id="top">
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">monorepo · pure assembly · MIT · beta v0.15.0-beta.1</p>
+          <p class="eyebrow">monorepo · pure assembly · MIT · v0.15.0 full-use</p>
           <h1>GNU coreutils, replaced</h1>
           <p class="lead">
             <strong>f00</strong> is a complete coreutils replacement suite in
@@ -58,8 +58,7 @@
               <button type="button" class="copy-btn" data-copy="#install-line">copy</button>
             </div>
             <p class="muted small" style="margin-top:0.75rem">
-              Pin beta:
-              <code class="mono">F00_VERSION=v0.15.0-beta.1</code>
+              Pin: <code class="mono">F00_VERSION=v0.15.0</code> · scoreboard <strong>106/106</strong>
             </p>
           </div>
           <div class="hero-actions">
@@ -233,7 +232,7 @@
             <thead><tr><th>Env</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>INSTALL_DIR</code></td><td>Bin dir (default <code>~/.local/bin</code>)</td></tr>
-              <tr><td><code>F00_VERSION</code></td><td>Release tag (beta: <code>v0.15.0-beta.1</code>)</td></tr>
+              <tr><td><code>F00_VERSION</code></td><td>Release tag (default: latest)</td></tr>
               <tr><td><code>F00_LOCAL</code></td><td>Local <code>asm/</code> with <code>./f00</code></td></tr>
               <tr><td><code>F00_TOOLS</code></td><td><code>all</code> or comma list</td></tr>
               <tr><td><code>F00_SUPERSEDE=1</code></td><td>Also short names (<code>ls</code>, <code>cat</code>, …)</td></tr>
@@ -242,8 +241,8 @@
             </tbody>
           </table>
         </div>
-        <pre class="code-block"><code># pin beta
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
+        <pre class="code-block"><code># pin version
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
 
 # local build
 curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
@@ -262,7 +261,7 @@ make &amp;&amp; make smoke &amp;&amp; make install
     <section class="section" id="packages">
       <div class="wrap">
         <h2>Package managers</h2>
-        <p class="muted">Beta: recipes are migrating from the historical Rust <code class="mono">ls</code> product to the ASM multicall suite. Prefer the install script or source build for <code class="mono">v0.15.0-beta.1</code>.</p>
+        <p class="muted">Packages: recipes are migrating from the historical Rust <code class="mono">ls</code> product to the ASM multicall suite. Prefer the install script or source build for <code class="mono">v0.15.0</code>.</p>
         <div class="table-wrap">
           <table class="matrix">
             <thead><tr><th>Channel</th><th>Status</th><th>Notes</th></tr></thead>
@@ -280,20 +279,20 @@ make &amp;&amp; make smoke &amp;&amp; make install
       </div>
     </section>
 
-    <section class="section" id="beta">
+    <section class="section" id="release">
       <div class="wrap">
-        <h2>Beta <code class="mono">v0.15.0-beta.1</code></h2>
+        <h2>Release <code class="mono">v0.15.0</code></h2>
         <div class="table-wrap">
           <table class="matrix">
             <tbody>
-              <tr><td><strong>Tag</strong></td><td><code>v0.15.0-beta.1</code></td></tr>
-              <tr><td><strong>Ships</strong></td><td>Full multicall coreutils <em>surface</em> in pure ASM · modern UX · speed-gate · parity harness</td></tr>
-              <tr><td><strong>Not yet</strong></td><td>Every obscure GNU long-option on every util · non-x86_64 · Darwin layer</td></tr>
-              <tr><td><strong>Tracking</strong></td><td><a href="https://github.com/theesfeld/f00/blob/main/docs/GNU-COMPLIANCE.md">GNU-COMPLIANCE.md</a> · <a href="https://github.com/theesfeld/f00/issues">Issues</a></td></tr>
+              <tr><td><strong>Tag</strong></td><td><code>v0.15.0</code></td></tr>
+              <tr><td><strong>Status</strong></td><td><strong>Full-use</strong> pure-ASM multicall coreutils suite (Linux x86-64)</td></tr>
+              <tr><td><strong>Scoreboard</strong></td><td><strong>106/106</strong> full · modern · speed win</td></tr>
+              <tr><td><strong>Tracking</strong></td><td><a href="https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md">COREUTILS-PROGRESS.md</a> · <a href="https://github.com/theesfeld/f00/issues">Issues</a></td></tr>
             </tbody>
           </table>
         </div>
-        <pre class="code-block"><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash</code></pre>
+        <pre class="code-block"><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash</code></pre>
       </div>
     </section>
 
@@ -445,6 +444,7 @@ make &amp;&amp; make smoke &amp;&amp; make install
 
 
 
+
     <section class="section" id="f00-ls">
       <div class="wrap">
         <h2>f00-ls</h2>
@@ -472,7 +472,7 @@ f00-ls --browse</code></pre>
 
   <footer class="site-footer">
     <div class="wrap footer-inner">
-      <p>f00 · pure assembly coreutils monorepo · MIT · beta v0.15.0-beta.1</p>
+      <p>f00 · pure assembly coreutils monorepo · MIT · v0.15.0 full-use</p>
       <p><a href="https://github.com/theesfeld/f00">GitHub</a> · <a href="#install">Install</a></p>
     </div>
   </footer>

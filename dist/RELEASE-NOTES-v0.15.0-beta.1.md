@@ -1,19 +1,19 @@
-# f00 v0.15.0-beta.1
+# f00 v0.15.0
 
 **Pure assembly GNU coreutils monorepo — first public beta of the multicall freestanding suite.**
 
 ## Install
 
 ```bash
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
 # or from source
-git checkout v0.15.0-beta.1 && cd asm && make && make install
+git checkout v0.15.0 && cd asm && make && make install
 # or local archive
-tar xzf f00-0.15.0-beta.1-x86_64-linux.tar.gz
-cd f00-0.15.0-beta.1-x86_64-linux && ./install-local.sh
+tar xzf f00-0.15.0-x86_64-linux.tar.gz
+cd f00-0.15.0-x86_64-linux && ./install-local.sh
 ```
 
-**Asset:** `f00-0.15.0-beta.1-x86_64-linux.tar.gz`  
+**Asset:** `f00-0.15.0-x86_64-linux.tar.gz`  
 **SHA256:** `3d8c375a388f9a6c68d3d74abaa7b97bdb4da3935bfa621e267d0b2dfabb6606`
 
 ## Highlights

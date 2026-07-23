@@ -5,20 +5,20 @@
 #
 # Official installer (recommended):
 #   curl -fsSL https://f00.sh/install.sh | bash
-#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0-beta.1 bash
+#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
 #
 # Linux x86-64 freestanding static binary. macOS bottles TBD (Darwin layer).
 
 class F00 < Formula
   desc "Pure assembly GNU coreutils replacement suite (multicall, freestanding)"
   homepage "https://f00.sh"
-  version "0.15.0-beta.1"
+  version "0.15.0"
   license "MIT"
 
   on_linux do
     on_intel do
-      url "https://github.com/theesfeld/f00/releases/download/v0.15.0-beta.1/f00-0.15.0-beta.1-x86_64-linux.tar.gz"
-      sha256 "3d8c375a388f9a6c68d3d74abaa7b97bdb4da3935bfa621e267d0b2dfabb6606"
+      url "https://github.com/theesfeld/f00/releases/download/v0.15.0/f00-0.15.0-linux-x86_64.tar.gz"
+      sha256 "4e9420e48412e9765d30132e8dcb6829087343fcddd94bd436b6d6dfcb685b99"
     end
   end
 
