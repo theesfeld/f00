@@ -41,3 +41,4 @@ Thumbs.db
 /dist/*.tar.gz
 /site/install.sh.rust-legacy.bak
 /asm/benches/smoke-report.txt
+/xx*
