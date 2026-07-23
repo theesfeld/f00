@@ -32,6 +32,14 @@ extern ui_help_print
 %define F_STRICT 16384
 %define F_WARN 32768
 %define F_IGNORE_MISS 65536
+%define F_PRINTLS 131072
+%define BM_B64 0
+%define BM_B32 1
+%define BM_B16 2
+%define BM_B64URL 3
+%define BM_B32HEX 4
+%define BM_B2MSB 5
+%define BM_B2LSB 6
 %define HT_MD5 0
 %define HT_SHA1 1
 %define HT_SHA256 2
@@ -79,6 +87,9 @@ b2_m: resq 16
 b2_last: resb 1
 resb 7
 col_count: resd 1
+alpha_ptr: resq 1
+dircolors_file: resq 1
+dc_colors_buf: resb 8192
 
 section .rodata
 nl: db 10,0
@@ -91,8 +102,12 @@ s_core: db "core",0
 s_help: db "help",0
 s_ver: db "version",0
 s_base64: db "base64",0
+s_base64url: db "base64url",0
 s_base32: db "base32",0
+s_base32hex: db "base32hex",0
 s_base16: db "base16",0
+s_base2msbf: db "base2msbf",0
+s_base2lsbf: db "base2lsbf",0
 s_hex: db "hex",0
 s_decode: db "decode",0
 s_wrap: db "wrap",0
@@ -108,11 +123,16 @@ s_binary: db "binary",0
 s_text: db "text",0
 s_zero: db "zero",0
 s_bournesh: db "bourne-shell",0
+s_sh: db "sh",0
 s_csh: db "c-shell",0
+s_csh_short: db "csh",0
 s_printdb: db "print-database",0
+s_printls: db "print-ls-colors",0
 hexdigits: db "0123456789abcdef"
 b64alpha: db "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+b64urlalpha: db "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 b32alpha: db "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+b32hexalpha: db "0123456789ABCDEFGHIJKLMNOPQRSTUV"
 csv_hdr_hash: db "hash,file,bytes,algorithm",10,0
 err_open: db "f00: cannot open '",0
 err_open2: db "'",10,0
@@ -637,7 +657,7 @@ init_io:
     mov dword [g_json_core], 0
     mov qword [npaths], 0
     mov dword [wrap_col], 76
-    mov dword [basenc_mode], 0
+    ; keep basenc_mode (set by base32_main/base64_main/basenc_main before enc_run)
     mov rdi, 1
     call is_tty
     mov [g_tty], al
@@ -3381,13 +3401,21 @@ b64_emit3:
     mov ebx, eax
     shr ebx, 18
     and ebx, 63
+    mov rsi, [alpha_ptr]
+    test rsi, rsi
+    jnz .bea1
     lea rsi, [b64alpha]
+.bea1:
     mov dil, [rsi+rbx]
     call b64_outc
     mov ebx, eax
     shr ebx, 12
     and ebx, 63
+    mov rsi, [alpha_ptr]
+    test rsi, rsi
+    jnz .bea2
     lea rsi, [b64alpha]
+.bea2:
     mov dil, [rsi+rbx]
     call b64_outc
     cmp r8d, 1
@@ -3401,7 +3429,11 @@ b64_emit3:
     mov ebx, eax
     shr ebx, 6
     and ebx, 63
+    mov rsi, [alpha_ptr]
+    test rsi, rsi
+    jnz .bea3
     lea rsi, [b64alpha]
+.bea3:
     mov dil, [rsi+rbx]
     call b64_outc
     cmp r8d, 2
@@ -3412,7 +3444,11 @@ b64_emit3:
 .be4:
     mov ebx, eax
     and ebx, 63
+    mov rsi, [alpha_ptr]
+    test rsi, rsi
+    jnz .bea4
     lea rsi, [b64alpha]
+.bea4:
     mov dil, [rsi+rbx]
     call b64_outc
 .bed:
@@ -3538,12 +3574,24 @@ b64_val:
     mov al, cl
     ret
 .bv3:
+    cmp dword [basenc_mode], BM_B64URL
+    je .bvurl
     cmp cl, '+'
     jne .bv4
     mov al, 62
     ret
 .bv4:
     cmp cl, '/'
+    jne .bv5
+    mov al, 63
+    ret
+.bvurl:
+    cmp cl, '-'
+    jne .bvurl2
+    mov al, 62
+    ret
+.bvurl2:
+    cmp cl, '_'
     jne .bv5
     mov al, 63
     ret
@@ -3754,7 +3802,11 @@ b32_encode_fd:
     mov rax, r15
     shr rax, cl
     and eax, 31
+    mov rsi, [alpha_ptr]
+    test rsi, rsi
+    jnz .b32a
     lea rsi, [b32alpha]
+.b32a:
     mov dil, [rsi+rax]
     call b64_outc
     dec r10d
@@ -3833,6 +3885,8 @@ b32_decode_fd:
     ret
 
 b32_val:
+    cmp dword [basenc_mode], BM_B32HEX
+    je .b3hex
     cmp cl, 'A'
     jb .b3v1
     cmp cl, 'Z'
@@ -3860,9 +3914,241 @@ b32_val:
 .b3v3:
     mov al, 0xff
     ret
+.b3hex:
+    cmp cl, '0'
+    jb .b3hx
+    cmp cl, '9'
+    ja .b3ha
+    sub cl, '0'
+    mov al, cl
+    ret
+.b3ha:
+    cmp cl, 'A'
+    jb .b3hl
+    cmp cl, 'V'
+    ja .b3hl
+    sub cl, 'A'
+    add cl, 10
+    mov al, cl
+    ret
+.b3hl:
+    cmp cl, 'a'
+    jb .b3hx
+    cmp cl, 'v'
+    ja .b3hx
+    sub cl, 'a'
+    add cl, 10
+    mov al, cl
+    ret
+.b3hx:
+    mov al, 0xff
+    ret
+
+; base2 msb-first encode
+b2_encode_fd_msb:
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov r12, rdi
+    mov dword [col_count], 0
+.m2r:
+    mov rax, SYS_read
+    mov rdi, r12
+    lea rsi, [readbuf]
+    mov rdx, 4096
+    syscall
+    test rax, rax
+    jle .m2d
+    mov r13, rax
+    xor ebx, ebx
+.m2lp:
+    cmp rbx, r13
+    jge .m2r
+    movzx r14d, byte [readbuf+rbx]
+    mov r8d, 8
+.m2b:
+    dec r8d
+    mov eax, r14d
+    mov cl, r8b
+    shr eax, cl
+    and al, 1
+    add al, '0'
+    mov dil, al
+    push r8
+    call b64_outc
+    pop r8
+    test r8d, r8d
+    jnz .m2b
+    inc rbx
+    jmp .m2lp
+.m2d:
+    cmp dword [wrap_col], 0
+    je .m2x
+    mov dil, 10
+    call out_byte
+.m2x:
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+b2_encode_fd_lsb:
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov r12, rdi
+    mov dword [col_count], 0
+.l2r:
+    mov rax, SYS_read
+    mov rdi, r12
+    lea rsi, [readbuf]
+    mov rdx, 4096
+    syscall
+    test rax, rax
+    jle .l2d
+    mov r13, rax
+    xor ebx, ebx
+.l2lp:
+    cmp rbx, r13
+    jge .l2r
+    movzx r14d, byte [readbuf+rbx]
+    xor r8d, r8d
+.l2b:
+    mov eax, r14d
+    mov cl, r8b
+    shr eax, cl
+    and al, 1
+    add al, '0'
+    mov dil, al
+    push r8
+    call b64_outc
+    pop r8
+    inc r8d
+    cmp r8d, 8
+    jb .l2b
+    inc rbx
+    jmp .l2lp
+.l2d:
+    cmp dword [wrap_col], 0
+    je .l2x
+    mov dil, 10
+    call out_byte
+.l2x:
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+b2_decode_fd_msb:
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov r12, rdi
+    xor r13d, r13d
+    xor r14d, r14d
+.dmr:
+    mov rax, SYS_read
+    mov rdi, r12
+    lea rsi, [readbuf]
+    mov rdx, 4096
+    syscall
+    test rax, rax
+    jle .dmx
+    mov rbx, rax
+    xor r8, r8
+.dmlp:
+    cmp r8, rbx
+    jge .dmr
+    movzx eax, byte [readbuf+r8]
+    inc r8
+    cmp al, '0'
+    je .dm0
+    cmp al, '1'
+    je .dm1
+    jmp .dmlp
+.dm0:
+    xor edx, edx
+    jmp .dmp
+.dm1:
+    mov edx, 1
+.dmp:
+    shl r13d, 1
+    or r13d, edx
+    inc r14d
+    cmp r14d, 8
+    jb .dmlp
+    mov dil, r13b
+    call out_byte
+    xor r13d, r13d
+    xor r14d, r14d
+    jmp .dmlp
+.dmx:
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+b2_decode_fd_lsb:
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov r12, rdi
+    xor r13d, r13d
+    xor r14d, r14d
+.dlr:
+    mov rax, SYS_read
+    mov rdi, r12
+    lea rsi, [readbuf]
+    mov rdx, 4096
+    syscall
+    test rax, rax
+    jle .dlx
+    mov rbx, rax
+    xor r8, r8
+.dllp:
+    cmp r8, rbx
+    jge .dlr
+    movzx eax, byte [readbuf+r8]
+    inc r8
+    cmp al, '0'
+    je .dl0
+    cmp al, '1'
+    je .dl1
+    jmp .dllp
+.dl0:
+    xor edx, edx
+    jmp .dlp
+.dl1:
+    mov edx, 1
+.dlp:
+    mov eax, edx
+    mov cl, r14b
+    shl eax, cl
+    or r13d, eax
+    inc r14d
+    cmp r14d, 8
+    jb .dllp
+    mov dil, r13b
+    call out_byte
+    xor r13d, r13d
+    xor r14d, r14d
+    jmp .dllp
+.dlx:
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
 
 ; encode/decode driver for base64/basenc
-; basenc_mode: 0=b64 1=b32 2=b16
+; basenc_mode: 0=b64 1=b32 2=b16 3=b64url 4=b32hex 5=b2msb 6=b2lsb
 enc_run:
     push rbx
     push r12
@@ -3967,8 +4253,18 @@ enc_run:
     call strcmp
     pop rdi
     test eax, eax
+    jnz .el3u
+    mov dword [basenc_mode], BM_B64
+    inc r14
+    jmp .eparse
+.el3u:
+    push rdi
+    lea rsi, [s_base64url]
+    call strcmp
+    pop rdi
+    test eax, eax
     jnz .el4
-    mov dword [basenc_mode], 0
+    mov dword [basenc_mode], BM_B64URL
     inc r14
     jmp .eparse
 .el4:
@@ -3977,8 +4273,18 @@ enc_run:
     call strcmp
     pop rdi
     test eax, eax
+    jnz .el4h
+    mov dword [basenc_mode], BM_B32
+    inc r14
+    jmp .eparse
+.el4h:
+    push rdi
+    lea rsi, [s_base32hex]
+    call strcmp
+    pop rdi
+    test eax, eax
     jnz .el5
-    mov dword [basenc_mode], 1
+    mov dword [basenc_mode], BM_B32HEX
     inc r14
     jmp .eparse
 .el5:
@@ -3988,7 +4294,7 @@ enc_run:
     pop rdi
     test eax, eax
     jnz .el6
-    mov dword [basenc_mode], 2
+    mov dword [basenc_mode], BM_B16
     inc r14
     jmp .eparse
 .el6:
@@ -3997,8 +4303,28 @@ enc_run:
     call strcmp
     pop rdi
     test eax, eax
+    jnz .el6m
+    mov dword [basenc_mode], BM_B16
+    inc r14
+    jmp .eparse
+.el6m:
+    push rdi
+    lea rsi, [s_base2msbf]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .el6l
+    mov dword [basenc_mode], BM_B2MSB
+    inc r14
+    jmp .eparse
+.el6l:
+    push rdi
+    lea rsi, [s_base2lsbf]
+    call strcmp
+    pop rdi
+    test eax, eax
     jnz .el7
-    mov dword [basenc_mode], 2
+    mov dword [basenc_mode], BM_B2LSB
     inc r14
     jmp .eparse
 .el7:
@@ -4081,14 +4407,43 @@ enc_one:
 .e0:
     xor ebx, ebx
 .edo:
+    ; alphabet select
+    mov eax, [basenc_mode]
+    cmp eax, BM_B64URL
+    je .aurl
+    cmp eax, BM_B32HEX
+    je .a32h
+    cmp eax, BM_B32
+    je .a32
+    lea rsi, [b64alpha]
+    mov [alpha_ptr], rsi
+    jmp .ado
+.aurl:
+    lea rsi, [b64urlalpha]
+    mov [alpha_ptr], rsi
+    jmp .ado
+.a32:
+    lea rsi, [b32alpha]
+    mov [alpha_ptr], rsi
+    jmp .ado
+.a32h:
+    lea rsi, [b32hexalpha]
+    mov [alpha_ptr], rsi
+.ado:
     mov rdi, rbx
     test dword [flags], F_DECODE
     jnz .edec
     mov eax, [basenc_mode]
-    cmp eax, 1
+    cmp eax, BM_B32
     je .e32
-    cmp eax, 2
+    cmp eax, BM_B32HEX
+    je .e32
+    cmp eax, BM_B16
     je .e16
+    cmp eax, BM_B2MSB
+    je .e2m
+    cmp eax, BM_B2LSB
+    je .e2l
     call b64_encode_fd
     jmp .eclose
 .e32:
@@ -4097,12 +4452,26 @@ enc_one:
 .e16:
     call b16_encode_fd
     jmp .eclose
+.e2m:
+    xor r15d, r15d
+    inc r15d
+    call b2_encode_fd_msb
+    jmp .eclose
+.e2l:
+    call b2_encode_fd_lsb
+    jmp .eclose
 .edec:
     mov eax, [basenc_mode]
-    cmp eax, 1
+    cmp eax, BM_B32
     je .d32
-    cmp eax, 2
+    cmp eax, BM_B32HEX
+    je .d32
+    cmp eax, BM_B16
     je .d16
+    cmp eax, BM_B2MSB
+    je .d2m
+    cmp eax, BM_B2LSB
+    je .d2l
     call b64_decode_fd
     jmp .eclose
 .d32:
@@ -4110,6 +4479,12 @@ enc_one:
     jmp .eclose
 .d16:
     call b16_decode_fd
+    jmp .eclose
+.d2m:
+    call b2_decode_fd_msb
+    jmp .eclose
+.d2l:
+    call b2_decode_fd_lsb
 .eclose:
     test rbx, rbx
     jz .edone
@@ -4204,23 +4579,24 @@ dircolors_main:
     push r12
     push r13
     push r14
+    push r15
     mov r12, rdi
     mov r13, rsi
     call init_io
     lea rax, [u_dircolors]
     mov [util_name], rax
+    mov qword [dircolors_file], 0
     mov r14, 1
 .dparse:
     cmp r14, r12
     jge .dgo
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
-    jne .dskip
+    jne .dfile
     cmp byte [rdi+1], 0
-    je .dskip
+    je .dfile
     cmp byte [rdi+1], '-'
     je .dlong
-    ; short -b / -c / -p
     inc rdi
 .ds:
     mov al, [rdi]
@@ -4228,21 +4604,27 @@ dircolors_main:
     jz .dn
     cmp al, 'b'
     jne .ds1
-    and dword [flags], ~F_CSH
+    and dword [flags], ~(F_CSH|F_PRINTDB|F_PRINTLS)
     jmp .dsn
 .ds1:
     cmp al, 'c'
     jne .ds2
     or dword [flags], F_CSH
+    and dword [flags], ~(F_PRINTDB|F_PRINTLS)
     jmp .dsn
 .ds2:
     cmp al, 'p'
     jne .dsn
     or dword [flags], F_PRINTDB
+    and dword [flags], ~(F_CSH|F_PRINTLS)
 .dsn:
     inc rdi
     jmp .ds
 .dn:
+    inc r14
+    jmp .dparse
+.dfile:
+    mov [dircolors_file], rdi
     inc r14
     jmp .dparse
 .dlong:
@@ -4252,8 +4634,18 @@ dircolors_main:
     call strcmp
     pop rdi
     test eax, eax
+    jnz .dlsh
+    and dword [flags], ~(F_CSH|F_PRINTDB|F_PRINTLS)
+    inc r14
+    jmp .dparse
+.dlsh:
+    push rdi
+    lea rsi, [s_sh]
+    call strcmp
+    pop rdi
+    test eax, eax
     jnz .dlc
-    and dword [flags], ~F_CSH
+    and dword [flags], ~(F_CSH|F_PRINTDB|F_PRINTLS)
     inc r14
     jmp .dparse
 .dlc:
@@ -4262,8 +4654,20 @@ dircolors_main:
     call strcmp
     pop rdi
     test eax, eax
+    jnz .dlc2
+    or dword [flags], F_CSH
+    and dword [flags], ~(F_PRINTDB|F_PRINTLS)
+    inc r14
+    jmp .dparse
+.dlc2:
+    push rdi
+    lea rsi, [s_csh_short]
+    call strcmp
+    pop rdi
+    test eax, eax
     jnz .dlp
     or dword [flags], F_CSH
+    and dword [flags], ~(F_PRINTDB|F_PRINTLS)
     inc r14
     jmp .dparse
 .dlp:
@@ -4272,8 +4676,20 @@ dircolors_main:
     call strcmp
     pop rdi
     test eax, eax
-    jnz .dlm
+    jnz .dlls
     or dword [flags], F_PRINTDB
+    and dword [flags], ~(F_CSH|F_PRINTLS)
+    inc r14
+    jmp .dparse
+.dlls:
+    push rdi
+    lea rsi, [s_printls]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .dlm
+    or dword [flags], F_PRINTLS
+    and dword [flags], ~(F_CSH|F_PRINTDB)
     inc r14
     jmp .dparse
 .dlm:
@@ -4282,18 +4698,29 @@ dircolors_main:
     je .dhelp
     cmp eax, 5
     je .dver
-.dskip:
     inc r14
     jmp .dparse
 .dgo:
+    ; optional FILE → simple DIR/LINK/.ext database
+    cmp qword [dircolors_file], 0
+    je .ddefc
+    call dircolors_load_simple
+    test eax, eax
+    jz .ddefc
+    lea r15, [dc_colors_buf]
+    jmp .demit
+.ddefc:
+    lea r15, [dircolors_colors]
+.demit:
     test dword [flags], F_PRINTDB
     jnz .ddb
+    test dword [flags], F_PRINTLS
+    jnz .dls
     test dword [flags], F_CSH
     jnz .dcsh
-    ; bourne shell (default)
     lea rsi, [dircolors_sh1]
     call out_str
-    lea rsi, [dircolors_colors]
+    mov rsi, r15
     call out_str
     lea rsi, [dircolors_sh2]
     call out_str
@@ -4301,7 +4728,7 @@ dircolors_main:
 .dcsh:
     lea rsi, [dircolors_csh1]
     call out_str
-    lea rsi, [dircolors_colors]
+    mov rsi, r15
     call out_str
     lea rsi, [dircolors_csh2]
     call out_str
@@ -4310,6 +4737,71 @@ dircolors_main:
     lea rsi, [dircolors_db]
     call out_str
     jmp xexit
+.dls:
+    ; print-ls-colors from r15 string k=v:
+    mov r12, r15
+.dlsp:
+    cmp byte [r12], 0
+    je xexit
+    mov r13, r12
+.dlseq:
+    mov al, [r13]
+    test al, al
+    jz xexit
+    cmp al, '='
+    je .dlsg
+    cmp al, ':'
+    je .dlssk
+    inc r13
+    jmp .dlseq
+.dlsg:
+    lea r14, [r13+1]
+.dlsv:
+    mov al, [r14]
+    test al, al
+    jz .dlse
+    cmp al, ':'
+    je .dlse
+    inc r14
+    jmp .dlsv
+.dlse:
+    mov dil, 27
+    call out_byte
+    mov dil, '['
+    call out_byte
+    lea rsi, [r13+1]
+    mov rdx, r14
+    sub rdx, rsi
+    call out_strn
+    mov dil, 'm'
+    call out_byte
+    mov rsi, r12
+    mov rdx, r13
+    sub rdx, rsi
+    call out_strn
+    lea rsi, [r13+1]
+    mov rdx, r14
+    sub rdx, rsi
+    call out_strn
+    mov dil, 27
+    call out_byte
+    mov dil, '['
+    call out_byte
+    mov dil, '0'
+    call out_byte
+    mov dil, 'm'
+    call out_byte
+    mov dil, 10
+    call out_byte
+    mov r12, r14
+    cmp byte [r12], ':'
+    jne .dlsp
+    inc r12
+    jmp .dlsp
+.dlssk:
+    inc r13
+    mov r12, r13
+    jmp .dlsp
 .dhelp:
     lea rsi, [h_dircolors]
     call out_str
@@ -4318,3 +4810,268 @@ dircolors_main:
     lea rsi, [v_dircolors]
     call out_str
     jmp xexit
+
+; dircolors_load_simple: FILE → dc_colors_buf; eax=1 ok
+; Supports lines: DIR val / LINK val / .ext val / KEY val
+dircolors_load_simple:
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov rdi, [dircolors_file]
+    call open_path
+    cmp rax, -1
+    je .fail
+    mov r12, rax
+    mov rax, SYS_read
+    mov rdi, r12
+    lea rsi, [readbuf]
+    mov rdx, 60000
+    syscall
+    mov r13, rax
+    mov rax, SYS_close
+    mov rdi, r12
+    syscall
+    test r13, r13
+    jle .empty
+    lea r14, [dc_colors_buf]
+    xor ebx, ebx
+.ln:
+    cmp rbx, r13
+    jge .ok
+    mov al, [readbuf+rbx]
+    cmp al, '#'
+    je .skipl
+    cmp al, 10
+    je .skipl
+    cmp al, ' '
+    je .adv
+    cmp al, 9
+    je .adv
+    ; token
+    lea rsi, [readbuf+rbx]
+.tk:
+    cmp rbx, r13
+    jge .ok
+    mov al, [readbuf+rbx]
+    cmp al, ' '
+    je .tke
+    cmp al, 9
+    je .tke
+    cmp al, 10
+    je .tke
+    inc rbx
+    jmp .tk
+.tke:
+    mov rcx, rbx
+    mov rax, rsi
+    sub rax, readbuf
+    sub rcx, rax                    ; toklen
+    ; skip ws
+.sw:
+    cmp rbx, r13
+    jge .ok
+    mov al, [readbuf+rbx]
+    cmp al, ' '
+    je .swi
+    cmp al, 9
+    je .swi
+    jmp .vl
+.swi: inc rbx
+    jmp .sw
+.vl:
+    lea r8, [readbuf+rbx]
+.vl2:
+    cmp rbx, r13
+    jge .vle
+    mov al, [readbuf+rbx]
+    cmp al, 10
+    je .vle
+    cmp al, '#'
+    je .vle
+    inc rbx
+    jmp .vl2
+.vle:
+    mov r9, rbx
+    mov rax, r8
+    sub rax, readbuf
+    sub r9, rax
+.trim:
+    test r9, r9
+    jz .next
+    mov al, [r8+r9-1]
+    cmp al, ' '
+    je .tr
+    cmp al, 9
+    je .tr
+    jmp .map
+.tr: dec r9
+    jmp .trim
+.map:
+    test rcx, rcx
+    jz .next
+    test r9, r9
+    jz .next
+    ; write key: if token starts with . → *token else map known
+    cmp byte [rsi], '.'
+    jne .named
+    mov byte [r14], '*'
+    inc r14
+    xor edx, edx
+.cpstar:
+    cmp rdx, rcx
+    jae .eq
+    mov al, [rsi+rdx]
+    mov [r14], al
+    inc r14
+    inc rdx
+    jmp .cpstar
+.named:
+    ; DIR→di LINK→ln EXEC→ex RESET→rs FIFO→pi SOCK→so else copy lower 2 of token if short
+    push rsi
+    push rcx
+    lea rdi, [s_dc_dir]
+    call strcmp_n
+    pop rcx
+    pop rsi
+    test eax, eax
+    jnz .n1
+    mov word [r14], 'di'
+    add r14, 2
+    jmp .eq
+.n1:
+    push rsi
+    push rcx
+    lea rdi, [s_dc_link]
+    call strcmp_n
+    pop rcx
+    pop rsi
+    test eax, eax
+    jnz .n2
+    mov word [r14], 'ln'
+    add r14, 2
+    jmp .eq
+.n2:
+    push rsi
+    push rcx
+    lea rdi, [s_dc_exec]
+    call strcmp_n
+    pop rcx
+    pop rsi
+    test eax, eax
+    jnz .n3
+    mov word [r14], 'ex'
+    add r14, 2
+    jmp .eq
+.n3:
+    push rsi
+    push rcx
+    lea rdi, [s_dc_reset]
+    call strcmp_n
+    pop rcx
+    pop rsi
+    test eax, eax
+    jnz .n4
+    mov word [r14], 'rs'
+    add r14, 2
+    jmp .eq
+.n4:
+    ; default: use first two chars lowercased-ish as key
+    mov al, [rsi]
+    or al, 0x20
+    mov [r14], al
+    inc r14
+    cmp rcx, 1
+    jbe .eq
+    mov al, [rsi+1]
+    or al, 0x20
+    mov [r14], al
+    inc r14
+.eq:
+    mov byte [r14], '='
+    inc r14
+    xor edx, edx
+.cpv:
+    cmp rdx, r9
+    jae .col
+    mov al, [r8+rdx]
+    mov [r14], al
+    inc r14
+    inc rdx
+    jmp .cpv
+.col:
+    mov byte [r14], ':'
+    inc r14
+    jmp .next
+.adv:
+    inc rbx
+    jmp .ln
+.skipl:
+.next:
+    cmp rbx, r13
+    jge .ok
+    mov al, [readbuf+rbx]
+    inc rbx
+    cmp al, 10
+    jne .next
+    jmp .ln
+.ok:
+    mov byte [r14], 0
+    mov eax, 1
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+.empty:
+    mov byte [dc_colors_buf], 0
+    mov eax, 1
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+.fail:
+    xor eax, eax
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+; strcmp_n: rdi=cstr, rsi=buf, rcx=len on stack... actually we use:
+; push rsi; push rcx; lea rdi,[s]; call — expects rsi=buf, rcx=len, rdi=cstr
+strcmp_n:
+    ; rdi=cstr, [rsp+16]=orig rsi, [rsp+8]=len after push? 
+    ; callers: push rsi; push rcx; lea rdi; call; pop rcx; pop rsi
+    ; so at entry: [rsp]=ret, [rsp+8]=len, [rsp+16]=buf
+    mov rsi, [rsp+16]
+    mov rcx, [rsp+8]
+    xor eax, eax
+.cn:
+    mov dl, [rdi]
+    test dl, dl
+    jz .cend
+    test rcx, rcx
+    jz .cne
+    mov dh, [rsi]
+    cmp dl, dh
+    jne .cne
+    inc rdi
+    inc rsi
+    dec rcx
+    jmp .cn
+.cend:
+    test rcx, rcx
+    jnz .cne
+    xor eax, eax
+    ret
+.cne:
+    mov eax, 1
+    ret
+
+section .rodata
+s_dc_dir: db "DIR",0
+s_dc_link: db "LINK",0
+s_dc_exec: db "EXEC",0
+s_dc_reset: db "RESET",0

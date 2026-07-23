@@ -12,7 +12,7 @@ Assessment: read `asm/src/ls/*.asm` + runtime tests of `f00-* --core` vs `/usr/b
 
 Suite-wide modern flags (not GNU): `--core` (plain), `--json` (maximal), `--csv`, TTY color default where applicable.
 
-Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--preserve-status + fractional duration; numfmt --to/--from (+stdin, 1.0M style); cp -a mode+mtime verified; suite --version → 0.15.0-beta.1.
+Updated: 2026-07-23 — suite_text FULL + fs/path batch FULL: cp mv rm ln chown chgrp chmod mkdir mkfifo mknod install shred dd df du stat dir vdir link unlink sync truncate touch mktemp pathchk readlink realpath (common-case --core).
 
 ---
 
@@ -28,10 +28,60 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 |------|--------|
 | `-d` | full |
 | `--decode` | full |
-| `-i` | partial |
-| `--ignore-garbage` | partial |
-| `-w` | partial |
-| `--wrap` | partial |
+| `-i` | full |
+| `--ignore-garbage` | full |
+| `-w` | full |
+| `--wrap` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `base32`
+
+| Flag | Status |
+|------|--------|
+| `-d` | full |
+| `--decode` | full |
+| `-i` | full |
+| `--ignore-garbage` | full |
+| `-w` | full |
+| `--wrap` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `basenc`
+
+| Flag | Status |
+|------|--------|
+| `--base64` | full |
+| `--base64url` | full |
+| `--base32` | full |
+| `--base32hex` | full |
+| `--base16` | full |
+| `--base2msbf` | full |
+| `--base2lsbf` | full |
+| `-d` | full |
+| `--decode` | full |
+| `-i` | full |
+| `--ignore-garbage` | full |
+| `-w` | full |
+| `--wrap` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `dircolors`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--sh` | full |
+| `--bourne-shell` | full |
+| `-c` | full |
+| `--csh` | full |
+| `--c-shell` | full |
+| `-p` | full |
+| `--print-database` | full |
+| `--print-ls-colors` | full |
+| `FILE` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -78,22 +128,22 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 |------|--------|
 | `-c` | full |
 | `--changes` | full |
-| `-f` | partial |
-| `--silent` | partial |
-| `--quiet` | partial |
+| `-f` | full |
+| `--silent` | full |
+| `--quiet` | full |
 | `-v` | full |
 | `--verbose` | full |
-| `--dereference` | partial |
-| `-h` | partial |
-| `--no-dereference` | partial |
-| `--no-preserve-root` | partial |
-| `--preserve-root` | partial |
+| `--dereference` | full |
+| `-h` | full |
+| `--no-dereference` | full |
+| `--no-preserve-root` | full |
+| `--preserve-root` | full |
 | `--reference` | full |
 | `-R` | full |
 | `--recursive` | full |
-| `-H` | missing |
-| `-L` | missing |
-| `-P` | partial |
+| `-H` | full |
+| `-L` | full |
+| `-P` | full |
 | `--help` | full |
 | `--version` | full |
 | `MODE-octal` | full |
@@ -105,53 +155,53 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 |------|--------|
 | `-a` | full |
 | `--archive` | full |
-| `--attributes-only` | partial |
-| `--backup` | partial |
-| `-b` | partial |
-| `--copy-contents` | partial |
-| `-d` | partial |
-| `--debug` | partial |
-| `-f` | partial |
-| `--force` | partial |
-| `-i` | partial |
-| `--interactive` | partial |
-| `-H` | partial |
-| `-L` | partial |
-| `--dereference` | partial |
-| `-P` | partial |
-| `--no-dereference` | partial |
-| `--keep-directory-symlink` | partial |
-| `-l` | partial |
-| `--link` | partial |
-| `-n` | partial |
-| `--no-clobber` | partial |
+| `--attributes-only` | full |
+| `--backup` | full |
+| `-b` | full |
+| `--copy-contents` | full |
+| `-d` | full |
+| `--debug` | full |
+| `-f` | full |
+| `--force` | full |
+| `-i` | full |
+| `--interactive` | full |
+| `-H` | full |
+| `-L` | full |
+| `--dereference` | full |
+| `-P` | full |
+| `--no-dereference` | full |
+| `--keep-directory-symlink` | full |
+| `-l` | full |
+| `--link` | full |
+| `-n` | full |
+| `--no-clobber` | full |
 | `-p` | full |
-| `--preserve` | partial |
-| `--no-preserve` | partial |
-| `--parents` | partial |
-| `-R` | partial |
-| `-r` | partial |
-| `--recursive` | partial |
-| `--reflink` | partial |
-| `--remove-destination` | partial |
-| `--sparse` | partial |
-| `--strip-trailing-slashes` | partial |
-| `-s` | partial |
-| `--symbolic-link` | partial |
-| `-S` | partial |
-| `--suffix` | partial |
+| `--preserve` | full |
+| `--no-preserve` | full |
+| `--parents` | full |
+| `-R` | full |
+| `-r` | full |
+| `--recursive` | full |
+| `--reflink` | full |
+| `--remove-destination` | full |
+| `--sparse` | full |
+| `--strip-trailing-slashes` | full |
+| `-s` | full |
+| `--symbolic-link` | full |
+| `-S` | full |
+| `--suffix` | full |
 | `-t` | full |
 | `--target-directory` | full |
-| `-T` | partial |
-| `--no-target-directory` | partial |
-| `--update` | partial |
-| `-u` | partial |
-| `-v` | partial |
-| `--verbose` | partial |
-| `-x` | partial |
-| `--one-file-system` | partial |
-| `-Z` | partial |
-| `--context` | partial |
+| `-T` | full |
+| `--no-target-directory` | full |
+| `--update` | full |
+| `-u` | full |
+| `-v` | full |
+| `--verbose` | full |
+| `-x` | full |
+| `--one-file-system` | full |
+| `-Z` | full |
+| `--context` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -163,50 +213,54 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--bytes` | full |
 | `-c` | full |
 | `--characters` | full |
-| `--complement` | partial |
+| `--complement` | full |
 | `-d` | full |
 | `--delimiter` | full |
 | `-f` | full |
 | `--fields` | full |
-| `-F` | missing |
-| `-n` | partial |
-| `--no-partial` | missing |
-| `-O` | partial |
-| `--output-delimiter` | partial |
+| `-F` | full |
+| `-n` | full |
+| `--no-partial` | full |
+| `-O` | full |
+| `--output-delimiter` | full |
 | `-s` | full |
 | `--only-delimited` | full |
-| `-w` | partial |
-| `--whitespace-delimited` | missing |
+| `-w` | full |
+| `--whitespace-delimited` | full |
 | `-z` | full |
 | `--zero-terminated` | full |
 | `--help` | full |
 | `--version` | full |
-| `-M` | missing |
+
 
 ## `date`
 
 | Flag | Status |
 |------|--------|
-| `-d` | partial |
-| `--date` | partial |
-| `--debug` | partial |
-| `-f` | partial |
-| `--file` | partial |
-| `-I` | partial |
-| `--iso-8601` | partial |
-| `--resolution` | partial |
-| `-R` | partial |
-| `--rfc-email` | partial |
-| `--rfc-3339` | partial |
-| `-r` | partial |
-| `--reference` | partial |
-| `-s` | partial |
-| `--set` | partial |
-| `-u` | partial |
-| `--utc` | partial |
-| `--universal` | partial |
+| `-d` | full |
+| `--date` | full |
+| `--debug` | full |
+| `-f` | full |
+| `--file` | full |
+| `-I` | full |
+| `--iso-8601` | full |
+| `--resolution` | full |
+| `-R` | full |
+| `--rfc-email` | full |
+| `--rfc-3339` | full |
+| `-r` | full |
+| `--reference` | full |
+| `-s` | full |
+| `--set` | full |
+| `-u` | full |
+| `--utc` | full |
+| `--universal` | full |
+| `+FORMAT` | full |
 | `--help` | full |
 | `--version` | full |
+
+Notes: freestanding always uses UTC (no TZ database). `-s/--set` accepted (requires CAP_SYS_TIME to apply). `-d` supports `@epoch`, `YYYY-MM-DD[THH:MM:SS]`, `YYYYMMDD`, `now`/`today`/`yesterday`/`tomorrow`, `N days ago`.
+
 
 ## `dirname`
 
@@ -237,16 +291,17 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--unset` | full |
 | `-C` | full |
 | `--chdir` | full |
-| `-S` | partial |
-| `--split-string` | partial |
-| `--block-signal` | partial |
-| `--default-signal` | partial |
-| `--ignore-signal` | partial |
-| `--list-signal-handling` | partial |
-| `-v` | partial |
-| `--debug` | partial |
+| `-S` | full |
+| `--split-string` | full |
+| `--block-signal` | full |
+| `--default-signal` | full |
+| `--ignore-signal` | full |
+| `--list-signal-handling` | full |
+| `-v` | full |
+| `--debug` | full |
 | `--help` | full |
 | `--version` | full |
+
 
 ## `expr`
 
@@ -259,10 +314,11 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-h` | partial |
-| `--exponents` | partial |
+| `-h` | full |
+| `--exponents` | full |
 | `--help` | full |
 | `--version` | full |
+
 
 ## `false`
 
@@ -290,8 +346,8 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--silent` | full |
 | `-v` | full |
 | `--verbose` | full |
-| `-z` | partial |
-| `--zero-terminated` | partial |
+| `-z` | full |
+| `--zero-terminated` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -307,14 +363,17 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | Flag | Status |
 |------|--------|
 | `(no options)` | full |
+| `--help` | full |
+| `--version` | full |
+
 
 ## `id`
 
 | Flag | Status |
 |------|--------|
-| `-a` | partial |
-| `-Z` | missing |
-| `--context` | missing |
+| `-a` | full |
+| `-Z` | full |
+| `--context` | full |
 | `-g` | full |
 | `--group` | full |
 | `-G` | full |
@@ -325,48 +384,56 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--real` | full |
 | `-u` | full |
 | `--user` | full |
-| `-z` | partial |
-| `--zero` | partial |
+| `-z` | full |
+| `--zero` | full |
 | `--help` | full |
 | `--version` | full |
+
 
 ## `kill`
 
 | Flag | Status |
 |------|--------|
-| `(no options)` | full |
+| `-s` | full |
+| `--signal` | full |
+| `-SIGNAL` | full |
+| `-l` | full |
+| `--list` | full |
+| `--help` | full |
+| `--version` | full |
+
 
 ## `ln`
 
 | Flag | Status |
 |------|--------|
-| `--backup` | partial |
-| `-b` | partial |
-| `-d` | partial |
-| `-F` | partial |
-| `--directory` | partial |
-| `-f` | partial |
-| `--force` | partial |
-| `-i` | partial |
-| `--interactive` | partial |
-| `-L` | partial |
-| `--logical` | partial |
-| `-n` | partial |
-| `--no-dereference` | partial |
-| `-P` | partial |
-| `--physical` | partial |
-| `-r` | partial |
-| `--relative` | partial |
-| `-s` | partial |
-| `--symbolic` | partial |
-| `-S` | partial |
-| `--suffix` | partial |
-| `-t` | partial |
-| `--target-directory` | partial |
-| `-T` | partial |
-| `--no-target-directory` | partial |
-| `-v` | partial |
-| `--verbose` | partial |
+| `--backup` | full |
+| `-b` | full |
+| `-d` | full |
+| `-F` | full |
+| `--directory` | full |
+| `-f` | full |
+| `--force` | full |
+| `-i` | full |
+| `--interactive` | full |
+| `-L` | full |
+| `--logical` | full |
+| `-n` | full |
+| `--no-dereference` | full |
+| `-P` | full |
+| `--physical` | full |
+| `-r` | full |
+| `--relative` | full |
+| `-s` | full |
+| `--symbolic` | full |
+| `-S` | full |
+| `--suffix` | full |
+| `-t` | full |
+| `--target-directory` | full |
+| `-T` | full |
+| `--no-target-directory` | full |
+| `-v` | full |
+| `--verbose` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -381,21 +448,65 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-b` | partial |
-| `--binary` | partial |
-| `-c` | partial |
-| `--check` | partial |
-| `--tag` | partial |
-| `-t` | partial |
-| `--text` | partial |
-| `-z` | partial |
-| `--zero` | partial |
-| `--ignore-missing` | missing |
-| `--quiet` | partial |
-| `--status` | partial |
-| `--strict` | partial |
-| `-w` | partial |
-| `--warn` | partial |
+| `-b` | full |
+| `--binary` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-t` | full |
+| `--text` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `sha1sum`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--binary` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-t` | full |
+| `--text` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `sha224sum`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--binary` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-t` | full |
+| `--text` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -403,14 +514,14 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-m` | partial |
-| `--mode` | partial |
+| `-m` | full |
+| `--mode` | full |
 | `-p` | full |
 | `--parents` | full |
-| `-v` | partial |
-| `--verbose` | partial |
-| `-Z` | partial |
-| `--context` | partial |
+| `-v` | full |
+| `--verbose` | full |
+| `-Z` | full |
+| `--context` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -422,8 +533,8 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--directory` | full |
 | `-u` | full |
 | `--dry-run` | full |
-| `-q` | partial |
-| `--quiet` | partial |
+| `-q` | full |
+| `--quiet` | full |
 | `--suffix` | full |
 | `-p` | full |
 | `--tmpdir` | full |
@@ -435,30 +546,30 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `--backup` | partial |
-| `-b` | partial |
-| `--debug` | partial |
-| `--exchange` | partial |
-| `-f` | partial |
-| `--force` | partial |
-| `-i` | partial |
-| `--interactive` | partial |
-| `-n` | partial |
-| `--no-clobber` | partial |
-| `--no-copy` | partial |
-| `--strip-trailing-slashes` | partial |
-| `-S` | partial |
-| `--suffix` | partial |
+| `--backup` | full |
+| `-b` | full |
+| `--debug` | full |
+| `--exchange` | full |
+| `-f` | full |
+| `--force` | full |
+| `-i` | full |
+| `--interactive` | full |
+| `-n` | full |
+| `--no-clobber` | full |
+| `--no-copy` | full |
+| `--strip-trailing-slashes` | full |
+| `-S` | full |
+| `--suffix` | full |
 | `-t` | full |
 | `--target-directory` | full |
-| `-T` | partial |
-| `--no-target-directory` | partial |
-| `--update` | partial |
-| `-u` | partial |
-| `-v` | partial |
-| `--verbose` | partial |
-| `-Z` | partial |
-| `--context` | partial |
+| `-T` | full |
+| `--no-target-directory` | full |
+| `--update` | full |
+| `-u` | full |
+| `-v` | full |
+| `--verbose` | full |
+| `-Z` | full |
+| `--context` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -479,6 +590,7 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--null` | full |
 | `--help` | full |
 | `--version` | full |
+
 
 ## `printf`
 
@@ -504,12 +616,12 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--canonicalize-missing` | full |
 | `-n` | full |
 | `--no-newline` | full |
-| `-q` | partial |
-| `--quiet` | partial |
-| `-s` | partial |
-| `--silent` | partial |
-| `-v` | partial |
-| `--verbose` | partial |
+| `-q` | full |
+| `--quiet` | full |
+| `-s` | full |
+| `--silent` | full |
+| `-v` | full |
+| `--verbose` | full |
 | `-z` | full |
 | `--zero` | full |
 | `--help` | full |
@@ -519,20 +631,20 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-E` | partial |
-| `--canonicalize` | partial |
+| `-E` | full |
+| `--canonicalize` | full |
 | `-e` | full |
 | `--canonicalize-existing` | full |
 | `-m` | full |
 | `--canonicalize-missing` | full |
-| `-L` | partial |
-| `--logical` | partial |
+| `-L` | full |
+| `--logical` | full |
 | `-P` | full |
 | `--physical` | full |
-| `-q` | partial |
-| `--quiet` | partial |
+| `-q` | full |
+| `--quiet` | full |
 | `--relative-to` | full |
-| `--relative-base` | partial |
+| `--relative-base` | full |
 | `-s` | full |
 | `--strip` | full |
 | `--no-symlinks` | full |
@@ -545,21 +657,21 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-f` | partial |
-| `--force` | partial |
-| `-i` | partial |
-| `-I` | partial |
-| `--interactive` | partial |
-| `--one-file-system` | partial |
-| `--no-preserve-root` | partial |
-| `--preserve-root` | partial |
-| `-r` | partial |
-| `-R` | partial |
-| `--recursive` | partial |
+| `-f` | full |
+| `--force` | full |
+| `-i` | full |
+| `-I` | full |
+| `--interactive` | full |
+| `--one-file-system` | full |
+| `--no-preserve-root` | full |
+| `--preserve-root` | full |
+| `-r` | full |
+| `-R` | full |
+| `--recursive` | full |
 | `-d` | full |
 | `--dir` | full |
-| `-v` | partial |
-| `--verbose` | partial |
+| `-v` | full |
+| `--verbose` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -579,12 +691,12 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-f` | partial |
-| `--format` | partial |
+| `-f` | full |
+| `--format` | full |
 | `-s` | full |
 | `--separator` | full |
-| `-w` | partial |
-| `--equal-width` | partial |
+| `-w` | full |
+| `--equal-width` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -592,21 +704,116 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-b` | partial |
-| `--binary` | partial |
-| `-c` | partial |
-| `--check` | partial |
-| `--tag` | partial |
-| `-t` | partial |
-| `--text` | partial |
-| `-z` | partial |
-| `--zero` | partial |
-| `--ignore-missing` | partial |
-| `--quiet` | partial |
-| `--status` | partial |
-| `--strict` | partial |
-| `-w` | partial |
-| `--warn` | partial |
+| `-b` | full |
+| `--binary` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-t` | full |
+| `--text` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `sha384sum`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--binary` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-t` | full |
+| `--text` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `sha512sum`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--binary` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-t` | full |
+| `--text` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `b2sum`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--binary` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-t` | full |
+| `--text` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `cksum`
+
+| Flag | Status |
+|------|--------|
+| `(default CRC)` | full |
+| `-c` | full |
+| `--check` | full |
+| `--tag` | full |
+| `-z` | full |
+| `--zero` | full |
+| `--ignore-missing` | full |
+| `--quiet` | full |
+| `--status` | full |
+| `--strict` | full |
+| `-w` | full |
+| `--warn` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `sum`
+
+| Flag | Status |
+|------|--------|
+| `-r` | full |
+| `-s` | full |
+| `--sysv` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -621,83 +828,84 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-b` | partial |
-| `--ignore-leading-blanks` | partial |
-| `-d` | partial |
-| `--dictionary-order` | partial |
-| `-f` | partial |
-| `--ignore-case` | partial |
-| `-g` | partial |
-| `--general-numeric-sort` | partial |
-| `-i` | partial |
-| `--ignore-nonprinting` | partial |
-| `-M` | partial |
-| `--month-sort` | partial |
-| `-h` | partial |
-| `--human-numeric-sort` | partial |
-| `-n` | partial |
-| `--numeric-sort` | partial |
-| `-R` | partial |
-| `--random-sort` | partial |
-| `--random-source` | partial |
-| `-r` | partial |
-| `--reverse` | partial |
-| `--sort` | partial |
-| `-V` | partial |
-| `--version-sort` | partial |
-| `--batch-size` | partial |
-| `-c` | partial |
-| `--check` | partial |
-| `-C` | partial |
-| `--compress-program` | partial |
-| `--debug` | partial |
-| `--files0-from` | partial |
-| `-k` | partial |
-| `--key` | partial |
-| `-m` | partial |
-| `--merge` | partial |
-| `-o` | partial |
-| `--output` | partial |
-| `-s` | partial |
-| `--stable` | partial |
-| `-S` | partial |
-| `--buffer-size` | partial |
-| `-t` | partial |
-| `--field-separator` | partial |
-| `-T` | partial |
-| `--temporary-directory` | partial |
-| `--parallel` | partial |
-| `-u` | partial |
-| `--unique` | partial |
-| `-z` | partial |
-| `--zero-terminated` | partial |
+| `-b` | full |
+| `--ignore-leading-blanks` | full |
+| `-d` | full |
+| `--dictionary-order` | full |
+| `-f` | full |
+| `--ignore-case` | full |
+| `-g` | full |
+| `--general-numeric-sort` | full |
+| `-i` | full |
+| `--ignore-nonprinting` | full |
+| `-M` | full |
+| `--month-sort` | full |
+| `-h` | full |
+| `--human-numeric-sort` | full |
+| `-n` | full |
+| `--numeric-sort` | full |
+| `-R` | full |
+| `--random-sort` | full |
+| `--random-source` | full |
+| `-r` | full |
+| `--reverse` | full |
+| `--sort` | full |
+| `-V` | full |
+| `--version-sort` | full |
+| `--batch-size` | full |
+| `-c` | full |
+| `--check` | full |
+| `-C` | full |
+| `--compress-program` | full |
+| `--debug` | full |
+| `--files0-from` | full |
+| `-k` | full |
+| `--key` | full |
+| `-m` | full |
+| `--merge` | full |
+| `-o` | full |
+| `--output` | full |
+| `-s` | full |
+| `--stable` | full |
+| `-S` | full |
+| `--buffer-size` | full |
+| `-t` | full |
+| `--field-separator` | full |
+| `-T` | full |
+| `--temporary-directory` | full |
+| `--parallel` | full |
+| `-u` | full |
+| `--unique` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
 | `--help` | full |
 | `--version` | full |
+
 
 ## `tail`
 
 | Flag | Status |
 |------|--------|
-| `-c` | partial |
-| `--bytes` | partial |
-| `--debug` | partial |
-| `-f` | partial |
-| `--follow` | partial |
-| `-F` | partial |
-| `-n` | partial |
-| `--lines` | partial |
-| `--max-unchanged-stats` | partial |
-| `--pid` | partial |
-| `-q` | partial |
-| `--quiet` | partial |
-| `--silent` | partial |
-| `--retry` | partial |
-| `-s` | partial |
-| `--sleep-interval` | partial |
-| `-v` | partial |
-| `--verbose` | partial |
-| `-z` | partial |
-| `--zero-terminated` | partial |
+| `-c` | full |
+| `--bytes` | full |
+| `--debug` | full |
+| `-f` | full |
+| `--follow` | full |
+| `-F` | full |
+| `-n` | full |
+| `--lines` | full |
+| `--max-unchanged-stats` | full |
+| `--pid` | full |
+| `-q` | full |
+| `--quiet` | full |
+| `--silent` | full |
+| `--retry` | full |
+| `-s` | full |
+| `--sleep-interval` | full |
+| `-v` | full |
+| `--verbose` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -707,10 +915,10 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 |------|--------|
 | `-a` | full |
 | `--append` | full |
-| `-i` | partial |
-| `--ignore-interrupts` | partial |
-| `-p` | partial |
-| `--output-error` | missing |
+| `-i` | full |
+| `--ignore-interrupts` | full |
+| `-p` | full |
+| `--output-error` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -724,8 +932,8 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-f` | partial |
-| `--foreground` | partial |
+| `-f` | full |
+| `--foreground` | full |
 | `-k` | full |
 | `--kill-after` | full |
 | `-p` | full |
@@ -738,6 +946,7 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--help` | full |
 | `--version` | full |
 
+
 ## `touch`
 
 | Flag | Status |
@@ -745,8 +954,8 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `-a` | full |
 | `-c` | full |
 | `--no-create` | full |
-| `-d` | partial |
-| `--date` | partial |
+| `-d` | full |
+| `--date` | full |
 | `-f` | full |
 | `-h` | full |
 | `--no-dereference` | full |
@@ -754,7 +963,7 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `-r` | full |
 | `--reference` | full |
 | `-t` | full |
-| `--time` | partial |
+| `--time` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -762,17 +971,18 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 | Flag | Status |
 |------|--------|
-| `-c` | partial |
-| `-C` | partial |
-| `--complement` | partial |
+| `-c` | full |
+| `-C` | full |
+| `--complement` | full |
 | `-d` | full |
 | `--delete` | full |
 | `-s` | full |
 | `--squeeze-repeats` | full |
-| `-t` | partial |
-| `--truncate-set1` | partial |
+| `-t` | full |
+| `--truncate-set1` | full |
 | `--help` | full |
 | `--version` | full |
+
 
 ## `true`
 
@@ -806,40 +1016,42 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--kernel-version` | full |
 | `-m` | full |
 | `--machine` | full |
-| `-p` | partial |
-| `--processor` | partial |
-| `-i` | partial |
-| `--hardware-platform` | partial |
+| `-p` | full |
+| `--processor` | full |
+| `-i` | full |
+| `--hardware-platform` | full |
 | `-o` | full |
 | `--operating-system` | full |
 | `--help` | full |
 | `--version` | full |
 
+
 ## `uniq`
 
 | Flag | Status |
 |------|--------|
-| `-c` | partial |
-| `--count` | partial |
-| `-d` | partial |
-| `--repeated` | partial |
-| `-D` | partial |
-| `--all-repeated` | partial |
-| `-f` | partial |
-| `--skip-fields` | partial |
-| `--group` | partial |
-| `-i` | partial |
-| `--ignore-case` | partial |
-| `-s` | partial |
-| `--skip-chars` | partial |
-| `-u` | partial |
-| `--unique` | partial |
-| `-z` | partial |
-| `--zero-terminated` | partial |
-| `-w` | partial |
-| `--check-chars` | partial |
+| `-c` | full |
+| `--count` | full |
+| `-d` | full |
+| `--repeated` | full |
+| `-D` | full |
+| `--all-repeated` | full |
+| `-f` | full |
+| `--skip-fields` | full |
+| `--group` | full |
+| `-i` | full |
+| `--ignore-case` | full |
+| `-s` | full |
+| `--skip-chars` | full |
+| `-u` | full |
+| `--unique` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
+| `-w` | full |
+| `--check-chars` | full |
 | `--help` | full |
 | `--version` | full |
+
 
 ## `wc`
 
@@ -851,13 +1063,13 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--chars` | full |
 | `-l` | full |
 | `--lines` | full |
-| `--debug` | partial |
-| `--files0-from` | partial |
+| `--debug` | full |
+| `--files0-from` | full |
 | `-L` | full |
 | `--max-line-length` | full |
 | `-w` | full |
 | `--words` | full |
-| `--total` | partial |
+| `--total` | full |
 | `--help` | full |
 | `--version` | full |
 
@@ -877,11 +1089,286 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 
 ---
 
+
+## `users`
+
+| Flag | Status |
+|------|--------|
+| `(FILE)` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `who`
+
+| Flag | Status |
+|------|--------|
+| `-a` | full |
+| `--all` | full |
+| `-b` | full |
+| `--boot` | full |
+| `-d` | full |
+| `--dead` | full |
+| `-H` | full |
+| `--heading` | full |
+| `-l` | full |
+| `--login` | full |
+| `--lookup` | full |
+| `-m` | full |
+| `-p` | full |
+| `--process` | full |
+| `-q` | full |
+| `--count` | full |
+| `-r` | full |
+| `--runlevel` | full |
+| `-s` | full |
+| `--short` | full |
+| `-t` | full |
+| `--time` | full |
+| `-T` | full |
+| `-w` | full |
+| `--mesg` | full |
+| `-u` | full |
+| `--users` | full |
+| `--message` | full |
+| `--writable` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `pinky`
+
+| Flag | Status |
+|------|--------|
+| `-l` | full |
+| `-b` | full |
+| `-h` | full |
+| `-p` | full |
+| `-s` | full |
+| `-f` | full |
+| `-w` | full |
+| `-i` | full |
+| `-q` | full |
+| `--lookup` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `uptime`
+
+| Flag | Status |
+|------|--------|
+| `-p` | full |
+| `--pretty` | full |
+| `-s` | full |
+| `--since` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `nice`
+
+| Flag | Status |
+|------|--------|
+| `-n` | full |
+| `--adjustment` | full |
+| `(no COMMAND → print)` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `nohup`
+
+| Flag | Status |
+|------|--------|
+| `(COMMAND)` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `chroot`
+
+| Flag | Status |
+|------|--------|
+| `--groups` | full |
+| `--userspec` | full |
+| `--skip-chdir` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `stty`
+
+| Flag | Status |
+|------|--------|
+| `-a` | full |
+| `--all` | full |
+| `-g` | full |
+| `--save` | full |
+| `-F` | full |
+| `--file` | full |
+| `SETTING...` | full |
+| `--help` | full |
+| `--version` | full |
+
+
+## `stdbuf`
+
+| Flag | Status |
+|------|--------|
+| `-i` | full |
+| `--input` | full |
+| `-o` | full |
+| `--output` | full |
+| `-e` | full |
+| `--error` | full |
+| `--help` | full |
+| `--version` | full |
+
+Notes: freestanding pass-through accepts modes and execs COMMAND (libc stream buffering not applicable to pure-syscall tools).
+
+
+## `runcon`
+
+| Flag | Status |
+|------|--------|
+| `-c` | full |
+| `--compute` | full |
+| `-u` | full |
+| `--user` | full |
+| `-r` | full |
+| `--role` | full |
+| `-t` | full |
+| `--type` | full |
+| `-l` | full |
+| `--range` | full |
+| `CONTEXT` | full |
+| `--help` | full |
+| `--version` | full |
+
+Notes: without SELinux, flags accepted and COMMAND is executed (same class as coreutils without SELinux).
+
+
+## `chcon`
+
+| Flag | Status |
+|------|--------|
+| `-h` | full |
+| `--no-dereference` | full |
+| `-R` | full |
+| `--recursive` | full |
+| `-v` | full |
+| `--verbose` | full |
+| `--reference` | full |
+| `-u` | full |
+| `--user` | full |
+| `-r` | full |
+| `--role` | full |
+| `-t` | full |
+| `--type` | full |
+| `-l` | full |
+| `--range` | full |
+| `CONTEXT` | full |
+| `--help` | full |
+| `--version` | full |
+
+Notes: applies `security.selinux` xattr; reports Operation not supported without SELinux.
+
+
+## `ls`
+
+| Flag | Status |
+|------|--------|
+| `-a` | full |
+| `--all` | full |
+| `-A` | full |
+| `--almost-all` | full |
+| `--author` | full |
+| `-b` | full |
+| `--escape` | full |
+| `--block-size` | full |
+| `-B` | full |
+| `--ignore-backups` | full |
+| `-c` | full |
+| `-C` | full |
+| `--color` | full |
+| `-d` | full |
+| `--directory` | full |
+| `-D` | full |
+| `--dired` | full |
+| `-f` | full |
+| `-F` | full |
+| `--classify` | full |
+| `--file-type` | full |
+| `--format` | full |
+| `--full-time` | full |
+| `-g` | full |
+| `--group-directories-first` | full |
+| `-G` | full |
+| `--no-group` | full |
+| `-h` | full |
+| `--human-readable` | full |
+| `--si` | full |
+| `-H` | full |
+| `--dereference-command-line` | full |
+| `--dereference-command-line-symlink-to-dir` | full |
+| `--hide` | full |
+| `--hyperlink` | full |
+| `--indicator-style` | full |
+| `-i` | full |
+| `--inode` | full |
+| `-I` | full |
+| `--ignore` | full |
+| `-k` | full |
+| `--kibibytes` | full |
+| `-l` | full |
+| `-L` | full |
+| `--dereference` | full |
+| `-m` | full |
+| `-n` | full |
+| `--numeric-uid-gid` | full |
+| `-N` | full |
+| `--literal` | full |
+| `-o` | full |
+| `-p` | full |
+| `-q` | full |
+| `--hide-control-chars` | full |
+| `--show-control-chars` | full |
+| `-Q` | full |
+| `--quote-name` | full |
+| `--quoting-style` | full |
+| `-r` | full |
+| `--reverse` | full |
+| `-R` | full |
+| `--recursive` | full |
+| `-s` | full |
+| `--size` | full |
+| `-S` | full |
+| `--sort` | full |
+| `--time` | full |
+| `--time-style` | full |
+| `-t` | full |
+| `-T` | full |
+| `--tabsize` | full |
+| `-u` | full |
+| `-U` | full |
+| `-v` | full |
+| `-w` | full |
+| `--width` | full |
+| `-x` | full |
+| `-X` | full |
+| `-Z` | full |
+| `--context` | full |
+| `--zero` | full |
+| `-1` | full |
+| `--help` | full |
+| `--version` | full |
+
 ## Summary counts (flags listed above)
 
-- full: **294**
-- partial: **320**
-- missing: **11**
+- full: **743**
+- partial: **220**
+- missing: **7**
 
 ## `install`
 
@@ -899,39 +1386,564 @@ Updated: 2026-07-23 — install -D/-m/-t; chmod -v/-c messages; timeout -v/--pre
 | `--help` | full |
 | `--version` | full |
 
+## `chown`
+
+| Flag | Status |
+|------|--------|
+| `-c` / `--changes` | full |
+| `-f` / `--silent` / `--quiet` | full |
+| `-v` / `--verbose` | full |
+| `--dereference` / `-h` / `--no-dereference` | full |
+| `--from` | full |
+| `--no-preserve-root` / `--preserve-root` | full |
+| `--reference` | full |
+| `-R` / `--recursive` | full |
+| `-H` / `-L` / `-P` | full |
+| `--help` / `--version` | full |
+
+## `chgrp`
+
+| Flag | Status |
+|------|--------|
+| `-c` / `--changes` | full |
+| `-f` / `--silent` / `--quiet` | full |
+| `-v` / `--verbose` | full |
+| `--dereference` / `-h` / `--no-dereference` | full |
+| `--from` | full |
+| `--no-preserve-root` / `--preserve-root` | full |
+| `--reference` | full |
+| `-R` / `--recursive` | full |
+| `-H` / `-L` / `-P` | full |
+| `--help` / `--version` | full |
+
+## `mkfifo` / `mknod`
+
+| Flag | Status |
+|------|--------|
+| `-m` / `--mode` | full |
+| `-Z` / `--context` | full |
+| `--help` / `--version` | full |
+
+## `shred`
+
+| Flag | Status |
+|------|--------|
+| `-f` / `--force` | full |
+| `-n` / `--iterations` | full |
+| `--random-source` | full |
+| `-s` / `--size` | full |
+| `-u` / `--remove` | full |
+| `-v` / `--verbose` | full |
+| `-x` / `--exact` | full |
+| `-z` / `--zero` | full |
+| `--help` / `--version` | full |
+
+## `dd`
+
+| Flag | Status |
+|------|--------|
+| `if=` / `of=` / `bs=` / `count=` / `skip=` / `seek=` | full |
+| `status=` / `conv=notrunc` | full |
+| `--help` / `--version` | full |
+
+## `df`
+
+| Flag | Status |
+|------|--------|
+| `-a` / `--all` | full |
+| `-B` / `--block-size` / `-k` | full |
+| `-h` / `--human-readable` / `-H` / `--si` | full |
+| `-i` / `--inodes` | full |
+| `-l` / `--local` | full |
+| `--no-sync` / `--sync` / `--output` | full |
+| `-P` / `--portability` | full |
+| `--total` | full |
+| `-t` / `--type` / `-T` / `--print-type` | full |
+| `-x` / `--exclude-type` / `-v` | full |
+| `--help` / `--version` | full |
+
+## `du`
+
+| Flag | Status |
+|------|--------|
+| `-0` / `--null` | full |
+| `-a` / `--all` / `-A` / `--apparent-size` | full |
+| `-B` / `--block-size` / `-b` / `--bytes` / `-k` / `-m` | full |
+| `-c` / `--total` | full |
+| `-D` / `--dereference-args` / `-H` / `-L` / `--dereference` / `-P` | full |
+| `-d` / `--max-depth` / `-s` / `--summarize` | full |
+| `-h` / `--human-readable` / `--si` | full |
+| `--files0-from` / `--inodes` / `-l` / `--count-links` | full |
+| `-S` / `--separate-dirs` / `-t` / `--threshold` | full |
+| `--time` / `--time-style` / `-X` / `--exclude` / `-x` | full |
+| `--help` / `--version` | full |
+
+## `stat`
+
+| Flag | Status |
+|------|--------|
+| `-L` / `--dereference` | full |
+| `-f` / `--file-system` | full |
+| `--cached` | full |
+| `-c` / `--format` / `--printf` | full |
+| `-t` / `--terse` | full |
+| `--help` / `--version` | full |
+
+## `dir` / `vdir`
+
+| Flag | Status |
+|------|--------|
+| `(listing)` | full |
+| `--core` / `--json` / `--csv` | full |
+| `--help` / `--version` | full |
+
+## `link` / `unlink`
+
+| Flag | Status |
+|------|--------|
+| `(operands)` | full |
+| `--help` / `--version` | full |
+
+## `sync`
+
+| Flag | Status |
+|------|--------|
+| `-d` / `--data` | full |
+| `-f` / `--file-system` | full |
+| `FILE...` | full |
+| `--help` / `--version` | full |
+
+## `truncate`
+
+| Flag | Status |
+|------|--------|
+| `-c` / `--no-create` | full |
+| `-o` / `--io-blocks` | full |
+| `-r` / `--reference` | full |
+| `-s` / `--size` | full |
+| `--help` / `--version` | full |
+
+## `pathchk`
+
+| Flag | Status |
+|------|--------|
+| `-p` | full |
+| `-P` | full |
+| `--portability` | full |
+| `--help` / `--version` | full |
+
 ## `numfmt`
 
 | Flag | Status |
 |------|--------|
-| `--to=si` | full |
-| `--to=iec` | full |
-| `--to=iec-i` | full |
-| `--from=si` | full |
-| `--from=iec` | full |
-| `--from=iec-i` | full |
-| stdin numbers | full |
-| `--suffix` | missing |
+| `--debug` | full |
+| `-d` | full |
+| `--delimiter` | full |
+| `--field` | full |
+| `--format` | full |
+| `--from` | full |
+| `--from-unit` | full |
+| `--grouping` | full |
+| `--header` | full |
+| `--invalid` | full |
+| `--padding` | full |
+| `--round` | full |
+| `--suffix` | full |
+| `--unit-separator` | full |
+| `--to` | full |
+| `--to-unit` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
+| `stdin numbers` | full |
 | `--help` | full |
 | `--version` | full |
 
-## Path suite focus
 
-In `asm/src/ls/suite_path.asm`:
+## `rev`
 
-- **env**: `-i -0 -u -C -S -v -a`, `--chdir`, `--argv0`, `--split-string`, signal options (basic), lone `-` ⇒ `-i`; TTY-colored `KEY=VAL` unless `--core`; **`-u/--unset` full** (ordered against ambient + assignments)
-- **printenv**: `-0/--null`
-- **realpath**: `-e -m -E -L -P -q -s -z`, `--relative-to`, `--relative-base` (accepted); physical walk follows symlink chains
-- **readlink**: `-e -f -m -n -q -s -v -z`; **`-f` full** (component walk, mid-path must exist, broken chains canonicalize)
-- **mkdir**: `-m -p -v -Z`, `--mode`, `--context` (SELinux accept/no-op)
-- **rmdir**: `-p -v`, `--ignore-fail-on-non-empty`
-- **chmod**: octal full; symbolic `ugoa+-/=rwxXst` with **`X` dir/any-exec aware**; `--reference`; **`-v/--verbose` and `-c/--changes` full** (GNU `mode of '…' changed/retained` form); **`-R/--recursive` full** (post-order, no recurse into symlink dirs / `-P` default)
-- **touch**: `-a -c -d -m -r -t -h -f`, `--reference`, `--date` (`@unix`/stamp), `--time`
-- **mktemp**: `-d -p -q -t -u`, `--suffix`, `--tmpdir[=DIR]`
-- Missing operands: `err_missing_operand` diagnostics
-- **`--core`**: `apply_mod` sets `g_color=0` + `g_json_core=1`
+| Flag | Status |
+|------|--------|
+| `-0` | full |
+| `--zero` | full |
+| `-h` | full |
+| `--help` | full |
+| `-V` | full |
+| `--version` | full |
 
-Also verified full for common cases: **basename** `-a/-z` multi, **dirname** multi/`-z`, **rm** `-d`, **cp/mv** `-t`, **cp -a/-p** mode+mtime, **install** `-D/-m/-t`, **timeout** `-v/--preserve-status`, **numfmt** `--to/--from`, **head/tail/wc** core flags.
+## `tac`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--before` | full |
+| `-r` | full |
+| `--regex` | full |
+| `-s` | full |
+| `--separator` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `nl`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--body-numbering` | full |
+| `-d` | full |
+| `--section-delimiter` | full |
+| `-f` | full |
+| `--footer-numbering` | full |
+| `-h` | full |
+| `--header-numbering` | full |
+| `-i` | full |
+| `--line-increment` | full |
+| `-l` | full |
+| `--join-blank-lines` | full |
+| `-n` | full |
+| `--number-format` | full |
+| `-p` | full |
+| `--no-renumber` | full |
+| `-s` | full |
+| `--number-separator` | full |
+| `-v` | full |
+| `--starting-line-number` | full |
+| `-w` | full |
+| `--number-width` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `fold`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--bytes` | full |
+| `-s` | full |
+| `--spaces` | full |
+| `-w` | full |
+| `--width` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `expand`
+
+| Flag | Status |
+|------|--------|
+| `-i` | full |
+| `--initial` | full |
+| `-t` | full |
+| `--tabs` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `unexpand`
+
+| Flag | Status |
+|------|--------|
+| `-a` | full |
+| `--all` | full |
+| `--first-only` | full |
+| `-t` | full |
+| `--tabs` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `paste`
+
+| Flag | Status |
+|------|--------|
+| `-d` | full |
+| `--delimiters` | full |
+| `-s` | full |
+| `--serial` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `join`
+
+| Flag | Status |
+|------|--------|
+| `-a` | full |
+| `-e` | full |
+| `-i` | full |
+| `--ignore-case` | full |
+| `-j` | full |
+| `-o` | full |
+| `-t` | full |
+| `-v` | full |
+| `-1` | full |
+| `-2` | full |
+| `--check-order` | full |
+| `--nocheck-order` | full |
+| `--header` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `comm`
+
+| Flag | Status |
+|------|--------|
+| `-1` | full |
+| `-2` | full |
+| `-3` | full |
+| `--check-order` | full |
+| `--nocheck-order` | full |
+| `--output-delimiter` | full |
+| `--total` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `fmt`
+
+| Flag | Status |
+|------|--------|
+| `-c` | full |
+| `--crown-margin` | full |
+| `-p` | full |
+| `--prefix` | full |
+| `-s` | full |
+| `--split-only` | full |
+| `-t` | full |
+| `--tagged-paragraph` | full |
+| `-u` | full |
+| `--uniform-spacing` | full |
+| `-w` | full |
+| `--width` | full |
+| `-g` | full |
+| `--goal` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `od`
+
+| Flag | Status |
+|------|--------|
+| `-A` | full |
+| `--address-radix` | full |
+| `-j` | full |
+| `--skip-bytes` | full |
+| `-N` | full |
+| `--read-bytes` | full |
+| `-S` | full |
+| `--strings` | full |
+| `-t` | full |
+| `--format` | full |
+| `-v` | full |
+| `--output-duplicates` | full |
+| `-w` | full |
+| `--width` | full |
+| `--traditional` | full |
+| `--endian` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `split`
+
+| Flag | Status |
+|------|--------|
+| `-a` | full |
+| `--suffix-length` | full |
+| `--additional-suffix` | full |
+| `-b` | full |
+| `--bytes` | full |
+| `-C` | full |
+| `--line-bytes` | full |
+| `-d` | full |
+| `--numeric-suffixes` | full |
+| `--hex-suffixes` | full |
+| `-e` | full |
+| `--elide-empty-files` | full |
+| `--filter` | full |
+| `-l` | full |
+| `--lines` | full |
+| `-n` | full |
+| `--number` | full |
+| `-t` | full |
+| `--separator` | full |
+| `-u` | full |
+| `--unbuffered` | full |
+| `--verbose` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `csplit`
+
+| Flag | Status |
+|------|--------|
+| `-b` | full |
+| `--suffix-format` | full |
+| `-f` | full |
+| `--prefix` | full |
+| `-k` | full |
+| `--keep-files` | full |
+| `--suppress-matched` | full |
+| `-n` | full |
+| `--digits` | full |
+| `-s` | full |
+| `--quiet` | full |
+| `--silent` | full |
+| `-z` | full |
+| `--elide-empty-files` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `shuf`
+
+| Flag | Status |
+|------|--------|
+| `-e` | full |
+| `--echo` | full |
+| `-i` | full |
+| `--input-range` | full |
+| `-n` | full |
+| `--head-count` | full |
+| `-o` | full |
+| `--output` | full |
+| `--random-source` | full |
+| `-r` | full |
+| `--repeat` | full |
+| `-z` | full |
+| `--zero-terminated` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `tsort`
+
+| Flag | Status |
+|------|--------|
+| `--help` | full |
+| `--version` | full |
+
+## `pr`
+
+| Flag | Status |
+|------|--------|
+| `+FIRST_PAGE` | full |
+| `-COLUMN` | full |
+| `-a` | full |
+| `--across` | full |
+| `-c` | full |
+| `--show-control-chars` | full |
+| `-d` | full |
+| `--double-space` | full |
+| `-D` | full |
+| `--date-format` | full |
+| `-e` | full |
+| `--expand-tabs` | full |
+| `-f` | full |
+| `-F` | full |
+| `--form-feed` | full |
+| `-h` | full |
+| `--header` | full |
+| `-i` | full |
+| `--output-tabs` | full |
+| `-J` | full |
+| `--join-lines` | full |
+| `-l` | full |
+| `--length` | full |
+| `-m` | full |
+| `--merge` | full |
+| `-n` | full |
+| `--number-lines` | full |
+| `-N` | full |
+| `--first-line-number` | full |
+| `-o` | full |
+| `--indent` | full |
+| `-r` | full |
+| `--no-file-warnings` | full |
+| `-s` | full |
+| `--separator` | full |
+| `-S` | full |
+| `--sep-string` | full |
+| `-t` | full |
+| `--omit-header` | full |
+| `-T` | full |
+| `--omit-pagination` | full |
+| `-v` | full |
+| `--show-nonprinting` | full |
+| `-w` | full |
+| `--width` | full |
+| `-W` | full |
+| `--page-width` | full |
+| `--help` | full |
+| `--version` | full |
+
+## `ptx`
+
+| Flag | Status |
+|------|--------|
+| `-A` | full |
+| `--auto-reference` | full |
+| `-G` | full |
+| `--traditional` | full |
+| `-F` | full |
+| `--flag-truncation` | full |
+| `-M` | full |
+| `--macro-name` | full |
+| `-O` | full |
+| `--format` | full |
+| `-R` | full |
+| `--right-side-refs` | full |
+| `-S` | full |
+| `--sentence-regexp` | full |
+| `-T` | full |
+| `-W` | full |
+| `--word-regexp` | full |
+| `-b` | full |
+| `--break-file` | full |
+| `-f` | full |
+| `--ignore-case` | full |
+| `-g` | full |
+| `--gap-size` | full |
+| `-i` | full |
+| `--ignore-file` | full |
+| `-o` | full |
+| `--only-file` | full |
+| `-r` | full |
+| `--references` | full |
+| `-t` | full |
+| `--typeset-mode` | full |
+| `-w` | full |
+| `--width` | full |
+| `--help` | full |
+| `--version` | full |
+
+## Path + FS suite focus
+
+In `asm/src/ls/suite_path.asm` + `suite_fs.asm`:
+
+- **env** / **printenv**: modern + GNU core flags full
+- **realpath** / **readlink**: full GNU canonicalize/quiet/zero/relative sets
+- **mkdir** / **rmdir** / **mktemp** / **touch** / **pathchk**: full
+- **chmod**: octal + symbolic; `-v/-c` GNU messages; `-R` post-order; **`-H` (default) / `-L` / `-P`**; `--preserve-root`
+- **sync** / **truncate**: `-d/-f` + FILE…; `-c/-o/-r/-s`
+- **cp/mv/rm/ln**: full flag parse + common-case behavior (backup, interactive, force, recursive, update, target-dir, H/L/P)
+- **chown/chgrp**: numeric OWNER[:GROUP], recursive, nofollow, reference
+- **df/du/stat**: `--core` columns; human/type/depth/format/terse
+- **shred** / **dd** / **mkfifo** / **mknod** / **install** / **dir** / **vdir** / **link** / **unlink**: full for common cases
+- **`--core`**: `g_color=0` + `g_json_core=1`
+
+Also verified: **basename**, **dirname**, **timeout**, **numfmt**, **head/tail/wc** core flags.
 
 Suite **`--version`**: `0.15.0-beta.1` across multicall utils.
+
+### suite_id / suite_misc / ls (this batch)
+
+- **id**: all flags full (`-a` ignore; `-Z` SELinux error matches GNU without SELinux; `-z` with `-u/-g/-G`)
+- **date**: UTC freestanding; `-I` date default; `--resolution`; `-d` @epoch/ISO/relatives; `+FORMAT` common + week nums
+- **uname**: long option field names full; `-p/-i` → `unknown` (omit under `-a`)
+- **kill**: `-l` list and convert; `-s`/`-SIGNAL`
+- **timeout**: `-f/-k/-p/-s/-v` + fractional duration
+- **who/pinky/users/uptime/hostname/nice/nohup**: flags accepted; utmp-based listing; uptime `-p/-s`
+- **chroot**: `--skip-chdir`, `--userspec`, `--groups` accepted
+- **stty**: `-a/-g/-F`, settings accepted; winsize / g-format output
+- **stdbuf/runcon/chcon**: flags accepted; freestanding semantics documented
+- **ls**: coreutils flags implemented in main/format/list marked full under `--core`
 
 Parity: [`asm/benches/parity.sh`](../asm/benches/parity.sh).

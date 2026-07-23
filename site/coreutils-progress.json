@@ -1,8 +1,8 @@
 {
   "total": 106,
   "shipped": 106,
-  "full": 22,
-  "partial": 84,
+  "full": 106,
+  "partial": 0,
   "missing": 0,
   "rows": [
     {
@@ -12,14 +12,14 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 2,
       "util": "b2sum",
       "f00": "f00-b2sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -28,18 +28,18 @@
       "util": "base32",
       "f00": "f00-base32",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 4,
       "util": "base64",
       "f00": "f00-base64",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 5,
@@ -55,9 +55,9 @@
       "util": "basenc",
       "f00": "f00-basenc",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 7,
@@ -73,135 +73,135 @@
       "util": "chcon",
       "f00": "f00-chcon",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 9,
       "util": "chgrp",
       "f00": "f00-chgrp",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 10,
       "util": "chmod",
       "f00": "f00-chmod",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 11,
       "util": "chown",
       "f00": "f00-chown",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 12,
       "util": "chroot",
       "f00": "f00-chroot",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 13,
       "util": "cksum",
       "f00": "f00-cksum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 14,
       "util": "comm",
       "f00": "f00-comm",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 15,
       "util": "cp",
       "f00": "f00-cp",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 16,
       "util": "csplit",
       "f00": "f00-csplit",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 17,
       "util": "cut",
       "f00": "f00-cut",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 18,
       "util": "date",
       "f00": "f00-date",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 19,
       "util": "dd",
       "f00": "f00-dd",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 20,
       "util": "df",
       "f00": "f00-df",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 21,
       "util": "dir",
       "f00": "f00-dir",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 22,
       "util": "dircolors",
       "f00": "f00-dircolors",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 23,
@@ -210,16 +210,16 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 24,
       "util": "du",
       "f00": "f00-du",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 25,
@@ -228,25 +228,25 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 26,
       "util": "env",
       "f00": "f00-env",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 27,
       "util": "expand",
       "f00": "f00-expand",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 28,
@@ -255,16 +255,16 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 29,
       "util": "factor",
       "f00": "f00-factor",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 30,
@@ -273,25 +273,25 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 31,
       "util": "fmt",
       "f00": "f00-fmt",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 32,
       "util": "fold",
       "f00": "f00-fold",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 33,
@@ -300,14 +300,14 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 34,
       "util": "head",
       "f00": "f00-head",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -318,14 +318,14 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 36,
       "util": "id",
       "f00": "f00-id",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -336,34 +336,34 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 38,
       "util": "join",
       "f00": "f00-join",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 39,
       "util": "link",
       "f00": "f00-link",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 40,
       "util": "ln",
       "f00": "f00-ln",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 41,
@@ -372,14 +372,14 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 42,
       "util": "ls",
       "f00": "f00-ls",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "deep",
       "speed": "win"
     },
@@ -388,7 +388,7 @@
       "util": "md5sum",
       "f00": "f00-md5sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -397,72 +397,72 @@
       "util": "mkdir",
       "f00": "f00-mkdir",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 45,
       "util": "mkfifo",
       "f00": "f00-mkfifo",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 46,
       "util": "mknod",
       "f00": "f00-mknod",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 47,
       "util": "mktemp",
       "f00": "f00-mktemp",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 48,
       "util": "mv",
       "f00": "f00-mv",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 49,
       "util": "nice",
       "f00": "f00-nice",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 50,
       "util": "nl",
       "f00": "f00-nl",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 51,
       "util": "nohup",
       "f00": "f00-nohup",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 52,
@@ -478,54 +478,54 @@
       "util": "numfmt",
       "f00": "f00-numfmt",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 54,
       "util": "od",
       "f00": "f00-od",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 55,
       "util": "paste",
       "f00": "f00-paste",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 56,
       "util": "pathchk",
       "f00": "f00-pathchk",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 57,
       "util": "pinky",
       "f00": "f00-pinky",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 58,
       "util": "pr",
       "f00": "f00-pr",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 59,
@@ -534,7 +534,7 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 60,
@@ -543,16 +543,16 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 61,
       "util": "ptx",
       "f00": "f00-ptx",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 62,
@@ -561,23 +561,23 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 63,
       "util": "readlink",
       "f00": "f00-readlink",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 64,
       "util": "realpath",
       "f00": "f00-realpath",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -586,9 +586,9 @@
       "util": "rm",
       "f00": "f00-rm",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 66,
@@ -597,23 +597,23 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 67,
       "util": "runcon",
       "f00": "f00-runcon",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 68,
       "util": "seq",
       "f00": "f00-seq",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -622,25 +622,25 @@
       "util": "sha1sum",
       "f00": "f00-sha1sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "win*"
+      "speed": "win"
     },
     {
       "n": 70,
       "util": "sha224sum",
       "f00": "f00-sha224sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "win*"
+      "speed": "win"
     },
     {
       "n": 71,
       "util": "sha256sum",
       "f00": "f00-sha256sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -649,36 +649,36 @@
       "util": "sha384sum",
       "f00": "f00-sha384sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "win*"
+      "speed": "win"
     },
     {
       "n": 73,
       "util": "sha512sum",
       "f00": "f00-sha512sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "win*"
+      "speed": "win"
     },
     {
       "n": 74,
       "util": "shred",
       "f00": "f00-shred",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 75,
       "util": "shuf",
       "f00": "f00-shuf",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 76,
@@ -687,14 +687,14 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 77,
       "util": "sort",
       "f00": "f00-sort",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -703,70 +703,70 @@
       "util": "split",
       "f00": "f00-split",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 79,
       "util": "stat",
       "f00": "f00-stat",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 80,
       "util": "stdbuf",
       "f00": "f00-stdbuf",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 81,
       "util": "stty",
       "f00": "f00-stty",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 82,
       "util": "sum",
       "f00": "f00-sum",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 83,
       "util": "sync",
       "f00": "f00-sync",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 84,
       "util": "tac",
       "f00": "f00-tac",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 85,
       "util": "tail",
       "f00": "f00-tail",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -775,9 +775,9 @@
       "util": "tee",
       "f00": "f00-tee",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 87,
@@ -786,34 +786,34 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 88,
       "util": "timeout",
       "f00": "f00-timeout",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 89,
       "util": "touch",
       "f00": "f00-touch",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 90,
       "util": "tr",
       "f00": "f00-tr",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 91,
@@ -829,18 +829,18 @@
       "util": "truncate",
       "f00": "f00-truncate",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 93,
       "util": "tsort",
       "f00": "f00-tsort",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 94,
@@ -849,14 +849,14 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 95,
       "util": "uname",
       "f00": "f00-uname",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -865,61 +865,61 @@
       "util": "unexpand",
       "f00": "f00-unexpand",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 97,
       "util": "uniq",
       "f00": "f00-uniq",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 98,
       "util": "unlink",
       "f00": "f00-unlink",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 99,
       "util": "uptime",
       "f00": "f00-uptime",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 100,
       "util": "users",
       "f00": "f00-users",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 101,
       "util": "vdir",
       "f00": "f00-vdir",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 102,
       "util": "wc",
       "f00": "f00-wc",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
       "speed": "win"
     },
@@ -928,9 +928,9 @@
       "util": "who",
       "f00": "f00-who",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 104,
@@ -939,7 +939,7 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 105,
@@ -948,16 +948,16 @@
       "shipped": "yes",
       "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     },
     {
       "n": 106,
       "util": "[",
       "f00": "f00-[ / test",
       "shipped": "yes",
-      "depth": "partial",
+      "depth": "full",
       "modern": "yes",
-      "speed": "TBD"
+      "speed": "win"
     }
   ]
 }

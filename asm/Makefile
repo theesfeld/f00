@@ -1,6 +1,6 @@
 # f00 suite — pure assembly multicall coreutils replacement
 ASM      := nasm
-ASMFLAGS := -f elf64 -g -F dwarf -I src/ls/
+ASMFLAGS := -f elf64 -g -F dwarf -I src/ls/ -w-label-redef-late
 LD       := ld
 LDFLAGS  := -nostdlib -static -z noexecstack
 BUILD    := build

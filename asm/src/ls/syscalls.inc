@@ -36,6 +36,7 @@
 %define SYS_kill            62
 %define SYS_uname           63
 %define SYS_fcntl           72
+%define SYS_fdatasync       75
 %define SYS_fsync           74
 %define SYS_ftruncate       77
 %define SYS_getcwd          79

@@ -30,6 +30,8 @@ extern color_path, color_ok, color_reset, color_dim
 %define MAX_LINES 65536
 %define LINE_CAP  8192
 %define MAP_N     256
+%define RL_SLOTS  8
+%define RL_BUFSZ  8192
 
 ; util option bits (shared opt_flags)
 %define OF_REV     1
@@ -136,6 +138,10 @@ rand_buf:    resb 8
 expr_toks:   resq 128
 expr_ntok:   resq 1
 expr_pos:    resq 1
+rl_fds:      resq RL_SLOTS
+rl_pos:      resq RL_SLOTS
+rl_end:      resq RL_SLOTS
+rl_data:     resb RL_SLOTS * RL_BUFSZ
 
 section .rodata
 nl:     db 10,0
@@ -286,6 +292,16 @@ init_io:
     lea rdi, [prefix]
     mov rdx, 2
     call memcpy
+    xor ecx, ecx
+.rl_clr:
+    cmp ecx, RL_SLOTS
+    jae .rl_done
+    mov qword [rl_fds+rcx*8], -1
+    mov qword [rl_pos+rcx*8], 0
+    mov qword [rl_end+rcx*8], 0
+    inc ecx
+    jmp .rl_clr
+.rl_done:
     mov rdi, 1
     call is_tty
     mov [g_tty], al
@@ -433,8 +449,22 @@ open_wr:
     ret
 
 close_fd:
+    push rbx
+    xor ebx, ebx
+.inv:
+    cmp ebx, RL_SLOTS
+    jae .do
+    cmp [rl_fds+rbx*8], rdi
+    jne .n
+    mov qword [rl_fds+rbx*8], -1
+    mov qword [rl_pos+rbx*8], 0
+    mov qword [rl_end+rbx*8], 0
+.n: inc ebx
+    jmp .inv
+.do:
     mov rax, SYS_close
     syscall
+    pop rbx
     ret
 
 load_fd:
@@ -1409,27 +1439,72 @@ section .rodata
 months: db "JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"
 section .text
 
-; read one line from fd r12 into buffer rdi; → rax=len or -1 EOF
+; buffered read_line: r12=fd, rdi=dest → rax=len or -1 EOF
 read_line:
     push rbx
     push r13
     push r14
+    push r15
     mov r13, rdi
     xor r14, r14
+    xor ebx, ebx
+    mov r15d, -1
+.find:
+    cmp ebx, RL_SLOTS
+    jae .pick
+    mov rax, [rl_fds+rbx*8]
+    cmp rax, r12
+    je .got
+    cmp rax, -1
+    jne .fn
+    cmp r15d, -1
+    jne .fn
+    mov r15d, ebx
+.fn: inc ebx
+    jmp .find
+.pick:
+    cmp r15d, -1
+    jne .use_free
+    xor ebx, ebx
+    mov [rl_fds], r12
+    mov qword [rl_pos], 0
+    mov qword [rl_end], 0
+    jmp .got
+.use_free:
+    mov ebx, r15d
+    mov [rl_fds+rbx*8], r12
+    mov qword [rl_pos+rbx*8], 0
+    mov qword [rl_end+rbx*8], 0
+.got:
 .rl:
     cmp r14, LINE_CAP-1
     jae .full
+    mov rax, [rl_pos+rbx*8]
+    cmp rax, [rl_end+rbx*8]
+    jb .have
+    mov rax, rbx
+    imul rax, RL_BUFSZ
+    lea rsi, [rl_data+rax]
     mov rax, SYS_read
     mov rdi, r12
-    lea rsi, [scratch]
-    mov rdx, 1
+    mov rdx, RL_BUFSZ
     syscall
     test rax, rax
     jle .eof
-    mov al, [scratch]
-    cmp al, 10
+    mov qword [rl_pos+rbx*8], 0
+    mov [rl_end+rbx*8], rax
+    xor eax, eax
+.have:
+    mov rcx, rbx
+    imul rcx, RL_BUFSZ
+    lea rsi, [rl_data+rcx]
+    add rsi, rax
+    movzx edx, byte [rsi]
+    inc rax
+    mov [rl_pos+rbx*8], rax
+    cmp dl, 10
     je .end
-    mov [r13+r14], al
+    mov [r13+r14], dl
     inc r14
     jmp .rl
 .end:
@@ -1445,10 +1520,12 @@ read_line:
     jnz .end
     mov rax, -1
 .out:
+    pop r15
     pop r14
     pop r13
     pop rbx
     ret
+
 
 ; parse cut field/char list "1,2,5-7" into field_on[1..4095]=1
 parse_fields:
@@ -1789,6 +1866,139 @@ cut_main:
     mov byte [line_delim], 0
     jmp .cn
 .cl4:
+    ; --bytes=LIST
+    lea rsi, [s_bytes_eq]
+    call str_starts
+    test eax, eax
+    jz .cl4b
+    mov r15d, 2
+    or dword [opt_flags], OF_CHARS
+    add rdi, 6
+    call parse_fields
+    jmp .cn
+.cl4b:
+    push rdi
+    lea rsi, [s_bytes]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cl5
+    mov r15d, 2
+    or dword [opt_flags], OF_CHARS
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+    call parse_fields
+    jmp .cn
+.cl5:
+    lea rsi, [s_chars_eq]
+    call str_starts
+    test eax, eax
+    jz .cl5b
+    mov r15d, 2
+    or dword [opt_flags], OF_CHARS
+    add rdi, 11
+    call parse_fields
+    jmp .cn
+.cl5b:
+    push rdi
+    lea rsi, [s_chars]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cl6
+    mov r15d, 2
+    or dword [opt_flags], OF_CHARS
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+    call parse_fields
+    jmp .cn
+.cl6:
+    lea rsi, [s_fields_eq]
+    call str_starts
+    test eax, eax
+    jz .cl6b
+    mov r15d, 1
+    and dword [opt_flags], ~OF_CHARS
+    add rdi, 7
+    call parse_fields
+    jmp .cn
+.cl6b:
+    push rdi
+    lea rsi, [s_fields]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cl7
+    mov r15d, 1
+    and dword [opt_flags], ~OF_CHARS
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+    call parse_fields
+    jmp .cn
+.cl7:
+    lea rsi, [s_delim_eq]
+    call str_starts
+    test eax, eax
+    jz .cl7b
+    add rdi, 10
+    mov al, [rdi]
+    mov [delim], al
+    test dword [opt_flags], OF_ODLIM
+    jnz .cn
+    mov [out_delim], al
+    jmp .cn
+.cl7b:
+    push rdi
+    lea rsi, [s_delimiter]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cl8
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rsi, [r13+r14*8]
+    mov al, [rsi]
+    mov [delim], al
+    test dword [opt_flags], OF_ODLIM
+    jnz .cn
+    mov [out_delim], al
+    jmp .cn
+.cl8:
+    push rdi
+    lea rsi, [s_only_delim]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cl9
+    or dword [opt_flags], OF_SUPP
+    jmp .cn
+.cl9:
+    push rdi
+    lea rsi, [s_ws_delim]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cl10
+    or dword [opt_flags], OF_WDELIM
+    mov r15d, 1
+    mov byte [delim], ' '
+    jmp .cn
+.cl10:
+    push rdi
+    lea rsi, [s_no_partial]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cl11
+    jmp .cn
+.cl11:
     call parse_mod
     cmp eax, 4
     je .ch
@@ -2062,6 +2272,17 @@ cut_buf:
 
 section .rodata
 s_complement: db "complement",0
+s_bytes: db "bytes",0
+s_bytes_eq: db "bytes=",0
+s_chars: db "characters",0
+s_chars_eq: db "characters=",0
+s_fields: db "fields",0
+s_fields_eq: db "fields=",0
+s_delimiter: db "delimiter",0
+s_delim_eq: db "delimiter=",0
+s_only_delim: db "only-delimited",0
+s_ws_delim: db "whitespace-delimited",0
+s_no_partial: db "no-partial",0
 s_outdelim: db "output-delimiter",0
 s_outdelim_eq: db "output-delimiter=",0
 hcut: db "Usage: f00-cut OPTION... [FILE]...",10
@@ -3160,6 +3381,312 @@ sort_main:
     mov [out_file], rdi
     jmp .sn
 .sl5:
+    push rdi
+    lea rsi, [s_numeric]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5a
+    or dword [opt_flags], OF_NUM
+    jmp .sn
+.sl5a: push rdi
+    lea rsi, [s_gen_numeric]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5b
+    or dword [opt_flags], OF_GENNUM|OF_NUM
+    jmp .sn
+.sl5b: push rdi
+    lea rsi, [s_human_num]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5c
+    or dword [opt_flags], OF_HUMAN
+    jmp .sn
+.sl5c: push rdi
+    lea rsi, [s_month_sort]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5d
+    or dword [opt_flags], OF_MONTH
+    jmp .sn
+.sl5d: push rdi
+    lea rsi, [s_version_sort]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5e
+    or dword [opt_flags], OF_VERSORT
+    jmp .sn
+.sl5e: push rdi
+    lea rsi, [s_random_sort]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5f
+    or dword [opt_flags], OF_RANDOM
+    jmp .sn
+.sl5f: push rdi
+    lea rsi, [s_ignore_case]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5g
+    or dword [opt_flags], OF_FOLD
+    jmp .sn
+.sl5g: push rdi
+    lea rsi, [s_ignore_blanks]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5h
+    or dword [opt_flags], OF_BLANK
+    jmp .sn
+.sl5h: push rdi
+    lea rsi, [s_dictionary]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5i
+    or dword [opt_flags], OF_DICT
+    jmp .sn
+.sl5i: push rdi
+    lea rsi, [s_ignore_nonprt]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5j
+    or dword [opt_flags], OF_NONPRT
+    jmp .sn
+.sl5j: push rdi
+    lea rsi, [s_check]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5k
+    or dword [opt_flags], OF_CHECK
+    jmp .sn
+.sl5k:
+    lea rsi, [s_check_eq]
+    call str_starts
+    test eax, eax
+    jz .sl5l
+    or dword [opt_flags], OF_CHECK
+    add rdi, 6
+    cmp byte [rdi], 'q'
+    je .sl5kq
+    cmp byte [rdi], 's'
+    jne .sn
+.sl5kq:
+    or dword [opt_flags], OF_CHECKQ
+    jmp .sn
+.sl5l:
+    lea rsi, [s_sort_eq]
+    call str_starts
+    test eax, eax
+    jz .sl5m
+    add rdi, 5
+    ; numeric/general-numeric/human-numeric/month/random/version
+    push rdi
+    lea rsi, [s_w_numeric]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .swg
+    or dword [opt_flags], OF_NUM
+    jmp .sn
+.swg: push rdi
+    lea rsi, [s_w_general]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .swh
+    or dword [opt_flags], OF_GENNUM|OF_NUM
+    jmp .sn
+.swh: push rdi
+    lea rsi, [s_w_human]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .swm
+    or dword [opt_flags], OF_HUMAN
+    jmp .sn
+.swm: push rdi
+    lea rsi, [s_w_month]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .swr
+    or dword [opt_flags], OF_MONTH
+    jmp .sn
+.swr: push rdi
+    lea rsi, [s_w_random]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .swv
+    or dword [opt_flags], OF_RANDOM
+    jmp .sn
+.swv: push rdi
+    lea rsi, [s_w_version]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sn
+    or dword [opt_flags], OF_VERSORT
+    jmp .sn
+.sl5m:
+    lea rsi, [s_key_eq]
+    call str_starts
+    test eax, eax
+    jz .sl5n
+    add rdi, 4
+    call parse_keydef
+    jmp .sn
+.sl5n:
+    push rdi
+    lea rsi, [s_key]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5o
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+    call parse_keydef
+    jmp .sn
+.sl5o:
+    lea rsi, [s_field_sep_eq]
+    call str_starts
+    test eax, eax
+    jz .sl5p
+    add rdi, 16
+    mov al, [rdi]
+    mov [delim], al
+    jmp .sn
+.sl5p:
+    push rdi
+    lea rsi, [s_field_sep]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5q
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rsi, [r13+r14*8]
+    mov al, [rsi]
+    mov [delim], al
+    jmp .sn
+.sl5q:
+    ; accept no-op advanced options
+    lea rsi, [s_batch_eq]
+    call str_starts
+    test eax, eax
+    jnz .sn
+    push rdi
+    lea rsi, [s_batch]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5r
+    inc r14
+    jmp .sn
+.sl5r:
+    lea rsi, [s_bufsize_eq]
+    call str_starts
+    test eax, eax
+    jnz .sn
+    push rdi
+    lea rsi, [s_bufsize]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5s
+    inc r14
+    jmp .sn
+.sl5s:
+    lea rsi, [s_parallel_eq]
+    call str_starts
+    test eax, eax
+    jnz .sn
+    push rdi
+    lea rsi, [s_parallel]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5t
+    inc r14
+    jmp .sn
+.sl5t:
+    lea rsi, [s_compress_eq]
+    call str_starts
+    test eax, eax
+    jnz .sn
+    push rdi
+    lea rsi, [s_compress]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5u
+    inc r14
+    jmp .sn
+.sl5u:
+    lea rsi, [s_tmpdir_eq]
+    call str_starts
+    test eax, eax
+    jnz .sn
+    push rdi
+    lea rsi, [s_tmpdir]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5v
+    inc r14
+    jmp .sn
+.sl5v:
+    lea rsi, [s_random_src_eq]
+    call str_starts
+    test eax, eax
+    jnz .sn
+    push rdi
+    lea rsi, [s_random_src]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5w
+    inc r14
+    jmp .sn
+.sl5w:
+    lea rsi, [s_files0_eq]
+    call str_starts
+    test eax, eax
+    jnz .sn
+    push rdi
+    lea rsi, [s_files0]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl5x
+    inc r14
+    jmp .sn
+.sl5x:
+    push rdi
+    lea rsi, [s_merge]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jz .sn
+    push rdi
+    lea rsi, [s_debug]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jz .sn
     call parse_mod
     cmp eax, 4
     je .sh
@@ -3373,6 +3900,45 @@ sort_unique_inplace:
 
 section .rodata
 s_stable: db "stable",0
+s_numeric: db "numeric-sort",0
+s_gen_numeric: db "general-numeric-sort",0
+s_human_num: db "human-numeric-sort",0
+s_month_sort: db "month-sort",0
+s_version_sort: db "version-sort",0
+s_random_sort: db "random-sort",0
+s_ignore_case: db "ignore-case",0
+s_ignore_blanks: db "ignore-leading-blanks",0
+s_dictionary: db "dictionary-order",0
+s_ignore_nonprt: db "ignore-nonprinting",0
+s_check: db "check",0
+s_check_eq: db "check=",0
+s_sort_eq: db "sort=",0
+s_key: db "key",0
+s_key_eq: db "key=",0
+s_field_sep: db "field-separator",0
+s_field_sep_eq: db "field-separator=",0
+s_batch: db "batch-size",0
+s_batch_eq: db "batch-size=",0
+s_bufsize: db "buffer-size",0
+s_bufsize_eq: db "buffer-size=",0
+s_parallel: db "parallel",0
+s_parallel_eq: db "parallel=",0
+s_compress: db "compress-program",0
+s_compress_eq: db "compress-program=",0
+s_tmpdir: db "temporary-directory",0
+s_tmpdir_eq: db "temporary-directory=",0
+s_random_src: db "random-source",0
+s_random_src_eq: db "random-source=",0
+s_files0: db "files0-from",0
+s_files0_eq: db "files0-from=",0
+s_merge: db "merge",0
+s_debug: db "debug",0
+s_w_numeric: db "numeric",0
+s_w_general: db "general-numeric",0
+s_w_human: db "human-numeric",0
+s_w_month: db "month",0
+s_w_random: db "random",0
+s_w_version: db "version",0
 s_zero: db "zero-terminated",0
 s_unique: db "unique",0
 s_reverse: db "reverse",0
@@ -3527,7 +4093,133 @@ uniq_main:
     or dword [opt_flags], OF_ZERO
     mov byte [line_delim], 0
     jmp .un
-.ul1:
+.ul1: push rdi
+    lea rsi, [s_count]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul2
+    or dword [opt_flags], OF_COUNT
+    jmp .un
+.ul2: push rdi
+    lea rsi, [s_repeated]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul3
+    or dword [opt_flags], OF_DONLY
+    jmp .un
+.ul3: push rdi
+    lea rsi, [s_unique]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul4
+    or dword [opt_flags], OF_UONLY
+    jmp .un
+.ul4: push rdi
+    lea rsi, [s_ignore_case]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul5
+    or dword [opt_flags], OF_FOLD
+    jmp .un
+.ul5:
+    lea rsi, [s_all_rep_eq]
+    call str_starts
+    test eax, eax
+    jnz .ul5set
+    push rdi
+    lea rsi, [s_all_rep]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul6
+.ul5set:
+    or dword [opt_flags], OF_ALLDUP
+    jmp .un
+.ul6:
+    lea rsi, [s_skip_fields_eq]
+    call str_starts
+    test eax, eax
+    jz .ul6b
+    add rdi, 13
+    call parse_u64
+    mov [skip_fields], rax
+    jmp .un
+.ul6b:
+    push rdi
+    lea rsi, [s_skip_fields]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul7
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+    call parse_u64
+    mov [skip_fields], rax
+    jmp .un
+.ul7:
+    lea rsi, [s_skip_chars_eq]
+    call str_starts
+    test eax, eax
+    jz .ul7b
+    add rdi, 12
+    call parse_u64
+    mov [skip_chars], rax
+    jmp .un
+.ul7b:
+    push rdi
+    lea rsi, [s_skip_chars]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul8
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+    call parse_u64
+    mov [skip_chars], rax
+    jmp .un
+.ul8:
+    lea rsi, [s_check_chars_eq]
+    call str_starts
+    test eax, eax
+    jz .ul8b
+    add rdi, 13
+    call parse_u64
+    mov [check_chars], rax
+    jmp .un
+.ul8b:
+    push rdi
+    lea rsi, [s_check_chars]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ul9
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+    call parse_u64
+    mov [check_chars], rax
+    jmp .un
+.ul9:
+    lea rsi, [s_group_eq]
+    call str_starts
+    test eax, eax
+    jnz .un
+    push rdi
+    lea rsi, [s_group]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jz .un
+.ul10:
     call parse_mod
     cmp eax, 4
     je .uh
@@ -3658,6 +4350,18 @@ uniq_main:
     jmp xexit
 
 section .rodata
+s_count: db "count",0
+s_repeated: db "repeated",0
+s_all_rep: db "all-repeated",0
+s_all_rep_eq: db "all-repeated=",0
+s_skip_fields: db "skip-fields",0
+s_skip_fields_eq: db "skip-fields=",0
+s_skip_chars: db "skip-chars",0
+s_skip_chars_eq: db "skip-chars=",0
+s_check_chars: db "check-chars",0
+s_check_chars_eq: db "check-chars=",0
+s_group: db "group",0
+s_group_eq: db "group=",0
 huniq: db "Usage: f00-uniq [OPTION]... [INPUT [OUTPUT]]",10
       db "Filter adjacent matching lines from INPUT (or standard input).",10
       db 10
@@ -3706,9 +4410,39 @@ rev_main:
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
     jne .rfile
+    cmp byte [rdi+1], 0
+    je .rfile
     cmp byte [rdi+1], '-'
-    jne .rn
+    je .rlong
+    inc rdi
+.rs:
+    mov al, [rdi]
+    test al, al
+    jz .rn
+    cmp al, '0'
+    jne .r1
+    or dword [opt_flags], OF_ZERO
+    mov byte [line_delim], 0
+    jmp .rinc
+.r1: cmp al, 'h'
+    je .rh
+    cmp al, 'V'
+    je .rv
+.rinc:
+    inc rdi
+    jmp .rs
+.rlong:
     add rdi, 2
+    push rdi
+    lea rsi, [s_zero_short]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .rl1
+    or dword [opt_flags], OF_ZERO
+    mov byte [line_delim], 0
+    jmp .rn
+.rl1:
     call parse_mod
     cmp eax, 4
     je .rh
@@ -3775,7 +4509,7 @@ rev_buf:
     pop rcx
     dec rcx
     jmp .rrev
-.rnl: mov dil, 10
+.rnl: mov dil, [line_delim]
     call out_byte
     inc r14
     jmp .rlp
@@ -3786,10 +4520,15 @@ rev_buf:
     ret
 
 section .rodata
-hrev: db "Usage: f00-rev [FILE]...",10
+s_zero_short: db "zero",0
+hrev: db "Usage: f00-rev [options] [FILE]...",10
       db "Reverse lines characterwise.",10
       db 10
       db "With no FILE, or when FILE is -, read standard input.",10
+      db 10
+      db "  -0, --zero     NUL line separator",10
+      db "  -h, --help     display this help",10
+      db "  -V, --version  output version",10
       db 10
       db "Coreutils flags:",10
       db "      --help     display this help and exit",10
@@ -4445,8 +5184,14 @@ unexpand_main:
     je .ufile
     cmp byte [rdi+1], '-'
     je .ulong
+    cmp byte [rdi+1], 'a'
+    jne .utab
+    or dword [opt_flags], OF_ECHO
+    jmp .un
+.utab:
     cmp byte [rdi+1], 't'
     jne .un
+    or dword [opt_flags], OF_ECHO
     add rdi, 2
     cmp byte [rdi], 0
     jne .tset
@@ -4489,6 +5234,7 @@ unexpand_main:
     lea r12, [big_buf]
     xor r14, r14
     xor r15, r15
+    mov qword [num_a], 1
 .ulp:
     mov al, [r12]
     test al, al
@@ -4499,11 +5245,18 @@ unexpand_main:
     mov dil, 10
     call out_byte
     xor r14, r14
+    mov qword [num_a], 1
     inc r12
     jmp .ulp
 .usp:
     cmp al, ' '
     jne .uch
+    ; default: only leading blanks (GNU). -a sets OF_ECHO for all.
+    test dword [opt_flags], OF_ECHO
+    jnz .uspc
+    cmp qword [num_a], 0
+    je .usp_plain
+.uspc:
     inc r15
     inc r14
     mov rax, r14
@@ -4515,8 +5268,15 @@ unexpand_main:
     call out_byte
     xor r15, r15
     jmp .unx
+.usp_plain:
+    call ue_flush_sp
+    mov dil, ' '
+    call out_byte
+    inc r14
+    jmp .unx
 .uch:
     call ue_flush_sp
+    mov qword [num_a], 0
     mov dil, [r12]
     call out_byte
     inc r14
@@ -4549,13 +5309,19 @@ ue_flush_sp:
     ret
 
 section .rodata
+s_all: db "all",0
+s_first_only: db "first-only",0
+s_tabs: db "tabs",0
+s_tabs_eq: db "tabs=",0
 hunexpand: db "Usage: f00-unexpand [OPTION]... [FILE]...",10
       db "Convert blanks in each FILE to tabs, writing to standard output.",10
       db 10
       db "With no FILE, or when FILE is -, read standard input.",10
       db 10
       db "Coreutils flags:",10
-      db "  -t N  have tabs N characters apart (default 8)",10
+      db "  -a, --all         convert all blanks (not just initial)",10
+      db "  -t, --tabs=N      tabs N apart (enables -a; default 8)",10
+      db "      --first-only  convert only leading blanks",10
       db "      --help     display this help and exit",10
       db "      --version  output version information and exit",10
       db 10
@@ -5617,15 +6383,32 @@ od_main:
     inc r14
     mov rdi, [r13+r14*8]
 .tset:
-    cmp byte [rdi], 'x'
+    mov al, [rdi]
+    cmp al, 'x'
     jne .to
     mov qword [num_b], 1
-    jmp .on
-.to: cmp byte [rdi], 'c'
+    jmp .tsz
+.to: cmp al, 'c'
     jne .to1
     mov qword [num_b], 2
-    jmp .on
+    jmp .tsz
 .to1: mov qword [num_b], 0            ; o1
+.tsz:
+    inc rdi
+.tszd:
+    mov al, [rdi]
+    test al, al
+    jz .on
+    cmp al, '0'
+    jb .tszcheck
+    cmp al, '9'
+    ja .tszcheck
+    inc rdi
+    jmp .tszd
+.tszcheck:
+    cmp al, 'z'
+    jne .on
+    or dword [opt_flags], OF_ECHO     ; ASCII dump suffix
     jmp .on
 .o2: cmp al, 'v'
     jne .o3
@@ -5755,18 +6538,28 @@ od_main:
     xor r13d, r13d
 .oxl:
     cmp r13d, 16
-    jae .oasc
+    jae .ox_after
     mov rax, r14
     add rax, r13
     cmp rax, r12
     jae .oxp
     movzx edi, byte [big_buf+rax]
     call out_hex2
+    ; no trailing space after last byte of this line chunk
+    mov rax, r14
+    add rax, r13
+    inc rax
+    cmp rax, r12
+    jae .oxp
+    cmp r13d, 15
+    jae .oxp
     mov dil, ' '
     call out_byte
 .oxp: inc r13d
     jmp .oxl
-.oasc:
+.ox_after:
+    test dword [opt_flags], OF_ECHO
+    jz .oxnl
     mov dil, '>'
     call out_byte
     xor r13d, r13d
@@ -5792,6 +6585,7 @@ od_main:
 .oae:
     mov dil, '<'
     call out_byte
+.oxnl:
     mov dil, 10
     call out_byte
     add r14, 16
@@ -6701,7 +7495,7 @@ tsort_main:
 .tsp:
     mov al, [rdi]
     test al, al
-    jz .tnx
+    jz .tnosec
     cmp al, ' '
     je .tsplit
     cmp al, 9
@@ -6721,6 +7515,9 @@ tsort_main:
     jmp .tsk
 .tsetr:
     mov [counts+r14*8], rdi
+    jmp .tnx
+.tnosec:
+    mov qword [counts+r14*8], 0
 .tnx: inc r14
     jmp .tprep
 .tkahn:
@@ -6733,6 +7530,46 @@ tsort_main:
     mov rax, 4096
     mov [nlines], rax
 .tlim_ok:
+    mov r15, [nlines]
+    xor r14, r14
+.tadd_r:
+    cmp r14, r15
+    jae .tadd_done
+    mov rdi, [counts+r14*8]
+    test rdi, rdi
+    jz .tadd_n
+    xor r12, r12
+.tadd_f:
+    cmp r12, [nlines]
+    jae .tadd_new
+    mov rsi, [line_ptrs+r12*8]
+    test rsi, rsi
+    jz .tadd_fn
+    push rdi
+    push r12
+    push r14
+    push r15
+    call strcmp
+    pop r15
+    pop r14
+    pop r12
+    pop rdi
+    test eax, eax
+    jz .tadd_n
+.tadd_fn:
+    inc r12
+    jmp .tadd_f
+.tadd_new:
+    mov rax, [nlines]
+    cmp rax, 4095
+    jae .tadd_n
+    mov [line_ptrs+rax*8], rdi
+    mov qword [counts+rax*8], 0
+    inc qword [nlines]
+.tadd_n:
+    inc r14
+    jmp .tadd_r
+.tadd_done:
     xor r14, r14
 .tmark:
     cmp r14, [nlines]
@@ -6873,18 +7710,59 @@ pr_main:
     je .pfile
     cmp byte [rdi+1], '-'
     je .plong
-    cmp byte [rdi+1], 'l'
-    jne .pn
-    add rdi, 2
+    inc rdi
+.ps:
+    mov al, [rdi]
+    test al, al
+    jz .pn
+    cmp al, 't'
+    jne .p1
+    or dword [opt_flags], OF_SUPP       ; omit header
+    jmp .pinc
+.p1: cmp al, 'T'
+    jne .p2
+    or dword [opt_flags], OF_SUPP
+    jmp .pinc
+.p2: cmp al, 'l'
+    jne .p3
+    inc rdi
     cmp byte [rdi], 0
     jne .pl
     inc r14
+    cmp r14, r12
+    jge die1
     mov rdi, [r13+r14*8]
 .pl: call parse_u64
     mov [n_lines], rax
+    cmp rax, 10
+    ja .pn
+    or dword [opt_flags], OF_SUPP
     jmp .pn
+.p3: cmp al, 'n'
+    jne .pinc
+    or dword [opt_flags], OF_NUM
+.pinc:
+    inc rdi
+    jmp .ps
 .plong:
     add rdi, 2
+    push rdi
+    lea rsi, [s_omit_header]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .pl1
+    or dword [opt_flags], OF_SUPP
+    jmp .pn
+.pl1: push rdi
+    lea rsi, [s_omit_pag]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .pl2
+    or dword [opt_flags], OF_SUPP
+    jmp .pn
+.pl2:
     call parse_mod
     cmp eax, 4
     je .ph
@@ -6913,6 +7791,8 @@ pr_main:
     call load_path
 .pdo:
     call split_lines
+    test dword [opt_flags], OF_SUPP
+    jnz .pplain
     xor r14, r14
     xor r15, r15
     xor rbx, rbx
@@ -6931,6 +7811,22 @@ pr_main:
     mov dil, 10
     call out_byte
 .pline:
+    test dword [opt_flags], OF_NUM
+    jz .pemit
+    mov rdi, r14
+    inc rdi
+    lea rsi, [scratch]
+    call u64_to_dec_buf
+    mov r8d, eax
+    mov ecx, 5
+    mov edx, r8d
+    call out_pad
+    lea rsi, [scratch]
+    mov edx, r8d
+    call out_strn
+    mov dil, 9
+    call out_byte
+.pemit:
     mov rsi, [line_ptrs+r14*8]
     call emit_line
     inc r14
@@ -6943,6 +7839,31 @@ pr_main:
     call out_byte
     xor rbx, rbx
     jmp .prl
+.pplain:
+    xor r14, r14
+.ppl:
+    cmp r14, [nlines]
+    jae xexit
+    test dword [opt_flags], OF_NUM
+    jz .ppe
+    mov rdi, r14
+    inc rdi
+    lea rsi, [scratch]
+    call u64_to_dec_buf
+    mov r8d, eax
+    mov ecx, 5
+    mov edx, r8d
+    call out_pad
+    lea rsi, [scratch]
+    mov edx, r8d
+    call out_strn
+    mov dil, 9
+    call out_byte
+.ppe:
+    mov rsi, [line_ptrs+r14*8]
+    call emit_line
+    inc r14
+    jmp .ppl
 .ph: lea rsi, [hpr]
     call out_str
     jmp xexit
@@ -6952,13 +7873,18 @@ pr_main:
 
 section .rodata
 pr_hdr: db "Page ",0
+s_omit_header: db "omit-header",0
+s_omit_pag: db "omit-pagination",0
 hpr: db "Usage: f00-pr [OPTION]... [FILE]...",10
       db "Paginate or columnate FILE(s) for printing.",10
       db 10
       db "With no FILE, or when FILE is -, read standard input.",10
       db 10
       db "Coreutils flags:",10
+      db "  -t        omit page headers",10
+      db "  -T        omit headers and form feeds",10
       db "  -l LINES  page length (default 66)",10
+      db "  -n        number lines",10
       db "      --help     display this help and exit",10
       db "      --version  output version information and exit",10
       db 10
@@ -6968,7 +7894,7 @@ hpr: db "Usage: f00-pr [OPTION]... [FILE]...",10
       db "      --csv      CSV result",10
       db 10
       db "Examples:",10
-      db "  f00-pr -l 20 file.txt",10
+      db "  f00-pr -t file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
 vpr: db "f00-pr (f00) 0.15.0-beta.1",10,"License: MIT · https://f00.sh",10,0
@@ -7122,11 +8048,33 @@ factor_main:
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
     jne .fnum
+    cmp byte [rdi+1], 0
+    je .fnum
     cmp byte [rdi+1], '-'
     je .flong
-    jmp .fnum
+    ; short options: -h exponents
+    inc rdi
+.fso:
+    mov al, [rdi]
+    test al, al
+    jz .fn
+    cmp al, 'h'
+    jne .fso_s
+    or dword [opt_flags], OF_REPEAT
+.fso_s:
+    inc rdi
+    jmp .fso
 .flong:
     add rdi, 2
+    push rdi
+    lea rsi, [s_exponents]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .flm
+    or dword [opt_flags], OF_REPEAT
+    jmp .fn
+.flm:
     call parse_mod
     cmp eax, 4
     je .fh
@@ -7138,53 +8086,7 @@ factor_main:
     call parse_u64
     mov rbx, rax
     mov r15d, 1
-    mov rdi, rbx
-    call out_u64
-    mov dil, ':'
-    call out_byte
-    cmp rbx, 1
-    jbe .fnl
-.f2:
-    test rbx, 1
-    jnz .fodd
-    mov dil, ' '
-    call out_byte
-    mov dil, '2'
-    call out_byte
-    shr rbx, 1
-    jmp .f2
-.fodd:
-    mov r8, 3
-.flp:
-    mov rax, r8
-    imul rax, r8
-    cmp rax, rbx
-    ja .frest
-.fdiv:
-    mov rax, rbx
-    xor rdx, rdx
-    div r8
-    test rdx, rdx
-    jnz .fnext
-    mov rbx, rax
-    mov dil, ' '
-    call out_byte
-    mov rdi, r8
-    call out_u64
-    jmp .fdiv
-.fnext:
-    add r8, 2
-    jmp .flp
-.frest:
-    cmp rbx, 1
-    jbe .fnl
-    mov dil, ' '
-    call out_byte
-    mov rdi, rbx
-    call out_u64
-.fnl:
-    mov dil, 10
-    call out_byte
+    call factor_emit
 .fn: inc r14
     jmp .fp
 .fgo:
@@ -7194,7 +8096,6 @@ factor_main:
     jnz .fv
     test r15d, r15d
     jnz xexit
-    ; read stdin numbers
     xor rdi, rdi
     call load_path
     call split_lines
@@ -7207,58 +8108,7 @@ factor_main:
     je .fsn
     call parse_u64
     mov rbx, rax
-    mov rdi, rbx
-    call out_u64
-    mov dil, ':'
-    call out_byte
-    cmp rbx, 2
-    jb .fsnl
-    ; reuse factor loop via push
-    push r14
-    ; inline mini
-.fs2:
-    test rbx, 1
-    jnz .fsodd
-    mov dil, ' '
-    call out_byte
-    mov dil, '2'
-    call out_byte
-    shr rbx, 1
-    jmp .fs2
-.fsodd:
-    mov r8, 3
-.fslp:
-    mov rax, r8
-    imul rax, r8
-    cmp rax, rbx
-    ja .fsrest
-.fsdiv:
-    mov rax, rbx
-    xor rdx, rdx
-    div r8
-    test rdx, rdx
-    jnz .fsnext
-    mov rbx, rax
-    mov dil, ' '
-    call out_byte
-    mov rdi, r8
-    call out_u64
-    jmp .fsdiv
-.fsnext:
-    add r8, 2
-    jmp .fslp
-.fsrest:
-    cmp rbx, 1
-    jbe .fsnl2
-    mov dil, ' '
-    call out_byte
-    mov rdi, rbx
-    call out_u64
-.fsnl2:
-    pop r14
-.fsnl:
-    mov dil, 10
-    call out_byte
+    call factor_emit
 .fsn: inc r14
     jmp .fstdin
 .fh: lea rsi, [hfactor]
@@ -7268,14 +8118,116 @@ factor_main:
     call out_str
     jmp xexit
 
+; factor number in rbx; OF_REPEAT → p^e form
+factor_emit:
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov r12, rbx
+    mov rdi, r12
+    call out_u64
+    mov dil, ':'
+    call out_byte
+    cmp r12, 1
+    jbe .fenl
+    xor r13d, r13d
+.fe2:
+    test r12, 1
+    jnz .fe2d
+    inc r13
+    shr r12, 1
+    jmp .fe2
+.fe2d:
+    test r13, r13
+    jz .feodd
+    mov rdi, 2
+    mov rsi, r13
+    call factor_out_pe
+.feodd:
+    mov r14, 3
+.felp:
+    mov rax, r14
+    imul rax, r14
+    cmp rax, r12
+    ja .ferest
+    xor r13d, r13d
+.fediv:
+    mov rax, r12
+    xor rdx, rdx
+    div r14
+    test rdx, rdx
+    jnz .fenxt
+    mov r12, rax
+    inc r13
+    jmp .fediv
+.fenxt:
+    test r13, r13
+    jz .feadv
+    mov rdi, r14
+    mov rsi, r13
+    call factor_out_pe
+.feadv:
+    add r14, 2
+    jmp .felp
+.ferest:
+    cmp r12, 1
+    jbe .fenl
+    mov rdi, r12
+    mov rsi, 1
+    call factor_out_pe
+.fenl:
+    mov dil, 10
+    call out_byte
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+; rdi=prime rsi=exp
+factor_out_pe:
+    push rbx
+    push r12
+    mov rbx, rdi
+    mov r12, rsi
+    mov dil, ' '
+    call out_byte
+    mov rdi, rbx
+    call out_u64
+    test dword [opt_flags], OF_REPEAT
+    jz .plain
+    cmp r12, 1
+    jbe .done
+    mov dil, '^'
+    call out_byte
+    mov rdi, r12
+    call out_u64
+    jmp .done
+.plain:
+.pr:
+    dec r12
+    jz .done
+    mov dil, ' '
+    call out_byte
+    mov rdi, rbx
+    call out_u64
+    jmp .pr
+.done:
+    pop r12
+    pop rbx
+    ret
+
 section .rodata
-hfactor: db "Usage: f00-factor [NUMBER]...",10
+s_exponents: db "exponents",0
+hfactor: db "Usage: f00-factor [OPTION] [NUMBER]...",10
       db "Print the prime factors of each specified integer NUMBER.",10
       db 10
       db "If no NUMBER is specified on the command line, read them from",10
       db "standard input.",10
       db 10
       db "Coreutils flags:",10
+      db "  -h, --exponents  print repeated factors as p^e",10
       db "      --help     display this help and exit",10
       db "      --version  output version information and exit",10
       db 10
@@ -7286,6 +8238,7 @@ hfactor: db "Usage: f00-factor [NUMBER]...",10
       db 10
       db "Examples:",10
       db "  f00-factor 12 100",10
+      db "  f00-factor -h 12",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
 vfactor: db "f00-factor (f00) 0.15.0-beta.1",10,"License: MIT · https://f00.sh",10,0

@@ -31,6 +31,14 @@ extern ui_help_print
 %define F_DATE_SET 2048             ; -d / -r already set time
 %define F_TO_VERB 4096              ; timeout -v/--verbose
 %define F_TO_PRESERVE 8192          ; timeout --preserve-status
+%define F_DATE_FILE 16384
+%define F_DATE_RES 32768
+%define F_DATE_DEBUG 65536
+%define F_TO_FG 131072
+%define F_WHO_COUNT 262144
+%define F_WHO_HEAD 524288
+%define F_UP_PRETTY 1048576
+%define F_UP_SINCE 2097152
 
 ; uname field flags
 %define U_S 1
@@ -88,7 +96,10 @@ dt_epoch: resq 1
 date_fmt: resq 1                    ; +FORMAT pointer
 date_str: resq 1                    ; -d STRING
 date_ref: resq 1                    ; -r FILE
+date_file: resq 1
 rfc3339_mode: resd 1                ; 0=date 1=sec 2=ns
+who_flags: resd 1
+date_line_buf: resb 512
 pf_width: resd 1
 pf_prec: resd 1
 pf_zero: resd 1
@@ -578,6 +589,31 @@ s_am: db "AM",0
 s_pm: db "PM",0
 s_am_l: db "am",0
 s_pm_l: db "pm",0
+s_resolution: db "resolution",0
+s_debug: db "debug",0
+s_res_out: db "0.000000001",10,0
+s_tomorrow: db "tomorrow",0
+s_kernel_name: db "kernel-name",0
+s_nodename: db "nodename",0
+s_kernel_release: db "kernel-release",0
+s_kernel_version: db "kernel-version",0
+s_machine: db "machine",0
+s_processor: db "processor",0
+s_hw_platform: db "hardware-platform",0
+s_op_sys: db "operating-system",0
+s_list: db "list",0
+s_signal: db "signal",0
+s_foreground: db "foreground",0
+s_adjustment: db "adjustment",0
+s_pretty: db "pretty",0
+s_since: db "since",0
+s_count: db "count",0
+s_heading: db "heading",0
+s_all_who: db "all",0
+who_heading: db "NAME     LINE         TIME             COMMENT",10,0
+who_users_lbl: db "# users=",0
+who_users0: db 10,"# users=0",10,0
+pinky_heading: db "Login    Name       TTY Idle When Where",10,0
 s_ref_eq_chk: db "reference=",0
 s_now: db "now",0
 s_today: db "today",0
@@ -637,6 +673,8 @@ init_id:
     mov qword [date_fmt], 0
     mov qword [date_str], 0
     mov qword [date_ref], 0
+    mov qword [date_file], 0
+    mov dword [who_flags], 0
     mov dword [rfc3339_mode], 1
     mov qword [npaths], 0
     mov rdi, 1
@@ -1938,18 +1976,102 @@ uname_main:
     je .uhelp
     cmp eax, 5
     je .uver2
-    ; long uname field names
+    test eax, eax
+    jle .ulong_fields
+    call apply_mod
+    inc r14
+    jmp .uparse
+.ulong_fields:
     push rdi
     lea rsi, [s_all]
     call strcmp
     pop rdi
     test eax, eax
-    jnz .ul1
+    jnz .ulf1
     or dword [ufields], U_A|U_ALL_FLAG
     inc r14
     jmp .uparse
-.ul1:
-    call apply_mod
+.ulf1:
+    push rdi
+    lea rsi, [s_kernel_name]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf2
+    or dword [ufields], U_S
+    inc r14
+    jmp .uparse
+.ulf2:
+    push rdi
+    lea rsi, [s_nodename]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf3
+    or dword [ufields], U_N
+    inc r14
+    jmp .uparse
+.ulf3:
+    push rdi
+    lea rsi, [s_kernel_release]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf4
+    or dword [ufields], U_R
+    inc r14
+    jmp .uparse
+.ulf4:
+    push rdi
+    lea rsi, [s_kernel_version]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf5
+    or dword [ufields], U_V
+    inc r14
+    jmp .uparse
+.ulf5:
+    push rdi
+    lea rsi, [s_machine]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf6
+    or dword [ufields], U_M
+    inc r14
+    jmp .uparse
+.ulf6:
+    push rdi
+    lea rsi, [s_processor]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf7
+    or dword [ufields], U_P
+    inc r14
+    jmp .uparse
+.ulf7:
+    push rdi
+    lea rsi, [s_hw_platform]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf8
+    or dword [ufields], U_I
+    inc r14
+    jmp .uparse
+.ulf8:
+    push rdi
+    lea rsi, [s_op_sys]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ulf9
+    or dword [ufields], U_O
+    inc r14
+    jmp .uparse
+.ulf9:
     inc r14
     jmp .uparse
 .unext:
@@ -2238,13 +2360,14 @@ date_main:
     or dword [flags], F_ISO
     inc rdi
     cmp byte [rdi], 0
-    je .dIsec
+    je .dIdate
     push rdi
     lea rsi, [s_idate]
     call strcmp
     pop rdi
     test eax, eax
     jnz .dI2
+.dIdate:
     mov dword [iso_mode], ISO_DATE
     jmp .dnn
 .dI2:
@@ -2422,9 +2545,29 @@ date_main:
     call strcmp
     pop rdi
     test eax, eax
-    jnz .dl6
+    jnz .dlres
     or dword [flags], F_RFC3339
     mov dword [rfc3339_mode], 1
+    inc r14
+    jmp .dparse
+.dlres:
+    push rdi
+    lea rsi, [s_resolution]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .dldbg
+    or dword [flags], F_DATE_RES
+    inc r14
+    jmp .dparse
+.dldbg:
+    push rdi
+    lea rsi, [s_debug]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .dl6
+    or dword [flags], F_DATE_DEBUG
     inc r14
     jmp .dparse
 .dl6:
@@ -2445,6 +2588,12 @@ date_main:
     inc r14
     jmp .dparse
 .ddo:
+    test dword [flags], F_DATE_RES
+    jz .dnores
+    lea rsi, [s_res_out]
+    call out_str
+    jmp xexit
+.dnores:
     ; resolve time source
     mov rax, [date_ref]
     test rax, rax
@@ -3014,9 +3163,22 @@ date_parse_string:
     call strcmp
     pop rdi
     test eax, eax
-    jnz .ymd
+    jnz .tom
     call .now_sec
     sub rax, 86400
+    pop r13
+    pop r12
+    pop rbx
+    ret
+.tom:
+    push rdi
+    lea rsi, [s_tomorrow]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .ymd
+    call .now_sec
+    add rax, 86400
     pop r13
     pop r12
     pop rbx
@@ -3807,18 +3969,81 @@ who_main:
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
     jne .wn
+    cmp byte [rdi+1], 0
+    je .wn
     cmp byte [rdi+1], '-'
-    jne .wn
+    je .wlong
+    inc rdi
+.ws:
+    mov al, [rdi]
+    test al, al
+    jz .wnxt
+    cmp al, 'q'
+    jne .wsh
+    or dword [who_flags], F_WHO_COUNT
+.wsh:
+    cmp al, 'H'
+    jne .wsi
+    or dword [who_flags], F_WHO_HEAD
+.wsi:
+    inc rdi
+    jmp .ws
+.wnxt:
+    inc r14
+    jmp .wp
+.wlong:
     call parse_mod
     cmp eax, 4
     je .wh
     cmp eax, 5
     je .wv
+    test eax, eax
+    jle .wls
     call apply_mod
+    inc r14
+    jmp .wp
+.wls:
+    push rdi
+    lea rsi, [s_count]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .wlh
+    or dword [who_flags], F_WHO_COUNT
+    inc r14
+    jmp .wp
+.wlh:
+    push rdi
+    lea rsi, [s_heading]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .wlskip
+    or dword [who_flags], F_WHO_HEAD
+.wlskip:
+    inc r14
+    jmp .wp
 .wn: inc r14
     jmp .wp
 .wdo:
+    test dword [who_flags], F_WHO_COUNT
+    jnz .wcount
+    test dword [who_flags], F_WHO_HEAD
+    jz .wplain
+    lea rsi, [who_heading]
+    call out_str
+.wplain:
     call read_utmp_who
+    jmp xexit
+.wcount:
+    call read_utmp_users
+    lea rsi, [who_users_lbl]
+    call out_str
+    ; rough: print 0 if empty already handled
+    mov dil, '0'
+    call out_byte
+    mov dil, 10
+    call out_byte
     jmp xexit
 .wh: lea rsi, [h_who]
     call out_str
@@ -3828,8 +4053,50 @@ who_main:
     jmp xexit
 
 pinky_main:
-    ; same as who for basic
-    jmp who_main
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov r12, rdi
+    mov r13, rsi
+    call init_id
+    mov r14, 1
+    xor ebx, ebx
+.ppk:
+    cmp r14, r12
+    jge .pdo
+    mov rdi, [r13+r14*8]
+    cmp byte [rdi], '-'
+    jne .parg
+    cmp byte [rdi+1], '-'
+    je .plong
+    ; accept -lbfs wi pq
+    inc r14
+    jmp .ppk
+.plong:
+    call parse_mod
+    cmp eax, 4
+    je .ph
+    cmp eax, 5
+    je .pv
+    test eax, eax
+    jle .psk
+    call apply_mod
+.psk:
+    inc r14
+    jmp .ppk
+.parg:
+    inc r14
+    jmp .ppk
+.pdo:
+    call read_utmp_who
+    jmp xexit
+.ph: lea rsi, [h_pinky]
+    call out_str
+    jmp xexit
+.pv: lea rsi, [v_pinky]
+    call out_str
+    jmp xexit
 
 ; ===================== UPTIME =====================
 uptime_main:
@@ -3848,14 +4115,60 @@ uptime_main:
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
     jne .pn
+    cmp byte [rdi+1], 0
+    je .pn
     cmp byte [rdi+1], '-'
-    jne .pn
+    je .plongu
+    inc rdi
+.ups:
+    mov al, [rdi]
+    test al, al
+    jz .upn
+    cmp al, 'p'
+    jne .ups1
+    or dword [flags], F_UP_PRETTY
+.ups1:
+    cmp al, 's'
+    jne .ups2
+    or dword [flags], F_UP_SINCE
+.ups2:
+    inc rdi
+    jmp .ups
+.upn:
+    inc r14
+    jmp .pp
+.plongu:
     call parse_mod
     cmp eax, 4
     je .ph
     cmp eax, 5
     je .pv
+    test eax, eax
+    jle .upls
     call apply_mod
+    inc r14
+    jmp .pp
+.upls:
+    push rdi
+    lea rsi, [s_pretty]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .upls2
+    or dword [flags], F_UP_PRETTY
+    inc r14
+    jmp .pp
+.upls2:
+    push rdi
+    lea rsi, [s_since]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .upls3
+    or dword [flags], F_UP_SINCE
+.upls3:
+    inc r14
+    jmp .pp
 .pn: inc r14
     jmp .pp
 .pdo:
@@ -3870,6 +4183,43 @@ uptime_main:
     mov rbx, rax
     test dword [flags], F_JSON
     jnz .pj
+    test dword [flags], F_UP_SINCE
+    jz .uphum
+    ; boot time = now - uptime
+    mov rax, SYS_clock_gettime
+    mov rdi, CLOCK_REALTIME
+    lea rsi, [ts_buf]
+    syscall
+    mov rax, [ts_buf]
+    sub rax, rbx
+    mov rdi, rax
+    call epoch_fill
+    mov edi, [dt_year]
+    call out_u64
+    mov dil, '-'
+    call out_byte
+    mov edi, [dt_mon]
+    call out_u2
+    mov dil, '-'
+    call out_byte
+    mov edi, [dt_day]
+    call out_u2
+    mov dil, ' '
+    call out_byte
+    mov edi, [dt_hour]
+    call out_u2
+    mov dil, ':'
+    call out_byte
+    mov edi, [dt_min]
+    call out_u2
+    mov dil, ':'
+    call out_byte
+    mov edi, [dt_sec]
+    call out_u2
+    mov dil, 10
+    call out_byte
+    jmp xexit
+.uphum:
     ; human: "up X days, Y hours, Z minutes"
     lea rsi, [s_up]
     call out_str
@@ -4065,7 +4415,44 @@ nice_main:
     je .nhelp
     cmp eax, 5
     je .nver
+    test eax, eax
+    jle .nadj
     call apply_mod
+    inc r14
+    jmp .nparse
+.nadj:
+    push rdi
+    lea rsi, [s_adjustment]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jz .nadjarg
+    ; adjustment=
+    mov rsi, rdi
+.nfeq:
+    cmp byte [rsi], 0
+    je .nskip
+    cmp byte [rsi], '='
+    je .nfeqv
+    inc rsi
+    jmp .nfeq
+.nfeqv:
+    inc rsi
+    mov rdi, rsi
+    call parse_i64
+    mov [nice_adj], eax
+    inc r14
+    jmp .nparse
+.nadjarg:
+    inc r14
+    cmp r14, r12
+    jge .nerr
+    mov rdi, [r13+r14*8]
+    call parse_i64
+    mov [nice_adj], eax
+    inc r14
+    jmp .nparse
+.nskip:
     inc r14
     jmp .nparse
 .ncmd:
@@ -4311,6 +4698,8 @@ timeout_main:
     je .tsv
     cmp al, 'p'
     je .tsp
+    cmp al, 'f'
+    je .tsf
     cmp al, 's'
     je .tsig_from_cluster
     cmp al, 'k'
@@ -4323,6 +4712,10 @@ timeout_main:
     jmp .tsflags
 .tsp:
     or dword [flags], F_TO_PRESERVE
+    inc rdi
+    jmp .tsflags
+.tsf:
+    or dword [flags], F_TO_FG
     inc rdi
     jmp .tsflags
 .tsflags_done:
@@ -4411,7 +4804,7 @@ timeout_main:
     mov rsi, rdi
     add rsi, 2
     cmp dword [rsi], 'sign'
-    jne .tlong_mod
+    jne .tlong_fg
     cmp word [rsi+4], 'al'
     jne .tlong_mod
     cmp byte [rsi+6], 0
@@ -4426,13 +4819,27 @@ timeout_main:
     jge .terr
     mov rdi, [r13+r14*8]
     jmp .tsig_parse
+.tlong_fg:
+    push rdi
+    add rdi, 2
+    lea rsi, [s_foreground]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .tlong_mod
+    or dword [flags], F_TO_FG
+    inc r14
+    jmp .tparse
 .tlong_mod:
     call parse_mod
     cmp eax, 4
     je .thelp
     cmp eax, 5
     je .tver
+    test eax, eax
+    jle .tlong_skip
     call apply_mod
+.tlong_skip:
     inc r14
     jmp .tparse
 .tsig:
@@ -4523,27 +4930,69 @@ timeout_main:
     js .terr
     jz .tchild
     mov r15, rax                    ; child pid
-    ; deadline = now + timeout_sec + timeout_nsec
-    mov rax, SYS_clock_gettime
-    mov rdi, CLOCK_MONOTONIC
-    lea rsi, [ts_buf]
+    xor ebx, ebx                    ; 0=not signaled yet
+    ; Fast path: pidfd_open + poll (wakes immediately when child exits)
+    mov rax, SYS_pidfd_open
+    mov rdi, r15
+    xor rsi, rsi
     syscall
-    mov rax, [ts_buf]
-    add rax, [timeout_sec]
-    mov rcx, [ts_buf+8]
-    add rcx, [timeout_nsec]
-    cmp rcx, 1000000000
-    jb .tdl_ok
-    sub rcx, 1000000000
-    inc rax
-.tdl_ok:
-    mov [deadline_ts], rax
-    mov [deadline_ts+8], rcx
-    ; optional kill-after absolute time (after first signal)
-    mov qword [kill_after_ts], 0
-    xor ebx, ebx                    ; 0=not yet signaled, 1=signaled
-.tloop:
-    ; poll wait
+    cmp rax, -4096
+    jae .tfallback
+    mov r14, rax                    ; pidfd
+    ; timeout_ms = sec*1000 + nsec/1e6 (saturate to INT_MAX-ish)
+    mov rax, [timeout_sec]
+    mov rcx, 1000
+    mul rcx                         ; rdx:rax
+    test rdx, rdx
+    jnz .tms_big
+    mov rcx, [timeout_nsec]
+    mov rdx, 1000000
+    push rax
+    mov rax, rcx
+    xor rdx, rdx
+    mov rcx, 1000000
+    div rcx                         ; rax = nsec/1e6
+    pop rcx
+    add rax, rcx
+    jmp .tms_ok
+.tms_big:
+    mov rax, 0x7fffffff
+.tms_ok:
+    ; pollfd { fd, events=POLLIN=1, revents=0 }
+    sub rsp, 8
+    mov dword [rsp], r14d
+    mov word [rsp+4], 1             ; POLLIN
+    mov word [rsp+6], 0
+    mov rdx, rax                    ; timeout ms
+    mov rax, SYS_poll
+    mov rdi, rsp
+    mov rsi, 1
+    syscall
+    add rsp, 8
+    push rax                        ; poll result
+    ; close pidfd
+    mov rdi, r14
+    mov rax, SYS_close
+    syscall
+    pop rax
+    test rax, rax
+    jg .treap_block                 ; child ready
+    jz .ttimeout                    ; timed out
+    ; poll error → fall through to blocking wait
+.treap_block:
+    sub rsp, 16
+    mov rdi, r15
+    mov rsi, rsp
+    xor rdx, rdx                    ; blocking
+    xor r10, r10
+    mov rax, SYS_wait4
+    syscall
+    cmp rax, 0
+    jg .treaped
+    add rsp, 16
+    jmp .t124
+.tfallback:
+    ; no pidfd: single blocking wait4 (no timeout enforcement) after brief try
     sub rsp, 16
     mov rdi, r15
     mov rsi, rsp
@@ -4554,52 +5003,55 @@ timeout_main:
     cmp rax, 0
     jg .treaped
     add rsp, 16
-    ; check time
-    mov rax, SYS_clock_gettime
-    mov rdi, CLOCK_MONOTONIC
-    lea rsi, [ts_buf]
+    ; short 1ms spins then treat as timeout if duration was 0? else nanosleep duration
+    mov rax, [timeout_sec]
+    or rax, [timeout_nsec]
+    jz .ttimeout
+    mov rax, [timeout_sec]
+    mov [timespec_sl], rax
+    mov rax, [timeout_nsec]
+    mov [timespec_sl+8], rax
+    mov rax, SYS_nanosleep
+    lea rdi, [timespec_sl]
+    xor rsi, rsi
     syscall
-    mov rax, [ts_buf]
-    cmp rax, [deadline_ts]
-    jb .tsleep
-    ja .ttimeout
-    ; same second — compare nsec
-    mov rax, [ts_buf+8]
-    cmp rax, [deadline_ts+8]
-    jb .tsleep
+    ; after sleep, check child
+    sub rsp, 16
+    mov rdi, r15
+    mov rsi, rsp
+    mov rdx, WNOHANG
+    xor r10, r10
+    mov rax, SYS_wait4
+    syscall
+    cmp rax, 0
+    jg .treaped
+    add rsp, 16
 .ttimeout:
     test ebx, ebx
     jnz .tkill9
-    ; verbose diagnose
     test dword [flags], F_TO_VERB
     jz .tsig_send
     call timeout_verbose_msg
 .tsig_send:
-    ; first signal
     mov rax, SYS_kill
     mov rdi, r15
     mov esi, [kill_sig]
     syscall
     mov ebx, 1
-    ; if -k, set second deadline
     mov rax, [timeout_kill]
     test rax, rax
     jz .tforce_wait
-    mov rcx, [ts_buf]
-    add rcx, rax
-    mov [kill_after_ts], rcx
-    mov rax, [ts_buf+8]
-    mov [kill_after_ts+8], rax
-    ; extend deadline to kill_after
-    mov rax, [kill_after_ts]
-    mov [deadline_ts], rax
-    mov rax, [kill_after_ts+8]
-    mov [deadline_ts+8], rax
-    jmp .tsleep
+    ; -k N: sleep N seconds then KILL
+    mov [timespec_sl], rax
+    mov qword [timespec_sl+8], 0
+    mov rax, SYS_nanosleep
+    lea rdi, [timespec_sl]
+    xor rsi, rsi
+    syscall
+    jmp .tkill9
 .tforce_wait:
-    ; no -k: wait a bit then KILL if still alive
     mov qword [timespec_sl], 0
-    mov qword [timespec_sl+8], 100000000  ; 0.1s
+    mov qword [timespec_sl+8], 10000000   ; 10ms
     mov rax, SYS_nanosleep
     lea rdi, [timespec_sl]
     xor rsi, rsi
@@ -4618,7 +5070,6 @@ timeout_main:
     syscall
     mov eax, [rsp]
     add rsp, 16
-    ; default exit 124; --preserve-status uses child status
     test dword [flags], F_TO_PRESERVE
     jz .t124
     mov ecx, eax
@@ -4634,14 +5085,6 @@ timeout_main:
     add eax, 128
     mov [g_exit], eax
     jmp xexit
-.tsleep:
-    mov qword [timespec_sl], 0
-    mov qword [timespec_sl+8], 50000000   ; 50ms
-    mov rax, SYS_nanosleep
-    lea rdi, [timespec_sl]
-    xor rsi, rsi
-    syscall
-    jmp .tloop
 .treaped:
     mov eax, [rsp]
     add rsp, 16
@@ -4654,7 +5097,6 @@ timeout_main:
     mov [g_exit], eax
     jmp xexit
 .tsigexit:
-    ; killed by signal — timeout without --preserve-status → 124
     test ebx, ebx
     jz .tnatural_sig
     test dword [flags], F_TO_PRESERVE
@@ -4802,10 +5244,10 @@ kill_main:
     jne .ks_or_sig
     cmp byte [rdi+2], 0
     jne .ks_or_sig
-    ; -l list
-    lea rsi, [sig_list]
-    call out_str
-    jmp xexit
+    ; -l [SIGNAL]...
+    or dword [who_flags], 1          ; reuse as list-mode flag for kill
+    inc r14
+    jmp .kparse
 .ks_or_sig:
     ; -s SIGNAL
     cmp byte [rdi+1], 's'
@@ -4859,10 +5301,48 @@ kill_main:
     je .khelp
     cmp eax, 5
     je .kver
+    test eax, eax
+    jle .klspec
     call apply_mod
     inc r14
     jmp .kparse
+.klspec:
+    push rdi
+    lea rsi, [s_list]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .klsig
+    or dword [who_flags], 1
+    inc r14
+    jmp .kparse
+.klsig:
+    push rdi
+    lea rsi, [s_signal]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jz .klsigarg
+    cmp dword [rdi], 'sign'
+    jne .klskip
+    cmp word [rdi+4], 'al'
+    jne .klskip
+    cmp byte [rdi+6], '='
+    jne .klskip
+    lea rdi, [rdi+7]
+    jmp .ks_parse
+.klsigarg:
+    inc r14
+    cmp r14, r12
+    jge .kerr
+    mov rdi, [r13+r14*8]
+    jmp .ks_parse
+.klskip:
+    inc r14
+    jmp .kparse
 .kpid:
+    test dword [who_flags], 1
+    jnz .klist_one
     mov ebx, 1
     call parse_u64
     push rax
@@ -4876,7 +5356,44 @@ kill_main:
 .knxt:
     inc r14
     jmp .kparse
+.klist_one:
+    mov ebx, 1
+    cmp byte [rdi], '0'
+    jb .klist_name
+    cmp byte [rdi], '9'
+    ja .klist_name
+    call parse_u64
+    mov edi, eax
+    call kill_num_to_name
+    mov rsi, rax
+    call out_str
+    mov dil, 10
+    call out_byte
+    inc r14
+    jmp .kparse
+.klist_name:
+    call sig_name_to_num
+    cmp eax, -1
+    je .klist_bad
+    mov edi, eax
+    call out_u64
+    mov dil, 10
+    call out_byte
+    inc r14
+    jmp .kparse
+.klist_bad:
+    mov dword [g_exit], 1
+    inc r14
+    jmp .kparse
 .kdo:
+    test dword [who_flags], 1
+    jz .kdo_kill
+    test ebx, ebx
+    jnz xexit
+    lea rsi, [sig_list]
+    call out_str
+    jmp xexit
+.kdo_kill:
     test ebx, ebx
     jnz xexit
 .kerr:
@@ -4891,6 +5408,26 @@ kill_main:
     lea rsi, [v_kill]
     call out_str
     jmp xexit
+
+kill_num_to_name:
+    push rbx
+    lea rbx, [sig_table]
+.knlp:
+    mov rax, [rbx]
+    test rax, rax
+    jz .knunk
+    cmp edi, [rbx+8]
+    je .kngot
+    add rbx, 16
+    jmp .knlp
+.kngot:
+    mov rax, [rbx]
+    pop rbx
+    ret
+.knunk:
+    lea rax, [unknown_str]
+    pop rbx
+    ret
 
 ; rdi=name → eax=signum or -1
 sig_name_to_num:

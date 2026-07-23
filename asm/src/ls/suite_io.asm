@@ -154,6 +154,7 @@ s_sep:  db "separator", 0
 s_eqw:  db "equal-width", 0
 s_append: db "append", 0
 s_ignint: db "ignore-interrupts", 0
+s_outerr: db "output-error", 0
 s_logical: db "logical", 0
 s_physical: db "physical", 0
 s_auto: db "auto", 0
@@ -1787,6 +1788,8 @@ seq_print_width:
 
 ; seq_emit_num: rdi=value
 seq_emit_num:
+    cmp qword [fmt_ptr], 0
+    jne seq_emit_fmt
     test dword [mode], M_EQW
     jz .plain
     mov ecx, [seq_width]
@@ -1794,6 +1797,128 @@ seq_emit_num:
     ret
 .plain:
     call out_i64
+    ret
+
+; seq_emit_fmt: rdi=value using [fmt_ptr] printf-style (integer common cases)
+seq_emit_fmt:
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    mov r12, rdi
+    mov r13, [fmt_ptr]
+.flp:
+    movzx eax, byte [r13]
+    test al, al
+    jz .fdone
+    cmp al, '%'
+    je .fspec
+    mov dil, al
+    call out_byte
+    inc r13
+    jmp .flp
+.fspec:
+    inc r13
+    cmp byte [r13], '%'
+    jne .fparse
+    mov dil, '%'
+    call out_byte
+    inc r13
+    jmp .flp
+.fparse:
+    xor r14d, r14d
+    xor r15d, r15d
+    cmp byte [r13], '0'
+    jne .fwidth
+    or r15d, 1
+    inc r13
+.fwidth:
+    movzx eax, byte [r13]
+    cmp al, '0'
+    jb .fprec
+    cmp al, '9'
+    ja .fprec
+    imul r14d, 10
+    sub al, '0'
+    add r14d, eax
+    inc r13
+    jmp .fwidth
+.fprec:
+    xor ebx, ebx
+    cmp byte [r13], '.'
+    jne .fconv
+    inc r13
+.fpd:
+    movzx eax, byte [r13]
+    cmp al, '0'
+    jb .fconv
+    cmp al, '9'
+    ja .fconv
+    imul ebx, 10
+    sub al, '0'
+    add ebx, eax
+    inc r13
+    jmp .fpd
+.fconv:
+    movzx eax, byte [r13]
+    test al, al
+    jz .fdone
+    inc r13
+    cmp al, 'd'
+    je .fint
+    cmp al, 'i'
+    je .fint
+    cmp al, 'u'
+    je .fint
+    cmp al, 'g'
+    je .fint
+    cmp al, 'G'
+    je .fint
+    cmp al, 'f'
+    je .ffloat
+    cmp al, 'e'
+    je .ffloat
+    cmp al, 'E'
+    je .ffloat
+    mov dil, '%'
+    call out_byte
+    mov dil, al
+    call out_byte
+    jmp .flp
+.fint:
+    test r15d, 1
+    jz .fint_plain
+    test r14d, r14d
+    jz .fint_plain
+    mov rdi, r12
+    mov ecx, r14d
+    call out_i64_zw
+    jmp .flp
+.fint_plain:
+    mov rdi, r12
+    call out_i64
+    jmp .flp
+.ffloat:
+    mov rdi, r12
+    call out_i64
+    mov dil, '.'
+    call out_byte
+    test ebx, ebx
+    jnz .ffz
+    mov ebx, 6
+.ffz:
+    mov dil, '0'
+    call out_byte
+    dec ebx
+    jg .ffz
+    jmp .flp
+.fdone:
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
     ret
 
 ; ===================== WC =====================
@@ -3443,41 +3568,37 @@ head_lines_neg:
     ; after finishing, complete count = t_count (the starts that began a now-finished line)
     cmp r8, r13
     jbe .push
-    ; emit line starting at t_off[0] through t_off[1]-1
+    ; emit oldest complete line; preserve scan rsi across out_strn/memmove
+    push rsi
+    push rdi
+    push rbx
+    push r15
     mov rax, [t_off]
     mov rdx, [t_off+8]
     sub rdx, rax
     lea rsi, [buf+rax]
-    push rdi
-    push rbx
-    push r15
     call out_strn
-    pop r15
-    pop rbx
-    pop rdi
-    ; shift t_off
-    push rdi
-    push rbx
     lea rdi, [t_off]
     lea rsi, [t_off+8]
     mov rdx, [t_count]
     dec rdx
     shl rdx, 3
     call memmove
+    pop r15
     pop rbx
     pop rdi
+    pop rsi
     dec qword [t_count]
 .push:
     mov rcx, [t_count]
     cmp rcx, 4096
-    jae .drop
-    mov rax, rbx
-    sub rax, buf
+    jae .tn1
+    lea rax, [rbx]
+    lea rcx, [buf]
+    sub rax, rcx
+    mov rcx, [t_count]
     mov [t_off+rcx*8], rax
     inc qword [t_count]
-    jmp .tn1
-.drop:
-    ; shouldn't happen if we emit
 .tn1:
     inc rsi
     jmp .tscan
@@ -4485,8 +4606,18 @@ tee_main:
     call strcmp
     pop rdi
     test eax, eax
-    jnz .tlmod
+    jnz .tloe
     or dword [mode], M_IGNINT
+    jmp .ten
+.tloe:
+    push rdi
+    add rdi, 2
+    lea rsi, [s_outerr]
+    call long_match
+    pop rdi
+    cmp eax, 2
+    je .tlmod
+    or dword [mode], M_PIPEM
     jmp .ten
 .tlmod:
     call parse_mod

@@ -48,11 +48,24 @@ extern g_envp
 %define F_REF     8388608    ; chmod/touch --reference
 %define F_RECURSE 16777216   ; chmod -R
 %define F_SELCTX  33554432   ; mkdir -Z
+%define F_TRAV_H  67108864   ; -H traverse CLI symlink dirs
+%define F_TRAV_L  134217728  ; -L traverse all symlink dirs
+%define F_TRAV_P  268435456  ; -P never traverse symlink dirs
+%define F_PRESROOT 536870912 ; --preserve-root
+%define F_NOPRESROOT 1073741824 ; --no-preserve-root
+; opt_extra bits (shared)
+%define F_PATH_P    1        ; pathchk -p
+%define F_PATH_P2   2        ; pathchk -P
+%define F_SYNC_DATA 4        ; sync -d
+%define F_SYNC_FS   8        ; sync -f
+%define F_TRUNC_NC  16       ; truncate -c
+%define F_TRUNC_IO  32       ; truncate -o
+%define F_TRUNC_REF 64       ; truncate -r
 
 section .bss
 alignb 8
 flags:       resd 1
-opt_extra:   resd 1          ; bit0=null sep
+opt_extra:   resd 1          ; bit0=null sep; pathchk/sync/trunc bits
 npaths:      resq 1
 paths:       resq 128
 path_a:      resq 1
@@ -60,6 +73,7 @@ path_b:      resq 1
 num_sz:      resq 1
 mode_val:    resd 1
 mode_sym:    resq 1          ; ptr to symbolic mode string (0=octal)
+chmod_depth: resq 1
 env_count:   resq 1
 env_ptrs:    resq 256
 env_nunset:  resq 1
@@ -174,6 +188,8 @@ msg_chmod_v: db "mode of '",0
 msg_chmod_chg: db "' changed from ",0
 msg_chmod_to: db " to ",0
 msg_chmod_ret: db "' retained as ",0
+msg_chmod_root: db "f00-chmod: it is dangerous to operate recursively on '/'",10
+    db "f00-chmod: use --no-preserve-root to override this failsafe",10,0
 msg_qend: db "'",10,0
 msg_env_chdir: db "env: chdir ",0
 msg_env_exec: db "env: exec ",0
@@ -3610,10 +3626,33 @@ pathchk_main:
     je .carg
     cmp byte [rdi+1], '-'
     je .clong
+    inc rdi
+.cs:
+    mov al, [rdi]
+    test al, al
+    jz .cnopt
+    cmp al, 'p'
+    je .cpp
+    cmp al, 'P'
+    je .cpP
+    jmp .csi
+.cpp: or dword [opt_extra], F_PATH_P
+    jmp .csi
+.cpP: or dword [opt_extra], F_PATH_P2
+.csi: inc rdi
+    jmp .cs
+.cnopt:
     inc r14
     jmp .cp
 .clong:
     add rdi, 2
+    ; --portability
+    cmp dword [rdi], 'port'
+    jne .cmod
+    or dword [opt_extra], F_PATH_P | F_PATH_P2
+    inc r14
+    jmp .cp
+.cmod:
     call parse_mod
     cmp eax, 4
     je .ch
@@ -3644,11 +3683,64 @@ pathchk_main:
     cmp rbx, [npaths]
     jae .cjson
     mov rdi, [paths + rbx*8]
+    ; -P: empty name
     cmp byte [rdi], 0
     je .cbad
+    ; -P: leading -
+    test dword [opt_extra], F_PATH_P2
+    jz .clen
+    cmp byte [rdi], '-'
+    je .cbad
+.clen:
     call strlen
     cmp rax, 4096
     ja .cbad
+    ; -p: POSIX portable charset + component length <= 14, total <= 255
+    test dword [opt_extra], F_PATH_P
+    jz .cbasic
+    cmp rax, 255
+    ja .cbad
+    mov rsi, [paths + rbx*8]
+    xor ecx, ecx                    ; component length
+.cpcl:
+    movzx eax, byte [rsi]
+    test al, al
+    jz .cpok_comp
+    cmp al, '/'
+    je .cpc_slash
+    inc ecx
+    cmp ecx, 14
+    ja .cbad
+    ; portable: A-Za-z0-9._-
+    cmp al, '.'
+    je .cpc_ok
+    cmp al, '_'
+    je .cpc_ok
+    cmp al, '-'
+    je .cpc_ok
+    cmp al, '0'
+    jb .cbad
+    cmp al, '9'
+    jbe .cpc_ok
+    cmp al, 'A'
+    jb .cbad
+    cmp al, 'Z'
+    jbe .cpc_ok
+    cmp al, 'a'
+    jb .cbad
+    cmp al, 'z'
+    jbe .cpc_ok
+    jmp .cbad
+.cpc_ok:
+    inc rsi
+    jmp .cpcl
+.cpc_slash:
+    xor ecx, ecx
+    inc rsi
+    jmp .cpcl
+.cpok_comp:
+    jmp .cpok
+.cbasic:
     mov rsi, [paths + rbx*8]
 .ccl:
     movzx eax, byte [rsi]
@@ -4317,6 +4409,7 @@ section .text
 
 ; ===================== SYNC =====================
 sync_main:
+    push rbx
     push r12
     push r13
     push r14
@@ -4324,18 +4417,51 @@ sync_main:
     mov r13, rsi
     call init_io
     mov r14, 1
+    mov qword [npaths], 0
 .sp:
     cmp r14, r12
     jge .sdo
     mov rdi, [r13 + r14*8]
     cmp byte [rdi], '-'
-    jne .sdo
+    jne .sarg
+    cmp byte [rdi+1], 0
+    je .sarg
     cmp byte [rdi+1], '-'
     je .slong
-    inc r14
+    inc rdi
+.ss:
+    mov al, [rdi]
+    test al, al
+    jz .sn
+    cmp al, 'd'
+    je .sd
+    cmp al, 'f'
+    je .sf
+    jmp .si
+.sd: or dword [opt_extra], F_SYNC_DATA
+    jmp .si
+.sf: or dword [opt_extra], F_SYNC_FS
+.si: inc rdi
+    jmp .ss
+.sn: inc r14
     jmp .sp
 .slong:
     add rdi, 2
+    cmp dword [rdi], 'data'
+    jne .sfs
+    cmp byte [rdi+4], 0
+    jne .sfs
+    or dword [opt_extra], F_SYNC_DATA
+    inc r14
+    jmp .sp
+.sfs:
+    ; --file-system
+    cmp dword [rdi], 'file'
+    jne .smod
+    or dword [opt_extra], F_SYNC_FS
+    inc r14
+    jmp .sp
+.smod:
     call parse_mod
     cmp eax, 4
     je .sh
@@ -4344,9 +4470,63 @@ sync_main:
     call apply_mod
     inc r14
     jmp .sp
+.sarg:
+    mov rax, [npaths]
+    cmp rax, 127
+    jae .sn2
+    mov [paths + rax*8], rdi
+    inc qword [npaths]
+.sn2: inc r14
+    jmp .sp
 .sdo:
+    cmp qword [npaths], 0
+    jne .sfiles
     mov rax, SYS_sync
     syscall
+    jmp .sjson
+.sfiles:
+    xor ebx, ebx
+.sit:
+    cmp rbx, [npaths]
+    jae .sjson
+    mov rdi, [paths + rbx*8]
+    mov rax, SYS_openat
+    mov rsi, rdi
+    mov rdi, AT_FDCWD
+    mov rdx, O_RDONLY
+    xor r10, r10
+    syscall
+    cmp rax, -4096
+    jae .serr
+    mov r14, rax
+    test dword [opt_extra], F_SYNC_FS
+    jnz .sfsync
+    test dword [opt_extra], F_SYNC_DATA
+    jnz .sdata
+    mov rax, SYS_fsync
+    mov rdi, r14
+    syscall
+    jmp .sclose
+.sdata:
+    mov rax, SYS_fdatasync
+    mov rdi, r14
+    syscall
+    jmp .sclose
+.sfsync:
+    mov rax, SYS_syncfs
+    mov rdi, r14
+    syscall
+.sclose:
+    mov rdi, r14
+    mov rax, SYS_close
+    syscall
+    jmp .snxt
+.serr:
+    mov dword [g_exit], 1
+.snxt:
+    inc rbx
+    jmp .sit
+.sjson:
     test dword [flags], F_JSON
     jz xexit
     lea rdi, [nm_sync]
@@ -4407,7 +4587,7 @@ truncate_main:
     cmp byte [rdi+1], '-'
     je .tlong
     cmp byte [rdi+1], 's'
-    jne .tother
+    jne .tc
     cmp byte [rdi+2], 0
     jne .tsame
     inc r14
@@ -4424,6 +4604,40 @@ truncate_main:
     mov r15d, 1
     inc r14
     jmp .tp
+.tc:
+    cmp byte [rdi+1], 'c'
+    jne .to
+    or dword [opt_extra], F_TRUNC_NC
+    inc r14
+    jmp .tp
+.to:
+    cmp byte [rdi+1], 'o'
+    jne .tr
+    or dword [opt_extra], F_TRUNC_IO
+    inc r14
+    jmp .tp
+.tr:
+    cmp byte [rdi+1], 'r'
+    jne .tother
+    cmp byte [rdi+2], 0
+    jne .trsame
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13 + r14*8]
+    call path_size
+    cmp rax, -1
+    je die1
+    mov [num_sz], rax
+    mov dword [size_mode], 0
+    mov r15d, 1
+    or dword [opt_extra], F_TRUNC_REF
+    inc r14
+    jmp .tp
+.trsame:
+    ; -rRFILE form rare; skip
+    inc r14
+    jmp .tp
 .tother:
     inc r14
     jmp .tp
@@ -4434,12 +4648,63 @@ truncate_main:
     call strcmp
     pop rdi
     test eax, eax
-    jnz .tm
+    jnz .tnc
     inc r14
     cmp r14, r12
     jge die1
     mov rdi, [r13 + r14*8]
     call parse_size_arg
+    mov r15d, 1
+    inc r14
+    jmp .tp
+.tnc:
+    push rdi
+    lea rsi, [s_no_create]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .tio
+    or dword [opt_extra], F_TRUNC_NC
+    inc r14
+    jmp .tp
+.tio:
+    ; --io-blocks
+    cmp dword [rdi], 'io-b'
+    jne .tref
+    or dword [opt_extra], F_TRUNC_IO
+    inc r14
+    jmp .tp
+.tref:
+    mov rsi, rdi
+    cmp dword [rsi], 'refe'
+    jne .tm
+    cmp dword [rsi+4], 'renc'
+    jne .tm
+    cmp byte [rsi+8], 'e'
+    jne .tm
+    cmp byte [rsi+9], 0
+    je .tref_a
+    cmp byte [rsi+9], '='
+    jne .tm
+    lea rdi, [rsi+10]
+    call path_size
+    cmp rax, -1
+    je die1
+    mov [num_sz], rax
+    mov dword [size_mode], 0
+    mov r15d, 1
+    inc r14
+    jmp .tp
+.tref_a:
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13 + r14*8]
+    call path_size
+    cmp rax, -1
+    je die1
+    mov [num_sz], rax
+    mov dword [size_mode], 0
     mov r15d, 1
     inc r14
     jmp .tp
@@ -4517,10 +4782,23 @@ truncate_main:
     jne .terr
     mov r8, [num_sz]
 .tabs:
+    ; -o: size is IO blocks * blksize (use 512 default)
+    test dword [opt_extra], F_TRUNC_IO
+    jz .topen
+    mov rax, r8
+    mov rcx, 512
+    mul rcx
+    mov r8, rax
+.topen:
+    mov eax, O_WRONLY | O_CREAT | O_CLOEXEC
+    test dword [opt_extra], F_TRUNC_NC
+    jz .tflags
+    mov eax, O_WRONLY | O_CLOEXEC   ; no create
+.tflags:
+    mov rdx, rax
     mov rax, SYS_openat
     mov rdi, AT_FDCWD
     mov rsi, [paths + rbx*8]
-    mov rdx, O_WRONLY | O_CREAT | O_CLOEXEC
     mov r10, 0o644
     syscall
     cmp rax, -4096
@@ -5267,8 +5545,23 @@ chmod_main:
     or dword [flags], F_NOFOLLOW
     jmp .h2
 .hR: cmp al, 'R'
-    jne .h2
+    jne .hH
     or dword [flags], F_RECURSE
+    jmp .h2
+.hH: cmp al, 'H'
+    jne .hL
+    and dword [flags], ~(F_TRAV_L|F_TRAV_P)
+    or dword [flags], F_TRAV_H
+    jmp .h2
+.hL: cmp al, 'L'
+    jne .hP
+    and dword [flags], ~(F_TRAV_H|F_TRAV_P)
+    or dword [flags], F_TRAV_L
+    jmp .h2
+.hP: cmp al, 'P'
+    jne .h2
+    and dword [flags], ~(F_TRAV_H|F_TRAV_L)
+    or dword [flags], F_TRAV_P
 .h2: inc rdi
     jmp .hs
 .hnopt:
@@ -5381,6 +5674,8 @@ chmod_main:
     pop rdi
     test eax, eax
     jnz .hnopres
+    or dword [flags], F_PRESROOT
+    and dword [flags], ~F_NOPRESROOT
     inc r14
     jmp .hp
 .hnopres:
@@ -5390,6 +5685,8 @@ chmod_main:
     pop rdi
     test eax, eax
     jnz .hmod
+    or dword [flags], F_NOPRESROOT
+    and dword [flags], ~F_PRESROOT
     inc r14
     jmp .hp
 .hmod:
@@ -5439,6 +5736,13 @@ chmod_main:
     call err_missing_operand
     jmp xexit
 .hok2:
+    ; default traverse -H when recursive and none set
+    test dword [flags], F_RECURSE
+    jz .htravset
+    test dword [flags], F_TRAV_L | F_TRAV_H | F_TRAV_P
+    jnz .htravset
+    or dword [flags], F_TRAV_H
+.htravset:
     test dword [flags], F_REF
     jz .hnoref
     mov rdi, [ref_ptr]
@@ -5458,6 +5762,22 @@ chmod_main:
     cmp rbx, [npaths]
     jae .hjson
     mov rdi, [paths + rbx*8]
+    test dword [flags], F_RECURSE
+    jz .hdoit
+    test dword [flags], F_NOPRESROOT
+    jnz .hdoit
+    push rdi
+    lea rsi, [slash]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .hdoit
+    lea rsi, [msg_chmod_root]
+    call err_str
+    mov dword [g_exit], 1
+    jmp .hok
+.hdoit:
+    mov qword [chmod_depth], 0
     call chmod_path
     test eax, eax
     jz .hok
@@ -5494,6 +5814,19 @@ chmod_main:
 ; is_dir_nofollow: rdi=path → eax=1 if directory (not via symlink)
 is_dir_nofollow:
     call path_lstat_mode
+    test eax, eax
+    jz .no
+    and eax, S_IFMT
+    cmp eax, S_IFDIR
+    jne .no
+    mov eax, 1
+    ret
+.no: xor eax, eax
+    ret
+
+; is_dir: follows symlinks
+is_dir:
+    call path_mode
     test eax, eax
     jz .no
     and eax, S_IFMT
@@ -5717,9 +6050,8 @@ chmod_one:
     pop rbx
     ret
 
-; chmod_path: rdi=path → eax=0 ok (any failure → 1)
-; With F_RECURSE: post-order walk (children first, then self) so restrictive
-; modes on directories do not block descent. Does not recurse into symlink dirs.
+; chmod_path: rdi=path → eax=0 ok
+; F_RECURSE post-order; -H/-L/-P control symlink-dir traversal
 chmod_path:
     push rbx
     push r12
@@ -5727,14 +6059,33 @@ chmod_path:
     push r14
     push r15
     mov r12, rdi
-    xor r13d, r13d                  ; accumulated error
+    xor r13d, r13d
     test dword [flags], F_RECURSE
     jz .one
     mov rdi, r12
-    call is_dir_nofollow
+    call path_lstat_mode
     test eax, eax
     jz .one
-    ; open directory
+    mov ebx, eax
+    and eax, S_IFMT
+    cmp eax, S_IFDIR
+    je .enter
+    cmp eax, S_IFLNK
+    jne .one
+    test dword [flags], F_TRAV_P
+    jnz .one
+    test dword [flags], F_TRAV_L
+    jnz .follow
+    test dword [flags], F_TRAV_H
+    jz .one
+    cmp qword [chmod_depth], 0
+    jne .one
+.follow:
+    mov rdi, r12
+    call is_dir
+    test eax, eax
+    jz .one
+.enter:
     mov rax, SYS_openat
     mov rdi, AT_FDCWD
     mov rsi, r12
@@ -5742,9 +6093,9 @@ chmod_path:
     xor r10, r10
     syscall
     cmp rax, -4096
-    jae .one                        ; can't open: still try chmod self
-    mov r14, rax                    ; fd
-    sub rsp, 12288                  ; path(4k) + dents(8k)
+    jae .one
+    mov r14, rax
+    sub rsp, 12288
 .rd:
     mov rax, SYS_getdents64
     mov rdi, r14
@@ -5759,10 +6110,10 @@ chmod_path:
     cmp rbx, r15
     jae .rd
     lea r9, [rsp+4096+rbx]
-    movzx r10d, word [r9+16]        ; d_reclen
+    movzx r10d, word [r9+16]
     test r10d, r10d
     jz .cl
-    lea r11, [r9+19]                ; d_name
+    lea r11, [r9+19]
     cmp byte [r11], '.'
     jne .okn
     cmp byte [r11+1], 0
@@ -5773,7 +6124,6 @@ chmod_path:
     je .nd
 .okn:
     push r10
-    ; join r12 + name → stack path
     lea rdi, [rsp+8]
     mov rsi, r12
     call strcpy_local
@@ -5796,7 +6146,9 @@ chmod_path:
     mov rsi, r11
     call strcpy_local
     lea rdi, [rsp+8]
+    inc qword [chmod_depth]
     call chmod_path
+    dec qword [chmod_depth]
     test eax, eax
     jz .chok
     mov r13d, 1

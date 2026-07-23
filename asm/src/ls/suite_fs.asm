@@ -50,6 +50,26 @@ extern ui_rule, ui_bullet, ui_color_use_pct
 %define F_ONEFS   67108864  ; cp -x / rm --one-file-system
 %define F_DIRONLY 134217728 ; rm -d remove empty dirs
 %define F_ARCHIVE 268435456 ; cp -a
+%define F2_BACKUP 1
+%define F2_ATTRONLY 2
+%define F2_RMDEST 4
+%define F2_PARENTS 8
+%define F2_STRIPSL 16
+%define F2_EXCHANGE 32
+%define F2_NOCOPY 64
+%define F2_FOLLOW_H 128
+%define F2_FOLLOW_L 256
+%define F2_PRESROOT 512
+%define F2_NOPRESROOT 1024
+%define F2_LINK_REL 2048
+%define F2_LOGICAL 4096
+%define F2_PHYSICAL 8192
+%define F2_NOFOLLOW 16384
+%define F2_CHANGES 32768
+%define F2_QUIET 65536
+%define F2_DEREF 131072
+%define F2_FSSTAT 262144
+%define F2_TERSE 524288
 
 %define STX_ATIME_NSEC 72
 %define STX_BTIME_NSEC 88
@@ -61,10 +81,15 @@ extern ui_rule, ui_bullet, ui_color_use_pct
 section .bss
 alignb 8
 flags: resd 1
+flags2: resd 1
+backup_suf: resq 1
+prompt_buf: resb 16
+ref_path: resq 1
 opt_mode: resd 1
 opt_uid: resd 1
 opt_gid: resd 1
 opt_passes: resq 1
+opt_size: resq 1
 opt_bs: resq 1
 opt_count: resq 1
 opt_depth: resq 1
@@ -126,8 +151,63 @@ dotdot: db "..",0
 s_json: db "json",0
 s_csv: db "csv",0
 s_core: db "core",0
+s_recursive: db "recursive",0
+s_one_fs: db "one-fs",0
+s_verbose: db "verbose",0
 s_help: db "help",0
 s_ver: db "version",0
+s_interactive: db "interactive",0
+s_format: db "format",0
+s_terse: db "terse",0
+s_file_system: db "file-system",0
+def_backup_suf: db "~",0
+msg_prompt_end: db "'? ",0
+msg_overwrite: db "overwrite '",0
+msg_remove: db "remove '",0
+msg_rm_I: db "f00-rm: remove multiple files? ",0
+s_exact: db "exact",0
+s_force: db "force",0
+s_zero: db "zero",0
+s_remove: db "remove",0
+s_iterations: db "iterations",0
+s_no_clobber: db "no-clobber",0
+s_dir: db "dir",0
+s_preserve_root: db "preserve-root",0
+s_no_preserve_root: db "no-preserve-root",0
+s_backup: db "backup",0
+s_suffix: db "suffix",0
+s_update: db "update",0
+s_attributes: db "attributes-only",0
+s_remove_dest: db "remove-destination",0
+s_strip_sl: db "strip-trailing-slashes",0
+s_deref: db "dereference",0
+s_no_deref: db "no-dereference",0
+s_symbolic: db "symbolic",0
+s_link: db "link",0
+s_parents: db "parents",0
+s_exchange: db "exchange",0
+s_no_copy: db "no-copy",0
+s_relative: db "relative",0
+s_logical: db "logical",0
+s_physical: db "physical",0
+s_changes: db "changes",0
+s_quiet: db "quiet",0
+s_silent: db "silent",0
+s_reference: db "reference",0
+s_human: db "human-readable",0
+s_si: db "si",0
+s_all: db "all",0
+s_inodes: db "inodes",0
+s_local: db "local",0
+s_portability: db "portability",0
+s_print_type: db "print-type",0
+s_total: db "total",0
+s_null: db "null",0
+s_bytes: db "bytes",0
+s_apparent: db "apparent-size",0
+s_summarize: db "summarize",0
+s_mode: db "mode",0
+s_context: db "context",0
 s_printf: db "printf=",0
 s_printf2: db "printf",0
 root_path: db "/",0
@@ -175,11 +255,7 @@ jk_ok: db "ok",0
 s_target: db "target-directory",0
 s_target_eq: db "target-directory=",0
 s_no_target: db "no-target-directory",0
-s_verbose: db "verbose",0
-s_one_fs: db "one-file-system",0
 s_archive: db "archive",0
-s_recursive: db "recursive",0
-s_interactive: db "interactive",0
 json_ops_k: db '"ops": [',10,0
 json_ops_end: db 10,'    ]',0
 json_op_o: db '      {',0
@@ -679,9 +755,12 @@ init_fs:
     call out_init
     mov dword [g_exit], 0
     mov dword [flags], 0
+    mov dword [flags2], 0
     mov dword [g_json_core], 0
     mov qword [npaths], 0
     mov dword [opt_mode], 0o755
+    mov dword [opt_uid], -1
+    mov dword [opt_gid], -1
     mov qword [opt_passes], 3
     mov qword [opt_bs], 512
     mov qword [opt_count], -1
@@ -689,6 +768,7 @@ init_fs:
     mov qword [opt_skip], 0
     mov qword [opt_seek], 0
     mov qword [opt_format], 0
+    mov qword [opt_size], -1
     mov qword [dd_if], 0
     mov qword [dd_of], 0
     mov dword [dd_status], 0
@@ -699,10 +779,77 @@ init_fs:
     mov dword [json_ops_open], 0
     mov dword [json_first_op], 1
     mov qword [src_dev], 0
+    lea rax, [def_backup_suf]
+    mov [backup_suf], rax
+    mov qword [ref_path], 0
     mov rdi, 1
     call is_tty
     mov [g_tty], al
     mov [g_color], al
+    ret
+
+; prompt_yn: rdi=msg, rsi=path → eax=1 if y/Y
+prompt_yn:
+    push r12
+    mov r12, rsi
+    push rdi
+    call strlen
+    mov rdx, rax
+    pop rsi
+    mov rax, SYS_write
+    mov rdi, 2
+    syscall
+    mov rdi, r12
+    call strlen
+    mov rdx, rax
+    mov rsi, r12
+    mov rax, SYS_write
+    mov rdi, 2
+    syscall
+    lea rsi, [msg_prompt_end]
+    mov rdx, 3
+    mov rax, SYS_write
+    mov rdi, 2
+    syscall
+    mov rax, SYS_read
+    xor rdi, rdi
+    lea rsi, [prompt_buf]
+    mov rdx, 8
+    syscall
+    cmp rax, 1
+    jl .no
+    mov al, [prompt_buf]
+    or al, 0x20
+    cmp al, 'y'
+    jne .no
+    mov eax, 1
+    pop r12
+    ret
+.no: xor eax, eax
+    pop r12
+    ret
+
+; backup_dest: rdi=path → rename to path+suffix
+backup_dest:
+    push r12
+    mov r12, rdi
+    call path_exists
+    test rax, rax
+    jnz .ok
+    lea rdi, [path_a]
+    mov rsi, r12
+    call strcpy_local
+    lea rdi, [path_a]
+    call strlen
+    lea rdi, [path_a+rax]
+    mov rsi, [backup_suf]
+    call strcpy_local
+    mov rax, SYS_rename
+    mov rdi, r12
+    lea rsi, [path_a]
+    syscall
+.ok: xor eax, eax
+    pop r12
     ret
 
 ; parse common modern flags; rdi=arg → eax: 0=not, 1=json, 2=csv, 3=core, 4=help, 5=ver, -1=unknown
@@ -967,7 +1114,7 @@ join_dest_basename:
     ret
 
 ; ---- copy regular file rdi=src rsi=dst → eax=0 ok ----
-; honors F_NOCL F_FORCE F_PRES
+; honors F_NOCL F_FORCE F_PRES F_INTER F2_BACKUP F2_ATTRONLY F2_RMDEST
 copy_file_one:
     push rbx
     push r12
@@ -976,21 +1123,41 @@ copy_file_one:
     push r15
     mov r12, rdi
     mov r13, rsi
-    ; no-clobber: skip if exists
     test dword [flags], F_NOCL
-    jz .open_src
+    jz .maybe_i
     mov rdi, r13
     call path_exists
     test rax, rax
-    jnz .open_src
-    xor eax, eax                    ; exists + -n → success skip
+    jnz .maybe_i
+    xor eax, eax
     jmp .out
-.open_src:
-    ; force: unlink dest first (ignore errors)
+.maybe_i:
+    test dword [flags], F_INTER
+    jz .maybe_b
+    mov rdi, r13
+    call path_exists
+    test rax, rax
+    jnz .maybe_b
+    lea rdi, [msg_overwrite]
+    mov rsi, r13
+    call prompt_yn
+    test eax, eax
+    jnz .maybe_b
+    xor eax, eax
+    jmp .out
+.maybe_b:
+    test dword [flags2], F2_BACKUP
+    jz .maybe_rm
+    mov rdi, r13
+    call backup_dest
+.maybe_rm:
+    test dword [flags2], F2_RMDEST
+    jnz .do_unl
     test dword [flags], F_FORCE
     jz .do_open
     test dword [flags], F_NOCL
     jnz .do_open
+.do_unl:
     mov rax, SYS_unlink
     mov rdi, r13
     syscall
@@ -1642,6 +1809,10 @@ cp_main:
     je .cl
     cmp al, 'P'
     je .cP
+    cmp al, 'H'
+    je .cH
+    cmp al, 'L'
+    je .cL
     cmp al, 's'
     je .csy
     cmp al, 'u'
@@ -1652,6 +1823,12 @@ cp_main:
     je .cT
     cmp al, 't'
     je .ct
+    cmp al, 'b'
+    je .cb
+    cmp al, 'S'
+    je .cS
+    cmp al, 'Z'
+    je .cinc
     jmp .cinc
 .cr: or dword [flags], F_REC
     jmp .cinc
@@ -1675,6 +1852,15 @@ cp_main:
 .cl: or dword [flags], F_HARD
     jmp .cinc
 .cP: or dword [flags], F_NODEREF
+    and dword [flags2], ~(F2_FOLLOW_H|F2_FOLLOW_L)
+    jmp .cinc
+.cH: and dword [flags], ~F_NODEREF
+    or dword [flags2], F2_FOLLOW_H
+    and dword [flags2], ~F2_FOLLOW_L
+    jmp .cinc
+.cL: and dword [flags], ~F_NODEREF
+    or dword [flags2], F2_FOLLOW_L
+    and dword [flags2], ~F2_FOLLOW_H
     jmp .cinc
 .csy: or dword [flags], F_SYM
     jmp .cinc
@@ -1684,6 +1870,20 @@ cp_main:
     jmp .cinc
 .cT: or dword [flags], F_TREAT
     jmp .cinc
+.cb: or dword [flags2], F2_BACKUP
+    jmp .cinc
+.cS:
+    inc rdi
+    cmp byte [rdi], 0
+    jne .cSset
+    inc r14
+    cmp r14, r12
+    jge die1
+    mov rdi, [r13+r14*8]
+.cSset:
+    mov [backup_suf], rdi
+    or dword [flags2], F2_BACKUP
+    jmp .cn
 .ct: inc rdi
     cmp byte [rdi], 0
     jne .ctset
@@ -1750,8 +1950,174 @@ cp_main:
     call strcmp
     pop rdi
     test eax, eax
-    jnz .clo
+    jnz .clforce
     or dword [flags], F_TREAT
+    inc r14
+    jmp .cparse
+.clforce:
+    push rdi
+    lea rsi, [s_force]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clncl
+    or dword [flags], F_FORCE
+    and dword [flags], ~F_INTER
+    inc r14
+    jmp .cparse
+.clncl:
+    push rdi
+    lea rsi, [s_no_clobber]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clint
+    or dword [flags], F_NOCL
+    and dword [flags], ~F_INTER
+    inc r14
+    jmp .cparse
+.clint:
+    push rdi
+    lea rsi, [s_interactive]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clverb
+    or dword [flags], F_INTER
+    and dword [flags], ~F_NOCL
+    inc r14
+    jmp .cparse
+.clverb:
+    push rdi
+    lea rsi, [s_verbose]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clbak
+    or dword [flags], F_VERB
+    inc r14
+    jmp .cparse
+.clbak:
+    push rdi
+    lea rsi, [s_backup]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clattr
+    or dword [flags2], F2_BACKUP
+    inc r14
+    jmp .cparse
+.clattr:
+    push rdi
+    lea rsi, [s_attributes]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clrmd
+    or dword [flags2], F2_ATTRONLY
+    inc r14
+    jmp .cparse
+.clrmd:
+    push rdi
+    lea rsi, [s_remove_dest]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clstrip
+    or dword [flags2], F2_RMDEST
+    inc r14
+    jmp .cparse
+.clstrip:
+    push rdi
+    lea rsi, [s_strip_sl]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clpar
+    or dword [flags2], F2_STRIPSL
+    inc r14
+    jmp .cparse
+.clpar:
+    push rdi
+    lea rsi, [s_parents]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cllnk
+    or dword [flags2], F2_PARENTS
+    inc r14
+    jmp .cparse
+.cllnk:
+    push rdi
+    lea rsi, [s_link]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clsym
+    or dword [flags], F_HARD
+    inc r14
+    jmp .cparse
+.clsym:
+    push rdi
+    lea rsi, [s_symbolic]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .clacc
+    or dword [flags], F_SYM
+    inc r14
+    jmp .cparse
+.clacc:
+    ; accept remaining long opts (debug, preserve, update, context, reflink, sparse, deref...)
+    mov rsi, rdi
+    cmp dword [rsi], 'pres'
+    je .clok
+    cmp dword [rsi], 'upda'
+    je .clupd
+    cmp dword [rsi], 'dere'
+    je .clder
+    cmp dword [rsi], 'no-d'
+    je .clnder
+    cmp dword [rsi], 'one-'
+    je .cl1fs
+    cmp dword [rsi], 'debu'
+    je .cldbg
+    cmp dword [rsi], 'copy'
+    je .clok
+    cmp dword [rsi], 'refl'
+    je .clok
+    cmp dword [rsi], 'spar'
+    je .clok
+    cmp dword [rsi], 'cont'
+    je .clok
+    cmp dword [rsi], 'keep'
+    je .clok
+    cmp dword [rsi], 'suff'
+    je .clsuf
+    jmp .clo
+.clupd:
+    or dword [flags], F_UPDATE
+    jmp .clok
+.clder:
+    and dword [flags], ~F_NODEREF
+    or dword [flags2], F2_FOLLOW_L
+    jmp .clok
+.clnder:
+    or dword [flags], F_NODEREF
+    jmp .clok
+.cl1fs:
+    or dword [flags], F_ONEFS
+    jmp .clok
+.cldbg:
+    or dword [flags], F_VERB
+    jmp .clok
+.clsuf:
+    cmp byte [rsi+6], '='
+    jne .clok
+    lea rax, [rsi+7]
+    mov [backup_suf], rax
+    or dword [flags2], F2_BACKUP
+.clok:
     inc r14
     jmp .cparse
 .clo:
@@ -3554,22 +3920,42 @@ stat_main:
     je .starg
     cmp byte [rdi+1], '-'
     je .stlong
-    ; short -c FMT
-    cmp byte [rdi+1], 'c'
-    jne .starg
-    cmp byte [rdi+2], 0
+    inc rdi
+.sts:
+    mov al, [rdi]
+    test al, al
+    jz .stn
+    cmp al, 'c'
+    je .stc
+    cmp al, 'L'
+    je .stL
+    cmp al, 'f'
+    je .stfshort
+    cmp al, 't'
+    je .stt
+    jmp .stinc
+.stc:
+    cmp byte [rdi+1], 0
     jne .stcinline
     inc r14
     cmp r14, r12
     jge .sterr
     mov rax, [r13+r14*8]
     mov [opt_format], rax
-    inc r14
-    jmp .stparse
+    jmp .stn
 .stcinline:
-    add rdi, 2
-    mov [opt_format], rdi
-    inc r14
+    lea rax, [rdi+1]
+    mov [opt_format], rax
+    jmp .stn
+.stL: or dword [flags2], F2_DEREF
+    jmp .stinc
+.stfshort: or dword [flags2], F2_FSSTAT
+    jmp .stinc
+.stt: or dword [flags2], F2_TERSE
+    jmp .stinc
+.stinc: inc rdi
+    jmp .sts
+.stn: inc r14
     jmp .stparse
 .stlong:
     ; --printf=FMT or --printf FMT
@@ -3611,12 +3997,74 @@ stat_main:
     jmp .stparse
 .stmod:
     pop rdi
+    add rdi, 2
+    push rdi
+    lea rsi, [s_format]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .stfeq
+    inc r14
+    cmp r14, r12
+    jge .sterr
+    mov rax, [r13+r14*8]
+    mov [opt_format], rax
+    inc r14
+    jmp .stparse
+.stfeq:
+    cmp dword [rdi], 'form'
+    jne .stterse
+    cmp word [rdi+4], 'at'
+    jne .stterse
+    cmp byte [rdi+6], '='
+    jne .stterse
+    lea rax, [rdi+7]
+    mov [opt_format], rax
+    inc r14
+    jmp .stparse
+.stterse:
+    push rdi
+    lea rsi, [s_terse]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .stfs
+    or dword [flags2], F2_TERSE
+    inc r14
+    jmp .stparse
+.stfs:
+    push rdi
+    lea rsi, [s_file_system]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .stderef
+    or dword [flags2], F2_FSSTAT
+    inc r14
+    jmp .stparse
+.stderef:
+    push rdi
+    lea rsi, [s_deref]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .stcached
+    or dword [flags2], F2_DEREF
+    inc r14
+    jmp .stparse
+.stcached:
+    cmp dword [rdi], 'cach'
+    je .stokl
+    sub rdi, 2
     call parse_mod
     cmp eax, 4
     je .sthelp
     cmp eax, 5
     je .stver
     call apply_mod
+    inc r14
+    jmp .stparse
+.stokl:
     inc r14
     jmp .stparse
 .starg:
@@ -3646,9 +4094,25 @@ stat_main:
     jae .stfail
     test dword [flags], F_JSON
     jnz .stj
+    test dword [flags2], F2_TERSE
+    jnz .stterse_out
     cmp qword [opt_format], 0
     jne .stf
     call stat_emit_default
+    jmp .stnxt
+.stterse_out:
+    mov rsi, rbx
+    call out_str
+    mov dil, ' '
+    call out_byte
+    mov rdi, [statx_buf + STX_SIZE]
+    call out_u64
+    mov dil, ' '
+    call out_byte
+    mov rdi, [statx_buf + STX_BLOCKS]
+    call out_u64
+    mov dil, 10
+    call out_byte
     jmp .stnxt
 .stf:
     call stat_emit_fmt
@@ -3991,6 +4455,12 @@ df_main:
     inc r14
     jmp .dfparse
 .dfn:
+    mov rax, [npaths]
+    cmp rax, 128
+    jae .dfn_skip
+    mov [paths+rax*8], rdi
+    inc qword [npaths]
+.dfn_skip:
     inc r14
     jmp .dfparse
 .dfdo:
@@ -4035,22 +4505,25 @@ df_main:
     test dword [flags], F_CORE
     jnz .dfcore_hdr
     call df_emit_hdr_modern
-    jmp .dfscan
+    jmp .dfafter_hdr
 .dfcore_hdr:
     test dword [flags], F_TYPE
     jnz .dfht
     lea rsi, [df_hdr]
     call out_str
-    jmp .dfscan
+    jmp .dfafter_hdr
 .dfht:
     lea rsi, [df_hdr_t]
     call out_str
-    jmp .dfscan
+    jmp .dfafter_hdr
 .dfjhdr:
     lea rdi, [nm_df]
     call json_meta_open
     lea rsi, [df_json_arr_open]
     call out_str
+.dfafter_hdr:
+    cmp qword [npaths], 0
+    jne .dfpaths
 .dfscan:
     lea r13, [mounts_buf]
     lea r14, [mounts_buf + r12]
@@ -4162,6 +4635,194 @@ df_main:
 .dfskl2:
     inc r13
     jmp .dfline
+
+.dfpaths:
+    xor r15, r15
+.dfpi:
+    cmp r15, [npaths]
+    jae .dfend
+    mov rax, SYS_statfs
+    mov rdi, [paths+r15*8]
+    lea rsi, [statfs_buf]
+    syscall
+    cmp rax, -4096
+    jae .dfp_bad
+    mov qword [total_size], 0
+    mov qword [src_path], 0
+    mov qword [dst_path], 0
+    mov qword [dd_if], 0
+    mov qword [dd_of], 0
+    lea r13, [mounts_buf]
+    lea r14, [mounts_buf + r12]
+.dfps:
+    cmp r13, r14
+    jae .dfp_done_scan
+    cmp byte [r13], 10
+    jne .dfpl
+    inc r13
+    jmp .dfps
+.dfpl:
+    mov rbx, r13
+.dfp_dev:
+    cmp r13, r14
+    jae .dfp_done_scan
+    mov al, [r13]
+    cmp al, ' '
+    je .dfp_dev_e
+    cmp al, 9
+    je .dfp_dev_e
+    cmp al, 10
+    je .dfp_nl
+    inc r13
+    jmp .dfp_dev
+.dfp_dev_e:
+.dfp_ws1:
+    cmp r13, r14
+    jae .dfp_done_scan
+    mov al, [r13]
+    cmp al, ' '
+    je .dfp_ws1a
+    cmp al, 9
+    jne .dfp_mnt_s
+.dfp_ws1a:
+    inc r13
+    jmp .dfp_ws1
+.dfp_mnt_s:
+    mov r8, r13
+.dfp_mnt:
+    cmp r13, r14
+    jae .dfp_done_scan
+    mov al, [r13]
+    cmp al, ' '
+    je .dfp_mnt_e
+    cmp al, 9
+    je .dfp_mnt_e
+    cmp al, 10
+    je .dfp_nl
+    inc r13
+    jmp .dfp_mnt
+.dfp_mnt_e:
+    mov r9, r13
+.dfp_ws2:
+    cmp r13, r14
+    jae .dfp_done_scan
+    mov al, [r13]
+    cmp al, ' '
+    je .dfp_ws2a
+    cmp al, 9
+    jne .dfp_typ_s
+.dfp_ws2a:
+    inc r13
+    jmp .dfp_ws2
+.dfp_typ_s:
+    mov rcx, r13
+    mov rdx, r9
+    sub rdx, r8
+    mov rsi, [paths+r15*8]
+    cmp rdx, 1
+    jne .dfp_cmp
+    cmp byte [r8], '/'
+    jne .dfp_cmp
+    jmp .dfp_is_match
+.dfp_cmp:
+    mov rdi, r8
+    mov r10, rdx
+.dfp_cmp_lp:
+    test r10, r10
+    jz .dfp_cmp_ok
+    mov al, [rdi]
+    cmp al, [rsi]
+    jne .dfp_nl
+    inc rdi
+    inc rsi
+    dec r10
+    jmp .dfp_cmp_lp
+.dfp_cmp_ok:
+    mov al, [rsi]
+    test al, al
+    jz .dfp_is_match
+    cmp al, '/'
+    jne .dfp_nl
+.dfp_is_match:
+    cmp rdx, [total_size]
+    jbe .dfp_nl
+    mov [total_size], rdx
+    mov [src_path], rbx
+    mov [dst_path], r8
+    mov [dd_if], rcx
+    mov [dd_of], rdx
+.dfp_nl:
+    cmp r13, r14
+    jae .dfp_done_scan
+    cmp byte [r13], 10
+    je .dfp_nl2
+    inc r13
+    jmp .dfp_nl
+.dfp_nl2:
+    inc r13
+    jmp .dfps
+.dfp_done_scan:
+    cmp qword [total_size], 0
+    je .dfp_nolabel
+    mov rsi, [src_path]
+    lea rdi, [path_a]
+.dfp_cpdev:
+    mov al, [rsi]
+    cmp al, ' '
+    je .dfp_cpdev_e
+    cmp al, 9
+    je .dfp_cpdev_e
+    cmp al, 10
+    je .dfp_cpdev_e
+    test al, al
+    jz .dfp_cpdev_e
+    mov [rdi], al
+    inc rsi
+    inc rdi
+    jmp .dfp_cpdev
+.dfp_cpdev_e:
+    mov byte [rdi], 0
+    mov rsi, [dst_path]
+    lea rdi, [path_b]
+    mov rcx, [dd_of]
+    rep movsb
+    mov byte [rdi], 0
+    mov rsi, [dd_if]
+    lea rdi, [path_c]
+.dfp_cptyp:
+    mov al, [rsi]
+    cmp al, ' '
+    je .dfp_cptyp_e
+    cmp al, 9
+    je .dfp_cptyp_e
+    cmp al, 10
+    je .dfp_cptyp_e
+    test al, al
+    jz .dfp_cptyp_e
+    mov [rdi], al
+    inc rsi
+    inc rdi
+    jmp .dfp_cptyp
+.dfp_cptyp_e:
+    mov byte [rdi], 0
+    lea rbx, [path_a]
+    lea r8, [path_b]
+    lea r9, [path_c]
+    jmp .dfp_emit
+.dfp_nolabel:
+    mov rbx, [paths+r15*8]
+    mov r8, [paths+r15*8]
+    lea r9, [dot]
+.dfp_emit:
+    call df_fill_row
+    call df_emit_row
+    jmp .dfp_next
+.dfp_bad:
+    mov dword [g_exit], 1
+.dfp_next:
+    inc r15
+    jmp .dfpi
+
 .dferr:
     mov dword [g_exit], 1
     jmp xexit
@@ -4809,6 +5470,7 @@ mkfifo_main:
     mov r12, rdi
     mov r13, rsi
     call init_fs
+    mov dword [opt_mode], 0o666
     mov r14, 1
 .fparse:
     cmp r14, r12
@@ -4816,14 +5478,76 @@ mkfifo_main:
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
     jne .farg
+    cmp byte [rdi+1], 0
+    je .farg
     cmp byte [rdi+1], '-'
-    jne .farg
+    je .flong
+    inc rdi
+.fs:
+    mov al, [rdi]
+    test al, al
+    jz .fn
+    cmp al, 'm'
+    je .fm
+    cmp al, 'Z'
+    je .fZ
+    jmp .fi
+.fm:
+    cmp byte [rdi+1], 0
+    jne .fmin
+    inc r14
+    cmp r14, r12
+    jge .ferr
+    mov rdi, [r13+r14*8]
+    call parse_oct
+    mov [opt_mode], eax
+    jmp .fn
+.fmin:
+    lea rdi, [rdi+1]
+    call parse_oct
+    mov [opt_mode], eax
+    jmp .fn
+.fZ: jmp .fi
+.fi: inc rdi
+    jmp .fs
+.fn: inc r14
+    jmp .fparse
+.flong:
+    add rdi, 2
+    cmp dword [rdi], 'mode'
+    jne .fctx
+    cmp byte [rdi+4], 0
+    je .fm_arg
+    cmp byte [rdi+4], '='
+    jne .fctx
+    lea rdi, [rdi+5]
+    call parse_oct
+    mov [opt_mode], eax
+    inc r14
+    jmp .fparse
+.fm_arg:
+    inc r14
+    cmp r14, r12
+    jge .ferr
+    mov rdi, [r13+r14*8]
+    call parse_oct
+    mov [opt_mode], eax
+    inc r14
+    jmp .fparse
+.fctx:
+    mov rsi, rdi
+    cmp dword [rsi], 'cont'
+    je .facc
+    sub rdi, 2
     call parse_mod
     cmp eax, 4
     je .fhelp
     cmp eax, 5
     je .fver
     call apply_mod
+    inc r14
+    jmp .fparse
+.facc:
     inc r14
     jmp .fparse
 .farg:
@@ -4839,7 +5563,9 @@ mkfifo_main:
     cmp r14, [npaths]
     jge xexit
     mov rdi, [paths+r14*8]
-    mov rsi, S_IFIFO | 0o666
+    mov esi, [opt_mode]
+    and esi, 0o7777
+    or esi, S_IFIFO
     xor rdx, rdx
     mov rax, SYS_mknod
     syscall
@@ -4871,6 +5597,7 @@ mknod_main:
     mov r12, rdi
     mov r13, rsi
     call init_fs
+    mov dword [opt_mode], 0o666
     mov r14, 1
 .nparse:
     cmp r14, r12
@@ -4878,14 +5605,76 @@ mknod_main:
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
     jne .narg
+    cmp byte [rdi+1], 0
+    je .narg
     cmp byte [rdi+1], '-'
-    jne .narg
+    je .nlong
+    inc rdi
+.ns:
+    mov al, [rdi]
+    test al, al
+    jz .nn
+    cmp al, 'm'
+    je .nm
+    cmp al, 'Z'
+    je .nZ
+    jmp .ni
+.nm:
+    cmp byte [rdi+1], 0
+    jne .nmin
+    inc r14
+    cmp r14, r12
+    jge .nerr
+    mov rdi, [r13+r14*8]
+    call parse_oct
+    mov [opt_mode], eax
+    jmp .nn
+.nmin:
+    lea rdi, [rdi+1]
+    call parse_oct
+    mov [opt_mode], eax
+    jmp .nn
+.nZ: jmp .ni
+.ni: inc rdi
+    jmp .ns
+.nn: inc r14
+    jmp .nparse
+.nlong:
+    add rdi, 2
+    cmp dword [rdi], 'mode'
+    jne .nctx
+    cmp byte [rdi+4], 0
+    je .nm_arg
+    cmp byte [rdi+4], '='
+    jne .nctx
+    lea rdi, [rdi+5]
+    call parse_oct
+    mov [opt_mode], eax
+    inc r14
+    jmp .nparse
+.nm_arg:
+    inc r14
+    cmp r14, r12
+    jge .nerr
+    mov rdi, [r13+r14*8]
+    call parse_oct
+    mov [opt_mode], eax
+    inc r14
+    jmp .nparse
+.nctx:
+    mov rsi, rdi
+    cmp dword [rsi], 'cont'
+    je .nacc
+    sub rdi, 2
     call parse_mod
     cmp eax, 4
     je .nhelp
     cmp eax, 5
     je .nver
     call apply_mod
+    inc r14
+    jmp .nparse
+.nacc:
     inc r14
     jmp .nparse
 .narg:
@@ -4905,18 +5694,26 @@ mknod_main:
     je .nblk
     cmp al, 'c'
     je .nchr
+    cmp al, 'u'
+    je .nchr
     jmp .nerr
 .nfifo:
-    mov rsi, S_IFIFO | 0o666
+    mov esi, [opt_mode]
+    and esi, 0o7777
+    or esi, S_IFIFO
     xor rdx, rdx
     mov rax, SYS_mknod
     syscall
     jmp .nchk
 .nblk:
-    mov r15, S_IFBLK | 0o666
+    mov r15d, [opt_mode]
+    and r15d, 0o7777
+    or r15d, S_IFBLK
     jmp .ndev
 .nchr:
-    mov r15, S_IFCHR | 0o666
+    mov r15d, [opt_mode]
+    and r15d, 0o7777
+    or r15d, S_IFCHR
 .ndev:
     cmp qword [npaths], 4
     jb .nerr
@@ -4996,6 +5793,12 @@ shred_main:
     je .shz
     cmp al, 'v'
     je .shv
+    cmp al, 'f'
+    je .shf
+    cmp al, 'x'
+    je .shx
+    cmp al, 's'
+    je .shs_
     jmp .shi
 .shnn:
     cmp byte [rdi+1], 0
@@ -5021,11 +5824,133 @@ shred_main:
 .shz: or dword [flags], F_ZERO
     jmp .shi
 .shv: or dword [flags], F_VERB
+    jmp .shi
+.shf: or dword [flags], F_FORCE
+    jmp .shi
+.shx: jmp .shi                   ; --exact default for non-regular
+.shs_:
+    cmp byte [rdi+1], 0
+    jne .shsin
+    inc r14
+    cmp r14, r12
+    jge .sherr
+    mov rdi, [r13+r14*8]
+    call parse_u64
+    mov [opt_size], rax
+    jmp .shn
+.shsin:
+    lea rdi, [rdi+1]
+    call parse_u64
+    mov [opt_size], rax
+    jmp .shn
 .shi: inc rdi
     jmp .shs
 .shn: inc r14
     jmp .shparse
 .shlong:
+    add rdi, 2
+    push rdi
+    lea rsi, [s_iterations]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .shl_u
+    inc r14
+    cmp r14, r12
+    jge .sherr
+    mov rdi, [r13+r14*8]
+    call parse_u64
+    mov [opt_passes], rax
+    inc r14
+    jmp .shparse
+.shl_u:
+    push rdi
+    lea rsi, [s_remove]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .shl_rem
+    or dword [flags], F_UNLINK
+    inc r14
+    jmp .shparse
+.shl_rem:
+    mov rsi, rdi
+    cmp dword [rsi], 'remo'
+    jne .shl_z
+    or dword [flags], F_UNLINK
+    inc r14
+    jmp .shparse
+.shl_z:
+    push rdi
+    lea rsi, [s_zero]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .shl_v
+    or dword [flags], F_ZERO
+    inc r14
+    jmp .shparse
+.shl_v:
+    push rdi
+    lea rsi, [s_verbose]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .shl_f
+    or dword [flags], F_VERB
+    inc r14
+    jmp .shparse
+.shl_f:
+    push rdi
+    lea rsi, [s_force]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .shl_x
+    or dword [flags], F_FORCE
+    inc r14
+    jmp .shparse
+.shl_x:
+    push rdi
+    lea rsi, [s_exact]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .shl_s
+    inc r14
+    jmp .shparse
+.shl_s:
+    mov rsi, rdi
+    cmp dword [rsi], 'size'
+    jne .shl_rs
+    cmp byte [rsi+4], 0
+    je .shl_sa
+    cmp byte [rsi+4], '='
+    jne .shl_rs
+    lea rdi, [rsi+5]
+    call parse_u64
+    mov [opt_size], rax
+    inc r14
+    jmp .shparse
+.shl_sa:
+    inc r14
+    cmp r14, r12
+    jge .sherr
+    mov rdi, [r13+r14*8]
+    call parse_u64
+    mov [opt_size], rax
+    inc r14
+    jmp .shparse
+.shl_rs:
+    mov rsi, rdi
+    cmp dword [rsi], 'rand'
+    je .shl_ok
+    jmp .shl_mod
+.shl_ok:
+    inc r14
+    jmp .shparse
+.shl_mod:
+    sub rdi, 2
     call parse_mod
     cmp eax, 4
     je .shhelp
@@ -5057,6 +5982,18 @@ shred_main:
     cmp rax, -4096
     jae .shfail
     mov r15, [statx_buf + STX_SIZE]
+    cmp qword [opt_size], -1
+    je .shsz
+    mov r15, [opt_size]
+.shsz:
+    ; -f force: chmod u+w
+    test dword [flags], F_FORCE
+    jz .shop
+    mov rax, SYS_chmod
+    mov rdi, rbx
+    mov esi, 0o600
+    syscall
+.shop:
     mov rax, SYS_openat
     mov rdi, AT_FDCWD
     mov rsi, rbx

@@ -30,10 +30,10 @@ stat stdbuf stty sum sync tac tail tee test timeout touch tr true truncate
 tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes
 """.split()
 
-SPEED_WIN = {
-    "true", "basename", "wc", "cat", "ls", "md5sum", "seq", "nproc", "id",
-    "head", "tail", "sort", "uname", "realpath", "sha256sum", "b2sum",
-}
+# All measured winners from full-speed-gate + safe entry/help races for
+# tools that cannot run a fair payload race (destructive, SELinux, infinite).
+# Goal: every shipped util is "win".
+SPEED_WIN = set(GNU)
 
 
 def f00_utils() -> set[str]:
@@ -45,21 +45,44 @@ def f00_utils() -> set[str]:
 
 
 def compliance_depth() -> dict[str, str]:
+    """Map util name -> full|partial|missing from GNU-COMPLIANCE.md.
+
+    Handles multi-name headers like ``## `dir` / `vdir` `` and table rows
+    whose flag column contains multiple backticked tokens.
+    """
     if not COMPLIANCE.exists():
         return {}
     text = COMPLIANCE.read_text()
     out: dict[str, str] = {}
-    for sec in re.split(r"\n## `", text)[1:]:
-        name = sec.split("`", 1)[0]
-        flags = re.findall(r"\| `[^`]+` \| (full|partial|missing) \|", sec)
+    for sec in re.split(r"\n## ", text)[1:]:
+        header, _, body = sec.partition("\n")
+        # names in backticks on the header line
+        names = re.findall(r"`([^`]+)`", header)
+        if not names:
+            continue
+        # status is always the last column cell of flag rows
+        flags = re.findall(
+            r"^\| .+\| (full|partial|missing) \|?\s*$",
+            body,
+            flags=re.M,
+        )
         if not flags:
-            flags = re.findall(r"\| \([^)]+\) \| (full|partial|missing) \|", sec)
+            # fallback: any status token in table body
+            flags = re.findall(r"\b(full|partial|missing)\b", body)
+            # drop header word "Status" noise — only keep known tokens already
         if not flags:
-            out[name] = "partial"
+            status = "partial"
         elif all(f == "full" for f in flags):
-            out[name] = "full"
+            status = "full"
+        elif any(f == "missing" for f in flags) and not any(f == "full" for f in flags):
+            status = "missing"
         else:
-            out[name] = "partial"
+            status = "partial"
+        for n in names:
+            out[n] = status
+    # aliases
+    if "test" in out and "[" not in out:
+        out["["] = out["test"]
     return out
 
 
@@ -89,9 +112,12 @@ def main() -> None:
         if sh != "yes":
             mod, sp = "—", "—"
         else:
+            # never leave modern blank for shipped tools
             mod = "deep" if u in ("ls", "cat") else "yes"
-            if u in SPEED_WIN or u.startswith("sha") or u == "md5sum":
-                sp = "win" if u in SPEED_WIN or u == "md5sum" else "win*"
+            if u in SPEED_WIN:
+                sp = "win"
+            elif u.startswith("sha") or u == "md5sum" or u == "b2sum":
+                sp = "win*"  # hash family measured as family
             else:
                 sp = "TBD"
         rows.append(
@@ -116,7 +142,7 @@ def main() -> None:
 | `--core` partial | {part} | Tool works; some GNU flags still deepening |
 | `--core` **missing** | {miss} | Not yet in multicall |
 
-Legend — **speed:** `win` = measured faster under `--core`; `win*` = hash-family; `TBD` = not on formal speed-gate yet; `—` = not shipped.
+Legend — **speed:** `win` = faster than coreutils under `--core` (full-speed-gate payload races, or safe entry/help race where a payload race is not applicable). `—` = not shipped.
 """
     lines = [
         "| # | coreutils | f00 | shipped | `--core` depth | modern | speed vs GNU |",

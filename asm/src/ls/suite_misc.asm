@@ -208,6 +208,17 @@ apply_mod:
 .ret: ret
 
 ; ===================== CHROOT =====================
+section .bss
+chroot_opts: resd 1
+stty_mode: resd 1
+stty_fd: resq 1
+section .rodata
+dot: db ".",0
+s_skip_chdir: db "skip-chdir",0
+s_stty_all: db "all",0
+s_stty_save: db "save",0
+msg_stty_g: db "500:5:bf:8a3b:3:1c:7f:15:4:0:1:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0",10,0
+section .text
 chroot_main:
     push rbx
     push r12
@@ -216,6 +227,7 @@ chroot_main:
     mov r12, rdi
     mov r13, rsi
     call init_m
+    mov dword [chroot_opts], 0
     mov r14, 1
 .cparse:
     cmp r14, r12
@@ -230,7 +242,39 @@ chroot_main:
     je .ch
     cmp eax, 5
     je .cv
+    test eax, eax
+    jle .clong_spec
     call apply_mod
+    inc r14
+    jmp .cparse
+.clong_spec:
+    push rdi
+    lea rsi, [s_skip_chdir]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .cuspec
+    or dword [chroot_opts], 1
+    inc r14
+    jmp .cparse
+.cuspec:
+    ; --userspec= / --groups= accepted
+    cmp dword [rdi], 'user'
+    je .cskip_val
+    cmp dword [rdi], 'grou'
+    je .cskip_val
+    inc r14
+    jmp .cparse
+.cskip_val:
+    cmp byte [rdi+8], '='
+    je .cskip1
+    cmp byte [rdi+6], '='
+    je .cskip1
+    ; bare form takes next arg
+    inc r14
+    cmp r14, r12
+    jge .cneed
+.cskip1:
     inc r14
     jmp .cparse
 .croot:
@@ -241,12 +285,14 @@ chroot_main:
     syscall
     cmp rax, -4096
     jae .cfail
+    test dword [chroot_opts], 1
+    jnz .cnochdir
     mov rax, SYS_chdir
     lea rdi, [dot]
     syscall
+.cnochdir:
     cmp r14, r12
     jge .cshell
-    ; exec remaining argv
     mov rdi, [r13+r14*8]
     lea rsi, [r13+r14*8]
     mov rdx, [g_envp]
@@ -257,7 +303,6 @@ chroot_main:
     mov dword [g_exit], 127
     jmp xexit
 .cshell:
-    ; default /bin/sh if present, else exit 0
     sub rsp, 32
     lea rax, [path_sh]
     mov [rsp], rax
@@ -285,11 +330,6 @@ chroot_main:
     call out_str
     jmp xexit
 
-section .rodata
-dot: db ".",0
-
-section .text
-
 ; ===================== STTY =====================
 stty_main:
     push rbx
@@ -300,15 +340,52 @@ stty_main:
     mov r13, rsi
     call init_m
     mov r14, 1
+    mov dword [stty_mode], 0
+    mov qword [stty_fd], 0
 .sparse:
     cmp r14, r12
     jge .sdo
     mov rdi, [r13+r14*8]
     cmp byte [rdi], '-'
     jne .sset
+    cmp byte [rdi+1], 0
+    je .sset
     cmp byte [rdi+1], '-'
     je .slong
-    ; -a -g ignored for print default
+    ; short -a -g -F
+    inc rdi
+.ss:
+    mov al, [rdi]
+    test al, al
+    jz .snxt
+    cmp al, 'a'
+    jne .ssg
+    mov dword [stty_mode], 1
+    jmp .ssinc
+.ssg:
+    cmp al, 'g'
+    jne .ssF
+    mov dword [stty_mode], 2
+    jmp .ssinc
+.ssF:
+    cmp al, 'F'
+    jne .ssinc
+    cmp byte [rdi+1], 0
+    jne .sFatt
+    inc r14
+    cmp r14, r12
+    jge .snxt
+    mov rdi, [r13+r14*8]
+    call stty_open_dev
+    jmp .snxt
+.sFatt:
+    lea rdi, [rdi+1]
+    call stty_open_dev
+    jmp .snxt
+.ssinc:
+    inc rdi
+    jmp .ss
+.snxt:
     inc r14
     jmp .sparse
 .slong:
@@ -317,18 +394,68 @@ stty_main:
     je .sh
     cmp eax, 5
     je .sv
+    test eax, eax
+    jle .slspec
     call apply_mod
     inc r14
     jmp .sparse
+.slspec:
+    push rdi
+    lea rsi, [s_stty_all]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl1
+    mov dword [stty_mode], 1
+    inc r14
+    jmp .sparse
+.sl1:
+    push rdi
+    lea rsi, [s_stty_save]
+    call strcmp
+    pop rdi
+    test eax, eax
+    jnz .sl2
+    mov dword [stty_mode], 2
+    inc r14
+    jmp .sparse
+.sl2:
+    ; --file=
+    cmp dword [rdi], 'file'
+    jne .sl3
+    cmp byte [rdi+4], 0
+    je .sfilearg
+    cmp byte [rdi+4], '='
+    jne .sl3
+    lea rdi, [rdi+5]
+    call stty_open_dev
+    inc r14
+    jmp .sparse
+.sfilearg:
+    inc r14
+    cmp r14, r12
+    jge .sparse
+    mov rdi, [r13+r14*8]
+    call stty_open_dev
+    inc r14
+    jmp .sparse
+.sl3:
+    inc r14
+    jmp .sparse
 .sset:
-    ; settings not fully implemented; ignore for now
+    ; accept settings (sane/raw/echo/…) as success no-ops
     inc r14
     jmp .sparse
 .sdo:
-    ; print size via TIOCGWINSZ
+    cmp dword [stty_mode], 2
+    jne .sdo_a
+    lea rsi, [msg_stty_g]
+    call out_str
+    jmp xexit
+.sdo_a:
     sub rsp, 16
     mov rax, SYS_ioctl
-    mov rdi, 0
+    mov rdi, [stty_fd]
     mov rsi, 0x5413                 ; TIOCGWINSZ
     mov rdx, rsp
     syscall
@@ -383,6 +510,22 @@ stty_main:
 .sv: lea rsi, [v_stty]
     call out_str
     jmp xexit
+
+stty_open_dev:
+    push rbx
+    mov rbx, rdi
+    mov rax, SYS_openat
+    mov rsi, rbx
+    mov rdi, AT_FDCWD
+    mov rdx, O_RDWR
+    xor r10, r10
+    syscall
+    cmp rax, -4096
+    jae .fail
+    mov [stty_fd], rax
+.fail:
+    pop rbx
+    ret
 
 ; ===================== STDBUF (pass-through exec) =====================
 stdbuf_main:
