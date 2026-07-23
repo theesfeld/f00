@@ -77,9 +77,9 @@ smoke: $(TARGET) links
 	./f00-uname -a
 	./f00-id
 	echo abc | ./f00-tr a-z A-Z
-	echo -e 'b\na\nc' | ./f00-sort
+	printf 'b\na\nc\n' | ./f00-sort
 	printf 'hello' | ./f00-md5sum
-	./f00-base64 <<< hi
+	printf 'hi\n' | ./f00-base64
 	@echo "smoke ok"
 
 # GNU coreutils --core parity for id/date/uname/hash/base64/nproc
