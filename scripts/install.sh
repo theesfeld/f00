@@ -38,7 +38,7 @@ TOOLS_ALL=(
   id groups uname arch date users who pinky uptime hostname
   nice nohup timeout kill test printf
   md5sum sha1sum sha256sum sha224sum sha384sum sha512sum b2sum cksum sum
-  base64 basenc dircolors chroot stty stdbuf runcon
+  base64 basenc base32 dircolors chroot stty stdbuf runcon chcon
 )
 
 if [[ -z "${F00_NO_COLOR:-}" && -t 2 ]]; then
@@ -230,9 +230,10 @@ fetch_release() {
 }
 
 main() {
-  printf "\n${BOLD}f00${RESET} ${DIM}suite installer (0.14 multicall)${RESET}\n" >&2
+  printf "\n${BOLD}f00${RESET} ${DIM}suite installer (0.15.0-beta.1 multicall)${RESET}\n" >&2
 
-  local dir bin tmp=""
+  local dir bin
+  local tmp=""
   dir="$(pick_dir)"
   mkdir -p "$dir"
 
@@ -257,7 +258,8 @@ main() {
     need tar
     need install
     tmp="$(mktemp -d)"
-    trap 'rm -rf "$tmp"' EXIT
+    # shellcheck disable=SC2064
+    trap '[[ -n "${tmp:-}" ]] && rm -rf -- "$tmp"' EXIT
     fetch_release "$tmp" >/dev/null
     bin="$(find "$tmp" -type f -name f00 | head -1)"
     [[ -n "$bin" && -f "$bin" ]] || die "archive missing f00 binary"
@@ -273,7 +275,7 @@ main() {
 
   ensure_path "$dir"
   printf "\n${BOLD}done${RESET}. try: ${BOLD}f00-ls --help${RESET} · ${BOLD}f00-wc -l${RESET} · ${BOLD}f00 --version${RESET}\n" >&2
-  printf "${DIM}knobs: F00_TOOLS=all|ls,cat,…  F00_SUPERSEDE=1  F00_ALIAS=1  F00_LOCAL=asm  F00_VERSION=v0.14.0${RESET}\n" >&2
+  printf "${DIM}knobs: F00_TOOLS=all|ls,cat,…  F00_SUPERSEDE=1  F00_ALIAS=1  F00_LOCAL=asm  F00_VERSION=v0.15.0-beta.1${RESET}\n" >&2
 }
 
 main "$@"

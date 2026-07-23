@@ -18,7 +18,7 @@ class F00 < Formula
   on_linux do
     on_intel do
       url "https://github.com/theesfeld/f00/releases/download/v0.15.0-beta.1/f00-0.15.0-beta.1-x86_64-linux.tar.gz"
-      sha256 "0dfe83594ae307d3ba6383ced90311ba5f91feecfd534370e3dd64e9f1ed24d2"
+      sha256 "3d8c375a388f9a6c68d3d74abaa7b97bdb4da3935bfa621e267d0b2dfabb6606"
     end
   end
 

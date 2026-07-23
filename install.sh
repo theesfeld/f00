@@ -38,7 +38,7 @@ TOOLS_ALL=(
   id groups uname arch date users who pinky uptime hostname
   nice nohup timeout kill test printf
   md5sum sha1sum sha256sum sha224sum sha384sum sha512sum b2sum cksum sum
-  base64 basenc dircolors chroot stty stdbuf runcon
+  base64 basenc base32 dircolors chroot stty stdbuf runcon chcon
 )
 
 if [[ -z "${F00_NO_COLOR:-}" && -t 2 ]]; then
