@@ -74,8 +74,11 @@ build_one() {
   local stage="${WORKDIR}/${asset_stem}"
   mkdir -p "${stage}"
   tar -xzf "${tarball}" -C "${stage}"
-  local bin
-  bin="$(find "${stage}" -type f -name f00 | head -n1)"
+  local bin=""
+  while IFS= read -r -d '' cand; do
+    bin="${cand}"
+    break
+  done < <(find "${stage}" -type f -name f00 -print0 2>/dev/null)
   if [[ -z "${bin}" || ! -f "${bin}" ]]; then
     echo "binary not found in ${tarball}" >&2
     return 1
@@ -84,9 +87,12 @@ build_one() {
 
   local man_dir="${WORKDIR}/man1-${arch}"
   mkdir -p "${man_dir}"
-  if find "${stage}" -type f -name 'f00*.1' | head -1 | grep -q .; then
-    find "${stage}" -type f -name 'f00*.1' -exec cp {} "${man_dir}/" \;
-  elif [[ -d "${ROOT}/asm/man/man1" ]]; then
+  local man_count=0
+  while IFS= read -r -d '' manf; do
+    cp "${manf}" "${man_dir}/"
+    man_count=$((man_count + 1))
+  done < <(find "${stage}" -type f -name 'f00*.1' -print0 2>/dev/null)
+  if [[ "${man_count}" -eq 0 && -d "${ROOT}/asm/man/man1" ]]; then
     cp -a "${ROOT}/asm/man/man1/f00"*.1 "${man_dir}/" 2>/dev/null || true
   fi
   if [[ ! -f "${man_dir}/f00.1" ]]; then

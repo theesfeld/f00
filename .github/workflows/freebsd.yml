@@ -1,22 +1,18 @@
 name: FreeBSD smoke
 
-# Product is freestanding Linux x86-64 ASM first. FreeBSD is not a target yet.
-# Keep the workflow file so historical links work; job is intentionally skipped.
+# Product target is freestanding Linux x86-64 ASM. FreeBSD is not supported.
+# Manual only — do not burn CI minutes on every push.
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   freebsd:
-    name: FreeBSD (skipped — Linux ASM first)
+    name: FreeBSD (not a product target)
     runs-on: ubuntu-latest
     steps:
-      - name: Not a FreeBSD target yet
+      - name: Documented non-target
         run: |
-          echo "f00 v0.15+ product surface is pure freestanding Linux x86-64 assembly."
-          echo "FreeBSD / Darwin ports are future work — see README."
+          echo "f00tils product surface is pure freestanding Linux x86-64 assembly."
+          echo "FreeBSD / Darwin ports are future work."
           exit 0

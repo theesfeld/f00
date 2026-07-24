@@ -1,10 +1,18 @@
 name: CI
 
+# f00tils — Linux x86-64 freestanding ASM multicall
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   asm-linux:
@@ -39,7 +47,6 @@ jobs:
           ./f00 --version
           ./f00-ls --version
           test -x ./f00
-          # util link count (UTILS + f00-[ + test)
           n=$(find . -maxdepth 1 -type l -name 'f00-*' | wc -l)
           echo "f00-* links: $n"
           test "$n" -ge 100
@@ -57,3 +64,25 @@ jobs:
           n=$(find asm/man/man1 -name 'f00*.1' | wc -l)
           echo "man pages: $n"
           test "$n" -ge 100
+
+  install-script:
+    name: install.sh dry (local binary)
+    runs-on: ubuntu-latest
+    needs: asm-linux
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install nasm
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq nasm
+      - name: Build
+        working-directory: asm
+        run: make -j"$(nproc)"
+      - name: Installer against F00_LOCAL
+        run: |
+          set -euo pipefail
+          chmod +x install.sh
+          tmp="$(mktemp -d)"
+          INSTALL_DIR="${tmp}/bin" F00_LOCAL="${PWD}/asm" ADD_PATH=0 bash install.sh
+          "${tmp}/bin/f00" --version
+          "${tmp}/bin/f00-true"
+          test -x "${tmp}/bin/f00-ls"
+          test -x "${tmp}/bin/f00-wc"
