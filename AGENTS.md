@@ -52,6 +52,12 @@ No Rust, C application code, libc, or polyglot product dependencies. Target is L
 Refer to the project as **f00tils**. Keep command names as `f00` / `f00-*`.
 Follow house rules in `~/.grok/rules/10-user-facing-language.md` (STE for procedures/man; NASA/AP for public narrative).
 
+## GitHub Actions
+
+- Only **Node 24** JS action majors (`actions/checkout@v6+`, `upload-artifact@v6+`, `download-artifact@v7+`, `softprops/action-gh-release@v3+`, Pages `@v5`/`@v6` as in `85-github-actions.md`).
+- Do not reintroduce Node 20-era pins (`@v4` checkout/artifact, `action-gh-release@v2`) — deprecation annotations are a defect.
+- House rule: `~/.grok/rules/85-github-actions.md`.
+
 ## License
 
 MIT only.

@@ -20,7 +20,7 @@ jobs:
     name: build linux x86_64 ASM
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install nasm
         run: sudo apt-get update -qq && sudo apt-get install -y -qq nasm
@@ -110,7 +110,7 @@ jobs:
           cat dist/SHA256SUMS
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: f00-linux-x86_64
           path: |
@@ -127,7 +127,7 @@ jobs:
     needs: build-linux-x86_64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Version from tag
         id: meta
@@ -145,7 +145,7 @@ jobs:
           fi
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: f00-linux-x86_64
           path: release-assets
@@ -173,7 +173,7 @@ jobs:
           echo "--- PKGBUILD ---"; head -40 packaging/aur/PKGBUILD
 
       - name: Create / update GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: false
           prerelease: ${{ steps.meta.outputs.prerelease }}

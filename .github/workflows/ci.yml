@@ -23,7 +23,7 @@ jobs:
       github.event_name != 'push' ||
       !contains(github.event.head_commit.message || '', 'chore(bench): refresh suite')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install nasm
         run: sudo apt-get update -qq && sudo apt-get install -y -qq nasm
@@ -81,7 +81,7 @@ jobs:
           test "$n" -ge 100
 
       - name: Upload suite bench artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: suite-bench
           path: |
@@ -99,13 +99,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Download suite bench
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: suite-bench
           path: _bench
@@ -202,7 +202,7 @@ jobs:
     name: man pages present
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check man tree
         run: |
           set -euo pipefail
@@ -217,7 +217,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: asm-linux
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install nasm
         run: sudo apt-get update -qq && sudo apt-get install -y -qq nasm
       - name: Build
