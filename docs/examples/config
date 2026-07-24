@@ -1,23 +1,22 @@
-# Example: copy to ~/.config/f00/config
+# f00tils config — copy to ~/.config/f00/config  (or: f00-config init)
 # See docs/CONFIG.md
+#
+# f00tils uses your terminal palette by default.
+# f00-config theme list  →  f00-config theme set <name>
 
+theme = terminal
 core = false
 color = auto
 icons = auto      # Nerd File Icons when color on; ascii on linux console
-# icons = ascii   # no Nerd Font installed
+# icons = ascii
 # icons = never
-# icons = nerd    # force Nerd (install a Nerd Font in the terminal)
-# icons = emoji
-# icons = glyph
+# icons = nerd
 animations = true
 spinner = true
 
 [ls]
 git = true
 icons = auto
-
-[cat]
-# future util-specific knobs
 
 [sha256sum]
 spinner = true

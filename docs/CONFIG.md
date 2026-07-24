@@ -73,6 +73,9 @@ Bare keys (no section) act as `[global]`.
 
 ## Themes
 
+> **f00tils uses your terminal palette by default; run `f00-config theme list`, then `f00-config theme set <name>` to lock a look into `~/.config/f00/config` — or `F00_THEME=…` for one shot.**
+
+
 Suite chrome uses **semantic tokens** (`path`, `num`, `ok`, `err`, `hdr`, `dim`) — not hardcoded hues per util.
 
 | Theme | Kind |
@@ -98,6 +101,7 @@ dim  = 2
 ```
 
 ```bash
+f00-config init             # create XDG tree + starter config (idempotent)
 f00-config                 # current theme + token preview
 f00-config theme list      # builtins + user-theme path
 f00-config theme set dracula

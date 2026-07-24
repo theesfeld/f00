@@ -1,37 +1,53 @@
-; f00-config — inspect / list / set themes and show config paths
+; f00-config — settings CLI (themes). Expert UX contract:
+; - never write $HOME on normal tool runs
+; - theme set persists to XDG config (git-config style)
+; - init creates tree + starter config only when asked
 BITS 64
 DEFAULT REL
 %include "syscalls.inc"
 
 global config_main
-extern out_init, out_flush, out_str, out_byte
+extern out_init, out_flush, out_str, out_byte, out_strn
 extern g_exit, g_tty, g_color, g_envp
-extern suite_runtime_init
-extern is_tty, color_init_default
+extern is_tty
 extern theme_list_print, theme_apply_name, theme_current_name, theme_init
+extern theme_apply_default
 extern g_theme_name, g_cfg_theme
-extern strcmp, strlen
+extern strcmp, strlen, memcpy, memset
 extern color_path, color_num, color_ok, color_err, color_hdr, color_dim, color_reset
+extern c_path, c_num, c_ok, c_err, c_hdr, c_dim
+extern env_key_match
+
+section .bss
+alignb 8
+path_cfg:   resb 1024
+path_dir:   resb 1024
+path_thdir: resb 1024
+rw_buf:     resb 16384
+out_buf:    resb 16384
+name_tmp:   resb 64
+tok_save:   resb 32*6               ; path num ok err hdr dim
 
 section .rodata
 usage:
     db "Usage: f00-config [COMMAND]", 10
     db 10
+    db "f00tils uses your terminal palette by default; run", 10
+    db "  f00-config theme list", 10
+    db "then", 10
+    db "  f00-config theme set <name>", 10
+    db "to lock a look into ~/.config/f00/config — or F00_THEME=… for one shot.", 10
+    db 10
     db "Commands:", 10
-    db "  (none) | show     Show current theme and token preview", 10
-    db "  theme | themes    List builtin themes (and how to add user themes)", 10
-    db "  theme get         Print current theme name", 10
-    db "  theme set NAME    Apply theme for this process (and print config hint)", 10
-    db "  paths             Print XDG config / themes directories", 10
+    db "  (none) | show       Current theme + token preview + chrome sample", 10
+    db "  init                Create XDG config tree + starter config (idempotent)", 10
+    db "  theme list|themes   Gallery of builtin (+ user) themes", 10
+    db "  theme get           Print theme name only (script-safe)", 10
+    db "  theme set NAME      Apply + write theme=NAME to XDG config", 10
+    db "  paths               Print config / themes paths", 10
     db 10
-    db "Config (XDG):", 10
-    db "  ~/.config/f00/config          theme = dracula", 10
-    db "  ~/.config/f00/themes/*.theme  user theme files", 10
-    db 10
-    db "Env: F00_THEME=name  (overrides config)", 10
-    db 10
-    db "Default theme 'terminal' uses ANSI 16 colors so your terminal palette", 10
-    db "owns the hues. Named themes (dracula, catppuccin-mocha, …) use truecolor.", 10
+    db "Default theme 'terminal' = ANSI 16 colors (your palette).", 10
+    db "Named themes use truecolor. User files: ~/.config/f00/themes/*.theme", 10
     db 10
     db "f00tils · pure assembly · MIT · https://f00.sh", 10, 0
 v_cfg: db "f00-config (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
@@ -42,34 +58,58 @@ s_get: db "get", 0
 s_set: db "set", 0
 s_list: db "list", 0
 s_paths: db "paths", 0
+s_init: db "init", 0
 s_help: db "help", 0
 s_ver: db "version", 0
 lbl_theme: db "theme: ", 0
-lbl_preview: db 10, "token preview:", 10, 0
+lbl_preview: db 10, "tokens:", 10, 0
+lbl_chrome: db 10, "chrome sample:", 10, "  ", 0
 pv_path: db "  path   ", 0
 pv_num:  db "  num    ", 0
 pv_ok:   db "  ok     ", 0
 pv_err:  db "  err    ", 0
 pv_hdr:  db "  hdr    ", 0
 pv_dim:  db "  dim    ", 0
-sample:  db "sample text", 0
+sample:  db "sample", 0
+samp_path: db "~/src/f00", 0
+samp_sp: db "  ", 0
+samp_sz: db "4.2K", 0
+samp_ok: db "ok", 0
+samp_err: db "err", 0
 nl:      db 10, 0
-hint_set:
-    db 10, "To persist, add to ~/.config/f00/config:", 10
-    db "  theme = ", 0
-hint_end: db 10, 0
-paths_msg:
-    db "Config file:  $XDG_CONFIG_HOME/f00/config", 10
-    db "              ~/.config/f00/config", 10
-    db "User themes:  ~/.config/f00/themes/<name>.theme", 10
-    db 10
-    db "Theme file format (SGR body only):", 10
-    db "  path = 1;36", 10
-    db "  num  = 38;2;241;250;140", 10
-    db "  ok = …  err = …  hdr = …  dim = …", 10
-    db "  banner = …  spin = …", 10, 0
+wrote_pre: db "wrote theme = ", 0
+wrote_mid: db " → ", 0
+wrote_end: db 10, 0
+init_ok: db "initialized ", 0
+init_skip: db "already exists: ", 0
 err_unknown: db "f00-config: unknown theme or command", 10, 0
 err_need: db "f00-config: theme set requires a name", 10, 0
+err_write: db "f00-config: could not write config", 10, 0
+env_xdg: db "XDG_CONFIG_HOME", 0
+env_home: db "HOME", 0
+suf_f00: db "/f00", 0
+suf_cfg: db "/f00/config", 0
+suf_th:  db "/f00/themes", 0
+suf_dot_f00: db "/.config/f00", 0
+suf_dot_cfg: db "/.config/f00/config", 0
+suf_dot_th:  db "/.config/f00/themes", 0
+starter:
+    db "# f00tils config — https://f00.sh  (docs/CONFIG.md)", 10
+    db "# f00tils uses your terminal palette by default.", 10
+    db "# f00-config theme list  →  f00-config theme set <name>", 10
+    db 10
+    db "theme = terminal", 10
+    db "core = false", 10
+    db "color = auto", 10
+    db "icons = auto", 10
+    db "animations = true", 10
+    db "spinner = true", 10
+    db 10
+    db "[ls]", 10
+    db "git = true", 10
+    db 0
+key_theme_eq: db "theme = ", 0
+line_theme_pfx: db "theme", 0
 
 section .text
 
@@ -78,24 +118,22 @@ config_main:
     push r12
     push r13
     push r14
-    mov r12, rdi
-    mov r13, rsi
-    ; tiny_init already ran suite_runtime_init
-    mov r14, 1
+    push r15
+    mov r12, rdi                    ; argc
+    mov r13, rsi                    ; argv
     cmp r12, 1
     jle .show
     mov rdi, [r13+8]
     cmp byte [rdi], '-'
     jne .cmd
-    ; --help / --version
     add rdi, 2
     lea rsi, [s_help]
     call strcmp
     test eax, eax
     jz .help
-    lea rsi, [s_ver]
     mov rdi, [r13+8]
     add rdi, 2
+    lea rsi, [s_ver]
     call strcmp
     test eax, eax
     jz .ver
@@ -105,6 +143,11 @@ config_main:
     call strcmp
     test eax, eax
     jz .show
+    mov rdi, [r13+8]
+    lea rsi, [s_init]
+    call strcmp
+    test eax, eax
+    jz .init
     mov rdi, [r13+8]
     lea rsi, [s_theme]
     call strcmp
@@ -131,6 +174,7 @@ config_main:
     test eax, eax
     jz .help
     jmp .bad
+
 .theme:
     cmp r12, 2
     jle .list
@@ -155,18 +199,33 @@ config_main:
     call theme_apply_name
     test eax, eax
     jz .bad
-    ; show + persist hint
-    call .do_show
-    lea rsi, [hint_set]
+    ; persist
+    mov rdi, [r13+24]
+    call config_upsert_theme
+    test eax, eax
+    jnz .set_ok
+    lea rsi, [err_write]
+    call out_str
+    mov dword [g_exit], 1
+    jmp .exit
+.set_ok:
+    lea rsi, [wrote_pre]
     call out_str
     mov rsi, [r13+24]
     call out_str
-    lea rsi, [hint_end]
+    lea rsi, [wrote_mid]
     call out_str
+    lea rsi, [path_cfg]
+    call out_str
+    lea rsi, [wrote_end]
+    call out_str
+    call do_show
     jmp .exit
+
 .list:
     call theme_list_print
     jmp .exit
+
 .get:
     call theme_current_name
     mov rsi, rax
@@ -174,13 +233,19 @@ config_main:
     mov dil, 10
     call out_byte
     jmp .exit
+
 .show:
-    call .do_show
+    call do_show
     jmp .exit
+
+.init:
+    call config_init_tree
+    jmp .exit
+
 .paths:
-    lea rsi, [paths_msg]
-    call out_str
+    call print_paths
     jmp .exit
+
 .help:
     lea rsi, [usage]
     call out_str
@@ -200,13 +265,15 @@ config_main:
     mov dword [g_exit], 1
 .exit:
     call out_flush
+    pop r15
     pop r14
     pop r13
     pop r12
     pop rbx
     ret
 
-.do_show:
+; ── show ──────────────────────────────────────────────────
+do_show:
     push rbx
     lea rsi, [lbl_theme]
     call out_str
@@ -215,15 +282,15 @@ config_main:
     call out_str
     lea rsi, [nl]
     call out_str
-    lea rsi, [lbl_preview]
-    call out_str
-    ; force color for preview if TTY
+    ; enable color for preview on TTY unless NO_COLOR already zeroed g_color forever
     mov rdi, 1
     call is_tty
     test al, al
-    jz .plain
+    jz .grid
     mov byte [g_color], 1
-.plain:
+.grid:
+    lea rsi, [lbl_preview]
+    call out_str
     lea rsi, [pv_path]
     call out_str
     call color_path
@@ -272,5 +339,571 @@ config_main:
     call color_reset
     lea rsi, [nl]
     call out_str
+    ; chrome sample line
+    lea rsi, [lbl_chrome]
+    call out_str
+    call color_path
+    lea rsi, [samp_path]
+    call out_str
+    call color_reset
+    lea rsi, [samp_sp]
+    call out_str
+    call color_num
+    lea rsi, [samp_sz]
+    call out_str
+    call color_reset
+    lea rsi, [samp_sp]
+    call out_str
+    call color_ok
+    lea rsi, [samp_ok]
+    call out_str
+    call color_reset
+    lea rsi, [samp_sp]
+    call out_str
+    call color_err
+    lea rsi, [samp_err]
+    call out_str
+    call color_reset
+    lea rsi, [nl]
+    call out_str
+    pop rbx
+    ret
+
+print_paths:
+    call resolve_cfg_path
+    lea rsi, [path_cfg]
+    call out_str
+    lea rsi, [nl]
+    call out_str
+    call resolve_themes_dir
+    lea rsi, [path_thdir]
+    call out_str
+    lea rsi, [nl]
+    call out_str
+    ret
+
+; ── path resolution ───────────────────────────────────────
+; resolve_cfg_path → path_cfg filled; eax=1 ok
+resolve_cfg_path:
+    push rbx
+    call env_get_xdg
+    test rax, rax
+    jz .home
+    lea rdi, [path_cfg]
+    mov rsi, rax
+    call strcpy_c
+    lea rdi, [path_cfg]
+    lea rsi, [suf_cfg]
+    call strcat_c
+    mov eax, 1
+    pop rbx
+    ret
+.home:
+    call env_get_home
+    test rax, rax
+    jz .fail
+    lea rdi, [path_cfg]
+    mov rsi, rax
+    call strcpy_c
+    lea rdi, [path_cfg]
+    lea rsi, [suf_dot_cfg]
+    call strcat_c
+    mov eax, 1
+    pop rbx
+    ret
+.fail:
+    xor eax, eax
+    pop rbx
+    ret
+
+resolve_f00_dir:
+    push rbx
+    call env_get_xdg
+    test rax, rax
+    jz .home
+    lea rdi, [path_dir]
+    mov rsi, rax
+    call strcpy_c
+    lea rdi, [path_dir]
+    lea rsi, [suf_f00]
+    call strcat_c
+    mov eax, 1
+    pop rbx
+    ret
+.home:
+    call env_get_home
+    test rax, rax
+    jz .fail
+    lea rdi, [path_dir]
+    mov rsi, rax
+    call strcpy_c
+    lea rdi, [path_dir]
+    lea rsi, [suf_dot_f00]
+    call strcat_c
+    mov eax, 1
+    pop rbx
+    ret
+.fail:
+    xor eax, eax
+    pop rbx
+    ret
+
+resolve_themes_dir:
+    push rbx
+    call env_get_xdg
+    test rax, rax
+    jz .home
+    lea rdi, [path_thdir]
+    mov rsi, rax
+    call strcpy_c
+    lea rdi, [path_thdir]
+    lea rsi, [suf_th]
+    call strcat_c
+    mov eax, 1
+    pop rbx
+    ret
+.home:
+    call env_get_home
+    test rax, rax
+    jz .fail
+    lea rdi, [path_thdir]
+    mov rsi, rax
+    call strcpy_c
+    lea rdi, [path_thdir]
+    lea rsi, [suf_dot_th]
+    call strcat_c
+    mov eax, 1
+    pop rbx
+    ret
+.fail:
+    xor eax, eax
+    pop rbx
+    ret
+
+env_get_xdg:
+    push r12
+    mov r12, [g_envp]
+    test r12, r12
+    jz .n
+.lp:
+    mov rdi, [r12]
+    test rdi, rdi
+    jz .n
+    push rdi
+    lea rsi, [env_xdg]
+    call env_key_match
+    pop rdi
+    test al, al
+    jnz .g
+    add r12, 8
+    jmp .lp
+.g:
+    ; rdi = "XDG_CONFIG_HOME=..." — skip key via strlen(key)
+    push rdi
+    lea rdi, [env_xdg]
+    call strlen
+    mov rcx, rax
+    pop rdi
+    add rdi, rcx
+    cmp byte [rdi], '='
+    jne .n
+    inc rdi
+    mov rax, rdi
+    pop r12
+    ret
+.n: xor eax, eax
+    pop r12
+    ret
+
+env_get_home:
+    push r12
+    mov r12, [g_envp]
+    test r12, r12
+    jz .n
+.lp:
+    mov rdi, [r12]
+    test rdi, rdi
+    jz .n
+    push rdi
+    lea rsi, [env_home]
+    call env_key_match
+    pop rdi
+    test al, al
+    jnz .g
+    add r12, 8
+    jmp .lp
+.g:
+    push rdi
+    lea rdi, [env_home]
+    call strlen
+    mov rcx, rax
+    pop rdi
+    add rdi, rcx
+    cmp byte [rdi], '='
+    jne .n
+    inc rdi
+    mov rax, rdi
+    pop r12
+    ret
+.n: xor eax, eax
+    pop r12
+    ret
+
+strcpy_c:
+    push rcx
+    xor ecx, ecx
+.lp:
+    cmp ecx, 1000
+    jae .z
+    mov al, [rsi+rcx]
+    mov [rdi+rcx], al
+    test al, al
+    jz .d
+    inc ecx
+    jmp .lp
+.z: mov byte [rdi+1000], 0
+.d: pop rcx
+    ret
+
+strcat_c:
+    push rbx
+    push r12
+    mov r12, rsi
+    mov rbx, rdi
+    call strlen
+    lea rdi, [rbx+rax]
+    mov rsi, r12
+    call strcpy_c
+    pop r12
+    pop rbx
+    ret
+
+; ── mkdir -p for f00 dir + themes (create each path segment) ─
+mkdir_p_f00:
+    call resolve_f00_dir
+    test eax, eax
+    jz .f
+    lea rdi, [path_dir]
+    call mkdir_p_path
+    call resolve_themes_dir
+    test eax, eax
+    jz .f
+    lea rdi, [path_thdir]
+    call mkdir_p_path
+    mov eax, 1
+    ret
+.f: xor eax, eax
+    ret
+
+; mkdir_p_path(rdi=absolute path cstr) — walk '/', mkdir each prefix
+mkdir_p_path:
+    push rbx
+    push r12
+    mov r12, rdi
+    cmp byte [r12], '/'
+    jne .start
+    lea rbx, [r12+1]
+    jmp .scan
+.start:
+    mov rbx, r12
+.scan:
+    mov al, [rbx]
+    test al, al
+    jz .fin
+    cmp al, '/'
+    jne .inc
+    mov byte [rbx], 0
+    mov rax, SYS_mkdir
+    mov rdi, r12
+    mov rsi, 0o755
+    syscall                         ; ignore EEXIST
+    mov byte [rbx], '/'
+.inc:
+    inc rbx
+    jmp .scan
+.fin:
+    mov rax, SYS_mkdir
+    mov rdi, r12
+    mov rsi, 0o755
+    syscall
+    pop r12
+    pop rbx
+    ret
+
+; ── init ──────────────────────────────────────────────────
+config_init_tree:
+    push rbx
+    call mkdir_p_f00
+    test eax, eax
+    jz .fail
+    call resolve_cfg_path
+    test eax, eax
+    jz .fail
+    ; if config exists, skip write
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [path_cfg]
+    mov rdx, O_RDONLY
+    xor r10, r10
+    syscall
+    cmp rax, -4096
+    jae .write
+    ; exists
+    mov rdi, rax
+    mov rax, SYS_close
+    syscall
+    lea rsi, [init_skip]
+    call out_str
+    lea rsi, [path_cfg]
+    call out_str
+    lea rsi, [nl]
+    call out_str
+    jmp .ok
+.write:
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [path_cfg]
+    mov rdx, O_WRONLY|O_CREAT|O_TRUNC
+    mov r10, 0o644
+    syscall
+    cmp rax, -4096
+    jae .fail
+    mov rbx, rax
+    lea rdi, [starter]
+    call strlen
+    mov rdx, rax
+    mov rax, SYS_write
+    mov rdi, rbx
+    lea rsi, [starter]
+    syscall
+    mov rdi, rbx
+    mov rax, SYS_close
+    syscall
+    lea rsi, [init_ok]
+    call out_str
+    lea rsi, [path_cfg]
+    call out_str
+    lea rsi, [nl]
+    call out_str
+.ok:
+    mov eax, 1
+    pop rbx
+    ret
+.fail:
+    lea rsi, [err_write]
+    call out_str
+    mov dword [g_exit], 1
+    xor eax, eax
+    pop rbx
+    ret
+
+; ── upsert theme = NAME ───────────────────────────────────
+; rdi = theme name cstr → eax=1 ok
+config_upsert_theme:
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    mov r15, rdi                    ; name
+    call mkdir_p_f00
+    call resolve_cfg_path
+    test eax, eax
+    jz .fail
+    ; read existing (optional)
+    mov qword [rw_buf], 0
+    mov r14, 0                      ; len
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [path_cfg]
+    mov rdx, O_RDONLY
+    xor r10, r10
+    syscall
+    cmp rax, -4096
+    jae .build                      ; no file
+    mov r13, rax
+    mov rax, SYS_read
+    mov rdi, r13
+    lea rsi, [rw_buf]
+    mov rdx, 16000
+    syscall
+    mov r14, rax
+    mov rdi, r13
+    mov rax, SYS_close
+    syscall
+    test r14, r14
+    jg .okrd
+    xor r14, r14
+.okrd:
+    cmp r14, 16000
+    jb .cap
+    mov r14, 15999
+.cap:
+    mov byte [rw_buf + r14], 0
+.build:
+    ; scan lines into out_buf, replacing theme=
+    lea r12, [rw_buf]
+    lea r13, [out_buf]
+    xor ebx, ebx                    ; replaced flag
+.line:
+    cmp byte [r12], 0
+    je .eof
+    ; copy line to name_tmp area? process in place
+    ; check if line is theme key (optional spaces)
+    mov rdi, r12
+    call line_is_theme_key
+    test eax, eax
+    jz .copyl
+    ; replace this line with theme = NAME
+    test ebx, ebx
+    jnz .skipl                      ; already wrote one
+    call write_theme_line_to_r13
+    mov ebx, 1
+    jmp .skipl
+.copyl:
+    ; copy until NL or NUL
+.clp:
+    mov al, [r12]
+    test al, al
+    jz .line
+    mov [r13], al
+    inc r12
+    inc r13
+    cmp al, 10
+    je .line
+    jmp .clp
+.skipl:
+    ; advance r12 to after NL
+.sk:
+    mov al, [r12]
+    test al, al
+    jz .line
+    inc r12
+    cmp al, 10
+    je .line
+    jmp .sk
+.eof:
+    test ebx, ebx
+    jnz .wfile
+    ; append theme line
+    cmp r13, out_buf
+    je .app
+    cmp byte [r13-1], 10
+    je .app
+    mov byte [r13], 10
+    inc r13
+.app:
+    call write_theme_line_to_r13
+.wfile:
+    mov byte [r13], 0
+    lea rdi, [out_buf]
+    call strlen
+    mov r14, rax
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [path_cfg]
+    mov rdx, O_WRONLY|O_CREAT|O_TRUNC
+    mov r10, 0o644
+    syscall
+    cmp rax, -4096
+    jae .fail
+    mov rbx, rax
+    mov rax, SYS_write
+    mov rdi, rbx
+    lea rsi, [out_buf]
+    mov rdx, r14
+    syscall
+    mov rdi, rbx
+    mov rax, SYS_close
+    syscall
+    mov eax, 1
+    jmp .out
+.fail:
+    xor eax, eax
+.out:
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+; write_theme_line_to_r13: append "theme = NAME\n", r15=name, r13 dest
+write_theme_line_to_r13:
+    push rsi
+    lea rsi, [key_theme_eq]
+.cp1:
+    mov al, [rsi]
+    test al, al
+    jz .nm
+    mov [r13], al
+    inc rsi
+    inc r13
+    jmp .cp1
+.nm:
+    mov rsi, r15
+.cp2:
+    mov al, [rsi]
+    test al, al
+    jz .nl
+    mov [r13], al
+    inc rsi
+    inc r13
+    jmp .cp2
+.nl:
+    mov byte [r13], 10
+    inc r13
+    pop rsi
+    ret
+
+; line_is_theme_key(rdi=line start) → eax=1 if theme key (ignoring spaces)
+line_is_theme_key:
+    push rbx
+    mov rbx, rdi
+.sk:
+    mov al, [rbx]
+    cmp al, ' '
+    je .s
+    cmp al, 9
+    jne .k
+.s: inc rbx
+    jmp .sk
+.k:
+    ; match "theme"
+    lea rsi, [line_theme_pfx]
+.m:
+    mov al, [rsi]
+    test al, al
+    jz .after
+    cmp al, [rbx]
+    jne .no
+    inc rsi
+    inc rbx
+    jmp .m
+.after:
+    mov al, [rbx]
+    cmp al, '='
+    je .yes
+    cmp al, ' '
+    je .sp
+    cmp al, 9
+    je .sp
+    jmp .no
+.sp:
+    inc rbx
+    mov al, [rbx]
+    cmp al, '='
+    je .yes
+    cmp al, ' '
+    je .sp
+    cmp al, 9
+    je .sp
+    jmp .no
+.yes:
+    mov eax, 1
+    pop rbx
+    ret
+.no:
+    xor eax, eax
     pop rbx
     ret

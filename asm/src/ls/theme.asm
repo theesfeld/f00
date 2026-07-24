@@ -206,9 +206,13 @@ star:        db " *", 0
 hdr_builtin: db "Builtin themes:", 10, 0
 hdr_user:    db "User themes (~/.config/f00/themes/):", 10, 0
 msg_cur:     db "current: ", 0
-msg_note:    db 10, "Default 'terminal'/'f00' use ANSI 16 colors (your palette).", 10
-             db "Named themes use truecolor. User files: themes/<name>.theme", 10
-             db "  path=1;36   or   path=38;2;R;G;B", 10, 0
+sw:          db "██", 0
+msg_note:    db 10, "swatches: path num ok err hdr dim", 10
+             db "Default 'terminal'/'f00' use ANSI 16 colors (your palette).", 10
+             db "Named themes use truecolor. User: ~/.config/f00/themes/<name>.theme", 10
+             db "  path=1;36   or   path=38;2;R;G;B", 10
+             db "Set: f00-config theme set <name>   (writes XDG config)", 10, 0
+extern color_path, color_num, color_ok, color_err, color_hdr, color_dim, color_reset
 
 section .text
 
@@ -516,9 +520,12 @@ env_get_xdg:
     add r12, 8
     jmp .lp
 .g:
-    lea rsi, [env_xdg]
+    push rdi
+    lea rdi, [env_xdg]
     call strlen
-    add rdi, rax
+    mov rcx, rax
+    pop rdi
+    add rdi, rcx
     cmp byte [rdi], '='
     jne .n
     inc rdi
@@ -547,9 +554,12 @@ env_get_home:
     add r12, 8
     jmp .lp
 .g:
-    lea rsi, [env_home]
+    push rdi
+    lea rdi, [env_home]
     call strlen
-    add rdi, rax
+    mov rcx, rax
+    pop rdi
+    add rdi, rcx
     cmp byte [rdi], '='
     jne .n
     inc rdi
@@ -800,10 +810,17 @@ apply_theme_line:
     pop rbx
     ret
 
-; theme_list_print — stdout list of builtins + note
+; theme_list_print — gallery: name + token swatches + current mark
 theme_list_print:
     push rbx
     push r12
+    push r13
+    push r14
+    push r15
+    ; save current theme name
+    lea rsi, [g_theme_name]
+    lea rdi, [body_tmp]
+    call strcpy_theme_local
     lea rsi, [msg_cur]
     call out_str
     lea rsi, [g_theme_name]
@@ -815,33 +832,102 @@ theme_list_print:
     call out_str
     lea rsi, [hdr_builtin]
     call out_str
+    ; force color for swatches if TTY
+    extern is_tty, g_color
+    mov rdi, 1
+    call is_tty
+    test al, al
+    jz .lp0
+    mov byte [g_color], 1
+.lp0:
     lea r12, [theme_table]
 .lp:
     mov rdi, [r12]
     test rdi, rdi
-    jz .note
+    jz .rest
+    ; apply theme for swatch (temporary)
+    mov rdi, [r12]
+    call theme_apply_name
     lea rsi, [sp2]
     call out_str
     mov rsi, [r12]
     call out_str
-    ; mark current
     lea rdi, [g_theme_name]
+    mov rsi, [r12]
+    ; mark if matches saved name in body_tmp
+    lea rdi, [body_tmp]
     mov rsi, [r12]
     call strcmp
     test eax, eax
-    jnz .nx
+    jnz .nsw
     lea rsi, [star]
     call out_str
-.nx:
+.nsw:
+    lea rsi, [sp2]
+    call out_str
+    ; six swatches
+    call color_path
+    lea rsi, [sw]
+    call out_str
+    call color_reset
+    call color_num
+    lea rsi, [sw]
+    call out_str
+    call color_reset
+    call color_ok
+    lea rsi, [sw]
+    call out_str
+    call color_reset
+    call color_err
+    lea rsi, [sw]
+    call out_str
+    call color_reset
+    call color_hdr
+    lea rsi, [sw]
+    call out_str
+    call color_reset
+    call color_dim
+    lea rsi, [sw]
+    call out_str
+    call color_reset
     lea rsi, [nl]
     call out_str
     add r12, 56
     jmp .lp
+.rest:
+    ; restore previous theme
+    lea rdi, [body_tmp]
+    cmp byte [rdi], 0
+    je .def
+    call theme_apply_name
+    jmp .note
+.def:
+    call theme_apply_default
 .note:
     lea rsi, [msg_note]
     call out_str
+    pop r15
+    pop r14
+    pop r13
     pop r12
     pop rbx
+    ret
+
+strcpy_theme_local:
+    ; rdi=dst rsi=src max 47
+    push rcx
+    xor ecx, ecx
+.lp:
+    cmp ecx, 47
+    jae .z
+    mov al, [rsi+rcx]
+    mov [rdi+rcx], al
+    test al, al
+    jz .d
+    inc ecx
+    jmp .lp
+.z: mov byte [rdi+47], 0
+.d: pop rcx
     ret
 
 theme_current_name:
