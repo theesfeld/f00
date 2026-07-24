@@ -21,8 +21,7 @@ if [[ ! -f "${PKGDIR}/PKGBUILD" ]]; then
   exit 1
 fi
 
-# Write .SRCINFO from PKGBUILD without makepkg (CI has no Arch userland;
-# docker makepkg-as-root is forbidden).
+# Write .SRCINFO without makepkg.
 write_srcinfo() {
   local pkgbuild="$1" out="$2"
   # shellcheck disable=SC1090
@@ -42,19 +41,50 @@ write_srcinfo() {
     for lic in "${license[@]}"; do
       printf '\tlicense = %s\n' "${lic}"
     done
-    local dep
-    for dep in "${depends[@]}"; do
-      printf '\tdepends = %s\n' "${dep}"
-    done
-    local p
-    for p in "${provides[@]}"; do
-      printf '\tprovides = %s\n' "${p}"
-    done
-    # Arch-specific sources (binary package)
-    printf '\tsource_x86_64 = %s\n' "${source_x86_64[0]}"
-    printf '\tsha256sums_x86_64 = %s\n' "${sha256sums_x86_64[0]}"
-    printf '\tsource_aarch64 = %s\n' "${source_aarch64[0]}"
-    printf '\tsha256sums_aarch64 = %s\n' "${sha256sums_aarch64[0]}"
+    if declare -p depends &>/dev/null; then
+      local dep
+      for dep in "${depends[@]+"${depends[@]}"}"; do
+        [[ -n "${dep}" ]] && printf '\tdepends = %s\n' "${dep}"
+      done
+    fi
+    if declare -p makedepends &>/dev/null; then
+      local md
+      for md in "${makedepends[@]+"${makedepends[@]}"}"; do
+        [[ -n "${md}" ]] && printf '\tmakedepends = %s\n' "${md}"
+      done
+    fi
+    if declare -p provides &>/dev/null; then
+      local p
+      for p in "${provides[@]+"${provides[@]}"}"; do
+        [[ -n "${p}" ]] && printf '\tprovides = %s\n' "${p}"
+      done
+    fi
+    if declare -p conflicts &>/dev/null; then
+      local c
+      for c in "${conflicts[@]+"${conflicts[@]}"}"; do
+        [[ -n "${c}" ]] && printf '\tconflicts = %s\n' "${c}"
+      done
+    fi
+    # Plain source= or arch-specific source_x86_64=
+    if declare -p source_x86_64 &>/dev/null; then
+      printf '\tsource_x86_64 = %s\n' "${source_x86_64[0]}"
+      printf '\tsha256sums_x86_64 = %s\n' "${sha256sums_x86_64[0]}"
+    fi
+    if declare -p source_aarch64 &>/dev/null; then
+      printf '\tsource_aarch64 = %s\n' "${source_aarch64[0]}"
+      printf '\tsha256sums_aarch64 = %s\n' "${sha256sums_aarch64[0]}"
+    fi
+    if declare -p source &>/dev/null; then
+      local s i=0
+      for s in "${source[@]}"; do
+        printf '\tsource = %s\n' "${s}"
+      done
+      if declare -p sha256sums &>/dev/null; then
+        for s in "${sha256sums[@]}"; do
+          printf '\tsha256sums = %s\n' "${s}"
+        done
+      fi
+    fi
     printf '\n'
     printf 'pkgname = %s\n' "${pkgname}"
   } > "${out}"
@@ -64,7 +94,6 @@ WORKDIR="$(mktemp -d)"
 trap 'rm -rf "${WORKDIR}"' EXIT
 
 KEY="${WORKDIR}/aur_key"
-# Preserve newlines in multiline secrets (GitHub may or may not include final newline).
 printf '%s\n' "${AUR_SSH_PRIVATE_KEY}" > "${KEY}"
 chmod 600 "${KEY}"
 

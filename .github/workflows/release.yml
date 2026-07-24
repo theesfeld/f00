@@ -125,6 +125,16 @@ jobs:
       - name: List assets
         run: find release-assets -type f | sort && cat release-assets/SHA256SUMS || true
 
+      - name: Regenerate Homebrew + AUR manifests from release checksums
+        run: |
+          set -euo pipefail
+          chmod +x scripts/*.sh
+          VER="${{ steps.meta.outputs.version }}"
+          scripts/gen-homebrew-formula.sh "${VER}" release-assets/SHA256SUMS Formula/f00.rb
+          scripts/gen-aur-pkgbuild.sh "${VER}" release-assets/SHA256SUMS packaging/aur/PKGBUILD
+          echo "--- Formula ---"; head -40 Formula/f00.rb
+          echo "--- PKGBUILD ---"; head -40 packaging/aur/PKGBUILD
+
       - name: Create / update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -134,31 +144,40 @@ jobs:
           files: |
             release-assets/*
           body: |
-            # f00 ${{ steps.meta.outputs.tag }}
+            # f00tils ${{ steps.meta.outputs.tag }}
 
-            **f00tils** — pure assembly GNU coreutils monorepo (Linux x86-64 freestanding multicall; binary `f00`).
+            **f00tils** — pure assembly GNU coreutils replacement (Linux x86-64 freestanding multicall; binary `f00`).
 
             ## Install
 
             ```bash
+            # primary
             curl -fsSL https://f00.sh/install.sh | bash
+            # pin
             curl -fsSL https://f00.sh/install.sh | F00_VERSION=${{ steps.meta.outputs.tag }} bash
+            # packages
+            #   deb:  f00_${{ steps.meta.outputs.version }}_amd64.deb
+            #   rpm:  f00-${{ steps.meta.outputs.version }}-1.x86_64.rpm
+            #   arch: f00-${{ steps.meta.outputs.version }}-1-x86_64.pkg.tar.zst
+            #   brew: brew install theesfeld/tap/f00
+            #   AUR:  yay -S f00
+            # source
             git checkout ${{ steps.meta.outputs.tag }} && cd asm && make && make install
             ```
 
             ## Assets
 
-            - `f00-${{ steps.meta.outputs.version }}-linux-x86_64.tar.gz` (preferred tarball)
+            - `f00-${{ steps.meta.outputs.version }}-linux-x86_64.tar.gz` (preferred tarball / curl installer)
             - `f00-${{ steps.meta.outputs.version }}-x86_64-linux.tar.gz` (alias)
             - `f00_${{ steps.meta.outputs.version }}_amd64.deb`
             - `f00-${{ steps.meta.outputs.version }}-1.x86_64.rpm`
             - `f00-${{ steps.meta.outputs.version }}-1-x86_64.pkg.tar.zst`
 
-            See [README](https://github.com/theesfeld/f00#readme) · [progress](https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md) · https://f00.sh
+            See [README](https://github.com/theesfeld/f00#readme) · https://f00.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish Homebrew tap (best-effort)
+      - name: Publish Homebrew tap
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
@@ -167,10 +186,10 @@ jobs:
             echo "skip homebrew: no HOMEBREW_TAP_TOKEN"
             exit 0
           fi
-          chmod +x scripts/*.sh 2>/dev/null || true
-          scripts/publish-homebrew-tap.sh Formula/f00.rb || echo "homebrew publish non-fatal"
+          chmod +x scripts/*.sh
+          scripts/publish-homebrew-tap.sh Formula/f00.rb
 
-      - name: Publish AUR (best-effort)
+      - name: Publish AUR
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
@@ -181,5 +200,5 @@ jobs:
             echo "skip AUR: no AUR_SSH_PRIVATE_KEY"
             exit 0
           fi
-          chmod +x scripts/*.sh 2>/dev/null || true
-          scripts/publish-aur.sh packaging/aur || echo "AUR publish non-fatal"
+          chmod +x scripts/*.sh
+          scripts/publish-aur.sh packaging/aur

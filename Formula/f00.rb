@@ -1,23 +1,21 @@
-# Homebrew formula for f00tils (pure assembly multicall coreutils suite).
+# Homebrew formula for f00 (pure assembly multicall coreutils suite).
 #
 # Install:
 #   brew install theesfeld/tap/f00
 #
-# Official installer (recommended):
+# Official installer:
 #   curl -fsSL https://f00.sh/install.sh | bash
-#
-# Linux x86-64 freestanding static binary.
 
 class F00 < Formula
   desc "f00tils — pure assembly coreutils replacement (multicall, freestanding)"
   homepage "https://f00.sh"
-  version "0.15.0"
+  version "0.15.1"
   license "MIT"
 
   on_linux do
     on_intel do
-      url "https://github.com/theesfeld/f00/releases/download/v0.15.0/f00-0.15.0-linux-x86_64.tar.gz"
-      sha256 "4e9420e48412e9765d30132e8dcb6829087343fcddd94bd436b6d6dfcb685b99"
+      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-0.15.1-linux-x86_64.tar.gz"
+      sha256 "cd170d12234b6abb26b2bcebc0d0e8064360a9806d7f69a93cacdee16f6d6958"
     end
   end
 

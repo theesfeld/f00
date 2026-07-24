@@ -9,16 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- Product brand **f00tils** (coreutils replacement naming)
-- Docs, man pages, website rewrite under house communication standards (STE / NASA-AP)
-- Website per-tool benchmarks: tool, command, sample output, GNU vs f00 time
-- Release assets: **deb**, **rpm**, and **Arch** packages alongside tarballs
-- House scaffold: `AGENTS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, pre-commit, issue templates
+## [0.15.1] - 2026-07-24
 
-### Removed
-- Historical Rust workspace (`crates/`, `Cargo.toml`, dual Apache license artifacts)
-- Windows Scoop/Winget packaging stubs (product is Linux x86-64 freestanding ASM)
+### Full packaging release — f00tils
+
+#### Added
+- Release packages on every tag: **tarball**, **deb**, **rpm**, **Arch** (`.pkg.tar.zst`)
+- Homebrew tap publish from release checksums (`theesfeld/tap/f00`)
+- AUR binary PKGBUILD publish (`f00`)
+- Brand assets + color screenshots; suite benchmarks on site
+
+#### Changed
+- Product brand **f00tils** (coreutils → f00tils); binary remains `f00`
+- Docs, man pages, website under house communication standards
+- Packaging scripts target ASM linux-x86_64 assets (not legacy Rust triples)
+
+#### Removed
+- Historical Rust workspace and dual Apache license artifacts
+- Windows Scoop/Winget packaging stubs
 
 ## [0.15.0] - 2026-07-23
 

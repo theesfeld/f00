@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate packaging/aur/PKGBUILD from version + SHA256SUMS (source tarball optional).
+# Generate packaging/aur/PKGBUILD from version + SHA256SUMS (binary package).
 # Usage: gen-aur-pkgbuild.sh <version> <SHA256SUMS-path> [output-path]
 set -euo pipefail
 
@@ -11,11 +11,31 @@ if [[ -z "${OUT}" ]]; then
   OUT="${ROOT}/packaging/aur/PKGBUILD"
 fi
 
-# Prefer building from tagged source (AUR-friendly). SHA for release binary is optional.
+sha_for() {
+  local name="$1"
+  awk -v f="$name" '$2 == f || $2 == ("./" f) { print $1; exit }' "${SUMS}"
+}
+
+need() {
+  local h
+  h="$(sha_for "$1")"
+  if [[ -z "${h}" ]]; then
+    echo "missing sha256 for $1 in ${SUMS}" >&2
+    exit 1
+  fi
+  printf '%s' "${h}"
+}
+
+ASSET="f00-${VERSION}-linux-x86_64.tar.gz"
+if [[ -z "$(sha_for "${ASSET}")" ]]; then
+  ASSET="f00-${VERSION}-x86_64-linux.tar.gz"
+fi
+SHA="$(need "${ASSET}")"
+
 mkdir -p "$(dirname "${OUT}")"
 cat > "${OUT}" <<EOF
 # Maintainer: theesfeld
-# Auto-updated on release by GitHub Actions.
+# f00tils — pure assembly coreutils replacement (binary package)
 pkgname=f00
 pkgver=${VERSION}
 pkgrel=1
@@ -24,20 +44,23 @@ arch=('x86_64')
 url="https://f00.sh"
 license=('MIT')
 depends=()
-makedepends=('nasm' 'binutils')
 provides=('f00')
 conflicts=('f00')
-source=("https://github.com/theesfeld/f00/archive/refs/tags/v\${pkgver}.tar.gz")
-sha256sums=('SKIP')
-
-build() {
-  cd "\${srcdir}/f00-\${pkgver}/asm" 2>/dev/null || cd "\${srcdir}/f00-"*/asm
-  make
-}
+options=('!strip')
+source=("https://github.com/theesfeld/f00/releases/download/v\${pkgver}/${ASSET}")
+sha256sums=('${SHA}')
 
 package() {
-  cd "\${srcdir}/f00-\${pkgver}/asm" 2>/dev/null || cd "\${srcdir}/f00-"*/asm
-  install -Dm755 f00 "\${pkgdir}/usr/bin/f00"
+  local root
+  root="\${srcdir}/f00-\${pkgver}-linux-x86_64"
+  if [[ ! -d "\${root}" ]]; then
+    root="\${srcdir}/f00-\${pkgver}-x86_64-linux"
+  fi
+  if [[ ! -d "\${root}" ]]; then
+    # tarball may extract a single top dir — find the binary
+    root="\$(dirname "\$(find "\${srcdir}" -type f -name f00 | head -n1)")"
+  fi
+  install -Dm755 "\${root}/f00" "\${pkgdir}/usr/bin/f00"
   local u
   for u in ls cat true false yes nproc tty whoami basename dirname \\
            head tail wc tee seq echo pwd sleep \\
@@ -52,11 +75,13 @@ package() {
            base64 basenc base32 dircolors chroot stty stdbuf runcon chcon; do
     ln -s f00 "\${pkgdir}/usr/bin/f00-\${u}"
   done
-  install -Dm644 ../LICENSE "\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE" 2>/dev/null || true
-  if [[ -d man/man1 ]]; then
-    install -Dm644 man/man1/*.1 -t "\${pkgdir}/usr/share/man/man1/"
+  if [[ -f "\${root}/LICENSE" ]]; then
+    install -Dm644 "\${root}/LICENSE" "\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE"
+  fi
+  if [[ -d "\${root}/man/man1" ]]; then
+    install -Dm644 "\${root}/man/man1/"*.1 -t "\${pkgdir}/usr/share/man/man1/"
   fi
 }
 EOF
 
-echo "wrote ${OUT} for v${VERSION} (SUMS=${SUMS} recorded for release tooling)"
+echo "wrote ${OUT} for v${VERSION} (${ASSET})"
