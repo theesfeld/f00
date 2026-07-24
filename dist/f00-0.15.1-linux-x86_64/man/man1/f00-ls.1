@@ -1,0 +1,83 @@
+.TH F00-LS 1 "2026" "f00 0.15.1" "User Commands"
+.SH NAME
+f00-ls \- list directory contents
+.SH SYNOPSIS
+.B f00-ls
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+List information about each
+.IR FILE
+(the current directory by default).
+.B f00-ls
+is part of the
+.B f00
+suite (f00tils): one freestanding x86-64 assembly multicall binary that replaces GNU coreutils.
+.PP
+Default mode is
+.B modern
+(color and icons on a TTY; optional git and tree views).
+Use
+.B --core
+for strict GNU coreutils
+.B ls
+presentation.
+.SH COREUTILS FLAGS
+.TP
+\fB\-a\fR, \fB\-\-all\fR
+Do not ignore entries that start with
+.BR . .
+.TP
+\fB\-l\fR
+Use a long listing format.
+.TP
+\fB\-h\fR, \fB\-\-human\-readable\fR
+With
+.B \-l
+and
+.BR \-s ,
+print sizes like 1K 234M 2G.
+.TP
+\fB\-\-color\fR[=\fIWHEN\fR]
+Colorize the output.
+.I WHEN
+is
+.BR auto ,
+.BR always ,
+or
+.BR never .
+.PP
+Run
+.B f00-ls --help
+for the full coreutils-compatible flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+Use strict coreutils-compatible output (no icons, git, or modern defaults).
+.TP
+\fB\-\-no\-core\fR
+Force modern mode even when standard output is not a TTY.
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+Write a detailed JSON listing.
+.TP
+\fB\-\-csv\fR
+Write a detailed CSV listing.
+.TP
+\fB\-\-tree\fR
+Show a tree view.
+.TP
+\fB\-\-git\fR
+Annotate entries with git status.
+.TP
+\fB\-\-icons\fR[=\fIWHEN\fR]
+Show Nerd Font icons.
+.TP
+\fB\-\-browse\fR
+Open the interactive dual-pane browser.
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR ls (1),
+.BR f00 (1)
+.PP
+https://f00.sh

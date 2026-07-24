@@ -1,0 +1,41 @@
+.TH F00-ECHO 1 "2026" "f00 0.15.1" "User Commands"
+.SH NAME
+f00\-echo \- display a line of text (f00tils)
+.SH SYNOPSIS
+.B f00\-echo
+[\fISHORT\-OPTION\fR]... [\fISTRING\fR]...
+.SH DESCRIPTION
+Echo the STRING(s) to standard output. Pure assembly multicall. MIT.
+.PP
+Default is modern mode.
+.B \-\-core
+selects strict GNU echo\-compatible behavior.
+.SH COREUTILS FLAGS
+.TP
+\fB\-n\fR
+do not output the trailing newline
+.TP
+\fB\-e\fR
+enable interpretation of backslash escapes
+.TP
+\fB\-E\fR
+disable interpretation of backslash escapes (default)
+.PP
+See
+.B f00\-echo \-\-help
+for the full flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils\-compatible mode
+.TP
+\fB\-\-help\fR / \fB\-\-version\fR
+suite meta options
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR echo (1),
+.BR f00\-printf (1),
+.BR f00 (1)
+.PP
+https://f00.sh

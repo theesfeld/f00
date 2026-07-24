@@ -12,7 +12,7 @@ extern g_exit, g_tty, g_color, g_json_core
 extern err_missing_operand, err_str
 extern json_meta_open, json_meta_close, json_key_str, json_key_u64, json_key_bool
 extern json_comma_nl
-extern color_ok, color_err, color_path, color_reset, color_hdr
+extern color_ok, color_err, color_path, color_reset, color_hdr, color_dim
 extern ui_help_print
 extern icon_for_path, icon_enabled
 extern ui_spinner_start, ui_spinner_tick, ui_spinner_stop
@@ -181,7 +181,7 @@ jk_matched: db "matched",0
 jk_expected: db "expected",0
 jk_actual: db "actual",0
 jk_ok: db "ok",0
-v_common: db "f00-hash (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_common: db "f00-hash (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_md5sum:
     db "Usage: f00-md5sum [OPTION]... [FILE]...",10
     db "Print or check MD5 (128-bit) checksums.",10,10
@@ -204,7 +204,7 @@ h_md5sum:
     db "  f00-md5sum -c checksums.md5",10
     db "  f00-md5sum --json file.txt",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_md5sum: db "f00-md5sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_md5sum: db "f00-md5sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_sha1sum:
     db "Usage: f00-sha1sum [OPTION]... [FILE]...",10
     db "Print or check SHA1 (160-bit) checksums.",10,10
@@ -219,7 +219,7 @@ h_sha1sum:
     db "Examples:",10
     db "  f00-sha1sum file.txt",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_sha1sum: db "f00-sha1sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_sha1sum: db "f00-sha1sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_sha256sum:
     db "Usage: f00-sha256sum [OPTION]... [FILE]...",10
     db "Print or check SHA256 (256-bit) checksums.",10,10
@@ -234,7 +234,7 @@ h_sha256sum:
     db "Examples:",10
     db "  f00-sha256sum file.txt",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_sha256sum: db "f00-sha256sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_sha256sum: db "f00-sha256sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_sha224sum:
     db "Usage: f00-sha224sum [OPTION]... [FILE]...",10
     db "Print or check SHA224 (224-bit) checksums.",10,10
@@ -247,7 +247,7 @@ h_sha224sum:
     db "      --json     detailed JSON (schema f00/v1 + hash metadata)",10
     db "      --csv      CSV result",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_sha224sum: db "f00-sha224sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_sha224sum: db "f00-sha224sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_sha384sum:
     db "Usage: f00-sha384sum [OPTION]... [FILE]...",10
     db "Print or check SHA384 (384-bit) checksums.",10,10
@@ -260,7 +260,7 @@ h_sha384sum:
     db "      --json     detailed JSON (schema f00/v1 + hash metadata)",10
     db "      --csv      CSV result",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_sha384sum: db "f00-sha384sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_sha384sum: db "f00-sha384sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_sha512sum:
     db "Usage: f00-sha512sum [OPTION]... [FILE]...",10
     db "Print or check SHA512 (512-bit) checksums.",10,10
@@ -273,7 +273,7 @@ h_sha512sum:
     db "      --json     detailed JSON (schema f00/v1 + hash metadata)",10
     db "      --csv      CSV result",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_sha512sum: db "f00-sha512sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_sha512sum: db "f00-sha512sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_b2sum:
     db "Usage: f00-b2sum [OPTION]... [FILE]...",10
     db "Print or check BLAKE2b-512 checksums.",10,10
@@ -286,7 +286,7 @@ h_b2sum:
     db "      --json     detailed JSON (schema f00/v1 + hash metadata)",10
     db "      --csv      CSV result",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_b2sum: db "f00-b2sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_b2sum: db "f00-b2sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_cksum:
     db "Usage: f00-cksum [OPTION]... [FILE]...",10
     db "Print CRC checksum and byte counts of each FILE.",10,10
@@ -300,7 +300,7 @@ h_cksum:
     db "Examples:",10
     db "  f00-cksum file.txt",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_cksum: db "f00-cksum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_cksum: db "f00-cksum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_sum:
     db "Usage: f00-sum [OPTION]... [FILE]...",10
     db "Print checksum and block counts for each FILE.",10,10
@@ -314,7 +314,7 @@ h_sum:
     db "      --json     detailed JSON (schema f00/v1)",10
     db "      --csv      CSV result",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_sum: db "f00-sum (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_sum: db "f00-sum (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_base64:
     db "Usage: f00-base64 [OPTION]... [FILE]",10
     db "Base64 encode or decode FILE, or standard input, to standard output.",10,10
@@ -333,7 +333,7 @@ h_base64:
     db "  f00-base64 file.bin",10
     db "  f00-base64 -d encoded.txt",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_base64: db "f00-base64 (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_base64: db "f00-base64 (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_basenc:
     db "Usage: f00-basenc [OPTION]... [FILE]",10
     db "basenc encode or decode FILE, or standard input, to standard output.",10,10
@@ -351,7 +351,7 @@ h_basenc:
     db "      --json     detailed JSON (schema f00/v1)",10
     db "      --csv      CSV result",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_basenc: db "f00-basenc (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_basenc: db "f00-basenc (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_dircolors:
     db "Usage: f00-dircolors [OPTION]... [FILE]",10
     db "Output commands to set the LS_COLORS environment variable.",10,10
@@ -368,7 +368,7 @@ h_dircolors:
     db "Examples:",10
     db '  eval "$(f00-dircolors)"',10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_dircolors: db "f00-dircolors (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_dircolors: db "f00-dircolors (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 align 4
 md5_T:
     dd 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee
@@ -667,13 +667,64 @@ init_io:
     ret
 
 ; out_hex rsi=bytes edx=len
+; modern color: green hex, dim space every 2 bytes (md5) or 4 bytes (sha≥16)
 out_hex:
     push rbx
     push r12
     push r13
+    push r14
+    push r15
     mov r12, rsi
     mov r13d, edx
+    xor r14d, r14d                  ; byte index
+    ; group width: 2 bytes default; 4 bytes when digest ≥16 (sha1/256/512)
+    mov r15d, 2
+    cmp edx, 16
+    jb .gw
+    mov r15d, 4
+.gw:
+    ; modern + color: group with dim gaps
+    cmp byte [g_color], 0
+    je .plain
+    test dword [flags], F_CORE
+    jnz .plain
+    call color_ok                   ; ensure green even if caller forgot
 .lp:
+    test r13d, r13d
+    jz .done
+    ; dim space before every group (except first)
+    test r14d, r14d
+    jz .pair
+    mov eax, r14d
+    xor edx, edx
+    div r15d                        ; r14 % group_width
+    test edx, edx
+    jnz .pair                       ; mid-group
+    push r13
+    call color_dim
+    mov dil, ' '
+    call out_byte
+    call color_reset
+    call color_ok
+    pop r13
+.pair:
+    movzx eax, byte [r12]
+    mov ebx, eax
+    shr al, 4
+    movzx eax, al
+    lea rsi, [hexdigits]
+    mov dil, [rsi+rax]
+    call out_byte
+    mov eax, ebx
+    and eax, 15
+    lea rsi, [hexdigits]
+    mov dil, [rsi+rax]
+    call out_byte
+    inc r12
+    inc r14d
+    dec r13d
+    jmp .lp
+.plain:
     test r13d, r13d
     jz .done
     movzx eax, byte [r12]
@@ -690,8 +741,10 @@ out_hex:
     call out_byte
     inc r12
     dec r13d
-    jmp .lp
+    jmp .plain
 .done:
+    pop r15
+    pop r14
     pop r13
     pop r12
     pop rbx
@@ -2327,7 +2380,7 @@ print_digest_line:
     jnz .pcsv
     test dword [flags], F_TAG
     jnz .ptag
-    ; classic: hash[ *|  ]filename
+    ; modern: green grouped digest · icon path
     call hash_c_on
     lea rsi, [digbuf]
     mov edx, [digest_len]
@@ -2339,6 +2392,27 @@ print_digest_line:
     call out_str
     jmp .ppath
 .ptxt:
+    ; modern spacer: dim "  ·  " vs core "  "
+    cmp byte [g_color], 0
+    je .ps2
+    test dword [flags], F_CORE
+    jnz .ps2
+    call color_dim
+    mov dil, ' '
+    call out_byte
+    mov dil, ' '
+    call out_byte
+    mov dil, 0xc2                   ; · UTF-8
+    call out_byte
+    mov dil, 0xb7
+    call out_byte
+    mov dil, ' '
+    call out_byte
+    mov dil, ' '
+    call out_byte
+    call color_reset
+    jmp .ppath
+.ps2:
     lea rsi, [sp2]
     call out_str
 .ppath:
@@ -4581,7 +4655,7 @@ base32_main:
 
 section .rodata
 u_base32: db "base32",0
-v_base32: db "f00-base32 (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_base32: db "f00-base32 (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 h_base32:
     db "Usage: f00-base32 [OPTION]... [FILE]",10
     db "Base32 encode or decode FILE, or standard input, to standard output.",10,10

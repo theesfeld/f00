@@ -18,7 +18,8 @@ extern g_exit, g_tty, g_color, g_json_core
 extern err_missing_operand, err_str, err_try_help
 extern json_meta_open, json_meta_close, json_key_str, json_key_u64
 extern json_key_bool, json_comma_nl, json_indent
-extern color_path, color_ok, color_reset, color_dim
+extern color_path, color_ok, color_reset, color_dim, color_num, color_hdr
+extern ui_spinner_start, ui_spinner_tick, ui_spinner_stop
 
 %define F_JSON 1
 %define F_CSV  2
@@ -157,6 +158,7 @@ s_ver:  db "version",0
 nm_cut: db "cut",0
 nm_tr: db "tr",0
 nm_sort: db "sort",0
+s_spin_sort: db "sorting…",0
 nm_uniq: db "uniq",0
 nm_rev: db "rev",0
 nm_tac: db "tac",0
@@ -2313,7 +2315,7 @@ hcut: db "Usage: f00-cut OPTION... [FILE]...",10
       db "  printf 'a,b,c\n' | f00-cut -d, -f2",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vcut: db "f00-cut (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vcut: db "f00-cut (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -3175,7 +3177,7 @@ htr: db "Usage: f00-tr [OPTION]... SET1 [SET2]",10
      db "  f00-tr -d '\\r'",10
      db 10
      db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vtr: db "f00-tr (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vtr: db "f00-tr (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -3726,10 +3728,15 @@ sort_main:
     mov byte [big_buf+r15], 0
     mov rax, r15
 .ssort:
+    ; modern TTY spinner while loading/sorting (no-op under --core / pipes)
+    lea rsi, [s_spin_sort]
+    call ui_spinner_start
     call split_lines
+    call ui_spinner_tick
     test dword [opt_flags], OF_CHECK
     jnz .scheck
     call shell_sort
+    call ui_spinner_stop
     test dword [opt_flags], OF_UNIQ
     jz .safter_u
     call sort_unique_inplace
@@ -3750,6 +3757,7 @@ sort_main:
     inc r14
     jmp .se
 .scheck:
+    call ui_spinner_stop
     ; verify sorted; exit 1 if not. line_cmp already applies -r
     xor r14, r14
 .sc:
@@ -3983,7 +3991,7 @@ hsort: db "Usage: f00-sort [OPTION]... [FILE]...",10
        db "  printf 'b\\na\\n' | f00-sort",10
        db 10
        db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vsort: db "f00-sort (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vsort: db "f00-sort (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 sort_disorder: db "f00-sort: disorder detected",10,0
 
 section .text
@@ -4388,7 +4396,7 @@ huniq: db "Usage: f00-uniq [OPTION]... [INPUT [OUTPUT]]",10
       db "  sort file | f00-uniq -c",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vuniq: db "f00-uniq (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vuniq: db "f00-uniq (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 c_ucount: db 27, "[1;36m", 0
 c_ureset: db 27, "[0m", 0
 
@@ -4544,7 +4552,7 @@ hrev: db "Usage: f00-rev [options] [FILE]...",10
       db "  printf 'abc\n' | f00-rev",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vrev: db "f00-rev (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vrev: db "f00-rev (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -4629,7 +4637,7 @@ htac: db "Usage: f00-tac [FILE]...",10
       db "  f00-tac file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vtac: db "f00-tac (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vtac: db "f00-tac (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -4763,7 +4771,32 @@ nl_main:
     je .nblank
 .nnum:
     add rbx, [nl_incr]
-    ; pad width
+    ; modern: yellow line numbers + dim gutter bar
+    cmp byte [g_color], 0
+    je .nnum_plain
+    test dword [flags], F_CORE
+    jnz .nnum_plain
+    call color_num
+    mov rdi, rbx
+    call out_u64_width
+    call color_reset
+    call color_dim
+    mov dil, ' '
+    call out_byte
+    ; UTF-8 light vertical bar │
+    mov dil, 0xe2
+    call out_byte
+    mov dil, 0x94
+    call out_byte
+    mov dil, 0x82
+    call out_byte
+    mov dil, ' '
+    call out_byte
+    call color_reset
+    mov rsi, [line_ptrs+r14*8]
+    call emit_line
+    jmp .nnx
+.nnum_plain:
     mov rdi, rbx
     call out_u64_width
     mov dil, 9
@@ -4772,7 +4805,7 @@ nl_main:
     call emit_line
     jmp .nnx
 .nblank:
-    ; spaces for width + tab
+    ; spaces for width + tab (or dim gutter modern)
     mov rcx, [nl_width]
 .nsp:
     test rcx, rcx
@@ -4783,8 +4816,28 @@ nl_main:
     pop rcx
     dec rcx
     jmp .nsp
-.nt: mov dil, 9
+.nt:
+    cmp byte [g_color], 0
+    je .nt_tab
+    test dword [flags], F_CORE
+    jnz .nt_tab
+    call color_dim
+    mov dil, ' '
     call out_byte
+    mov dil, 0xe2
+    call out_byte
+    mov dil, 0x94
+    call out_byte
+    mov dil, 0x82
+    call out_byte
+    mov dil, ' '
+    call out_byte
+    call color_reset
+    jmp .nt_line
+.nt_tab:
+    mov dil, 9
+    call out_byte
+.nt_line:
     mov rsi, [line_ptrs+r14*8]
     call emit_line
 .nnx: inc r14
@@ -4869,7 +4922,7 @@ hnl: db "Usage: f00-nl [OPTION]... [FILE]...",10
       db "  f00-nl -ba -w4 file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vnl: db "f00-nl (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vnl: db "f00-nl (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -5024,7 +5077,7 @@ hfold: db "Usage: f00-fold [OPTION]... [FILE]...",10
       db "  f00-fold -w 40 file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vfold: db "f00-fold (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vfold: db "f00-fold (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -5158,7 +5211,7 @@ hexpand: db "Usage: f00-expand [OPTION]... [FILE]...",10
       db "  f00-expand -t 4 file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vexpand: db "f00-expand (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vexpand: db "f00-expand (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -5334,7 +5387,7 @@ hunexpand: db "Usage: f00-unexpand [OPTION]... [FILE]...",10
       db "  f00-unexpand -t 4 file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vunexpand: db "f00-unexpand (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vunexpand: db "f00-unexpand (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -5555,7 +5608,7 @@ hpaste: db "Usage: f00-paste [OPTION]... [FILE]...",10
       db "  f00-paste -d, file1 file2",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vpaste: db "f00-paste (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vpaste: db "f00-paste (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -5921,7 +5974,7 @@ hjoin: db "Usage: f00-join [OPTION]... FILE1 FILE2",10
        db "  f00-join -t: -1 1 -2 1 a.txt b.txt",10
        db 10
        db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vjoin: db "f00-join (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vjoin: db "f00-join (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -6163,7 +6216,7 @@ hcomm: db "Usage: f00-comm [OPTION]... FILE1 FILE2",10
        db "  f00-comm -12 a.txt b.txt",10
        db 10
        db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vcomm: db "f00-comm (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vcomm: db "f00-comm (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -6319,7 +6372,7 @@ hfmt: db "Usage: f00-fmt [OPTION]... [FILE]...",10
       db "  f00-fmt -w 60 file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vfmt: db "f00-fmt (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vfmt: db "f00-fmt (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -6789,7 +6842,7 @@ hod: db "Usage: f00-od [OPTION]... [FILE]...",10
       db "  f00-od -tx1z file.bin",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vod: db "f00-od (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vod: db "f00-od (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -6976,7 +7029,7 @@ hsplit: db "Usage: f00-split [OPTION]... [FILE [PREFIX]]",10
       db "  f00-split -l 100 big.txt part",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vsplit: db "f00-split (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vsplit: db "f00-split (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -7141,7 +7194,7 @@ hcsplit: db "Usage: f00-csplit FILE LINE [LINE]...",10
          db "  f00-csplit data.txt 10 20",10
          db 10
          db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vcsplit: db "f00-csplit (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vcsplit: db "f00-csplit (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -7433,7 +7486,7 @@ hshuf: db "Usage: f00-shuf [OPTION]... [FILE]",10
       db "  f00-shuf -i 1-10 -n 3",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vshuf: db "f00-shuf (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vshuf: db "f00-shuf (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -7684,7 +7737,7 @@ htsort: db "Usage: f00-tsort [FILE]",10
       db "  f00-tsort deps.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vtsort: db "f00-tsort (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vtsort: db "f00-tsort (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -7897,7 +7950,7 @@ hpr: db "Usage: f00-pr [OPTION]... [FILE]...",10
       db "  f00-pr -t file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vpr: db "f00-pr (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vpr: db "f00-pr (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -8026,7 +8079,7 @@ hptx: db "Usage: f00-ptx [OPTION]... [FILE]...",10
       db "  f00-ptx file.txt",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vptx: db "f00-ptx (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vptx: db "f00-ptx (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -8241,7 +8294,7 @@ hfactor: db "Usage: f00-factor [OPTION] [NUMBER]...",10
       db "  f00-factor -h 12",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vfactor: db "f00-factor (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vfactor: db "f00-factor (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -8695,7 +8748,7 @@ hnumfmt: db "Usage: f00-numfmt [OPTION]... [NUMBER]...",10
       db "  f00-numfmt --to=si 1000000",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vnumfmt: db "f00-numfmt (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vnumfmt: db "f00-numfmt (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 section .text
 
@@ -9114,4 +9167,4 @@ hexpr: db "Usage: f00-expr EXPRESSION",10
        db "  f00-expr length hello",10
        db 10
        db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-vexpr: db "f00-expr (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+vexpr: db "f00-expr (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0

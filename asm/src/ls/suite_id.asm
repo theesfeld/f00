@@ -489,22 +489,22 @@ h_printf:
     db "  f00-printf '%04d' 42",10,10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
 
-v_id: db "f00-id (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_groups: db "f00-groups (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_uname: db "f00-uname (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_arch: db "f00-arch (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_date: db "f00-date (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_users: db "f00-users (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_who: db "f00-who (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_pinky: db "f00-pinky (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_uptime: db "f00-uptime (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_hostname: db "f00-hostname (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_nice: db "f00-nice (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_nohup: db "f00-nohup (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_timeout: db "f00-timeout (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_kill: db "f00-kill (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_test: db "f00-test (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_printf: db "f00-printf (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_id: db "f00-id (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_groups: db "f00-groups (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_uname: db "f00-uname (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_arch: db "f00-arch (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_date: db "f00-date (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_users: db "f00-users (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_who: db "f00-who (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_pinky: db "f00-pinky (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_uptime: db "f00-uptime (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_hostname: db "f00-hostname (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_nice: db "f00-nice (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_nohup: db "f00-nohup (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_timeout: db "f00-timeout (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_kill: db "f00-kill (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_test: db "f00-test (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_printf: db "f00-printf (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 
 ; util names for err_missing_operand / json_meta_open
 nm_id: db "id",0
@@ -1362,15 +1362,16 @@ id_main:
     test eax, ID_GALL
     jnz .only_G
     ; default full: uid=N(name) gid=N(name) [euid=...] [egid=...] groups=...
+    ; modern: dim labels, yellow nums, cyan names; core: plain via g_color=0
     lea rsi, [uid_lbl]
-    call out_str
+    call id_out_lbl
     mov edi, [id_uid]
     xor r8d, r8d
     call id_out_id_paren
     mov dil, ' '
     call out_byte
     lea rsi, [gid_lbl]
-    call out_str
+    call id_out_lbl
     mov edi, [id_gid]
     mov r8d, 1
     call id_out_id_paren
@@ -1380,7 +1381,7 @@ id_main:
     mov dil, ' '
     call out_byte
     lea rsi, [euid_lbl]
-    call out_str
+    call id_out_lbl
     mov edi, [id_euid]
     xor r8d, r8d
     call id_out_id_paren
@@ -1391,7 +1392,7 @@ id_main:
     mov dil, ' '
     call out_byte
     lea rsi, [egid_lbl]
-    call out_str
+    call id_out_lbl
     mov edi, [id_egid]
     mov r8d, 1
     call id_out_id_paren
@@ -1402,13 +1403,26 @@ id_main:
     mov dil, ' '
     call out_byte
     lea rsi, [groups_lbl]
-    call out_str
+    call id_out_lbl
     xor r15d, r15d
 .iglp:
     cmp r15d, [ngroups]
     jae .idl
     test r15d, r15d
     jz .ig1
+    ; modern: dim middot separator between groups; core: comma
+    cmp byte [g_color], 0
+    je .ig_comma
+    push rsi
+    lea rsi, [ansi_sep]
+    call out_str
+    lea rsi, [grp_sep]
+    call out_str
+    lea rsi, [ansi_rst]
+    call out_str
+    pop rsi
+    jmp .ig1
+.ig_comma:
     mov dil, ','
     call out_byte
 .ig1:
@@ -1659,6 +1673,17 @@ id_c_rst:
     call out_str
     pop rsi
 .r: ret
+; dim label (uid=/gid=/groups=)
+id_out_lbl:
+    push rsi
+    cmp byte [g_color], 0
+    je .p
+    lea rsi, [ansi_sep]
+    call out_str
+.p: pop rsi
+    call out_str
+    call id_c_rst
+    ret
 
 ; print id number edi with optional color
 id_out_num:
@@ -3823,15 +3848,31 @@ read_utmp_users:
     movzx eax, word [utmp_buf + UT_TYPE]
     cmp ax, USER_PROCESS
     jne .rd
-    ; print user (NUL-terminated field)
+    ; print user (NUL-terminated field); modern: cyan names
     lea rsi, [utmp_buf + UT_USER]
     cmp byte [rsi], 0
     je .rd
     test r15d, r15d
     jz .p1
+    ; modern middot between users
+    cmp byte [g_color], 0
+    je .p_sp
+    push rsi
+    lea rsi, [ansi_sep]
+    call out_str
+    lea rsi, [grp_sep]
+    call out_str
+    lea rsi, [ansi_rst]
+    call out_str
+    pop rsi
+    jmp .p1
+.p_sp:
     mov dil, ' '
     call out_byte
-.p1: call out_str
+.p1:
+    call id_c_name
+    call out_str
+    call id_c_rst
     mov r15d, 1
     jmp .rd
 .cl:
@@ -3897,15 +3938,29 @@ read_utmp_who:
     lea rsi, [utmp_buf + UT_USER]
     cmp byte [rsi], 0
     je .rd
+    call id_c_name
     call out_str
+    call id_c_rst
     mov dil, ' '
     call out_byte
+    cmp byte [g_color], 0
+    je .who_line
+    lea rsi, [ansi_sep]
+    call out_str
+.who_line:
     lea rsi, [utmp_buf + UT_LINE]
     call out_str
+    call id_c_rst
     mov dil, ' '
     call out_byte
+    cmp byte [g_color], 0
+    je .who_host
+    lea rsi, [ansi_soft]
+    call out_str
+.who_host:
     lea rsi, [utmp_buf + UT_HOST]
     call out_str
+    call id_c_rst
     mov dil, 10
     call out_byte
     jmp .rd
@@ -4221,8 +4276,15 @@ uptime_main:
     jmp xexit
 .uphum:
     ; human: "up X days, Y hours, Z minutes"
+    ; modern: dim "up", yellow numbers, dim unit words
+    cmp byte [g_color], 0
+    je .up_lbl
+    lea rsi, [ansi_sep]
+    call out_str
+.up_lbl:
     lea rsi, [s_up]
     call out_str
+    call id_c_rst
     mov rax, rbx
     xor rdx, rdx
     mov rcx, 86400
@@ -4240,8 +4302,15 @@ uptime_main:
     mov rbx, rax                    ; minutes
     test r14, r14
     jz .nodays
+    call id_c_num
     mov rdi, r14
     call out_u64
+    call id_c_rst
+    cmp byte [g_color], 0
+    je .days_plain
+    lea rsi, [ansi_sep]
+    call out_str
+.days_plain:
     cmp r14, 1
     jne .days_pl
     lea rsi, [s_day]
@@ -4250,11 +4319,19 @@ uptime_main:
     lea rsi, [s_days]
 .days_out:
     call out_str
+    call id_c_rst
 .nodays:
     test r15, r15
     jz .nohours
+    call id_c_num
     mov rdi, r15
     call out_u64
+    call id_c_rst
+    cmp byte [g_color], 0
+    je .hrs_plain
+    lea rsi, [ansi_sep]
+    call out_str
+.hrs_plain:
     cmp r15, 1
     jne .hrs_pl
     lea rsi, [s_hour]
@@ -4263,9 +4340,17 @@ uptime_main:
     lea rsi, [s_hours]
 .hrs_out:
     call out_str
+    call id_c_rst
 .nohours:
+    call id_c_num
     mov rdi, rbx
     call out_u64
+    call id_c_rst
+    cmp byte [g_color], 0
+    je .min_plain
+    lea rsi, [ansi_sep]
+    call out_str
+.min_plain:
     cmp rbx, 1
     jne .min_pl
     lea rsi, [s_min]
@@ -4274,6 +4359,7 @@ uptime_main:
     lea rsi, [s_mins]
 .min_out:
     call out_str
+    call id_c_rst
     mov dil, 10
     call out_byte
     jmp xexit

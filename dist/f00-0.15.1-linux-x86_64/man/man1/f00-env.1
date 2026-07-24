@@ -1,0 +1,45 @@
+.TH F00-ENV 1 "2026" "f00 0.15.1" "User Commands"
+.SH NAME
+f00\-env \- run a program in a modified environment (f00tils)
+.SH SYNOPSIS
+.B f00\-env
+[\fIOPTION\fR]... [\fI\-\fR] [\fINAME\fR=\fIVALUE\fR]... [\fICOMMAND\fR [\fIARG\fR]...]
+.SH DESCRIPTION
+Set each NAME to VALUE in the environment and run COMMAND.
+With no COMMAND, print the environment. Pure assembly multicall. MIT.
+.PP
+Default is modern mode.
+.B \-\-core
+selects strict GNU env\-compatible behavior.
+.SH COREUTILS FLAGS
+.TP
+\fB\-i\fR, \fB\-\-ignore\-environment\fR
+start with an empty environment
+.TP
+\fB\-u\fR, \fB\-\-unset\fR=\fINAME\fR
+remove variable from the environment
+.TP
+\fB\-0\fR, \fB\-\-null\fR
+end each output line with NUL, not newline
+.PP
+See
+.B f00\-env \-\-help
+for the full flag list.
+.SH MODERN FLAGS
+.TP
+\fB\-\-core\fR
+strict coreutils\-compatible mode
+.TP
+\fB\-j\fR, \fB\-\-json\fR
+JSON environment dump when supported
+.TP
+\fB\-\-csv\fR
+CSV environment dump when supported
+.SH AUTHOR
+f00 contributors. License MIT.
+.SH SEE ALSO
+.BR env (1),
+.BR f00\-printenv (1),
+.BR f00 (1)
+.PP
+https://f00.sh

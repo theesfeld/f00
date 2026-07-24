@@ -72,18 +72,34 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ---
 
-## Chromed text tools (cat / head / tail / less-like)
+## Chromed text tools (cat / head / tail / nl / less-like)
 
 Standard modern frame for multi-file text tools:
 
-1. **File banner** — `ui_file_header(path)`: dim rule + optional icon + cyan path.
-2. **Gutter** — dim box-drawing bar for line-numbered views (`│ `).
+1. **File banner** — `ui_file_header(path)`: box rule `╭─ path ─╮` + optional icon + cyan path (always when not `--core`; SGR only if color on).
+2. **Gutter** — dim box-drawing bar for line-numbered views (`│ `) — `f00-nl` modern, `f00-cat -n`.
 3. **Markers** — colored `^I` / `$` / non-printing under `-vET` (cat already).
 4. **No chrome** under `--core` or non-TTY (unless forced flags).
 
-`f00-cat` ships bat-class multi-file headers + gutters. Other text utils should reuse the same helpers as they deepen modern mode.
+`f00-cat` / `f00-head` / `f00-tail` use bat-class multi-file headers. `f00-nl` modern uses yellow numbers + dim `│` gutters.
 
 There is no full `less` pager binary yet; interactive browse is `f00-ls --browse`. Pager-class chrome (status line, less keys) is a later util or opt-in mode — same token system.
+
+---
+
+## Suite modern chrome (hash / stat / df / du / id / …)
+
+| Util family | Modern (TTY, not `--core`) | `--core` |
+|-------------|----------------------------|----------|
+| **hash** (`md5sum`/`sha*sum`) | Green hex grouped (2- or 4-byte), dim ` · ` spacer, icon + cyan path, stderr spinner | Plain `DIGEST  path` |
+| **stat** | Dim labels, yellow sizes + human `(1.2K)`, rwx color, icon path, colored timestamps | Classic GNU block |
+| **df** | Human sizes default, Type column, unicode use bars, severity `%`, cyan mounts | 1K-blocks table |
+| **du** | Human sizes default on TTY, magnitude color, cyan paths | 1K-blocks + tab |
+| **id** / **groups** / **users** / **who** | Dim labels, yellow ids, cyan names, ` · ` group separators | Plain GNU |
+| **uptime** | Dim units, yellow numbers | Plain |
+| **realpath** / **readlink** | Cyan paths | Plain |
+| **sort** | stderr spinner while sorting | Silent |
+| **wc** | Labeled modern summary on TTY | Classic columns |
 
 ---
 
@@ -92,9 +108,9 @@ There is no full `less` pager binary yet; interactive browse is `f00-ls --browse
 - **API:** `ui_spinner_start(label)` · `ui_spinner_tick` · `ui_spinner_stop`
 - **Where:** stderr only; modern TTY; no-ops under `--core` / non-TTY / `g_color=0`
 - **Style:** colored braille frames + label; CR + erase line on stop
-- **Use:** multi-file hash, large copies, deep walks — anything that can pause a human. Fast paths stay silent (no spinner spam).
+- **Use:** multi-file hash, sort, large copies, deep walks — anything that can pause a human. Fast paths stay silent (no spinner spam).
 
-Hash suite already starts/stops a spinner around each file.
+Hash suite starts/stops a spinner around each file; sort spins while loading/sorting.
 
 ---
 

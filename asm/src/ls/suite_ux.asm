@@ -440,19 +440,27 @@ ui_bullet:
 
 ; ── modern file chrome ───────────────────────────────────────────
 ; ui_file_header(rsi=path) — bat-class file banner for multi-file tools.
-; Modern TTY: dim rule + optional Nerd icon + cyan path.
-; --core / no color: plain "==> path <==".
+; Callers gate --core; this always emits modern box chrome.
+; SGR/icons only when g_color; monochrome box still used when color off.
 ui_file_header:
     push rbx
     push r12
     mov r12, rsi                    ; path
+    ; ╭─ [icon] path ─╮  (always modern when called)
     cmp byte [g_color], 0
-    je .plain
-    ; ╭─ [icon] path ─╮
+    je .pre_plain
     call color_dim
+.pre_plain:
     lea rsi, [s_hdr_pre]
     call out_str
     call color_reset
+    ; optional Nerd/icon when color/icons active
+    cmp byte [g_color], 0
+    je .nopath_icon
+    mov rdi, r12
+    call icon_enabled
+    test al, al
+    jz .nopath_icon
     mov rdi, r12
     call icon_for_path
     cmp byte [rsi], 0
@@ -465,11 +473,17 @@ ui_file_header:
     call out_byte
     call color_reset
 .nopath_icon:
+    cmp byte [g_color], 0
+    je .path_plain
     call color_path
+.path_plain:
     mov rsi, r12
     call out_str
     call color_reset
+    cmp byte [g_color], 0
+    je .post_plain
     call color_dim
+.post_plain:
     lea rsi, [s_hdr_post]
     call out_str
     ; ╰──── rule
@@ -478,16 +492,6 @@ ui_file_header:
     lea rsi, [s_hdr_rule2]
     call out_str
     call color_reset
-    pop r12
-    pop rbx
-    ret
-.plain:
-    lea rsi, [s_hdr_plain_pre]
-    call out_str
-    mov rsi, r12
-    call out_str
-    lea rsi, [s_hdr_plain_post]
-    call out_str
     pop r12
     pop rbx
     ret

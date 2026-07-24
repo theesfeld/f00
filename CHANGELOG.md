@@ -12,6 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Root `file_id.diz` release scene card (ACiD / 16colo.rs-style block ASCII); README + site preview; `man f00` FILES; release workflow attaches the asset with every tag
 
+## [0.15.9] - 2026-07-24
+
+### Changed
+- **Suite-wide modern chrome deepen** (TTY, not `--core`):
+  - **hash**: green hex grouped by 2/4 bytes, dim ` · ` spacer, icons, spinner
+  - **stat**: human size, rwx color, icon path, colored device/inode/times/uids
+  - **df**: human default, type column, unicode use bars, severity `%`, cyan mounts
+  - **du**: human default on TTY, magnitude-colored sizes, cyan paths
+  - **head/tail**: always bat box headers when not `--core` (color optional)
+  - **id/groups/users/who**: dim labels, yellow ids, cyan names, ` · ` separators
+  - **uptime**: yellow numbers, dim units
+  - **realpath/readlink**: cyan paths
+  - **nl**: yellow line numbers + dim `│` gutter
+  - **sort**: stderr spinner while sorting
+- Docs: `TERMINAL-UX.md` suite chrome matrix
+
+### Fixed
+- `realpath` / `readlink` modern mode printed empty path (`color_path` clobbered `rsi`)
+
 ## [0.15.8] - 2026-07-24
 
 ### Changed

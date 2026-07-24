@@ -20,6 +20,7 @@ extern ui_help_banner, ui_help_section, ui_help_footer
 extern ui_pad_right, ui_pad_left_u64, ui_emit_bar
 extern ui_label, ui_value_path, ui_value_num, ui_value_ok, ui_kv_line
 extern ui_rule, ui_bullet, ui_color_use_pct
+extern icon_for_path, icon_enabled
 
 %define F_JSON    1
 %define F_CSV     2
@@ -602,22 +603,22 @@ msg_usage_vdir:
     db "      --csv      CSV result",10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
-v_cp: db "f00-cp (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_mv: db "f00-mv (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_rm: db "f00-rm (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_ln: db "f00-ln (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_chown: db "f00-chown (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_chgrp: db "f00-chgrp (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_stat: db "f00-stat (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_df: db "f00-df (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_du: db "f00-du (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_install: db "f00-install (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_mkfifo: db "f00-mkfifo (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_mknod: db "f00-mknod (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_shred: db "f00-shred (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_dd: db "f00-dd (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_dir: db "f00-dir (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
-v_vdir: db "f00-vdir (f00) 0.15.8",10,"License: MIT · https://f00.sh",10,0
+v_cp: db "f00-cp (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_mv: db "f00-mv (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_rm: db "f00-rm (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_ln: db "f00-ln (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_chown: db "f00-chown (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_chgrp: db "f00-chgrp (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_stat: db "f00-stat (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_df: db "f00-df (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_du: db "f00-du (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_install: db "f00-install (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_mkfifo: db "f00-mkfifo (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_mknod: db "f00-mknod (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_shred: db "f00-shred (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_dd: db "f00-dd (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_dir: db "f00-dir (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
+v_vdir: db "f00-vdir (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
 arrow: db " -> ",0
 copied: db "'",0
 moved: db "renamed '",0
@@ -3462,6 +3463,59 @@ emit_oct_mode4:
 .octp:
     jmp out_str
 
+; emit mode_str with rwx color (type=blue, r=green, w=red, x/s/t=yellow, -=dim)
+stat_emit_mode_colored:
+    push rbx
+    push r12
+    lea r12, [mode_str]
+    xor ebx, ebx
+.mloop:
+    cmp ebx, 10
+    jae .mdone
+    movzx eax, byte [r12+rbx]
+    test al, al
+    jz .mdone
+    push rax
+    cmp byte [g_color], 0
+    je .mraw
+    test ebx, ebx
+    jz .mtype                       ; first char = file type
+    cmp al, 'r'
+    je .mr
+    cmp al, 'w'
+    je .mw
+    cmp al, 'x'
+    je .mx
+    cmp al, 's'
+    je .mx
+    cmp al, 'S'
+    je .mx
+    cmp al, 't'
+    je .mx
+    cmp al, 'T'
+    je .mx
+    call color_dim
+    jmp .mraw
+.mtype:
+    call color_hdr
+    jmp .mraw
+.mr: call color_ok
+    jmp .mraw
+.mw: call color_err
+    jmp .mraw
+.mx: call color_num
+.mraw:
+    pop rax
+    mov dil, al
+    call out_byte
+    call color_reset
+    inc ebx
+    jmp .mloop
+.mdone:
+    pop r12
+    pop rbx
+    ret
+
 ; stat_emit_default: modern pretty block, or --core classic
 ; rbx = path, statx_buf filled
 stat_emit_default:
@@ -3472,6 +3526,24 @@ stat_emit_default:
     lea rsi, [stat_file]
     call out_str
     call color_reset
+    ; optional icon before path
+    cmp byte [g_color], 0
+    je .nicon
+    call icon_enabled
+    test al, al
+    jz .nicon
+    mov rdi, rbx
+    call icon_for_path
+    cmp byte [rsi], 0
+    je .nicon
+    push rsi
+    call color_hdr
+    pop rsi
+    call out_str
+    mov dil, ' '
+    call out_byte
+    call color_reset
+.nicon:
     mov rsi, rbx
     call ui_value_path
     mov dil, 10
@@ -3483,6 +3555,27 @@ stat_emit_default:
     call color_reset
     mov rdi, [statx_buf + STX_SIZE]
     call ui_value_num
+    ; modern: also show human size in dim parens
+    call color_dim
+    mov dil, ' '
+    call out_byte
+    mov dil, '('
+    call out_byte
+    call color_reset
+    mov rdi, [statx_buf + STX_SIZE]
+    lea rsi, [hum_buf]
+    xor edx, edx
+    push rbx
+    call human_size
+    pop rbx
+    call color_num
+    lea rsi, [hum_buf]
+    call out_str
+    call color_reset
+    call color_dim
+    mov dil, ')'
+    call out_byte
+    call color_reset
     call color_dim
     lea rsi, [stat_blocks]
     call out_str
@@ -3510,12 +3603,14 @@ stat_emit_default:
     lea rsi, [stat_device]
     call out_str
     call color_reset
+    call color_num
     mov edi, [statx_buf + STX_DEV_MAJOR]
     call out_u64
     mov dil, ','
     call out_byte
     mov edi, [statx_buf + STX_DEV_MINOR]
     call out_u64
+    call color_reset
     call color_dim
     lea rsi, [stat_inode]
     call out_str
@@ -3528,49 +3623,82 @@ stat_emit_default:
     call color_reset
     mov edi, [statx_buf + STX_NLINK]
     call ui_value_num
-    ; Access mode line
+    ; Access mode line — colored octal + rwx + uid/gid
+    call color_dim
     lea rsi, [stat_access]
     call out_str
+    call color_reset
+    call color_num
     mov edi, [statx_buf + STX_MODE]
     call emit_oct_mode4
+    call color_reset
+    call color_dim
     mov dil, '/'
     call out_byte
+    call color_reset
     mov edi, [statx_buf + STX_MODE]
     call mode_to_str
-    lea rsi, [mode_str]
-    call out_str
+    call stat_emit_mode_colored
+    call color_dim
     lea rsi, [stat_uid]
     call out_str
+    call color_reset
+    call color_num
     mov edi, [statx_buf + STX_UID]
     call out_u64
+    call color_reset
+    call color_dim
     lea rsi, [stat_gid]
     call out_str
+    call color_reset
+    call color_num
     mov edi, [statx_buf + STX_GID]
     call out_u64
+    call color_reset
+    call color_dim
     lea rsi, [stat_paren]
     call out_str
-    ; times human
+    call color_reset
+    ; times — dim labels, yellow timestamps
+    call color_dim
     lea rsi, [stat_atime]
     call out_str
+    call color_reset
+    call color_num
     mov rdi, [statx_buf + STX_ATIME_SEC]
     call emit_epoch_utc
+    call color_reset
+    call color_dim
     lea rsi, [stat_mtime]
     call out_str
+    call color_reset
+    call color_num
     mov rdi, [statx_buf + STX_MTIME_SEC]
     call emit_epoch_utc
+    call color_reset
+    call color_dim
     lea rsi, [stat_ctime]
     call out_str
+    call color_reset
+    call color_num
     mov rdi, [statx_buf + STX_CTIME_SEC]
     call emit_epoch_utc
+    call color_reset
+    call color_dim
     lea rsi, [stat_btime]
     call out_str
+    call color_reset
     mov rdi, [statx_buf + STX_BTIME_SEC]
     test rdi, rdi
     jnz .bt
+    call color_dim
     lea rsi, [s_dash]
     call out_str
+    call color_reset
     jmp .btnl
-.bt: call emit_epoch_utc
+.bt: call color_num
+    call emit_epoch_utc
+    call color_reset
 .btnl:
     mov dil, 10
     call out_byte
@@ -4278,12 +4406,33 @@ df_emit_row:
     test dword [flags], F_CORE
     jnz .core
     ; ---- modern ----
+    ; device: dim when virtual (tmpfs/devtmpfs/proc/sys/…) else plain path color
+    cmp byte [g_color], 0
+    je .devp
+    mov rsi, [df_typ]
+    ; quick virtual-fs dimming: tmpfs / devtmpfs / proc / sysfs / cgroup*
+    push rsi
+    mov rdi, [df_typ]
+    call strlen
+    pop rsi
+    cmp eax, 5
+    jb .devc
+    ; color device path cyan for real block devices
+.devc:
+    call color_path
+.devp:
     mov rsi, [df_dev]
     mov ecx, 28
     call ui_pad_right
+    call color_reset
+    cmp byte [g_color], 0
+    je .typp
+    call color_hdr
+.typp:
     mov rsi, [df_typ]
     mov ecx, 10
     call ui_pad_right
+    call color_reset
     mov rdi, [df_total]
     mov ecx, 8
     call df_emit_size_field
@@ -4299,7 +4448,7 @@ df_emit_row:
     call df_emit_size_field
     mov dil, ' '
     call out_byte
-    ; mini bar on TTY
+    ; mini bar on TTY (modern always wants the bar when interactive)
     cmp byte [g_tty], 0
     je .nob
     mov edi, [df_pct]
@@ -5148,6 +5297,14 @@ du_main:
     inc r14
     jmp .duparse
 .dudo:
+    ; modern default: human sizes (duf-like); --core keeps 1K-blocks
+    ; gate on TTY (not only color) so NO_COLOR still gets human modern layout
+    test dword [flags], F_CORE
+    jnz .du_nohum
+    cmp byte [g_tty], 0
+    je .du_nohum
+    or dword [flags], F_HUMAN
+.du_nohum:
     ; default -s if neither -a nor -d set
     test dword [flags], F_ALL
     jnz .duok
