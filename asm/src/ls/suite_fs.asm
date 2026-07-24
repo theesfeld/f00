@@ -21,6 +21,7 @@ extern ui_pad_right, ui_pad_left_u64, ui_emit_bar
 extern ui_label, ui_value_path, ui_value_num, ui_value_ok, ui_kv_line
 extern ui_rule, ui_bullet, ui_color_use_pct
 extern icon_for_path, icon_enabled
+extern ui_spinner_start, ui_spinner_tick, ui_spinner_stop
 
 %define F_JSON    1
 %define F_CSV     2
@@ -626,6 +627,9 @@ removed: db "removed '",0
 linked: db "'",0
 quote2: db "' -> '",0
 quote_end: db "'",10,0
+spin_cp: db "copying…",0
+spin_mv: db "moving…",0
+spin_dd: db "dd…",0
 stat_file: db "  File: ",0
 stat_size: db "  Size: ",0
 stat_blocks: db "        Blocks: ",0
@@ -2168,6 +2172,16 @@ cp_main:
     mov rbx, [paths+8]
     mov r15, 1
 .cloop_setup:
+    ; modern multi-file: stderr spinner
+    cmp r15, 1
+    jbe .cnospin
+    test dword [flags], F_CORE
+    jnz .cnospin
+    cmp byte [g_tty], 0
+    je .cnospin
+    lea rsi, [spin_cp]
+    call ui_spinner_start
+.cnospin:
     xor r14, r14
 .cloop:
     cmp r14, r15
@@ -2271,9 +2285,11 @@ cp_main:
     mov rsi, [dst_path]
     call vprint_pair
 .cnxt:
+    call ui_spinner_tick
     inc r14
     jmp .cloop
 .cend:
+    call ui_spinner_stop
     call fs_json_end
     jmp xexit
 .cerr:
@@ -2505,6 +2521,15 @@ mv_main:
     mov rbx, [paths+8]
     mov r15, 1
 .mloop_s:
+    cmp r15, 1
+    jbe .mnospin
+    test dword [flags], F_CORE
+    jnz .mnospin
+    cmp byte [g_tty], 0
+    je .mnospin
+    lea rsi, [spin_mv]
+    call ui_spinner_start
+.mnospin:
     xor r14, r14
 .mloop:
     cmp r14, r15
@@ -2594,9 +2619,11 @@ mv_main:
     mov ecx, 1
     call json_emit_op
 .mnxt:
+    call ui_spinner_tick
     inc r14
     jmp .mloop
 .mend:
+    call ui_spinner_stop
     call fs_json_end
     jmp xexit
 .merr:
@@ -4461,6 +4488,24 @@ df_emit_row:
     call ui_color_use_pct
     mov dil, ' '
     call out_byte
+    ; optional icon before mount
+    cmp byte [g_color], 0
+    je .mntp
+    call icon_enabled
+    test al, al
+    jz .mntp
+    mov rdi, [df_mnt]
+    call icon_for_path
+    cmp byte [rsi], 0
+    je .mntp
+    push rsi
+    call color_hdr
+    pop rsi
+    call out_str
+    mov dil, ' '
+    call out_byte
+    call color_reset
+.mntp:
     mov rsi, [df_mnt]
     call ui_value_path
     mov dil, 10
@@ -6502,6 +6547,21 @@ dd_main:
     xor rdx, rdx
     syscall
 .dcopy:
+    ; progress: status=progress always; modern TTY unless status=none
+    xor ebx, ebx                    ; progress on?
+    cmp dword [dd_status], 1        ; none
+    je .dnoprog
+    cmp dword [dd_status], 2        ; progress
+    je .dyesprog
+    test dword [flags], F_CORE
+    jnz .dnoprog
+    cmp byte [g_tty], 0
+    je .dnoprog
+.dyesprog:
+    mov ebx, 1
+    lea rsi, [spin_dd]
+    call ui_spinner_start
+.dnoprog:
     xor r12, r12
     mov r13, [opt_count]
 .dloop:
@@ -6521,6 +6581,7 @@ dd_main:
     syscall
     test rax, rax
     jle .ddone
+    push rbx
     mov rbx, rax
     mov rax, SYS_write
     mov rdi, r15
@@ -6528,13 +6589,18 @@ dd_main:
     mov rdx, rbx
     syscall
     cmp rax, rbx
+    pop rbx
     jl .dfail
     inc r12
-    cmp dword [dd_status], 2
-    jne .dloop
-    ; progress to stderr would need fd 2 — minimal: skip heavy
+    test ebx, ebx
+    jz .dloop
+    call ui_spinner_tick
     jmp .dloop
 .ddone:
+    test ebx, ebx
+    jz .dclose
+    call ui_spinner_stop
+.dclose:
     cmp r14, 0
     jle .dco
     mov rdi, r14
@@ -6548,6 +6614,7 @@ dd_main:
     syscall
     jmp xexit
 .dfail:
+    call ui_spinner_stop
     mov dword [g_exit], 1
     jmp xexit
 .dhelp:

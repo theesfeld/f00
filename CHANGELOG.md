@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Overall suite speed headline** (geo mean of per-tool speedups) stamped into `file_id.diz`, README, and site hero — e.g. **2.5× / 148% faster overall**
 - Website Bun-style **fluid race-bar charts** + **cold-startup line chart** (`#benchmarks`), fed by `site/bench/suite.json` (`summary`, `showcase`, `cold_startup`)
 
+### Changed
+- Suite modern polish (not `--core`):
+  - **pwd**: cyan path on TTY
+  - **wc** multi-file: labeled rows + total (same chrome as single-file)
+  - **cp** / **mv** multi-file: stderr spinner
+  - **dd**: spinner for `status=progress` or modern TTY (off with `status=none`)
+  - **od**: dim address, yellow hex, green ASCII dump
+  - **df**: Nerd/ascii icon before mountpoint
+
 ## [0.15.9] - 2026-07-24
 
 ### Changed

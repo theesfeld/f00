@@ -6544,21 +6544,24 @@ od_main:
 .olp:
     cmp r14, r12
     jae .oend
-    ; address
+    ; address (modern: dim)
     cmp qword [num_a], 3
     je .odata
+    call od_c_dim
     mov rdi, rbx
     cmp qword [num_a], 1
     je .ohex
     cmp qword [num_a], 2
     je .odec
     call out_oct7
-    jmp .odata
+    jmp .odata_rst
 .ohex:
     call out_hex7
-    jmp .odata
+    jmp .odata_rst
 .odec:
     call out_u64
+.odata_rst:
+    call od_c_rst
 .odata:
     mov dil, ' '
     call out_byte
@@ -6566,11 +6569,12 @@ od_main:
     je .ox1
     cmp qword [num_b], 2
     je .oc
-    ; o1: 16 octal bytes
+    ; o1: 16 octal bytes (modern: yellow)
+    call od_c_num
     xor r13d, r13d
 .o1l:
     cmp r13d, 16
-    jae .onl
+    jae .o1done
     mov rax, r14
     add rax, r13
     cmp rax, r12
@@ -6581,6 +6585,8 @@ od_main:
     call out_byte
 .o1p: inc r13d
     jmp .o1l
+.o1done:
+    call od_c_rst
 .onl:
     mov dil, 10
     call out_byte
@@ -6588,6 +6594,8 @@ od_main:
     add rbx, 16
     jmp .olp
 .ox1:
+    ; hex dump (modern: yellow hex, dim spaces, green ASCII)
+    call od_c_num
     xor r13d, r13d
 .oxl:
     cmp r13d, 16
@@ -6606,15 +6614,23 @@ od_main:
     jae .oxp
     cmp r13d, 15
     jae .oxp
+    call od_c_dim
     mov dil, ' '
     call out_byte
+    call od_c_num
 .oxp: inc r13d
     jmp .oxl
 .ox_after:
+    call od_c_rst
     test dword [opt_flags], OF_ECHO
     jz .oxnl
+    call od_c_dim
+    mov dil, ' '
+    call out_byte
     mov dil, '>'
     call out_byte
+    call od_c_rst
+    call od_c_ok
     xor r13d, r13d
 .oal:
     cmp r13d, 16
@@ -6636,8 +6652,11 @@ od_main:
 .oan: inc r13d
     jmp .oal
 .oae:
+    call od_c_rst
+    call od_c_dim
     mov dil, '<'
     call out_byte
+    call od_c_rst
 .oxnl:
     mov dil, 10
     call out_byte
@@ -6720,6 +6739,31 @@ od_main:
 .ov: lea rsi, [vod]
     call out_str
     jmp xexit
+
+; modern od color (no-op under --core / no color)
+od_c_dim:
+    test dword [flags], F_CORE
+    jnz .r
+    cmp byte [g_color], 0
+    je .r
+    jmp color_dim
+.r: ret
+od_c_num:
+    test dword [flags], F_CORE
+    jnz .r
+    cmp byte [g_color], 0
+    je .r
+    jmp color_num
+.r: ret
+od_c_ok:
+    test dword [flags], F_CORE
+    jnz .r
+    cmp byte [g_color], 0
+    je .r
+    jmp color_ok
+.r: ret
+od_c_rst:
+    jmp color_reset
 
 out_hex2:
     push rax

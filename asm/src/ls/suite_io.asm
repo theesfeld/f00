@@ -223,6 +223,7 @@ wc_lbl_bytes: db "bytes", 0
 wc_lbl_chars: db "chars", 0
 wc_lbl_maxll: db "max", 0
 wc_lbl_file:  db "file", 0
+wc_tbl_hdr:   db 0              ; optional (unused); modern multi uses labeled rows
 wc_sep_sp:    db "  ", 0
 jk_files_arr: db '    "files": [', 0
 jk_fobj_open: db 10, '      {"file": "', 0
@@ -1178,7 +1179,16 @@ pwd_main:
     jnz .pj
     test dword [flags], F_CSV
     jnz .pc
+    ; modern: cyan path; --core / plain: raw
+    test dword [flags], F_CORE
+    jnz .pplain
+    cmp byte [g_color], 0
+    je .pplain
+    call ui_value_path
+    jmp .pnl
+.pplain:
     call out_str
+.pnl:
     mov dil, 10
     call out_byte
     jmp xexit
@@ -2178,6 +2188,49 @@ wc_main:
     call wc_print_modern
     jmp xexit
 .wmulti:
+    ; modern multi-file: labeled table (same as single, one line per file + total)
+    call wc_want_modern
+    test eax, eax
+    jz .wmulti_core
+    xor r14, r14
+.wmodlp:
+    cmp r14, [npaths]
+    jae .wmodtot
+    mov rax, [wc_fl+r14*8]
+    mov [wc_l], rax
+    mov rax, [wc_fw+r14*8]
+    mov [wc_w], rax
+    mov rax, [wc_fc+r14*8]
+    mov [wc_c], rax
+    mov rax, [wc_fm+r14*8]
+    mov [wc_m], rax
+    mov rax, [wc_fL+r14*8]
+    mov [wc_L], rax
+    mov r15, [paths+r14*8]
+    call wc_print_modern
+    inc r14
+    jmp .wmodlp
+.wmodtot:
+    ; total row when multi
+    cmp qword [npaths], 1
+    jbe xexit
+    mov eax, [wc_total]
+    cmp eax, TOT_NEVER
+    je xexit
+    mov rax, [wc_tl]
+    mov [wc_l], rax
+    mov rax, [wc_tw]
+    mov [wc_w], rax
+    mov rax, [wc_tc]
+    mov [wc_c], rax
+    mov rax, [wc_tm]
+    mov [wc_m], rax
+    mov rax, [wc_tL]
+    mov [wc_L], rax
+    lea r15, [total_s]
+    call wc_print_modern
+    jmp xexit
+.wmulti_core:
     ; decide total
     mov eax, [wc_total]
     cmp eax, TOT_NEVER
@@ -2210,10 +2263,8 @@ wc_main:
     call wc_print_line
     mov dil, ' '
     call out_byte
-    call color_path
     mov rsi, r15
-    call out_str
-    call color_reset
+    call ui_value_path
     mov dil, 10
     call out_byte
     inc r14
@@ -2265,10 +2316,8 @@ wc_main:
     call wc_print_line
     mov dil, ' '
     call out_byte
-    call color_path
     mov rsi, r15
-    call out_str
-    call color_reset
+    call ui_value_path
     mov dil, 10
     call out_byte
     inc r14
