@@ -71,7 +71,7 @@ cat_help:
 cat_help_len equ $-cat_help
 
 cat_version:
-    db "f00-cat (f00) 0.15.1", 10
+    db "f00-cat (f00) 0.15.2", 10
     db "GNU coreutils cat drop-in + modern chrome — pure assembly", 10
     db "License: MIT · https://f00.sh", 10
 cat_version_len equ $-cat_version
@@ -97,7 +97,7 @@ jk_show_tabs: db "show_tabs", 0
 jk_show_np: db "show_nonprinting", 0
 
 csv_hdr:    db "util,version,files,lines_out,bytes_out", 10, 0
-csv_util:   db "cat,0.15.1,", 0
+csv_util:   db "cat,0.15.2,", 0
 
 section .text
 

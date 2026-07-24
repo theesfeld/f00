@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-07-24
+
+### Added
+- XDG config (`~/.config/f00/config`) global + per-util; env `F00_*`
+- Default **emoji** icons (`--icons=auto|emoji|nerd|ascii|never`); Nerd opt-in
+- Suite modern chrome: file headers, path icons, spinners
+- Expanded website suite benchmarks; single scoreboard table
+
+### Fixed
+- Install/docs brand as f00tils; packaging release automation for brew/AUR/deb/rpm
+
 ## [0.15.1] - 2026-07-24
 
 ### Full packaging release — f00tils
