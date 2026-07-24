@@ -6,6 +6,12 @@ on:
     paths:
       - "site/**"
       - ".github/workflows/pages.yml"
+  # GITHUB_TOKEN bench auto-commits do not re-trigger path filters for other
+  # workflows; redeploy after CI so suite.json from publish-bench goes live.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -21,11 +27,18 @@ jobs:
   deploy:
     name: GitHub Pages
     runs-on: ubuntu-latest
+    # For workflow_run: only deploy successful CI on main
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # workflow_run defaults to workflow file SHA; take latest main for bench data
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
