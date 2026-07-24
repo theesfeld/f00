@@ -10,12 +10,12 @@ One multicall x86-64 Linux binary (no libc). Modern defaults for interactive wor
 |---|---|
 | **Project** | **f00tils** (coreutils replacement suite) |
 | **Binary** | `f00` multicall + `f00-*` links + optional short names (`ls`, `cat`, …) |
-| **Default** | Modern (color, **glyph** icons, richer layout, `--json` / `--csv`) |
-| **Icons** | Glyph default · `emoji` / `nerd` / `ascii` opt-in · `--icons=never` off |
+| **Default** | Modern (color, type gutter, table columns, chromed JSON/CSV) |
+| **Icons** | Auto 1-cell ascii (`d`/`l`/`x`/`-`) · glyph/emoji/nerd opt-in · off under `--core` |
 | **Scripts** | `--core` — strict coreutils-compatible presentation |
 | **Engine** | Pure ASM multicall · ~650K static · no libc |
 | **License** | MIT |
-| **Status** | Released `v0.15.3` |
+| **Status** | Released `v0.15.4` |
 | **Site** | [https://f00.sh](https://f00.sh) |
 | **Repo** | [github.com/theesfeld/f00](https://github.com/theesfeld/f00) |
 
@@ -269,7 +269,7 @@ The script installs multicall `f00` and all `f00-*` links into `~/.local/bin`.
 
 ```bash
 # pin version
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.3 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.4 bash
 
 # local build
 curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
@@ -296,7 +296,7 @@ Requires: `nasm`, `ld` (binutils). Target: **Linux x86-64**.
 
 ## Package managers
 
-Release assets for `v0.15.3` include tarball, **deb**, **rpm**, and **Arch** packages.
+Release assets for `v0.15.4` include tarball, **deb**, **rpm**, and **Arch** packages.
 
 | Channel | Status | Notes |
 |---------|--------|-------|
@@ -311,16 +311,16 @@ Release assets for `v0.15.3` include tarball, **deb**, **rpm**, and **Arch** pac
 
 ```bash
 # Debian / Ubuntu example
-curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.3/f00_0.15.3_amd64.deb
-sudo dpkg -i f00_0.15.3_amd64.deb
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.4/f00_0.15.4_amd64.deb
+sudo dpkg -i f00_0.15.4_amd64.deb
 
 # Fedora / RHEL example
-curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.3/f00-0.15.3-1.x86_64.rpm
-sudo rpm -Uvh f00-0.15.3-1.x86_64.rpm
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.4/f00-0.15.4-1.x86_64.rpm
+sudo rpm -Uvh f00-0.15.4-1.x86_64.rpm
 
 # Arch example (release package)
-curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.3/f00-0.15.3-1-x86_64.pkg.tar.zst
-sudo pacman -U f00-0.15.3-1-x86_64.pkg.tar.zst
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.4/f00-0.15.4-1-x86_64.pkg.tar.zst
+sudo pacman -U f00-0.15.4-1-x86_64.pkg.tar.zst
 ```
 
 ---

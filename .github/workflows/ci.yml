@@ -80,6 +80,25 @@ jobs:
           echo "f00-* links: $n"
           test "$n" -ge 100
 
+      - name: Docs version sync
+        run: |
+          set -euo pipefail
+          # Binary version must appear in README, install.sh, CHANGELOG, site
+          VER=$(./asm/f00 --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          test -n "$VER"
+          echo "binary version: $VER"
+          grep -q "$VER" README.md
+          grep -q "$VER" install.sh
+          grep -q "$VER" site/install.sh
+          grep -q "\[$VER\]" CHANGELOG.md
+          grep -q "$VER" site/index.html || grep -q "v$VER" site/index.html
+          # Config docs describe XDG path
+          grep -q '~/.config/f00' docs/CONFIG.md
+          grep -q 'type gutter\|table' docs/TERMINAL-UX.md
+          # install.sh copies stay aligned
+          diff -q install.sh site/install.sh
+          echo "docs version sync ok for $VER"
+
       - name: Upload suite bench artifacts
         uses: actions/upload-artifact@v6
         with:

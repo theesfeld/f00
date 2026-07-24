@@ -29,9 +29,11 @@ s_mod_sec:   db "Modern flags:", 0
 s_ex_sec:    db "Examples:", 0
 s_footer:    db "f00tils · pure assembly · MIT · https://f00.sh", 10, 0
 s_rule:      db "────────────────────────────────────────────────────────────", 10, 0
-s_hdr_pre:   db "── ", 0
+s_hdr_pre:   db "╭─ ", 0
 s_hdr_mid:   db " ", 0
-s_hdr_post:  db " ──", 10, 0
+s_hdr_post:  db " ─╮", 10, 0
+s_hdr_rule:  db "╰", 0
+s_hdr_rule2: db "────────────────────────────────────────────────────────────", 10, 0
 s_hdr_plain_pre:  db "==> ", 0
 s_hdr_plain_post: db " <==", 10, 0
 c_sec:       db 27, "[1;35m", 0      ; bold magenta section
@@ -446,7 +448,7 @@ ui_file_header:
     mov r12, rsi                    ; path
     cmp byte [g_color], 0
     je .plain
-    ; icon (if enabled)
+    ; ╭─ [icon] path ─╮
     call color_dim
     lea rsi, [s_hdr_pre]
     call out_str
@@ -469,6 +471,11 @@ ui_file_header:
     call color_reset
     call color_dim
     lea rsi, [s_hdr_post]
+    call out_str
+    ; ╰──── rule
+    lea rsi, [s_hdr_rule]
+    call out_str
+    lea rsi, [s_hdr_rule2]
     call out_str
     call color_reset
     pop r12

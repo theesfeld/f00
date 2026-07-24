@@ -247,7 +247,7 @@ hecho:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vecho:  db "f00-echo (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vecho:  db "f00-echo (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 
 hpwd:
     db "Usage: f00-pwd [OPTION]...", 10
@@ -262,7 +262,7 @@ hpwd:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vpwd:   db "f00-pwd (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vpwd:   db "f00-pwd (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 cpwd:   db "util,cwd", 10, "pwd,", 0
 
 hsleep:
@@ -278,7 +278,7 @@ hsleep:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vsleep: db "f00-sleep (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vsleep: db "f00-sleep (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 
 hseq:
     db "Usage: f00-seq [OPTION]... LAST", 10
@@ -296,7 +296,7 @@ hseq:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vseq:   db "f00-seq (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vseq:   db "f00-seq (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 cseq:   db "util,first,increment,last,count", 10, "seq,", 0
 
 hwc:
@@ -319,7 +319,7 @@ hwc:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vwc:    db "f00-wc (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vwc:    db "f00-wc (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 cwc:    db "util,lines,words,bytes,chars,max_line", 10, "wc,", 0
 
 hhead:
@@ -339,7 +339,7 @@ hhead:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vhead:  db "f00-head (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vhead:  db "f00-head (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 
 htail:
     db "Usage: f00-tail [OPTION]... [FILE]...", 10
@@ -360,7 +360,7 @@ htail:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vtail:  db "f00-tail (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vtail:  db "f00-tail (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 
 htee:
     db "Usage: f00-tee [OPTION]... [FILE]...", 10
@@ -376,7 +376,7 @@ htee:
     db "      --json     detailed JSON (schema f00/v1 + result metadata)", 10
     db "      --csv      CSV result", 10, 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vtee:   db "f00-tee (f00) 0.15.3", 10, "License: MIT · https://f00.sh", 10, 0
+vtee:   db "f00-tee (f00) 0.15.4", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 

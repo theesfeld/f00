@@ -54,7 +54,7 @@ extern chroot_main, stty_main, stdbuf_main, runcon_main, chcon_main
 
 section .rodata
 version_msg:
-    db "f00-ls (f00) 0.15.3", 10
+    db "f00-ls (f00) 0.15.4", 10
     db "GNU coreutils ls drop-in + modern listing — pure assembly", 10
     db "License: MIT · https://f00.sh", 10
 version_len equ $-version_msg
@@ -64,8 +64,8 @@ help_msg:
     db "   or: f00 [OPTION]... [FILE]...", 10
     db "List directory contents (f00 suite).", 10
     db 10
-    db "Default is modern mode (color, glyph icons on TTY, git). Use --core for", 10
-    db "strict GNU coreutils ls-compatible output.", 10
+    db "Default is modern mode (color, type gutter, table columns, git).", 10
+    db "Use --core for strict GNU coreutils ls-compatible output.", 10
     db 10
     db "Coreutils flags:", 10
     db "  -a, --all                  do not ignore entries starting with .", 10
@@ -113,8 +113,8 @@ help_msg:
     db "      --csv / --tsv          detailed delimited machine output", 10
     db "      --tree                 tree view", 10
     db "      --git / --no-git       git status annotation", 10
-    db "      --icons[=STYLE]        icons: auto|glyph|emoji|nerd|ascii|never", 10
-    db "                             (default auto=glyph on TTY; emoji/nerd opt-in)", 10
+    db "      --icons[=STYLE]        type gutter: auto|ascii|glyph|emoji|nerd|never", 10
+    db "                             (modern auto=ascii 1-cell d/l/x/-; off under --core)", 10
     db "      --browse / --tui       interactive dual-pane browser", 10
     db "      --ignore-files         honor .gitignore / .f00ignore", 10
     db "      --hyperlink            OSC-8 hyperlinks on TTY", 10
@@ -554,7 +554,7 @@ util_ls_ok:
     mov qword [rec_sp], 0
     mov qword [g_now_sec], 0
     mov byte [g_icons_when], ICONS_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_GLYPH
+    mov byte [g_icons_style], ICONS_STYLE_ASCII
     mov byte [g_sort], SORT_NAME
     mov byte [g_time_field], TIME_MTIME
     mov byte [g_quoting], QUOTE_LITERAL
@@ -1120,7 +1120,7 @@ util_ls_ok:
 .ic_fallback:
     ; unknown value → auto glyph
     mov byte [g_icons_when], ICONS_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_GLYPH
+    mov byte [g_icons_style], ICONS_STYLE_ASCII
     jmp .next_arg
 .j10:
     push rdi

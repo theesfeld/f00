@@ -9,6 +9,7 @@ extern g_opts, g_opts2, g_color, g_cols, g_tty, g_now_sec
 extern out_byte, out_str, out_strn, out_u64, out_spaces, out_pad, out_write
 extern human_size, u64_to_dec_buf, strlen, memcpy
 extern icon_for_entry, icon_enabled, icon_disp_cells
+extern color_dim
 extern git_status_char
 extern format_json, format_csv, format_tsv, format_tree
 extern uid_to_name, gid_to_name
@@ -164,6 +165,52 @@ indicator_char:
     mov al, '='
     ret
 
+; compute_short_meta_widths — max digit widths for -i/-s in non-long listings
+compute_short_meta_widths:
+    push rbx
+    push r12
+    push r13
+    push r14
+    mov dword [w_ino], 0
+    mov dword [w_blocks], 0
+    mov r12, [g_entries]
+    mov r13, [g_entry_count]
+    xor rbx, rbx
+.lp:
+    cmp rbx, r13
+    jae .done
+    mov r14, [r12 + rbx*8]
+    mov eax, [g_opts]
+    test eax, OPT_INODE
+    jz .blk
+    mov rdi, [r14 + Entry.ino]
+    lea rsi, [name_tmp]
+    call u64_to_dec_buf
+    cmp eax, [w_ino]
+    jbe .blk
+    mov [w_ino], eax
+.blk:
+    mov eax, [g_opts]
+    test eax, OPT_BLOCKS
+    jz .n
+    mov rax, [r14 + Entry.blocks]
+    add rax, 1
+    shr rax, 1
+    mov rdi, rax
+    lea rsi, [name_tmp]
+    call u64_to_dec_buf
+    cmp eax, [w_blocks]
+    jbe .n
+    mov [w_blocks], eax
+.n: inc rbx
+    jmp .lp
+.done:
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
 ; entry_disp_width(rdi=Entry*) -> eax display cells (name + chrome)
 entry_disp_width:
     push rbx
@@ -176,31 +223,32 @@ entry_disp_width:
     jz .noind
     inc r12d
 .noind:
+    ; short-form -i/-s use fixed max widths (table columns)
     mov eax, [g_opts]
+    test eax, OPT_LONG
+    jnz .skip_short_meta
     test eax, OPT_INODE
     jz .noino
-    push r12
-    mov rdi, [rbx + Entry.ino]
-    lea rsi, [name_tmp]
-    call u64_to_dec_buf
-    pop r12
+    mov eax, [w_ino]
+    test eax, eax
+    jnz .ino_w
+    mov eax, 1
+.ino_w:
     add r12d, eax
     inc r12d                        ; space
 .noino:
     mov eax, [g_opts]
     test eax, OPT_BLOCKS
     jz .noblk
-    push r12
-    mov rax, [rbx + Entry.blocks]
-    add rax, 1
-    shr rax, 1
-    mov rdi, rax
-    lea rsi, [name_tmp]
-    call u64_to_dec_buf
-    pop r12
+    mov eax, [w_blocks]
+    test eax, eax
+    jnz .blk_w
+    mov eax, 1
+.blk_w:
     add r12d, eax
     inc r12d
 .noblk:
+.skip_short_meta:
     ; git status column: always 2 cells when enabled (char/space + pad)
     mov eax, [g_opts2]
     test eax, OPT2_GIT
@@ -224,14 +272,23 @@ entry_disp_width:
     ret
 
 ; emit_name(rdi=Entry*)
+; For -l, inode/blocks are table columns in format_long (not emitted here).
 emit_name_public:
 emit_name:
     push rbx
     push r12
     mov rbx, rdi
     mov eax, [g_opts]
+    test eax, OPT_LONG
+    jnz .meta_done                  ; long form owns -i/-s columns
     test eax, OPT_INODE
     jz .noino
+    mov rdi, [rbx + Entry.ino]
+    lea rsi, [name_tmp]
+    call u64_to_dec_buf
+    mov edx, eax
+    mov ecx, [w_ino]
+    call out_pad
     mov rdi, [rbx + Entry.ino]
     call out_u64
     mov dil, ' '
@@ -243,11 +300,19 @@ emit_name:
     mov rax, [rbx + Entry.blocks]
     add rax, 1
     shr rax, 1
+    push rax
     mov rdi, rax
+    lea rsi, [name_tmp]
+    call u64_to_dec_buf
+    mov edx, eax
+    mov ecx, [w_blocks]
+    call out_pad
+    pop rdi
     call out_u64
     mov dil, ' '
     call out_byte
 .noblk:
+.meta_done:
     mov eax, [g_opts2]
     test eax, OPT2_GIT
     jz .nogit
@@ -290,6 +355,20 @@ emit_name:
     mov rdi, rbx
     call paint_prefix
     mov r12b, al
+    ; modern: dim names starting with '.' (hidden)
+    mov eax, [g_opts2]
+    test eax, OPT2_CORE
+    jnz .no_dim_dot
+    cmp byte [g_color], 0
+    je .no_dim_dot
+    mov rsi, [rbx + Entry.name]
+    test rsi, rsi
+    jz .no_dim_dot
+    cmp byte [rsi], '.'
+    jne .no_dim_dot
+    call color_dim
+    mov r12b, 1                     ; ensure reset
+.no_dim_dot:
     ; optional hyperlink open
     mov eax, [g_opts2]
     test eax, OPT2_HYPER
@@ -345,6 +424,7 @@ section .text
 format_one_per_line:
     push rbx
     push r12
+    call compute_short_meta_widths
     mov r12, [g_entries]
     xor rbx, rbx
 .lp:
@@ -408,6 +488,8 @@ format_columns:
     mov r12, [g_entry_count]
     test r12, r12
     jz .done
+
+    call compute_short_meta_widths
 
     ; compute widths[i]
     cmp r12, 512
@@ -920,16 +1002,60 @@ format_long:
     mov dil, 10
     call out_byte
 
-    ; compute column widths: nlink, owner, group, size
+    ; compute column widths: ino, blocks, nlink, owner, group, size
     xor r8d, r8d                    ; w_nlink
     xor r9d, r9d                    ; w_owner
     xor r10d, r10d                  ; w_group
     xor r11d, r11d                  ; w_size
+    mov dword [w_ino], 0
+    mov dword [w_blocks], 0
     xor rbx, rbx
 .wlp:
     cmp rbx, r13
     jae .wdone
     mov r15, [r12 + rbx*8]
+
+    ; inode width (-i)
+    mov eax, [g_opts]
+    test eax, OPT_INODE
+    jz .wino_done
+    mov rdi, [r15 + Entry.ino]
+    lea rsi, [name_tmp]
+    push r8
+    push r9
+    push r10
+    push r11
+    call u64_to_dec_buf
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    cmp eax, [w_ino]
+    jbe .wino_done
+    mov [w_ino], eax
+.wino_done:
+    ; blocks width (-s), 1K units like GNU
+    mov eax, [g_opts]
+    test eax, OPT_BLOCKS
+    jz .wblk_done
+    mov rax, [r15 + Entry.blocks]
+    add rax, 1
+    shr rax, 1
+    mov rdi, rax
+    lea rsi, [name_tmp]
+    push r8
+    push r9
+    push r10
+    push r11
+    call u64_to_dec_buf
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    cmp eax, [w_blocks]
+    jbe .wblk_done
+    mov [w_blocks], eax
+.wblk_done:
 
     mov edi, [r15 + Entry.nlink]
     lea rsi, [name_tmp]
@@ -1030,6 +1156,42 @@ format_long:
     cmp rbx, r13
     jae .done
     mov r15, [r12 + rbx*8]
+
+    ; inode (-i): right-aligned, before perms (GNU order with -s/-i)
+    mov eax, [g_opts]
+    test eax, OPT_INODE
+    jz .no_ino_col
+    mov rdi, [r15 + Entry.ino]
+    lea rsi, [name_tmp]
+    call u64_to_dec_buf
+    mov edx, eax
+    mov ecx, [w_ino]
+    call out_pad
+    mov rdi, [r15 + Entry.ino]
+    call out_u64
+    mov dil, ' '
+    call out_byte
+.no_ino_col:
+
+    ; blocks (-s): right-aligned 1K units
+    mov eax, [g_opts]
+    test eax, OPT_BLOCKS
+    jz .no_blk_col
+    mov rax, [r15 + Entry.blocks]
+    add rax, 1
+    shr rax, 1
+    push rax
+    mov rdi, rax
+    lea rsi, [name_tmp]
+    call u64_to_dec_buf
+    mov edx, eax
+    mov ecx, [w_blocks]
+    call out_pad
+    pop rdi
+    call out_u64
+    mov dil, ' '
+    call out_byte
+.no_blk_col:
 
     ; perms
     mov rdi, r15
@@ -1195,10 +1357,12 @@ format_long:
     ret
 
 section .bss
-w_nlink: resd 1
-w_owner: resd 1
-w_group: resd 1
-w_size:  resd 1
+w_nlink:  resd 1
+w_owner:  resd 1
+w_group:  resd 1
+w_size:   resd 1
+w_ino:    resd 1
+w_blocks: resd 1
 
 section .text
 

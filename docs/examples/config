@@ -3,11 +3,12 @@
 
 core = false
 color = auto
-icons = auto
-# icons = glyph   # default: single-width Unicode (▸ · ★ ↪ …)
-# icons = emoji   # colorful emoji (opt-in)
-# icons = nerd    # Nerd Font PUA (needs patched font)
-# icons = ascii   # [D]/[F]/… always works
+icons = auto      # modern: 1-cell type gutter (d/l/x/-) when color on
+# icons = never   # color/table only
+# icons = glyph   # Unicode glyph skin
+# icons = emoji   # emoji skin
+# icons = nerd    # Nerd Font PUA
+# icons = ascii   # force ascii letters
 animations = true
 spinner = true
 

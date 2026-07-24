@@ -82,7 +82,7 @@ config_load:
     mov byte [g_cfg_spinner], 1
     mov byte [g_cfg_color_when], CFG_AUTO
     mov byte [g_cfg_icons_when], CFG_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_GLYPH
+    mov byte [g_icons_style], ICONS_STYLE_ASCII
     mov byte [g_cfg_git], CFG_AUTO
     mov byte [sec_name], 0          ; current section = global
 

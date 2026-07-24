@@ -23,43 +23,56 @@ home_buf:  resb 512
 section .rodata
 msg_hdr:  db "plugins:",10,0
 msg_none: db "(no plugins loaded)",10,0
-home_suf: db "/.f00/plugins",0
-cfg_suf:  db "/.config/f00/plugins",0
+; XDG only — never ~/.f00
+suf_xdg:  db "/f00/plugins",0
+suf_home: db "/.config/f00/plugins",0
+env_xdg:  db "XDG_CONFIG_HOME=",0
+env_home: db "HOME=",0
 env_key:  db "F00_PLUGIN_DIR=",0
 slash:    db "/",0
 
 section .text
 
+; Plugin search (XDG Base Directory):
+;   1) $XDG_CONFIG_HOME/f00/plugins
+;   2) $HOME/.config/f00/plugins
+;   3) $F00_PLUGIN_DIR
 plugins_init:
     push r12
     mov r12, rdi                    ; envp
     mov [g_envp], r12
     mov qword [plug_n], 0
-    ; HOME/.f00/plugins
-    call get_home
+    ; 1) XDG_CONFIG_HOME/f00/plugins
+    lea rsi, [env_xdg]
+    mov ecx, 16                     ; len "XDG_CONFIG_HOME="
+    call env_get_pfx
     test rax, rax
-    jz .cfg
+    jz .home_cfg
     lea rdi, [home_buf]
     mov rsi, rax
     call strcpy
     lea rdi, [home_buf]
-    lea rsi, [home_suf]
+    lea rsi, [suf_xdg]
     call strcat
     lea rdi, [home_buf]
     call scan_dir
-.cfg:
-    call get_home
+.home_cfg:
+    ; 2) $HOME/.config/f00/plugins
+    lea rsi, [env_home]
+    mov ecx, 5
+    call env_get_pfx
     test rax, rax
     jz .env
     lea rdi, [home_buf]
     mov rsi, rax
     call strcpy
     lea rdi, [home_buf]
-    lea rsi, [cfg_suf]
+    lea rsi, [suf_home]
     call strcat
     lea rdi, [home_buf]
     call scan_dir
 .env:
+    ; 3) F00_PLUGIN_DIR
     call get_plugin_dir
     test rax, rax
     jz .done
@@ -69,38 +82,24 @@ plugins_init:
     pop r12
     ret
 
-get_home:
+; env_get_pfx(rsi=prefix cstr, ecx=prefix len) → rax value or 0
+env_get_pfx:
+    push rbx
+    push r12
+    push r13
+    mov r12, rsi
+    mov r13d, ecx
     mov rdi, [g_envp]
     test rdi, rdi
     jz .no
 .lp:
-    mov rsi, [rdi]
-    test rsi, rsi
-    jz .no
-    cmp dword [rsi], 0x454d4f48     ; HOME
-    jne .n
-    cmp byte [rsi+4], '='
-    jne .n
-    lea rax, [rsi+5]
-    ret
-.n: add rdi, 8
-    jmp .lp
-.no:
-    xor eax, eax
-    ret
-
-get_plugin_dir:
-    mov rdi, [g_envp]
-    test rdi, rdi
-    jz .no
-.lp:
-    mov rsi, [rdi]
-    test rsi, rsi
+    mov rbx, [rdi]
+    test rbx, rbx
     jz .no
     push rdi
-    mov rdi, rsi
-    lea rsi, [env_key]
-    mov ecx, 15
+    mov rdi, rbx
+    mov rsi, r12
+    mov ecx, r13d
     call pfx
     pop rdi
     test al, al
@@ -108,10 +107,23 @@ get_plugin_dir:
     add rdi, 8
     jmp .lp
 .y: mov rsi, [rdi]
-    lea rax, [rsi+15]
+    mov eax, r13d
+    lea rax, [rsi+rax]
+    pop r13
+    pop r12
+    pop rbx
     ret
 .no:
     xor eax, eax
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+get_plugin_dir:
+    lea rsi, [env_key]
+    mov ecx, 15                     ; "F00_PLUGIN_DIR="
+    call env_get_pfx
     ret
 
 pfx:

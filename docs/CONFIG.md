@@ -1,6 +1,8 @@
 # f00tils configuration (XDG)
 
-User configuration is **XDG Base Directory** compliant.
+User configuration is **XDG Base Directory** compliant under **`~/.config/f00/`** (or `$XDG_CONFIG_HOME/f00/`).
+
+There is **no** `~/.f00` user config directory.
 
 ## Search order
 
@@ -8,6 +10,14 @@ User configuration is **XDG Base Directory** compliant.
 2. `$HOME/.config/f00/config`
 
 Later files override earlier ones. Missing files are ignored.
+
+### Related paths (same tree)
+
+| Path | Role |
+|------|------|
+| `~/.config/f00/config` | Settings (this file) |
+| `~/.config/f00/plugins/` | Optional plugin `.so` files |
+| `$F00_PLUGIN_DIR` | Extra plugin directory (env override) |
 
 Environment variables override the file. Command-line flags override everything.
 
@@ -44,7 +54,7 @@ spinner = false
 |-----|--------|--------|
 | `core` | `true`/`false`, `yes`/`no`, `1`/`0` | Force `--core` presentation |
 | `color` | `auto`, `always`, `never` (also `on`/`off`) | Color when |
-| `icons` | `auto`, `glyph`, `emoji`, `nerd`, `ascii`, `never`, `always` | Icon when + style (default **glyph** single-width Unicode; emoji/nerd opt-in) |
+| `icons` | `auto` (1-cell ascii gutter when color on), `ascii`, `glyph`, `emoji`, `nerd`, `never` | Type gutter chrome; off under `--core` |
 | `animations` | bool | Master switch for motion (spinners, …) |
 | `spinner` | bool | Per-spinner enable (also needs `animations`) |
 | `git` | `auto`/`always`/`never` or bool | ls git decorations |

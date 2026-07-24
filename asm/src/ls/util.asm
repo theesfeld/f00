@@ -98,7 +98,7 @@ c_hdr:      db 27, "[1;34m", 0
 env_nocolor: db "NO_COLOR", 0
 j_schema:   db "{", 10, '  "schema": "f00/v1",', 10, 0
 j_suite:    db '  "suite": "f00",', 10, 0
-j_ver:      db '  "version": "0.15.3",', 10, 0
+j_ver:      db '  "version": "0.15.4",', 10, 0
 j_util_a:   db '  "util": "', 0
 j_util_b:   db '",', 10, 0
 j_mode_m:   db '  "mode": "modern",', 10, 0
@@ -903,6 +903,24 @@ color_dim:
     lea rsi, [c_dim]
     jmp color_set
 
+; soft color wrap for meta JSON lines when modern
+json_meta_paint_on:
+    cmp byte [g_color], 0
+    je .r
+    cmp dword [g_json_core], 0
+    jne .r
+    lea rsi, [c_dim]
+    call out_str
+.r: ret
+json_meta_paint_off:
+    cmp byte [g_color], 0
+    je .r
+    cmp dword [g_json_core], 0
+    jne .r
+    lea rsi, [c_reset]
+    call out_str
+.r: ret
+
 json_meta_open:
     push rbx
     push r12
@@ -911,6 +929,7 @@ json_meta_open:
     jnz .haveu
     mov rbx, [g_util_name]
 .haveu:
+    call json_meta_paint_on
     lea rsi, [j_schema]
     call out_str
     lea rsi, [j_suite]
@@ -919,8 +938,18 @@ json_meta_open:
     call out_str
     lea rsi, [j_util_a]
     call out_str
+    call json_meta_paint_off
+    cmp byte [g_color], 0
+    je .u0
+    cmp dword [g_json_core], 0
+    jne .u0
+    lea rsi, [c_path]
+    call out_str
+.u0:
     mov rsi, rbx
     call out_str
+    call json_meta_paint_off
+    call json_meta_paint_on
     lea rsi, [j_util_b]
     call out_str
     cmp dword [g_json_core], 0
@@ -934,15 +963,26 @@ json_meta_open:
     ; color + tty
     lea rsi, [j_color_a]
     call out_str
+    call json_meta_paint_off
     movzx eax, byte [g_color]
     test eax, eax
     jz .cf
+    cmp byte [g_color], 0
+    je .cf2
+    cmp dword [g_json_core], 0
+    jne .cf2
+    lea rsi, [c_ok]
+    call out_str
+.cf2:
     lea rsi, [j_true]
     jmp .ce
 .cf: lea rsi, [j_false]
 .ce: call out_str
+    call json_meta_paint_off
+    call json_meta_paint_on
     lea rsi, [j_tty_a]
     call out_str
+    call json_meta_paint_off
     movzx eax, byte [g_tty]
     test eax, eax
     jz .tf

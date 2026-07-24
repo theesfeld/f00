@@ -32,20 +32,31 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ---
 
-## Icons (suite-wide)
+## Icons / type gutter (suite-wide)
 
-- **Default style: glyph** — single-width Unicode (`▸` `·` `★` `↪` …); no emoji, no Nerd Font.
-- **CLI (ls):** `--icons[=STYLE]` where `STYLE` is:
-  - `auto` — on modern TTY, **glyph** style (default)
-  - `glyph` / `glyphs` / `unicode` — force on, glyph table
-  - `emoji` — force on, emoji table (opt-in)
-  - `nerd` — force on, Nerd Font PUA (opt-in; needs patched font)
-  - `ascii` — force on, `[D]`/`[F]`/… (always works)
-  - `never` — off
-  - bare `--icons` — force on, keep current style (default glyph)
-- Symlinks classify by **target** (dir/exec) when follow-stat succeeds; pure links use `↪`.
-- Column width accounts for style (glyph/nerd ≈ 1 cell, emoji ≈ 2, ascii = `strlen`).
-- **Config / env:** `icons = auto|glyph|emoji|nerd|ascii|never` · `F00_ICONS=…`
+- **Modern default: 1-cell ASCII type gutter** when color is on: `d` dir · `-` file · `l` link · `x` exec · `#` code · `z` zip · …
+- Primary type signal remains **color** (LS_COLORS); gutter is fixed-width chrome, never shifts columns.
+- **Off under `--core`**, pipes without color, or `icons=never`.
+- **CLI:** `--icons[=STYLE]` — `auto` (default) | `ascii` | `glyph` | `emoji` | `nerd` | `never`
+- Emoji/Nerd/glyph are skins; ascii is the stylish default.
+- **Config / env:** `icons = auto|ascii|glyph|emoji|nerd|never` · `F00_ICONS=…`
+
+## JSON / CSV chrome
+
+- Modern (`! --core` + color): **colored keys / strings / numbers / punctuation**.
+- `--core` or no color: plain machine output (no SGR).
+
+## Long listing as a table
+
+`f00-ls -l` (and `-i` / `-s`) is a **fixed-width table**, GNU field order:
+
+```text
+[ino] [blocks] perms nlink owner group size mtime name
+```
+
+- Numeric fields **right-aligned** to the max width of the listing set.
+- `-s` blocks sit **before** perms (not after the date) so names share one vertical edge.
+- Git status (when on) is a fixed 2-cell column before the name.
 - **API:**
   - `icon_for_entry(Entry*)` — ls / tree
   - `icon_for_path(path)` — cat headers, hash paths, any path print

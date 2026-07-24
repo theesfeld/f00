@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-07-24
+
+### Changed
+- Modern chrome: **1-cell type gutter** (`d`/`l`/`x`/`-`/…) when color on; off under `--core`
+- Long + short listings are **tables**: `-i`/`-s` fixed-width columns (GNU order)
+- **JSON/CSV chromed** (colored keys/strings/numbers) unless `--core`
+- File headers: bat-class box chrome (`╭─ path ─╮`)
+- Dotfiles dimmed in modern color mode
+- User config/plugins: XDG only (`~/.config/f00/`), no `~/.f00`
+
+### Fixed
+- `ls -asl` name column no longer shifts when block counts differ
+
 ## [0.15.3] - 2026-07-24
 
 ### Changed

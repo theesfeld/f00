@@ -141,33 +141,34 @@ nf_lock:        db 0xef, 0x80, 0xa3, 0
 nf_src:         db 0xef, 0x86, 0xb2, 0
 nf_cfg:         db 0xef, 0x80, 0x93, 0
 
-; ── ASCII (always works) ──────────────────────────────────────────
-as_folder:      db "[D]", 0
-as_folder_cfg:  db "[.]", 0
-as_file:        db "[F]", 0
-as_link:        db "[L]", 0
-as_exec:        db "[*]", 0
-as_rs:          db "[rs]", 0
-as_py:          db "[py]", 0
-as_js:          db "[js]", 0
-as_ts:          db "[ts]", 0
-as_c:           db "[c]", 0
-as_cpp:         db "[c+]", 0
-as_go:          db "[go]", 0
-as_md:          db "[md]", 0
-as_json:        db "[{}]", 0
-as_toml:        db "[tm]", 0
-as_yml:         db "[ym]", 0
-as_sh:          db "[sh]", 0
-as_img:         db "[im]", 0
-as_zip:         db "[z]", 0
-as_git:         db "[g]", 0
-as_html:        db "[ht]", 0
-as_css:         db "[cs]", 0
-as_pdf:         db "[pd]", 0
-as_lock:        db "[lk]", 0
-as_src:         db "[src]", 0
-as_cfg:         db "[cfg]", 0
+; ── ASCII type gutter (1 cell, fixed — modern default chrome) ──────
+; d dir  . dotdir  - file  l link  x exec  # code  z zip  i image  etc.
+as_folder:      db "d", 0
+as_folder_cfg:  db "d", 0              ; same as dir — keep 1-cell gutter clear
+as_file:        db "-", 0
+as_link:        db "l", 0
+as_exec:        db "x", 0
+as_rs:          db "#", 0
+as_py:          db "#", 0
+as_js:          db "#", 0
+as_ts:          db "#", 0
+as_c:           db "#", 0
+as_cpp:         db "#", 0
+as_go:          db "#", 0
+as_md:          db "m", 0
+as_json:        db "{", 0
+as_toml:        db "{", 0
+as_yml:         db "{", 0
+as_sh:          db "$", 0
+as_img:         db "i", 0
+as_zip:         db "z", 0
+as_git:         db "g", 0
+as_html:        db "@", 0
+as_css:         db "~", 0
+as_pdf:         db "p", 0
+as_lock:        db "!", 0
+as_src:         db "#", 0
+as_cfg:         db "*", 0
 
 empty_icon:     db 0
 
@@ -313,17 +314,18 @@ icon_disp_cells:
     ret
 
 icon_enabled:
-    movzx eax, byte [g_icons_when]
-    cmp al, ICONS_ALWAYS
-    je .yes
-    cmp al, ICONS_NEVER
-    je .no
+    ; Modern: 1-cell type gutter ON for TTY+color (style default = ascii).
+    ; --core / pipes / never → off. Explicit --icons=STYLE still ALWAYS.
     mov eax, [g_opts2]
     test eax, OPT2_NO_ICONS | OPT2_CORE
     jnz .no
-    cmp byte [g_color], 0
+    movzx eax, byte [g_icons_when]
+    cmp al, ICONS_NEVER
     je .no
-    cmp byte [g_tty], 0
+    cmp al, ICONS_ALWAYS
+    je .yes
+    ; AUTO: chrome whenever color is on (TTY auto-color or --color=always)
+    cmp byte [g_color], 0
     je .no
 .yes:
     mov al, 1
@@ -431,7 +433,7 @@ icon_set_style_from_str:
     ret
 .auto:
     mov byte [g_icons_when], ICONS_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_GLYPH
+    mov byte [g_icons_style], ICONS_STYLE_ASCII   ; sensible 1-cell type letters
     mov al, 1
     pop rbx
     ret
