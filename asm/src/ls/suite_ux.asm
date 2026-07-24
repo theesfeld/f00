@@ -1,5 +1,5 @@
-; f00 suite — terminal UI/UX design system (pure ASM)
-; Expert console chrome: semantic color, columns, help sections, progress bars.
+; f00tils — terminal UI/UX design system (pure ASM)
+; Expert console chrome: semantic color, columns, help, progress, spinners.
 ; Modern default ON when g_color; silent under --core.
 BITS 64
 DEFAULT REL
@@ -10,6 +10,8 @@ global ui_pad_right, ui_pad_left_u64, ui_emit_bar
 global ui_label, ui_value_path, ui_value_num, ui_value_ok, ui_value_err
 global ui_kv_line, ui_rule, ui_bullet
 global ui_color_use_pct
+global ui_file_header
+global ui_spinner_start, ui_spinner_tick, ui_spinner_stop
 
 extern out_str, out_byte, out_u64, out_spaces, out_strn
 extern color_reset, color_path, color_num, color_ok, color_err, color_hdr, color_dim
@@ -17,16 +19,24 @@ extern color_set
 extern g_color, g_tty, g_cols
 extern strlen
 extern strcmp
+extern icon_for_path, icon_enabled
+extern is_tty
 
 section .rodata
 s_core_sec:  db "Coreutils flags:", 0
 s_mod_sec:   db "Modern flags:", 0
 s_ex_sec:    db "Examples:", 0
-s_footer:    db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
+s_footer:    db "f00tils · pure assembly · MIT · https://f00.sh", 10, 0
 s_rule:      db "────────────────────────────────────────────────────────────", 10, 0
+s_hdr_pre:   db "── ", 0
+s_hdr_mid:   db " ", 0
+s_hdr_post:  db " ──", 10, 0
+s_hdr_plain_pre:  db "==> ", 0
+s_hdr_plain_post: db " <==", 10, 0
 c_sec:       db 27, "[1;35m", 0      ; bold magenta section
 c_banner:    db 27, "[1;36m", 0
 c_muted:     db 27, "[2;37m", 0
+c_spin:      db 27, "[1;36m", 0      ; spinner accent
 c_use_hi:    db 27, "[1;31m", 0      ; >90% red
 c_use_mid:   db 27, "[1;33m", 0      ; >70% yellow
 c_use_lo:    db 27, "[1;32m", 0      ; else green
@@ -37,10 +47,32 @@ bar_empty:   db "░", 0
 bar_fill_a:  db "#", 0
 bar_empty_a: db "-", 0
 bullet:      db "  · ", 0
+; braille spinner frames (UTF-8) + CR for in-place update on stderr
+spin_frames:
+    db 0xe2, 0xa0, 0x8b, 0   ; ⠋
+    db 0xe2, 0xa0, 0x99, 0   ; ⠙
+    db 0xe2, 0xa0, 0xb9, 0   ; ⠹
+    db 0xe2, 0xa0, 0xb8, 0   ; ⠸
+    db 0xe2, 0xa0, 0xbc, 0   ; ⠼
+    db 0xe2, 0xa0, 0xb4, 0   ; ⠴
+    db 0xe2, 0xa0, 0xa6, 0   ; ⠦
+    db 0xe2, 0xa0, 0xa7, 0   ; ⠧
+    db 0xe2, 0xa0, 0x8f, 0   ; ⠇
+    db 0xe2, 0xa0, 0x8d, 0   ; ⠏
+spin_frame_count equ 10
+spin_cr:     db 13
+spin_clear:  db 13, 27, "[K", 0     ; CR + erase line
+spin_space:  db " ", 0
+spin_working: db "working…", 0
 
 section .bss
 alignb 8
 help_line:   resb 256
+spin_idx:    resd 1
+spin_active: resb 1
+spin_err_tty: resb 1
+             resb 2
+spin_label:  resq 1
 
 section .text
 
@@ -402,3 +434,174 @@ ui_bullet:
 .p: lea rsi, [bullet]
     call out_str
     jmp color_reset
+
+; ── modern file chrome ───────────────────────────────────────────
+; ui_file_header(rsi=path) — bat-class file banner for multi-file tools.
+; Modern TTY: dim rule + optional Nerd icon + cyan path.
+; --core / no color: plain "==> path <==".
+ui_file_header:
+    push rbx
+    push r12
+    mov r12, rsi                    ; path
+    cmp byte [g_color], 0
+    je .plain
+    ; icon (if enabled)
+    call color_dim
+    lea rsi, [s_hdr_pre]
+    call out_str
+    call color_reset
+    mov rdi, r12
+    call icon_for_path
+    cmp byte [rsi], 0
+    je .nopath_icon
+    push rsi
+    call color_hdr
+    pop rsi
+    call out_str
+    mov dil, ' '
+    call out_byte
+    call color_reset
+.nopath_icon:
+    call color_path
+    mov rsi, r12
+    call out_str
+    call color_reset
+    call color_dim
+    lea rsi, [s_hdr_post]
+    call out_str
+    call color_reset
+    pop r12
+    pop rbx
+    ret
+.plain:
+    lea rsi, [s_hdr_plain_pre]
+    call out_str
+    mov rsi, r12
+    call out_str
+    lea rsi, [s_hdr_plain_post]
+    call out_str
+    pop r12
+    pop rbx
+    ret
+
+; ── spinner (stderr, modern TTY only) ────────────────────────────
+; For long multi-file / large-input work. No-ops under --core, pipes, NO_COLOR.
+; ui_spinner_start(rsi=label cstr or 0)  ui_spinner_tick  ui_spinner_stop
+ui_spinner_start:
+    push rbx
+    mov rbx, rsi
+    mov byte [spin_active], 0
+    mov dword [spin_idx], 0
+    mov qword [spin_label], 0
+    cmp byte [g_color], 0
+    je .off
+    ; stderr TTY?
+    mov rdi, 2
+    call is_tty
+    test al, al
+    jz .off
+    mov byte [spin_err_tty], 1
+    mov byte [spin_active], 1
+    test rbx, rbx
+    jz .def
+    mov [spin_label], rbx
+    jmp .tick0
+.def:
+    lea rax, [spin_working]
+    mov [spin_label], rax
+.tick0:
+    pop rbx
+    jmp ui_spinner_tick
+.off:
+    mov byte [spin_err_tty], 0
+    pop rbx
+    ret
+
+ui_spinner_tick:
+    cmp byte [spin_active], 0
+    je .ret
+    push rbx
+    push r12
+    push r13
+    ; frame
+    mov eax, [spin_idx]
+    xor edx, edx
+    mov ecx, spin_frame_count
+    div ecx
+    mov [spin_idx], edx
+    inc dword [spin_idx]
+    ; ptr = spin_frames + edx * 4 (each frame is 4 bytes incl NUL)
+    mov eax, edx
+    shl eax, 2
+    lea r12, [spin_frames]
+    add r12, rax
+    ; write CR + color + frame + space + label to stderr (best-effort)
+    mov rax, SYS_write
+    mov rdi, 2
+    lea rsi, [spin_cr]
+    mov rdx, 1
+    syscall
+    cmp byte [g_color], 0
+    je .frm
+    mov rax, SYS_write
+    mov rdi, 2
+    lea rsi, [c_spin]
+    mov rdx, 7                      ; ESC[1;36m
+    syscall
+.frm:
+    mov rdi, r12
+    call strlen
+    mov rdx, rax
+    mov rax, SYS_write
+    mov rdi, 2
+    mov rsi, r12
+    syscall
+    mov rax, SYS_write
+    mov rdi, 2
+    lea rsi, [spin_space]
+    mov rdx, 1
+    syscall
+    ; reset color
+    mov rax, SYS_write
+    mov rdi, 2
+    lea rsi, [c_muted]
+    ; just write ESC[0m via a tiny sequence — reuse banner mute then path? use out buffer no —
+    ; write ESC[0m literal
+    lea r13, [spin_reset]
+    mov rax, SYS_write
+    mov rdi, 2
+    mov rsi, r13
+    mov rdx, 4
+    syscall
+    mov rsi, [spin_label]
+    test rsi, rsi
+    jz .done
+    mov rdi, rsi
+    call strlen
+    mov rdx, rax
+    mov rax, SYS_write
+    mov rdi, 2
+    mov rsi, [spin_label]
+    syscall
+.done:
+    pop r13
+    pop r12
+    pop rbx
+.ret:
+    ret
+
+ui_spinner_stop:
+    cmp byte [spin_active], 0
+    je .ret
+    mov byte [spin_active], 0
+    ; clear line on stderr
+    mov rax, SYS_write
+    mov rdi, 2
+    lea rsi, [spin_clear]
+    mov rdx, 4
+    syscall
+.ret:
+    ret
+
+section .rodata
+spin_reset: db 27, "[0m", 0

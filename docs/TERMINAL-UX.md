@@ -1,14 +1,69 @@
-# Terminal UX conventions (f00 suite)
+# Terminal UX conventions (f00tils)
 
-Tiny suite-wide contract for help text, semantic color, `--core`, and machine-readable JSON.
-Applies to the freestanding ASM multicall product under `asm/`.
+Suite-wide contract for modern chrome, icons, help text, semantic color, `--core`, and machine-readable JSON.
+Product name **f00tils**; binary `f00` / tools `f00-*`.
+
+**Law:** when **not** `--core`, interactive TTY output is **modern** — color, icons where they help, structured chrome, never a plain GNU clone.
 
 Implementation anchors:
 
 - Color helpers: `asm/src/ls/util.asm` (`color_path`, `color_num`, …)
-- Help chrome: `asm/src/ls/suite_ux.asm` (`ui_help_banner`, `ui_help_section`, `ui_help_footer`)
-- Buffered I/O: `out_init` / `out_*` / `out_flush` (single flush per logical frame where possible)
+- Help + chrome: `asm/src/ls/suite_ux.asm` (`ui_help_*`, `ui_file_header`, `ui_spinner_*`, bars)
+- Icons: `asm/src/ls/icons.asm` (`icon_enabled`, `icon_for_entry`, `icon_for_path`)
+- Buffered I/O: `out_init` / `out_*` / `out_flush`
 - Dual-pane browser: `asm/src/ls/tui.asm` (`f00-ls --browse` / `--tui`)
+
+---
+
+## Modern vs `--core`
+
+| Surface | Modern (default on TTY) | `--core` |
+|---------|-------------------------|----------|
+| Color | Semantic SGR | Never |
+| Icons | Nerd Font when useful (paths, listings) | Never |
+| Headers / gutters | Bat-class file chrome (`ui_file_header`) | Plain GNU style |
+| Spinners | stderr braille spinner for long work | Never |
+| JSON/CSV | Available; `mode: "modern"` | Available; `mode: "core"` |
+| Flags / exit codes | GNU-compatible + modern extras | Track GNU presentation |
+
+Honor **`NO_COLOR`**, non-TTY pipes (no SGR / no icons auto), and **`--core`**.
+
+---
+
+## Icons (suite-wide)
+
+- **When:** `icon_enabled` — AUTO on modern TTY (`g_color` + TTY, not `--core`); ALWAYS/NEVER via `--icons` where the util exposes it (ls today; shared helper for others).
+- **What:** Nerd Font glyphs for directories, files by extension, executables, links, config basenames.
+- **API:**
+  - `icon_for_entry(Entry*)` — ls / tree
+  - `icon_for_path(path)` — cat headers, hash paths, any path print
+- **Where it belongs:** listings, multi-file headers, digest lines, path-heavy tools — not in machine-only streams or pure numeric dumps.
+
+---
+
+## Chromed text tools (cat / head / tail / less-like)
+
+Standard modern frame for multi-file text tools:
+
+1. **File banner** — `ui_file_header(path)`: dim rule + optional icon + cyan path.
+2. **Gutter** — dim box-drawing bar for line-numbered views (`│ `).
+3. **Markers** — colored `^I` / `$` / non-printing under `-vET` (cat already).
+4. **No chrome** under `--core` or non-TTY (unless forced flags).
+
+`f00-cat` ships bat-class multi-file headers + gutters. Other text utils should reuse the same helpers as they deepen modern mode.
+
+There is no full `less` pager binary yet; interactive browse is `f00-ls --browse`. Pager-class chrome (status line, less keys) is a later util or opt-in mode — same token system.
+
+---
+
+## Spinners / long work
+
+- **API:** `ui_spinner_start(label)` · `ui_spinner_tick` · `ui_spinner_stop`
+- **Where:** stderr only; modern TTY; no-ops under `--core` / non-TTY / `g_color=0`
+- **Style:** colored braille frames + label; CR + erase line on stop
+- **Use:** multi-file hash, large copies, deep walks — anything that can pause a human. Fast paths stay silent (no spinner spam).
+
+Hash suite already starts/stops a spinner around each file.
 
 ---
 

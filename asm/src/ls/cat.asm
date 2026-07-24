@@ -9,6 +9,7 @@ extern arena_init, out_init, out_flush, out_str, out_byte, out_strn, out_u64
 extern is_tty, exit_code, strlen, strcmp, memcpy
 extern g_exit, g_tty, g_color, g_opts2, g_json_core
 extern json_meta_open, json_meta_close, json_key_u64, json_key_bool, json_comma_nl
+extern ui_file_header
 
 ; local option bits in cat_opts
 %define C_NUMBER       1
@@ -65,20 +66,18 @@ cat_help:
     db "  -j, --json               detailed JSON result (pretty + color on TTY)", 10
     db "      --csv                detailed CSV result", 10
     db 10
-    db "f00 suite · pure assembly · MIT · https://f00.sh", 10
+    db "Modern TTY uses bat-class chrome (colored headers, Nerd icons, gutters).", 10
+    db "f00tils · pure assembly · MIT · https://f00.sh", 10
 cat_help_len equ $-cat_help
 
 cat_version:
     db "f00-cat (f00) 0.15.1", 10
-    db "GNU coreutils cat drop-in + modern listing — pure assembly", 10
+    db "GNU coreutils cat drop-in + modern chrome — pure assembly", 10
     db "License: MIT · https://f00.sh", 10
 cat_version_len equ $-cat_version
 
-hdr_pre:  db "==> ", 0
-hdr_post: db " <==", 10, 0
 ; bat-class gutter: dim vertical bar + space (UTF-8 BOX DRAWINGS LIGHT VERTICAL)
 pipe_mark: db 0xe2, 0x94, 0x82, ' ', 0
-c_hdr:    db 27, "[1;36m", 0
 c_num:    db 27, "[2;37m", 0
 c_pipe:   db 27, "[2;37m", 0
 c_mark:   db 27, "[1;33m", 0
@@ -441,7 +440,7 @@ cat_one_path:
     mov r12, rdi
     inc qword [j_files]
 
-    ; modern multi-file headers (bat/cat style) — never under --core
+    ; modern multi-file headers (bat-class) — never under --core
     mov eax, [cat_opts]
     test eax, C_HEADERS
     jz .open
@@ -450,21 +449,8 @@ cat_one_path:
     cmp byte [cat_multi], 0
     je .open
 .hdr:
-    cmp byte [g_color], 0
-    je .hdr_plain
-    lea rsi, [c_hdr]
-    call out_str
-.hdr_plain:
-    lea rsi, [hdr_pre]
-    call out_str
     mov rsi, r12
-    call out_str
-    lea rsi, [hdr_post]
-    call out_str
-    cmp byte [g_color], 0
-    je .open
-    lea rsi, [c_reset]
-    call out_str
+    call ui_file_header
 
 .open:
     ; open file or use fd 0

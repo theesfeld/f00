@@ -1,12 +1,22 @@
 # Modern features decisions (surveys)
 
-Always for every util: color (TTY), `--json`, `--csv`, all GNU flags, modern default, `--core` only for strict.
+**f00tils** product law: when not `--core`, everything interactive is **modern**.
+
+Always for every util: color (TTY), `--json`/`--csv` where structured, GNU flags, modern default, `--core` only for strict presentation.
+
+Shared chrome (see [TERMINAL-UX.md](TERMINAL-UX.md)):
+
+- Semantic color tokens
+- Nerd Font **icons** via `icon_for_path` / `icon_for_entry` where paths appear
+- **File headers** (`ui_file_header`) for multi-file text tools
+- **Spinners** (`ui_spinner_*`) on stderr for longer multi-file work
+- Help section chrome + progress bars
 
 ## f00-ls
 Shipped: icons, git, tree, json/csv/tsv, TUI, archives, hyperlink, ignore-files, LS_COLORS, themes.
 
 ## f00-cat
-**Chosen:** bat-class direction — line numbers, -vET markers colored, squeeze, multi-file headers, binary-aware path, `--json`/`--csv` summaries. Syntax highlight: progressive (structure ready; full engines later).
+**Chosen / shipping:** bat-class — colored multi-file headers with icons, line gutters, -vET markers colored, squeeze, `--json`/`--csv` summaries. Syntax highlight: progressive later.
 
 ## f00-head
 **Chosen:** multi-file power + follow lite (headers, human units, json/csv, simple follow).

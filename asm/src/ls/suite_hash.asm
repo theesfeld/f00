@@ -12,8 +12,10 @@ extern g_exit, g_tty, g_color, g_json_core
 extern err_missing_operand, err_str
 extern json_meta_open, json_meta_close, json_key_str, json_key_u64, json_key_bool
 extern json_comma_nl
-extern color_ok, color_err, color_path, color_reset
+extern color_ok, color_err, color_path, color_reset, color_hdr
 extern ui_help_print
+extern icon_for_path, icon_enabled
+extern ui_spinner_start, ui_spinner_tick, ui_spinner_stop
 
 %define F_JSON 1
 %define F_CSV  2
@@ -2340,6 +2342,26 @@ print_digest_line:
     lea rsi, [sp2]
     call out_str
 .ppath:
+    ; modern: optional Nerd icon before path
+    call icon_enabled
+    test al, al
+    jz .noic
+    mov rdi, [cur_path]
+    test rdi, rdi
+    jnz .icp
+    lea rdi, [dash]
+.icp:
+    call icon_for_path
+    cmp byte [rsi], 0
+    je .noic
+    push rsi
+    call color_hdr
+    pop rsi
+    call out_str
+    mov dil, ' '
+    call out_byte
+    call color_reset
+.noic:
     call hash_c_file
     mov rsi, [cur_path]
     test rsi, rsi
@@ -2595,8 +2617,14 @@ process_one_path:
     mov [cur_path], rax
     xor ebx, ebx
 .do:
+    ; modern stderr spinner while hashing (no-op under --core / pipes)
+    mov rsi, [cur_path]
+    call ui_spinner_start
     mov rdi, rbx
     call hash_fd
+    push rax
+    call ui_spinner_stop
+    pop rax
     test eax, eax
     jnz .rderr
     call print_digest_line

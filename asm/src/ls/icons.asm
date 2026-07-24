@@ -3,8 +3,8 @@ BITS 64
 DEFAULT REL
 %include "syscalls.inc"
 
-global icon_for_entry, icon_enabled
-extern g_opts2, g_tty, g_icons_when
+global icon_for_entry, icon_for_path, icon_enabled
+extern g_opts2, g_tty, g_icons_when, g_color
 extern strlen
 
 section .rodata
@@ -87,16 +87,18 @@ bn_cargo:       db "Cargo.toml", 0
 section .text
 
 icon_enabled:
-    ; al = 1 if icons on
+    ; al = 1 if icons on (suite-wide modern chrome)
     movzx eax, byte [g_icons_when]
     cmp al, ICONS_ALWAYS
     je .yes
     cmp al, ICONS_NEVER
     je .no
-    ; auto: off under --core / pipe script mode / NO_ICONS
+    ; auto: modern TTY only — off under --core, NO_ICONS, g_color=0, non-TTY
     mov eax, [g_opts2]
     test eax, OPT2_NO_ICONS | OPT2_CORE
     jnz .no
+    cmp byte [g_color], 0
+    je .no
     cmp byte [g_tty], 0
     je .no
 .yes:
@@ -223,6 +225,67 @@ icon_for_entry:
 .none:
     lea rsi, [empty_icon]
 .done:
+    pop rbx
+    ret
+
+; icon_for_path(rdi=path cstr) → rsi UTF-8 glyph (static) or empty
+; Basename + extension map; used by cat headers, hash paths, etc.
+icon_for_path:
+    push rbx
+    push r12
+    mov r12, rdi
+    call icon_enabled
+    test al, al
+    jz .none
+    ; basename = after last '/'
+    mov rdi, r12
+    call strlen
+    lea rbx, [r12 + rax]
+.scan:
+    cmp rbx, r12
+    jbe .base
+    dec rbx
+    cmp byte [rbx], '/'
+    jne .scan
+    inc rbx
+.base:
+    ; special basenames
+    mov rdi, rbx
+    lea rsi, [bn_makefile]
+    call streq
+    test al, al
+    jnz .ic_cfg
+    mov rdi, rbx
+    lea rsi, [bn_dockerfile]
+    call streq
+    test al, al
+    jnz .ic_cfg
+    mov rdi, rbx
+    lea rsi, [bn_cargo]
+    call streq
+    test al, al
+    jnz .ic_toml
+    mov rdi, rbx
+    call find_ext_lc
+    test rax, rax
+    jz .file
+    mov rdi, rax
+    call map_ext
+    test rsi, rsi
+    jnz .done
+.file:
+    lea rsi, [ic_file]
+    jmp .done
+.ic_cfg:
+    lea rsi, [ic_cfg]
+    jmp .done
+.ic_toml:
+    lea rsi, [ic_toml]
+    jmp .done
+.none:
+    lea rsi, [empty_icon]
+.done:
+    pop r12
     pop rbx
     ret
 
