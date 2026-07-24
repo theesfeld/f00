@@ -23,13 +23,23 @@ extern ui_file_header
 %define C_CORE         256
 %define C_HEADERS      512
 
+; content paint modes
+%define P_NONE  0
+%define P_ASM   1
+%define P_MD    2
+%define P_SH    3
+%define P_C     4
+%define P_JSON  5
+%define P_MAKE  6
+
 section .bss
 alignb 8
 cat_opts:     resd 1
 cat_line_no:  resq 1
 cat_prev_blank: resb 1
 cat_multi:    resb 1              ; 1 when ≥2 file operands (headers)
-              resb 6
+cat_paint:    resb 1              ; content color mode
+              resb 5
 read_buf:     resb 65536
 path_arg:     resq 1
 ; json/csv accum
@@ -39,6 +49,22 @@ j_bytes:      resq 1
 name_tmp:     resb 32
 
 section .rodata
+c_cmt:   db 27, "[2;37m", 0       ; dim comments
+c_kw:    db 27, "[1;35m", 0       ; magenta keywords/headers
+c_strc:  db 27, "[32m", 0         ; green strings-ish
+c_rstc:  db 27, "[0m", 0
+ext_asm: db "asm", 0
+ext_s:   db "s", 0
+ext_S:   db "S", 0
+ext_md:  db "md", 0
+ext_sh:  db "sh", 0
+ext_bash: db "bash", 0
+ext_c:   db "c", 0
+ext_h:   db "h", 0
+ext_json: db "json", 0
+bn_make: db "Makefile", 0
+bn_make2: db "makefile", 0
+
 cat_help:
     db "Usage: f00-cat [OPTION]... [FILE]...", 10
     db "Concatenate FILE(s) to standard output.", 10
@@ -71,7 +97,7 @@ cat_help:
 cat_help_len equ $-cat_help
 
 cat_version:
-    db "f00-cat (f00) 0.15.7", 10
+    db "f00-cat (f00) 0.15.8", 10
     db "GNU coreutils cat drop-in + modern chrome — pure assembly", 10
     db "License: MIT · https://f00.sh", 10
 cat_version_len equ $-cat_version
@@ -97,7 +123,7 @@ jk_show_tabs: db "show_tabs", 0
 jk_show_np: db "show_nonprinting", 0
 
 csv_hdr:    db "util,version,files,lines_out,bytes_out", 10, 0
-csv_util:   db "cat,0.15.7,", 0
+csv_util:   db "cat,0.15.8,", 0
 
 section .text
 
@@ -432,6 +458,266 @@ l_no_headers: db "no-headers", 0
 
 section .text
 
+; cat_detect_paint(rdi=path) → sets cat_paint
+cat_detect_paint:
+    mov byte [cat_paint], P_NONE
+    test rdi, rdi
+    jz .r
+    push rbx
+    push r12
+    mov r12, rdi
+    ; Makefile?
+    mov rdi, r12
+    call strlen
+    lea rbx, [r12+rax]
+.bs:
+    cmp rbx, r12
+    jbe .base
+    dec rbx
+    cmp byte [rbx], '/'
+    jne .bs
+    inc rbx
+.base:
+    mov rdi, rbx
+    lea rsi, [bn_make]
+    call strcmp
+    test eax, eax
+    jz .make
+    mov rdi, rbx
+    lea rsi, [bn_make2]
+    call strcmp
+    test eax, eax
+    jz .make
+    ; extension
+    mov rdi, rbx
+    call strlen
+    lea rsi, [rbx+rax]
+.ex:
+    cmp rsi, rbx
+    jbe .r2
+    dec rsi
+    cmp byte [rsi], '.'
+    je .got
+    cmp byte [rsi], '/'
+    je .r2
+    jmp .ex
+.got:
+    inc rsi
+    mov rdi, rsi
+    lea rsi, [ext_asm]
+    call strcmp
+    test eax, eax
+    jz .asm
+    mov rdi, rsi
+    ; reload ext start - corrupted. save
+    jmp .ext_reload
+.make:
+    mov byte [cat_paint], P_MAKE
+    jmp .r2
+.asm:
+    mov byte [cat_paint], P_ASM
+    jmp .r2
+.ext_reload:
+    ; re-find extension into name_tmp
+    mov rdi, rbx
+    call strlen
+    lea rsi, [rbx+rax]
+.ex2:
+    cmp rsi, rbx
+    jbe .r2
+    dec rsi
+    cmp byte [rsi], '.'
+    je .g2
+    cmp byte [rsi], '/'
+    je .r2
+    jmp .ex2
+.g2:
+    inc rsi
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_asm]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .asm
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_s]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .asm
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_md]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .md
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_sh]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .sh
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_bash]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .sh
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_c]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .c
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_h]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .c
+    push rsi
+    mov rdi, rsi
+    lea rsi, [ext_json]
+    call strcmp
+    test eax, eax
+    pop rsi
+    jz .json
+    jmp .r2
+.md: mov byte [cat_paint], P_MD
+    jmp .r2
+.sh: mov byte [cat_paint], P_SH
+    jmp .r2
+.c:  mov byte [cat_paint], P_C
+    jmp .r2
+.json:
+    mov byte [cat_paint], P_JSON
+.r2: pop r12
+    pop rbx
+.r:  ret
+
+; paint_line_prefix(r12=line, r13=len) — set color for line content
+paint_line_start:
+    cmp byte [g_color], 0
+    je .r
+    mov eax, [cat_opts]
+    test eax, C_CORE
+    jnz .r
+    movzx eax, byte [cat_paint]
+    test eax, eax
+    jz .r
+    cmp eax, P_ASM
+    je .asm
+    cmp eax, P_MD
+    je .md
+    cmp eax, P_SH
+    je .sh
+    cmp eax, P_C
+    je .c
+    cmp eax, P_JSON
+    je .json
+    cmp eax, P_MAKE
+    je .make
+    ret
+.asm:
+    test r13, r13
+    jz .r
+    ; skip leading space
+    mov rsi, r12
+.sk: cmp rsi, r12
+    ; check first non-space
+    mov rcx, r13
+    mov rsi, r12
+.skl:
+    test rcx, rcx
+    jz .r
+    mov al, [rsi]
+    cmp al, ' '
+    je .skn
+    cmp al, 9
+    je .skn
+    cmp al, ';'
+    je .cmt
+    jmp .r
+.skn: inc rsi
+    dec rcx
+    jmp .skl
+.cmt: lea rsi, [c_cmt]
+    call out_str
+    ret
+.md:
+    test r13, r13
+    jz .r
+    cmp byte [r12], '#'
+    jne .r
+    lea rsi, [c_kw]
+    call out_str
+    ret
+.sh:
+    test r13, r13
+    jz .r
+    cmp byte [r12], '#'
+    jne .r
+    lea rsi, [c_cmt]
+    call out_str
+    ret
+.c:
+    test r13, r13
+    jz .r
+    mov rsi, r12
+    mov rcx, r13
+.cs:
+    test rcx, rcx
+    jz .r
+    cmp byte [rsi], ' '
+    je .cn
+    cmp byte [rsi], 9
+    je .cn
+    cmp word [rsi], '//'
+    je .cmt
+    cmp byte [rsi], '#'
+    je .cmt  ; also preprocessor - use kw
+    cmp byte [rsi], '/'
+    jne .r
+    cmp rcx, 2
+    jb .r
+    cmp byte [rsi+1], '/'
+    je .cmt
+    cmp byte [rsi+1], '*'
+    je .cmt
+    ret
+.cn: inc rsi
+    dec rcx
+    jmp .cs
+.make:
+    test r13, r13
+    jz .r
+    cmp byte [r12], '#'
+    je .cmt
+    ; targets with :
+    ret
+.json:
+    ret
+.r: ret
+
+paint_line_end:
+    cmp byte [g_color], 0
+    je .r
+    mov eax, [cat_opts]
+    test eax, C_CORE
+    jnz .r
+    cmp byte [cat_paint], 0
+    je .r
+    lea rsi, [c_rstc]
+    call out_str
+.r: ret
+
 ; cat_one_path(rdi=path)  "-" = stdin
 cat_one_path:
     push rbx
@@ -439,6 +725,9 @@ cat_one_path:
     push r13
     mov r12, rdi
     inc qword [j_files]
+    mov byte [cat_paint], P_NONE
+    mov rdi, r12
+    call cat_detect_paint
 
     ; modern multi-file headers (bat-class) — never under --core
     mov eax, [cat_opts]
@@ -501,11 +790,17 @@ cat_one_path:
     dec rcx
     jmp .cnt
 .emit_body:
-    ; Fast path: plain cat (no -n/-b/-s/-v/-E/-T/-A) → bulk buffered write.
-    ; Avoids per-byte emit_char which loses badly to coreutils on --core.
+    ; Fast path: plain cat (no -n/-b/-s/-v/-E/-T/-A, no content paint) → bulk write.
     mov eax, [cat_opts]
     test eax, C_NUMBER | C_NUMBER_NB | C_SHOW_ENDS | C_SHOW_TABS | C_SHOW_NONP | C_SQUEEZE
     jnz .slow_body
+    cmp byte [g_color], 0
+    je .bulk
+    test eax, C_CORE
+    jnz .bulk
+    cmp byte [cat_paint], 0
+    jne .slow_body
+.bulk:
     mov rsi, r9
     mov rdx, r8
     call out_strn
@@ -643,6 +938,7 @@ emit_line:
     mov dil, 9
     call out_byte
 .body:
+    call paint_line_start
     ; emit content with transforms
     xor ebx, ebx
 .b:
@@ -653,6 +949,7 @@ emit_line:
     inc rbx
     jmp .b
 .ends:
+    call paint_line_end
     mov eax, [cat_opts]
     test eax, C_SHOW_ENDS
     jz .nl

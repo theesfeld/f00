@@ -48,8 +48,10 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ## JSON / CSV chrome
 
-- Modern (`! --core` + color): **colored keys / strings / numbers / punctuation**.
-- `--core` or no color: plain machine output (no SGR).
+- Modern `ls --json`: **pretty multi-line** nested objects; keys cyan, strings green, numbers yellow, punct dim.
+- Modern `ls --csv` / `--tsv`: **aligned colored table** (not raw CSV).
+- `--core`: compact machine JSON / raw CSV (pipe-safe for `jq` / scripts).
+- Also applies when TTY even if color auto was ambiguous.
 
 ## Long listing as a table
 

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.8] - 2026-07-24
+
+### Changed
+- `ls --json` modern: **pretty-printed** nested objects, colored keys/strings/numbers (TTY)
+- `ls --csv` / `--tsv` modern: **aligned table** (not raw CSV); raw only under `--core`
+- `cat` modern: **filetype content coloring** (asm comments, markdown headers, shell comments, …)
+
 ## [0.15.7] - 2026-07-24
 
 ### Added
