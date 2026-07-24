@@ -220,20 +220,20 @@ Per-tool tables (command, sample output, GNU time, f00 time):
 Representative results (from latest suite bench — do not hand-edit; CI overwrites):
 
 <!-- bench-table:start -->
-_CI / suite bench · `2026-07-24T13:23:37Z` · N=15 median · x86_64 · Linux 6.17.0-1020-azure_
+_CI / suite bench · `2026-07-24T13:40:17Z` · N=15 median · x86_64 · Linux 6.17.0-1020-azure_
 
 | Tool | Command | GNU | f00 `--core` | vs GNU |
 |------|---------|-----|--------------|--------|
-| `true` | `f00-true --core` | 0.58 ms | **0.26 ms** | **~2.2×** |
-| `basename` | `f00-basename --core /usr/bin/ls` | 0.79 ms | **0.26 ms** | **~3.0×** |
-| `nproc` | `f00-nproc --core` | 0.82 ms | **0.27 ms** | **~3.1×** |
-| `whoami` | `f00-whoami --core` | 0.94 ms | **0.28 ms** | **~3.4×** |
-| `cat` | `f00-cat --core fixture.txt` | 0.88 ms | **0.34 ms** | **~2.6×** |
-| `wc` | `f00-wc --core -l fixture.txt` | 0.85 ms | **0.38 ms** | **~2.2×** |
-| `md5sum` | `f00-md5sum --core fixture.txt` | 1.26 ms | **0.42 ms** | **~3.0×** |
-| `sha256sum` | `f00-sha256sum --core fixture.txt` | 1.24 ms | **0.47 ms** | **~2.7×** |
-| `sort` | `f00-sort --core fixture.txt` | 1.48 ms | **0.76 ms** | **~1.9×** |
-| `ls` | `f00-ls --core -1 dir` | 1.02 ms | **0.47 ms** | **~2.2×** |
+| `true` | `f00-true --core` | 0.58 ms | **0.30 ms** | **~1.9×** |
+| `basename` | `f00-basename --core /usr/bin/ls` | 0.80 ms | **0.26 ms** | **~3.1×** |
+| `nproc` | `f00-nproc --core` | 0.79 ms | **0.26 ms** | **~3.0×** |
+| `whoami` | `f00-whoami --core` | 0.86 ms | **0.26 ms** | **~3.3×** |
+| `cat` | `f00-cat --core fixture.txt` | 0.80 ms | **0.30 ms** | **~2.7×** |
+| `wc` | `f00-wc --core -l fixture.txt` | 0.82 ms | **0.37 ms** | **~2.2×** |
+| `md5sum` | `f00-md5sum --core fixture.txt` | 1.17 ms | **0.39 ms** | **~3.0×** |
+| `sha256sum` | `f00-sha256sum --core fixture.txt` | 1.17 ms | **0.46 ms** | **~2.6×** |
+| `sort` | `f00-sort --core fixture.txt` | 1.30 ms | **0.73 ms** | **~1.8×** |
+| `ls` | `f00-ls --core -1 dir` | 0.99 ms | **0.44 ms** | **~2.2×** |
 <!-- bench-table:end -->
 
 Reproduce:
