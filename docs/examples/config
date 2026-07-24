@@ -4,6 +4,9 @@
 core = false
 color = auto
 icons = auto
+# icons = emoji   # force emoji (default style)
+# icons = nerd    # Nerd Font PUA (needs patched font)
+# icons = ascii   # [D]/[F]/… always works
 animations = true
 spinner = true
 

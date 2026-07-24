@@ -21,7 +21,7 @@ extern g_cfg_color_when
 global g_arena_base, g_arena_ptr, g_arena_end
 global g_out_buf, g_out_len, g_tty, g_cols, g_opts, g_exit
 global g_color, g_now_sec
-global g_opts2, g_icons_when, g_sort, g_time_field, g_quoting, g_max_depth, g_width_override
+global g_opts2, g_icons_when, g_icons_style, g_sort, g_time_field, g_quoting, g_max_depth, g_width_override
 global g_envp
 global g_json_core
 global g_argc, g_argv, g_argv0, g_util_name, g_pid, g_uid, g_euid, g_cwd
@@ -46,7 +46,8 @@ g_color:        resb 1          ; 1 = emit ANSI
                 resb 3
 g_now_sec:      resq 1
 g_opts2:        resd 1
-g_icons_when:   resb 1
+g_icons_when:   resb 1              ; auto/always/never
+g_icons_style:  resb 1              ; emoji/nerd/ascii (default emoji)
 g_sort:         resb 1
 g_time_field:   resb 1
 g_quoting:      resb 1

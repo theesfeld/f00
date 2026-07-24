@@ -13,11 +13,12 @@ global config_load, config_apply
 global g_cfg_core, g_cfg_animations, g_cfg_spinner
 global g_cfg_color_when, g_cfg_icons_when, g_cfg_git
 
-extern g_envp, g_util_name, g_opts2, g_icons_when, g_color, g_tty, g_json_core
+extern g_envp, g_util_name, g_opts2, g_icons_when, g_icons_style, g_color, g_tty, g_json_core
 extern strlen, strcmp, memcpy, memset
 extern env_key_match
+extern icon_set_style_from_str
 
-; when enums match icons: 0=auto 1=always 2=never
+; when enums: 0=auto 1=always 2=never
 %define CFG_AUTO   0
 %define CFG_ALWAYS 1
 %define CFG_NEVER  2
@@ -81,6 +82,7 @@ config_load:
     mov byte [g_cfg_spinner], 1
     mov byte [g_cfg_color_when], CFG_AUTO
     mov byte [g_cfg_icons_when], CFG_AUTO
+    mov byte [g_icons_style], ICONS_STYLE_EMOJI
     mov byte [g_cfg_git], CFG_AUTO
     mov byte [sec_name], 0          ; current section = global
 
@@ -492,6 +494,15 @@ apply_key:
     call strcmp
     test eax, eax
     jnz .a5
+    ; icons = auto|emoji|nerd|ascii|never|always
+    mov rdi, r12
+    call icon_set_style_from_str
+    test al, al
+    jz .a4b
+    mov al, [g_icons_when]
+    mov [g_cfg_icons_when], al
+    jmp .done
+.a4b:
     mov rdi, r12
     call parse_when
     mov [g_cfg_icons_when], al
@@ -632,6 +643,18 @@ apply_env_overrides:
     pop rdi
     test al, al
     jz .e3
+    push rdi
+    call env_val_ptr
+    mov rdi, rax
+    call icon_set_style_from_str
+    test al, al
+    jz .e2b
+    mov al, [g_icons_when]
+    mov [g_cfg_icons_when], al
+    pop rdi
+    jmp .next
+.e2b:
+    pop rdi
     call env_val_ptr
     mov rdi, rax
     call parse_when

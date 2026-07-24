@@ -68,24 +68,21 @@ SGR_RE = re.compile(r"\x1b\[([0-9;]*)m")
 
 
 def find_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    # Prefer Nerd Font so f00-ls --icons glyphs (PUA) render in screenshots.
+    # Mono for ASCII/ANSI text (not color-emoji CBDT fonts).
     candidates = [
-        "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Bold.ttf" if bold else "",
-        "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf",
-        "/usr/share/fonts/TTF/JetBrainsMonoNerdFontMono-Regular.ttf",
-        "/usr/share/fonts/OTF/FiraMonoNerdFont-Regular.otf",
         "/usr/share/fonts/noto/NotoSansMono-Bold.ttf" if bold else "",
         "/usr/share/fonts/noto/NotoSansMono-Regular.ttf",
+        "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Bold.ttf" if bold else "",
+        "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf",
         "/usr/share/fonts/TTF/DejaVuSansMono.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
         "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",
     ]
     if bold:
         candidates = [
-            "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Bold.ttf",
-            "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-SemiBold.ttf",
             "/usr/share/fonts/noto/NotoSansMono-Bold.ttf",
             "/usr/share/fonts/noto/NotoSansMono-Medium.ttf",
+            "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Bold.ttf",
             *candidates,
         ]
     for c in candidates:
@@ -95,6 +92,85 @@ def find_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFo
             except OSError:
                 pass
     return ImageFont.load_default()
+
+
+def find_emoji_font(pixel_size: int = 109) -> ImageFont.FreeTypeFont | None:
+    # Noto Color Emoji is CBDT and only accepts its design size (109).
+    for c in (
+        "/usr/share/fonts/noto/NotoColorEmoji.ttf",
+        "/usr/share/fonts/TTF/NotoColorEmoji.ttf",
+    ):
+        if Path(c).is_file():
+            try:
+                return ImageFont.truetype(c, size=pixel_size)
+            except OSError:
+                continue
+    return None
+
+
+def is_emoji_char(ch: str) -> bool:
+    o = ord(ch)
+    return (
+        o >= 0x1F300
+        or o in (0x2699, 0xFE0F, 0x200D)
+        or 0x2600 <= o <= 0x27BF
+        or 0x1F000 <= o <= 0x1FAFF
+    )
+
+
+def draw_mixed_text(
+    img: Image.Image,
+    draw: ImageDraw.ImageDraw,
+    xy: tuple[int, int],
+    text: str,
+    font,
+    fill: tuple[int, int, int],
+    emoji_font,
+    emoji_px: int = 16,
+) -> int:
+    """Draw text using mono font + optional color-emoji font. Returns advance width."""
+    x, y = xy
+    if not text:
+        return 0
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        # gather emoji cluster (emoji + FE0F)
+        if is_emoji_char(ch) and emoji_font is not None:
+            j = i + 1
+            while j < len(text) and (is_emoji_char(text[j]) or ord(text[j]) == 0xFE0F):
+                j += 1
+            cluster = text[i:j]
+            # render at native size then scale
+            try:
+                bbox = emoji_font.getbbox(cluster)
+                ew = max(1, (bbox[2] - bbox[0]) if bbox else emoji_px)
+                eh = max(1, (bbox[3] - bbox[1]) if bbox else emoji_px)
+                tile = Image.new("RGBA", (ew + 4, eh + 4), (0, 0, 0, 0))
+                td = ImageDraw.Draw(tile)
+                td.text((2, 2), cluster, font=emoji_font, embedded_color=True)
+                scale = emoji_px / max(eh, 1)
+                nw = max(1, int((ew + 4) * scale))
+                nh = max(1, int((eh + 4) * scale))
+                tile = tile.resize((nw, nh), Image.Resampling.LANCZOS)
+                img.paste(tile, (x, y - 1), tile)
+                x += nw + 2
+            except Exception:
+                draw.text((x, y), "·", fill=fill, font=font)
+                tw, _ = measure_text(draw, "·", font)
+                x += tw
+            i = j
+            continue
+        # ascii / mono run
+        j = i + 1
+        while j < len(text) and not is_emoji_char(text[j]):
+            j += 1
+        run = text[i:j]
+        draw.text((x, y), run, fill=fill, font=font)
+        tw, _ = measure_text(draw, run, font)
+        x += tw
+        i = j
+    return x - xy[0]
 
 
 def run_f00(argv: list[str], env: dict | None = None) -> str:
@@ -189,11 +265,13 @@ def render_terminal(
     font_bold = find_font(15, bold=True)
     font_title = find_font(13)
     font_prompt = find_font(15, bold=True)
+    emoji_font = find_emoji_font(109)
+    emoji_px = 16
 
     pad_x = 28
     pad_y = 22
     chrome_h = 40
-    line_h = 22
+    line_h = 24
     lines = body.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     # trim trailing empties but keep one
     while len(lines) > 1 and lines[-1] == "":
@@ -262,13 +340,13 @@ def render_terminal(
         x = x0
         for text, color, bold in parse_ansi_line(line):
             f = font_bold if bold else font
-            # boost bold colors slightly
             c = color
             if bold and color == TEXT:
                 c = WHITE
-            draw.text((x, y), text, fill=c, font=f)
-            tw, _ = measure_text(draw, text, f)
-            x += tw
+            adv = draw_mixed_text(
+                img, draw, (x, y), text, f, c, emoji_font, emoji_px=emoji_px
+            )
+            x += adv
         y += line_h
 
     # bottom accent line
@@ -526,13 +604,13 @@ def main() -> int:
         prepare_demo_tree(demo)
 
         # 1) ls -la color
-        # Icons default to TTY-auto; capture is a pipe → force --icons=always for product shots.
+        # Capture is a pipe (non-TTY): force emoji icons (default style, no Nerd Font).
         out_ls = run_f00(
             [
                 "f00-ls",
                 "-la",
                 "--color=always",
-                "--icons=always",
+                "--icons=emoji",
                 str(demo),
             ]
         )
@@ -543,7 +621,7 @@ def main() -> int:
         ):
             render_terminal(
                 "f00tils · f00-ls",
-                [f"$ f00-ls -la --color=always --icons=always {demo.name}/"],
+                [f"$ f00-ls -la --color=always --icons=emoji {demo.name}/"],
                 out_ls,
                 dest,
                 width=1000,
@@ -552,7 +630,7 @@ def main() -> int:
 
         # 2) short modern ls
         out_ls2 = run_f00(
-            ["f00-ls", "--color=always", "--icons=always", str(demo)]
+            ["f00-ls", "--color=always", "--icons=emoji", str(demo)]
         )
         for dest in (
             shots / "f00-ls.png",
@@ -561,7 +639,7 @@ def main() -> int:
         ):
             render_terminal(
                 "f00tils · f00-ls",
-                [f"$ f00-ls --color=always --icons=always {demo.name}/"],
+                [f"$ f00-ls --color=always --icons=emoji {demo.name}/"],
                 out_ls2,
                 dest,
                 width=880,
@@ -622,11 +700,11 @@ def main() -> int:
 
         # 4) core vs modern comparison style
         modern = run_f00(
-            ["f00-ls", "--color=always", "--icons=always", "-1", str(demo)]
+            ["f00-ls", "--color=always", "--icons=emoji", "-1", str(demo)]
         )
         core = run_f00(["f00-ls", "--core", "-1", str(demo)])
         compare = (
-            "\x1b[1m# modern (icons + color)\x1b[0m\n"
+            "\x1b[1m# modern (emoji icons + color)\x1b[0m\n"
             + modern.rstrip()
             + "\n\n"
             + "\x1b[1m# --core (scripts)\x1b[0m\n"
@@ -641,7 +719,7 @@ def main() -> int:
             render_terminal(
                 "f00tils · modern vs --core",
                 [
-                    f"$ f00-ls --color=always --icons=always -1 {demo.name}/",
+                    f"$ f00-ls --color=always --icons=emoji -1 {demo.name}/",
                     f"$ f00-ls --core -1 {demo.name}/",
                 ],
                 compare,
@@ -665,7 +743,7 @@ def main() -> int:
                 "f00tils · https://f00.sh",
                 [
                     "$ f00-ls --version",
-                    f"$ f00-ls --color=always --icons=always {demo.name}/",
+                    f"$ f00-ls --color=always --icons=emoji {demo.name}/",
                 ],
                 hero,
                 dest,

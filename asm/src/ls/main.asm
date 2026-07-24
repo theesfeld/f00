@@ -11,7 +11,8 @@ extern is_tty, get_winsize, exit_code
 extern list_path, sort_entries
 extern format_listing, color_init
 extern g_opts, g_opts2, g_tty, g_cols, g_color, g_exit, g_now_sec
-extern g_icons_when, g_sort, g_time_field, g_quoting, g_max_depth, g_width_override
+extern g_icons_when, g_icons_style, g_sort, g_time_field, g_quoting, g_max_depth, g_width_override
+extern icon_set_style_from_str
 extern g_entries, g_entry_count
 extern strlen, strcmp, memcpy
 extern tui_browse
@@ -63,7 +64,7 @@ help_msg:
     db "   or: f00 [OPTION]... [FILE]...", 10
     db "List directory contents (f00 suite).", 10
     db 10
-    db "Default is modern mode (color, icons on TTY, git). Use --core for", 10
+    db "Default is modern mode (color, emoji icons on TTY, git). Use --core for", 10
     db "strict GNU coreutils ls-compatible output.", 10
     db 10
     db "Coreutils flags:", 10
@@ -112,7 +113,8 @@ help_msg:
     db "      --csv / --tsv          detailed delimited machine output", 10
     db "      --tree                 tree view", 10
     db "      --git / --no-git       git status annotation", 10
-    db "      --icons[=WHEN]         Nerd Font icons (auto/always/never)", 10
+    db "      --icons[=STYLE]        icons: auto|emoji|nerd|ascii|never", 10
+    db "                             (default auto=emoji on TTY; nerd is opt-in)", 10
     db "      --browse / --tui       interactive dual-pane browser", 10
     db "      --ignore-files         honor .gitignore / .f00ignore", 10
     db "      --hyperlink            OSC-8 hyperlinks on TTY", 10
@@ -552,6 +554,7 @@ util_ls_ok:
     mov qword [rec_sp], 0
     mov qword [g_now_sec], 0
     mov byte [g_icons_when], ICONS_AUTO
+    mov byte [g_icons_style], ICONS_STYLE_EMOJI
     mov byte [g_sort], SORT_NAME
     mov byte [g_time_field], TIME_MTIME
     mov byte [g_quoting], QUOTE_LITERAL
@@ -1082,7 +1085,7 @@ util_ls_ok:
     and dword [g_opts2], ~OPT2_GIT
     jmp .next_arg
 .j9:
-    ; --icons / --icons=WHEN
+    ; --icons / --icons=auto|emoji|nerd|ascii|never|always
     push rdi
     lea rsi, [opt_icons]
     call strcmp
@@ -1090,6 +1093,7 @@ util_ls_ok:
     test eax, eax
     jnz .j10a
     mov byte [g_icons_when], ICONS_ALWAYS
+    ; keep style (default emoji)
     or dword [g_opts2], OPT2_ICONS
     and dword [g_opts2], ~OPT2_NO_ICONS
     jmp .next_arg
@@ -1102,26 +1106,21 @@ util_ls_ok:
     test eax, eax
     jnz .j10
     add rdi, 6
-    lea rsi, [when_never]
-    push rdi
-    call strcmp
-    pop rdi
-    test eax, eax
-    jnz .ic1
-    mov byte [g_icons_when], ICONS_NEVER
+    call icon_set_style_from_str
+    test al, al
+    jz .ic_fallback
+    cmp byte [g_icons_when], ICONS_NEVER
+    je .ic_off
+    or dword [g_opts2], OPT2_ICONS
+    and dword [g_opts2], ~OPT2_NO_ICONS
+    jmp .next_arg
+.ic_off:
     or dword [g_opts2], OPT2_NO_ICONS
     jmp .next_arg
-.ic1:
-    lea rsi, [when_always]
-    push rdi
-    call strcmp
-    pop rdi
-    test eax, eax
-    jnz .ic2
-    mov byte [g_icons_when], ICONS_ALWAYS
-    jmp .next_arg
-.ic2:
+.ic_fallback:
+    ; unknown value → auto emoji
     mov byte [g_icons_when], ICONS_AUTO
+    mov byte [g_icons_style], ICONS_STYLE_EMOJI
     jmp .next_arg
 .j10:
     push rdi

@@ -34,12 +34,20 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ## Icons (suite-wide)
 
-- **When:** `icon_enabled` — AUTO on modern TTY (`g_color` + TTY, not `--core`); ALWAYS/NEVER via `--icons` where the util exposes it (ls today; shared helper for others).
-- **What:** Nerd Font glyphs for directories, files by extension, executables, links, config basenames.
+- **Default style: emoji / standard Unicode** — no Nerd Font pack required.
+- **CLI (ls):** `--icons[=STYLE]` where `STYLE` is:
+  - `auto` — on modern TTY, **emoji** style (default)
+  - `emoji` — force on, emoji/Unicode table
+  - `nerd` — force on, Nerd Font PUA (opt-in for people with that font)
+  - `ascii` — force on, `[D]`/`[F]`/… (always works)
+  - `never` — off
+  - bare `--icons` — force on, keep current style (default emoji)
+- **Config / env:** `icons = auto|emoji|nerd|ascii|never` · `F00_ICONS=…`
 - **API:**
   - `icon_for_entry(Entry*)` — ls / tree
   - `icon_for_path(path)` — cat headers, hash paths, any path print
-- **Where it belongs:** listings, multi-file headers, digest lines, path-heavy tools — not in machine-only streams or pure numeric dumps.
+  - `icon_set_style_from_str` — parse style string into `g_icons_when` + `g_icons_style`
+- **Where it belongs:** listings, multi-file headers, digest lines — not machine-only streams.
 
 ---
 
