@@ -1,12 +1,12 @@
 {
   "meta": {
-    "generated_at": "2026-07-24T12:02:39Z",
+    "generated_at": "2026-07-24T12:06:46Z",
     "host": "runnervmvrwv9",
     "machine": "x86_64",
     "system": "Linux 6.17.0-1020-azure",
     "n_runs": 15,
     "method": "warm-cache spawn-inclusive median",
-    "f00_version": "f00-ls (f00) 0.15.2",
+    "f00_version": "f00-ls (f00) 0.15.3",
     "notes": "f00 timed as f00-TOOL --core; GNU as /usr/bin/TOOL. Times include process spawn."
   },
   "tools": [
@@ -16,9 +16,9 @@
       "command_f00": "f00-true --core",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.552,
-      "time_f00_ms": 0.254,
-      "ratio": 2.17,
+      "time_gnu_ms": 0.54,
+      "time_f00_ms": 0.251,
+      "ratio": 2.15,
       "status": "ok"
     },
     {
@@ -27,9 +27,9 @@
       "command_f00": "f00-false --core",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.553,
-      "time_f00_ms": 0.242,
-      "ratio": 2.29,
+      "time_gnu_ms": 0.53,
+      "time_f00_ms": 0.255,
+      "ratio": 2.08,
       "status": "ok"
     },
     {
@@ -38,9 +38,9 @@
       "command_f00": "f00-basename --core /usr/bin/ls",
       "output_gnu": "ls",
       "output_f00": "ls",
-      "time_gnu_ms": 0.81,
-      "time_f00_ms": 0.247,
-      "ratio": 3.28,
+      "time_gnu_ms": 0.766,
+      "time_f00_ms": 0.25,
+      "ratio": 3.07,
       "status": "ok"
     },
     {
@@ -49,9 +49,9 @@
       "command_f00": "f00-dirname --core /usr/bin/ls",
       "output_gnu": "/usr/bin",
       "output_f00": "/usr/bin",
-      "time_gnu_ms": 0.796,
-      "time_f00_ms": 0.249,
-      "ratio": 3.19,
+      "time_gnu_ms": 0.768,
+      "time_f00_ms": 0.248,
+      "ratio": 3.1,
       "status": "ok"
     },
     {
@@ -60,9 +60,9 @@
       "command_f00": "f00-echo --core hi",
       "output_gnu": "hi",
       "output_f00": "hi",
-      "time_gnu_ms": 0.824,
-      "time_f00_ms": 0.302,
-      "ratio": 2.73,
+      "time_gnu_ms": 0.773,
+      "time_f00_ms": 0.314,
+      "ratio": 2.46,
       "status": "ok"
     },
     {
@@ -71,9 +71,9 @@
       "command_f00": "f00-pwd --core",
       "output_gnu": "/home/runner/work/f00/f00",
       "output_f00": "/home/runner/work/f00/f00",
-      "time_gnu_ms": 0.821,
-      "time_f00_ms": 0.309,
-      "ratio": 2.66,
+      "time_gnu_ms": 0.814,
+      "time_f00_ms": 0.303,
+      "ratio": 2.69,
       "status": "ok"
     },
     {
@@ -82,9 +82,9 @@
       "command_f00": "f00-nproc --core",
       "output_gnu": "4",
       "output_f00": "4",
-      "time_gnu_ms": 0.884,
-      "time_f00_ms": 0.251,
-      "ratio": 3.52,
+      "time_gnu_ms": 0.78,
+      "time_f00_ms": 0.254,
+      "ratio": 3.08,
       "status": "ok"
     },
     {
@@ -93,9 +93,9 @@
       "command_f00": "f00-whoami --core",
       "output_gnu": "runner",
       "output_f00": "runner",
-      "time_gnu_ms": 0.898,
-      "time_f00_ms": 0.257,
-      "ratio": 3.49,
+      "time_gnu_ms": 0.849,
+      "time_f00_ms": 0.256,
+      "ratio": 3.31,
       "status": "ok"
     },
     {
@@ -104,9 +104,9 @@
       "command_f00": "f00-uname --core -s",
       "output_gnu": "Linux",
       "output_f00": "Linux",
-      "time_gnu_ms": 0.821,
-      "time_f00_ms": 0.306,
-      "ratio": 2.69,
+      "time_gnu_ms": 0.763,
+      "time_f00_ms": 0.321,
+      "ratio": 2.37,
       "status": "ok"
     },
     {
@@ -115,9 +115,9 @@
       "command_f00": "f00-id --core -u",
       "output_gnu": "1001",
       "output_f00": "1001",
-      "time_gnu_ms": 1.009,
-      "time_f00_ms": 0.313,
-      "ratio": 3.22,
+      "time_gnu_ms": 0.95,
+      "time_f00_ms": 0.303,
+      "ratio": 3.14,
       "status": "ok"
     },
     {
@@ -126,9 +126,9 @@
       "command_f00": "f00-date --core -u +%Y",
       "output_gnu": "2026",
       "output_f00": "2026",
-      "time_gnu_ms": 0.852,
-      "time_f00_ms": 0.301,
-      "ratio": 2.83,
+      "time_gnu_ms": 0.794,
+      "time_f00_ms": 0.302,
+      "ratio": 2.63,
       "status": "ok"
     },
     {
@@ -137,9 +137,9 @@
       "command_f00": "f00-printenv --core PATH",
       "output_gnu": "/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/too\u2026",
       "output_f00": "/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/too\u2026",
-      "time_gnu_ms": 0.808,
-      "time_f00_ms": 0.305,
-      "ratio": 2.65,
+      "time_gnu_ms": 0.758,
+      "time_f00_ms": 0.313,
+      "ratio": 2.43,
       "status": "ok"
     },
     {
@@ -148,9 +148,9 @@
       "command_f00": "f00-printf --core %s world",
       "output_gnu": "world",
       "output_f00": "world",
-      "time_gnu_ms": 0.813,
-      "time_f00_ms": 0.3,
-      "ratio": 2.71,
+      "time_gnu_ms": 0.772,
+      "time_f00_ms": 0.319,
+      "ratio": 2.42,
       "status": "ok"
     },
     {
@@ -159,9 +159,9 @@
       "command_f00": "f00-factor --core 12",
       "output_gnu": "12: 2 2 3",
       "output_f00": "12: 2 2 3",
-      "time_gnu_ms": 0.86,
-      "time_f00_ms": 0.317,
-      "ratio": 2.72,
+      "time_gnu_ms": 0.823,
+      "time_f00_ms": 0.349,
+      "ratio": 2.35,
       "status": "ok"
     },
     {
@@ -170,9 +170,9 @@
       "command_f00": "f00-numfmt --core --to=si 1000",
       "output_gnu": "1.0K",
       "output_f00": "1.0k",
-      "time_gnu_ms": 0.834,
-      "time_f00_ms": 0.319,
-      "ratio": 2.62,
+      "time_gnu_ms": 0.827,
+      "time_f00_ms": 0.35,
+      "ratio": 2.36,
       "status": "ok"
     },
     {
@@ -181,9 +181,9 @@
       "command_f00": "f00-expr --core 1 + 1",
       "output_gnu": "2",
       "output_f00": "2",
-      "time_gnu_ms": 0.885,
-      "time_f00_ms": 0.31,
-      "ratio": 2.86,
+      "time_gnu_ms": 0.839,
+      "time_f00_ms": 0.32,
+      "ratio": 2.62,
       "status": "ok"
     },
     {
@@ -192,9 +192,9 @@
       "command_f00": "f00-seq --core 1 5",
       "output_gnu": "1 2 3 4 5",
       "output_f00": "1 2 3 4 5",
-      "time_gnu_ms": 0.812,
-      "time_f00_ms": 0.297,
-      "ratio": 2.73,
+      "time_gnu_ms": 0.78,
+      "time_f00_ms": 0.305,
+      "ratio": 2.56,
       "status": "ok"
     },
     {
@@ -203,20 +203,20 @@
       "command_f00": "f00-cat --core fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.878,
-      "time_f00_ms": 0.344,
-      "ratio": 2.55,
+      "time_gnu_ms": 0.783,
+      "time_f00_ms": 0.283,
+      "ratio": 2.76,
       "status": "ok"
     },
     {
       "tool": "wc",
       "command_gnu": "wc -l fixture.txt",
       "command_f00": "f00-wc --core -l fixture.txt",
-      "output_gnu": "400 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "400 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 0.914,
-      "time_f00_ms": 0.399,
-      "ratio": 2.29,
+      "output_gnu": "400 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "400 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 0.828,
+      "time_f00_ms": 0.353,
+      "ratio": 2.35,
       "status": "ok"
     },
     {
@@ -225,9 +225,9 @@
       "command_f00": "f00-head --core -n 3 fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.886,
-      "time_f00_ms": 0.37,
-      "ratio": 2.4,
+      "time_gnu_ms": 0.788,
+      "time_f00_ms": 0.325,
+      "ratio": 2.43,
       "status": "ok"
     },
     {
@@ -236,9 +236,9 @@
       "command_f00": "f00-tail --core -n 3 fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.887,
-      "time_f00_ms": 0.403,
-      "ratio": 2.2,
+      "time_gnu_ms": 0.779,
+      "time_f00_ms": 0.343,
+      "ratio": 2.27,
       "status": "ok"
     },
     {
@@ -247,9 +247,9 @@
       "command_f00": "f00-nl --core fixture.txt",
       "output_gnu": "1 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 2 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 3 suite-bench line abcdefghijklmnopqrstuvwxyz\u2026",
       "output_f00": "1 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 2 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 3 suite-bench line abcdefghijklmnopqrstuvwxyz\u2026",
-      "time_gnu_ms": 0.887,
-      "time_f00_ms": 0.416,
-      "ratio": 2.13,
+      "time_gnu_ms": 0.856,
+      "time_f00_ms": 0.378,
+      "ratio": 2.26,
       "status": "ok"
     },
     {
@@ -258,9 +258,9 @@
       "command_f00": "f00-od --core -An -tx1 -N8 fixture.txt",
       "output_gnu": "73 75 69 74 65 2d 62 65",
       "output_f00": "73 75 69 74 65 2d 62 65",
-      "time_gnu_ms": 0.831,
-      "time_f00_ms": 0.309,
-      "ratio": 2.69,
+      "time_gnu_ms": 0.81,
+      "time_f00_ms": 0.323,
+      "ratio": 2.51,
       "status": "ok"
     },
     {
@@ -269,9 +269,9 @@
       "command_f00": "f00-cut --core -d: -f1 /etc/passwd",
       "output_gnu": "root daemon bin sys sync games man lp mail news uucp proxy www-data backup list irc _apt nobody systemd-network systemd-timesync dhcpcd messagebus syslog syste\u2026",
       "output_f00": "root daemon bin sys sync games man lp mail news uucp proxy www-data backup list irc _apt nobody systemd-network systemd-timesync dhcpcd messagebus syslog syste\u2026",
-      "time_gnu_ms": 0.847,
-      "time_f00_ms": 0.32,
-      "ratio": 2.65,
+      "time_gnu_ms": 0.785,
+      "time_f00_ms": 0.326,
+      "ratio": 2.41,
       "status": "ok"
     },
     {
@@ -280,9 +280,9 @@
       "command_f00": "f00-tr --core a-z A-Z",
       "output_gnu": "HELLO",
       "output_f00": "HELLO",
-      "time_gnu_ms": 0.856,
-      "time_f00_ms": 0.337,
-      "ratio": 2.54,
+      "time_gnu_ms": 0.8,
+      "time_f00_ms": 0.338,
+      "ratio": 2.36,
       "status": "ok"
     },
     {
@@ -291,9 +291,9 @@
       "command_f00": "f00-sort --core fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 1.354,
-      "time_f00_ms": 0.845,
-      "ratio": 1.6,
+      "time_gnu_ms": 1.279,
+      "time_f00_ms": 0.719,
+      "ratio": 1.78,
       "status": "ok"
     },
     {
@@ -302,9 +302,9 @@
       "command_f00": "f00-uniq --core a.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789",
-      "time_gnu_ms": 0.857,
-      "time_f00_ms": 0.358,
-      "ratio": 2.39,
+      "time_gnu_ms": 0.808,
+      "time_f00_ms": 0.355,
+      "ratio": 2.28,
       "status": "ok"
     },
     {
@@ -313,9 +313,9 @@
       "command_f00": "f00-paste --core a.txt b.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.924,
-      "time_f00_ms": 0.459,
-      "ratio": 2.01,
+      "time_gnu_ms": 0.887,
+      "time_f00_ms": 0.466,
+      "ratio": 1.9,
       "status": "ok"
     },
     {
@@ -324,9 +324,9 @@
       "command_f00": "f00-comm --core -12 a.txt b.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.903,
-      "time_f00_ms": 0.43,
-      "ratio": 2.1,
+      "time_gnu_ms": 0.849,
+      "time_f00_ms": 0.441,
+      "ratio": 1.92,
       "status": "ok"
     },
     {
@@ -335,9 +335,9 @@
       "command_f00": "f00-join --core a.txt b.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 line a\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 line a\u2026",
-      "time_gnu_ms": 15.102,
-      "time_f00_ms": 0.451,
-      "ratio": 33.47,
+      "time_gnu_ms": 14.962,
+      "time_f00_ms": 0.457,
+      "ratio": 32.76,
       "status": "ok"
     },
     {
@@ -346,9 +346,9 @@
       "command_f00": "f00-base64 --core fixture.txt",
       "output_gnu": "c3VpdGUtYmVuY2ggbGluZSBhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5eiAwMTIzNDU2Nzg5CnN1 aXRlLWJlbmNoIGxpbmUgYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXogMDEyMzQ1Njc4OQpzdWl0 ZS1iZ\u2026",
       "output_f00": "c3VpdGUtYmVuY2ggbGluZSBhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5eiAwMTIzNDU2Nzg5CnN1 aXRlLWJlbmNoIGxpbmUgYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXogMDEyMzQ1Njc4OQpzdWl0 ZS1iZ\u2026",
-      "time_gnu_ms": 0.9,
-      "time_f00_ms": 0.464,
-      "ratio": 1.94,
+      "time_gnu_ms": 0.808,
+      "time_f00_ms": 0.456,
+      "ratio": 1.77,
       "status": "ok"
     },
     {
@@ -357,9 +357,9 @@
       "command_f00": "f00-base32 --core fixture.txt",
       "output_gnu": "ON2WS5DFFVRGK3TDNAQGY2LOMUQGCYTDMRSWMZ3INFVGW3DNNZXXA4LSON2HK5TXPB4XUIBQGEZD GNBVGY3TQOIKON2WS5DFFVRGK3TDNAQGY2LOMUQGCYTDMRSWMZ3INFVGW3DNNZXXA4LSON2HK5TX PB4XU\u2026",
       "output_f00": "ON2WS5DFFVRGK3TDNAQGY2LOMUQGCYTDMRSWMZ3INFVGW3DNNZXXA4LSON2HK5TXPB4XUIBQGEZD GNBVGY3TQOIKON2WS5DFFVRGK3TDNAQGY2LOMUQGCYTDMRSWMZ3INFVGW3DNNZXXA4LSON2HK5TX PB4XU\u2026",
-      "time_gnu_ms": 0.887,
-      "time_f00_ms": 0.488,
-      "ratio": 1.82,
+      "time_gnu_ms": 0.812,
+      "time_f00_ms": 0.508,
+      "ratio": 1.6,
       "status": "ok"
     },
     {
@@ -368,108 +368,108 @@
       "command_f00": "f00-basenc --core --base64 fixture.txt",
       "output_gnu": "c3VpdGUtYmVuY2ggbGluZSBhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5eiAwMTIzNDU2Nzg5CnN1 aXRlLWJlbmNoIGxpbmUgYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXogMDEyMzQ1Njc4OQpzdWl0 ZS1iZ\u2026",
       "output_f00": "c3VpdGUtYmVuY2ggbGluZSBhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5eiAwMTIzNDU2Nzg5CnN1 aXRlLWJlbmNoIGxpbmUgYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXogMDEyMzQ1Njc4OQpzdWl0 ZS1iZ\u2026",
-      "time_gnu_ms": 0.877,
-      "time_f00_ms": 0.453,
-      "ratio": 1.94,
+      "time_gnu_ms": 0.808,
+      "time_f00_ms": 0.463,
+      "ratio": 1.74,
       "status": "ok"
     },
     {
       "tool": "md5sum",
       "command_gnu": "md5sum fixture.txt",
       "command_f00": "f00-md5sum --core fixture.txt",
-      "output_gnu": "a5e6b1aa8523bc01f561fcef58d16894 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "a5e6b1aa8523bc01f561fcef58d16894 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 1.259,
-      "time_f00_ms": 0.383,
-      "ratio": 3.28,
+      "output_gnu": "a5e6b1aa8523bc01f561fcef58d16894 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "a5e6b1aa8523bc01f561fcef58d16894 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 1.162,
+      "time_f00_ms": 0.384,
+      "ratio": 3.03,
       "status": "ok"
     },
     {
       "tool": "sha1sum",
       "command_gnu": "sha1sum fixture.txt",
       "command_f00": "f00-sha1sum --core fixture.txt",
-      "output_gnu": "49f92a1f57c1a825b5ca5777c92d6e15ac26a8ea /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "49f92a1f57c1a825b5ca5777c92d6e15ac26a8ea /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 1.235,
-      "time_f00_ms": 0.403,
-      "ratio": 3.07,
+      "output_gnu": "49f92a1f57c1a825b5ca5777c92d6e15ac26a8ea /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "49f92a1f57c1a825b5ca5777c92d6e15ac26a8ea /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 1.141,
+      "time_f00_ms": 0.396,
+      "ratio": 2.88,
       "status": "ok"
     },
     {
       "tool": "sha224sum",
       "command_gnu": "sha224sum fixture.txt",
       "command_f00": "f00-sha224sum --core fixture.txt",
-      "output_gnu": "94c1dff65fd14336129da4555171327a3e1e3e684810af23fa13e7f3 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "94c1dff65fd14336129da4555171327a3e1e3e684810af23fa13e7f3 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 1.234,
-      "time_f00_ms": 0.434,
-      "ratio": 2.84,
+      "output_gnu": "94c1dff65fd14336129da4555171327a3e1e3e684810af23fa13e7f3 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "94c1dff65fd14336129da4555171327a3e1e3e684810af23fa13e7f3 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 1.137,
+      "time_f00_ms": 0.424,
+      "ratio": 2.68,
       "status": "ok"
     },
     {
       "tool": "sha256sum",
       "command_gnu": "sha256sum fixture.txt",
       "command_f00": "f00-sha256sum --core fixture.txt",
-      "output_gnu": "7c28ea8726bc6923d5b38a6b6938ad5907c01dc6640e1645cf63cbf9df706132 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "7c28ea8726bc6923d5b38a6b6938ad5907c01dc6640e1645cf63cbf9df706132 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 1.237,
-      "time_f00_ms": 0.439,
-      "ratio": 2.82,
+      "output_gnu": "7c28ea8726bc6923d5b38a6b6938ad5907c01dc6640e1645cf63cbf9df706132 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "7c28ea8726bc6923d5b38a6b6938ad5907c01dc6640e1645cf63cbf9df706132 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 1.139,
+      "time_f00_ms": 0.424,
+      "ratio": 2.69,
       "status": "ok"
     },
     {
       "tool": "sha384sum",
       "command_gnu": "sha384sum fixture.txt",
       "command_f00": "f00-sha384sum --core fixture.txt",
-      "output_gnu": "f2578c293b7eeebf35402906e5e2fcd522b567687241b72950690c389f88baf83f9cd518c1fd67b3a8d2263e8578bc99 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "f2578c293b7eeebf35402906e5e2fcd522b567687241b72950690c389f88baf83f9cd518c1fd67b3a8d2263e8578bc99 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 1.269,
-      "time_f00_ms": 0.415,
-      "ratio": 3.06,
+      "output_gnu": "f2578c293b7eeebf35402906e5e2fcd522b567687241b72950690c389f88baf83f9cd518c1fd67b3a8d2263e8578bc99 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "f2578c293b7eeebf35402906e5e2fcd522b567687241b72950690c389f88baf83f9cd518c1fd67b3a8d2263e8578bc99 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 1.187,
+      "time_f00_ms": 0.411,
+      "ratio": 2.89,
       "status": "ok"
     },
     {
       "tool": "sha512sum",
       "command_gnu": "sha512sum fixture.txt",
       "command_f00": "f00-sha512sum --core fixture.txt",
-      "output_gnu": "a3282daa5cc665baa2b247ee17a0798f1d8028bbfb2107ea0df9493d0e57bfba10ba95d72d2550c289031816024a84773ef14c1bd758b6c4b4e0b5e561aa600b /tmp/f00-suite-bench.u36ghr6l/\u2026",
-      "output_f00": "a3282daa5cc665baa2b247ee17a0798f1d8028bbfb2107ea0df9493d0e57bfba10ba95d72d2550c289031816024a84773ef14c1bd758b6c4b4e0b5e561aa600b /tmp/f00-suite-bench.u36ghr6l/\u2026",
-      "time_gnu_ms": 1.242,
+      "output_gnu": "a3282daa5cc665baa2b247ee17a0798f1d8028bbfb2107ea0df9493d0e57bfba10ba95d72d2550c289031816024a84773ef14c1bd758b6c4b4e0b5e561aa600b /tmp/f00-suite-bench.v3htcw45/\u2026",
+      "output_f00": "a3282daa5cc665baa2b247ee17a0798f1d8028bbfb2107ea0df9493d0e57bfba10ba95d72d2550c289031816024a84773ef14c1bd758b6c4b4e0b5e561aa600b /tmp/f00-suite-bench.v3htcw45/\u2026",
+      "time_gnu_ms": 1.156,
       "time_f00_ms": 0.404,
-      "ratio": 3.07,
+      "ratio": 2.86,
       "status": "ok"
     },
     {
       "tool": "b2sum",
       "command_gnu": "b2sum fixture.txt",
       "command_f00": "f00-b2sum --core fixture.txt",
-      "output_gnu": "915149393ea1091e4aa19ad9c68f980ebf83f5da2a576a20ca65fb001c685bf890523b442b840760d4a256dc27f1e045b6100663550d7755492ba295c3b3e8f1 /tmp/f00-suite-bench.u36ghr6l/\u2026",
-      "output_f00": "915149393ea1091e4aa19ad9c68f980ebf83f5da2a576a20ca65fb001c685bf890523b442b840760d4a256dc27f1e045b6100663550d7755492ba295c3b3e8f1 /tmp/f00-suite-bench.u36ghr6l/\u2026",
-      "time_gnu_ms": 0.883,
-      "time_f00_ms": 0.397,
-      "ratio": 2.23,
+      "output_gnu": "915149393ea1091e4aa19ad9c68f980ebf83f5da2a576a20ca65fb001c685bf890523b442b840760d4a256dc27f1e045b6100663550d7755492ba295c3b3e8f1 /tmp/f00-suite-bench.v3htcw45/\u2026",
+      "output_f00": "915149393ea1091e4aa19ad9c68f980ebf83f5da2a576a20ca65fb001c685bf890523b442b840760d4a256dc27f1e045b6100663550d7755492ba295c3b3e8f1 /tmp/f00-suite-bench.v3htcw45/\u2026",
+      "time_gnu_ms": 0.822,
+      "time_f00_ms": 0.388,
+      "ratio": 2.12,
       "status": "ok"
     },
     {
       "tool": "cksum",
       "command_gnu": "cksum fixture.txt",
       "command_f00": "f00-cksum --core fixture.txt",
-      "output_gnu": "1448063438 22000 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "1448063438 22000 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 1.249,
-      "time_f00_ms": 0.38,
-      "ratio": 3.29,
+      "output_gnu": "1448063438 22000 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "1448063438 22000 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 1.161,
+      "time_f00_ms": 0.366,
+      "ratio": 3.18,
       "status": "ok"
     },
     {
       "tool": "sum",
       "command_gnu": "sum fixture.txt",
       "command_f00": "f00-sum --core fixture.txt",
-      "output_gnu": "09481 22 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "output_f00": "9481 22 /tmp/f00-suite-bench.u36ghr6l/fix.txt",
-      "time_gnu_ms": 0.897,
-      "time_f00_ms": 0.365,
-      "ratio": 2.46,
+      "output_gnu": "09481 22 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "output_f00": "9481 22 /tmp/f00-suite-bench.v3htcw45/fix.txt",
+      "time_gnu_ms": 0.826,
+      "time_f00_ms": 0.347,
+      "ratio": 2.38,
       "status": "ok"
     },
     {
@@ -478,9 +478,9 @@
       "command_f00": "f00-ls --core -1 dir",
       "output_gnu": "f01.txt f02.txt f03.txt f04.txt f05.txt f06.txt f07.txt f08.txt f09.txt f10.txt f11.txt f12.txt f13.txt f14.txt f15.txt f16.txt f17.txt f18.txt f19.txt f20.txt",
       "output_f00": "f01.txt f02.txt f03.txt f04.txt f05.txt f06.txt f07.txt f08.txt f09.txt f10.txt f11.txt f12.txt f13.txt f14.txt f15.txt f16.txt f17.txt f18.txt f19.txt f20.txt",
-      "time_gnu_ms": 1.048,
-      "time_f00_ms": 0.419,
-      "ratio": 2.5,
+      "time_gnu_ms": 0.981,
+      "time_f00_ms": 0.407,
+      "ratio": 2.41,
       "status": "ok"
     },
     {
@@ -489,9 +489,9 @@
       "command_f00": "f00-dir --core -1 dir",
       "output_gnu": "f01.txt f02.txt f03.txt f04.txt f05.txt f06.txt f07.txt f08.txt f09.txt f10.txt f11.txt f12.txt f13.txt f14.txt f15.txt f16.txt f17.txt f18.txt f19.txt f20.txt",
       "output_f00": "f06.txt f02.txt f20.txt f14.txt f09.txt f13.txt f10.txt f17.txt f16.txt f08.txt f01.txt f11.txt f03.txt f15.txt f12.txt f05.txt f07.txt f04.txt f18.txt f19.txt",
-      "time_gnu_ms": 1.048,
-      "time_f00_ms": 0.32,
-      "ratio": 3.27,
+      "time_gnu_ms": 0.97,
+      "time_f00_ms": 0.327,
+      "ratio": 2.97,
       "status": "ok"
     },
     {
@@ -500,9 +500,9 @@
       "command_f00": "f00-vdir --core -1 dir",
       "output_gnu": "f01.txt f02.txt f03.txt f04.txt f05.txt f06.txt f07.txt f08.txt f09.txt f10.txt f11.txt f12.txt f13.txt f14.txt f15.txt f16.txt f17.txt f18.txt f19.txt f20.txt",
       "output_f00": "- f06.txt - f02.txt - f20.txt - f14.txt - f09.txt - f13.txt - f10.txt - f17.txt - f16.txt - f08.txt - f01.txt - f11.txt - f03.txt - f15.txt - f12.txt - f05.txt\u2026",
-      "time_gnu_ms": 1.092,
-      "time_f00_ms": 0.317,
-      "ratio": 3.45,
+      "time_gnu_ms": 0.98,
+      "time_f00_ms": 0.32,
+      "ratio": 3.06,
       "status": "ok"
     },
     {
@@ -511,9 +511,9 @@
       "command_f00": "f00-stat --core -c %s fixture.txt",
       "output_gnu": "22000",
       "output_f00": "22000",
-      "time_gnu_ms": 0.993,
-      "time_f00_ms": 0.305,
-      "ratio": 3.25,
+      "time_gnu_ms": 0.946,
+      "time_f00_ms": 0.302,
+      "ratio": 3.13,
       "status": "ok"
     },
     {
@@ -522,9 +522,9 @@
       "command_f00": "f00-realpath --core .",
       "output_gnu": "/home/runner/work/f00/f00/asm",
       "output_f00": "/home/runner/work/f00/f00/asm",
-      "time_gnu_ms": 0.83,
-      "time_f00_ms": 0.383,
-      "ratio": 2.16,
+      "time_gnu_ms": 0.768,
+      "time_f00_ms": 0.389,
+      "ratio": 1.98,
       "status": "ok"
     },
     {
@@ -533,31 +533,31 @@
       "command_f00": "f00-readlink --core /proc/self/exe",
       "output_gnu": "/usr/bin/readlink",
       "output_f00": "/home/runner/work/f00/f00/asm/f00",
-      "time_gnu_ms": 0.832,
-      "time_f00_ms": 0.323,
-      "ratio": 2.58,
+      "time_gnu_ms": 0.797,
+      "time_f00_ms": 0.318,
+      "ratio": 2.51,
       "status": "ok"
     },
     {
       "tool": "df",
       "command_gnu": "df -P /",
       "command_f00": "f00-df --core -P /",
-      "output_gnu": "Filesystem 1024-blocks Used Available Capacity Mounted on /dev/root 75085112 56775080 18293648 76% /",
-      "output_f00": "Filesystem 1K-blocks Used Available Use% Mounted on /dev/root 75085112 56775080 18293648 75% /",
-      "time_gnu_ms": 0.948,
-      "time_f00_ms": 0.358,
-      "ratio": 2.65,
+      "output_gnu": "Filesystem 1024-blocks Used Available Capacity Mounted on /dev/root 75085112 55868392 19200336 75% /",
+      "output_f00": "Filesystem 1K-blocks Used Available Use% Mounted on /dev/root 75085112 55868392 19200336 74% /",
+      "time_gnu_ms": 0.897,
+      "time_f00_ms": 0.361,
+      "ratio": 2.48,
       "status": "ok"
     },
     {
       "tool": "du",
       "command_gnu": "du -s dir",
       "command_f00": "f00-du --core -s dir",
-      "output_gnu": "84 /tmp/f00-suite-bench.u36ghr6l/dir",
-      "output_f00": "5 /tmp/f00-suite-bench.u36ghr6l/dir",
-      "time_gnu_ms": 0.907,
-      "time_f00_ms": 0.371,
-      "ratio": 2.45,
+      "output_gnu": "84 /tmp/f00-suite-bench.v3htcw45/dir",
+      "output_f00": "5 /tmp/f00-suite-bench.v3htcw45/dir",
+      "time_gnu_ms": 0.86,
+      "time_f00_ms": 0.362,
+      "ratio": 2.38,
       "status": "ok"
     },
     {
@@ -566,9 +566,9 @@
       "command_f00": "f00-dircolors --core -p",
       "output_gnu": "# Configuration file for dircolors, a utility to help you set the # LS_COLORS environment variable used by GNU ls with the --color option. # Copyright (C) 1996\u2026",
       "output_f00": "# Configuration file for dircolors, a utility to help you set the # LS_COLORS environment variable used by GNU ls with the --color option. RESET 0 DIR 01;34 LI\u2026",
-      "time_gnu_ms": 0.813,
-      "time_f00_ms": 0.305,
-      "ratio": 2.67,
+      "time_gnu_ms": 0.759,
+      "time_f00_ms": 0.298,
+      "ratio": 2.55,
       "status": "ok"
     },
     {
@@ -577,9 +577,9 @@
       "command_f00": "f00-env --core -i true",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 1.179,
-      "time_f00_ms": 0.305,
-      "ratio": 3.87,
+      "time_gnu_ms": 1.128,
+      "time_f00_ms": 0.311,
+      "ratio": 3.63,
       "status": "ok"
     },
     {
@@ -588,9 +588,9 @@
       "command_f00": "f00-timeout --core 5 true",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 1.507,
-      "time_f00_ms": 0.432,
-      "ratio": 3.49,
+      "time_gnu_ms": 1.393,
+      "time_f00_ms": 0.415,
+      "ratio": 3.36,
       "status": "ok"
     },
     {
@@ -599,9 +599,9 @@
       "command_f00": "f00-nice --core true",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 1.244,
-      "time_f00_ms": 0.307,
-      "ratio": 4.05,
+      "time_gnu_ms": 1.181,
+      "time_f00_ms": 0.309,
+      "ratio": 3.82,
       "status": "ok"
     },
     {
@@ -610,9 +610,9 @@
       "command_f00": "f00-nohup --core true",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 1.272,
-      "time_f00_ms": 0.313,
-      "ratio": 4.07,
+      "time_gnu_ms": 1.194,
+      "time_f00_ms": 0.305,
+      "ratio": 3.91,
       "status": "ok"
     },
     {
@@ -621,9 +621,9 @@
       "command_f00": "f00-sleep --core 0",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.885,
-      "time_f00_ms": 0.366,
-      "ratio": 2.42,
+      "time_gnu_ms": 0.887,
+      "time_f00_ms": 0.431,
+      "ratio": 2.06,
       "status": "ok"
     },
     {
@@ -632,9 +632,9 @@
       "command_f00": "f00-test --core -f fixture.txt",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.82,
-      "time_f00_ms": 0.307,
-      "ratio": 2.67,
+      "time_gnu_ms": 0.756,
+      "time_f00_ms": 0.305,
+      "ratio": 2.48,
       "status": "ok"
     },
     {
@@ -643,20 +643,20 @@
       "command_f00": "f00-pathchk --core ok-name",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.805,
-      "time_f00_ms": 0.301,
-      "ratio": 2.68,
+      "time_gnu_ms": 0.741,
+      "time_f00_ms": 0.306,
+      "ratio": 2.43,
       "status": "ok"
     },
     {
       "tool": "mktemp",
       "command_gnu": "mktemp -u",
       "command_f00": "f00-mktemp --core -u",
-      "output_gnu": "/tmp/tmp.Iy6DZs5pUS",
-      "output_f00": "/tmp/tmp.WjzSCS",
-      "time_gnu_ms": 0.828,
-      "time_f00_ms": 0.304,
-      "ratio": 2.73,
+      "output_gnu": "/tmp/tmp.LCrBHwGSSE",
+      "output_f00": "/tmp/tmp.yDqS4D",
+      "time_gnu_ms": 0.789,
+      "time_f00_ms": 0.307,
+      "ratio": 2.58,
       "status": "ok"
     },
     {
@@ -665,31 +665,31 @@
       "command_f00": "f00-sync --core",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.855,
-      "time_f00_ms": 0.337,
-      "ratio": 2.53,
+      "time_gnu_ms": 0.788,
+      "time_f00_ms": 0.336,
+      "ratio": 2.35,
       "status": "ok"
     },
     {
       "tool": "uptime",
       "command_gnu": "uptime",
       "command_f00": "f00-uptime --core",
-      "output_gnu": "12:02:38 up 0 min, 0 user, load average: 3.43, 1.14, 0.40",
+      "output_gnu": "12:06:45 up 0 min, 0 user, load average: 1.71, 0.50, 0.17",
       "output_f00": "up 0 minutes",
-      "time_gnu_ms": 1.497,
-      "time_f00_ms": 0.317,
-      "ratio": 4.72,
+      "time_gnu_ms": 1.383,
+      "time_f00_ms": 0.306,
+      "ratio": 4.52,
       "status": "ok"
     },
     {
       "tool": "hostid",
       "command_gnu": "hostid",
       "command_f00": "f00-hostid --core",
-      "output_gnu": "010a8400",
+      "output_gnu": "010af000",
       "output_f00": "db830370",
-      "time_gnu_ms": 0.949,
-      "time_f00_ms": 0.357,
-      "ratio": 2.66,
+      "time_gnu_ms": 0.875,
+      "time_f00_ms": 0.362,
+      "ratio": 2.42,
       "status": "ok"
     },
     {
@@ -698,9 +698,9 @@
       "command_f00": "f00-logname --core",
       "output_gnu": "/usr/bin/logname: no login name",
       "output_f00": "runner",
-      "time_gnu_ms": 0.835,
+      "time_gnu_ms": 0.783,
       "time_f00_ms": 0.361,
-      "ratio": 2.31,
+      "ratio": 2.17,
       "status": "ok"
     },
     {
@@ -709,9 +709,9 @@
       "command_f00": "f00-tty --core",
       "output_gnu": "not a tty",
       "output_f00": "not a tty",
-      "time_gnu_ms": 0.819,
-      "time_f00_ms": 0.247,
-      "ratio": 3.32,
+      "time_gnu_ms": 0.757,
+      "time_f00_ms": 0.246,
+      "ratio": 3.08,
       "status": "ok"
     },
     {
@@ -720,9 +720,9 @@
       "command_f00": "f00-groups --core",
       "output_gnu": "runner adm users docker systemd-journal",
       "output_f00": "adm users docker systemd-journal runner",
-      "time_gnu_ms": 0.932,
-      "time_f00_ms": 0.328,
-      "ratio": 2.84,
+      "time_gnu_ms": 0.882,
+      "time_f00_ms": 0.332,
+      "ratio": 2.66,
       "status": "ok"
     },
     {
@@ -731,9 +731,9 @@
       "command_f00": "f00-arch --core",
       "output_gnu": "x86_64",
       "output_f00": "x86_64",
-      "time_gnu_ms": 0.807,
-      "time_f00_ms": 0.36,
-      "ratio": 2.24,
+      "time_gnu_ms": 0.773,
+      "time_f00_ms": 0.31,
+      "ratio": 2.5,
       "status": "ok"
     },
     {
@@ -742,9 +742,9 @@
       "command_f00": "f00-hostname --core",
       "output_gnu": "runnervmvrwv9",
       "output_f00": "runnervmvrwv9",
-      "time_gnu_ms": 0.587,
-      "time_f00_ms": 0.315,
-      "ratio": 1.86,
+      "time_gnu_ms": 0.543,
+      "time_f00_ms": 0.306,
+      "ratio": 1.77,
       "status": "ok"
     },
     {
@@ -753,9 +753,9 @@
       "command_f00": "f00-users --core",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.862,
-      "time_f00_ms": 0.31,
-      "ratio": 2.78,
+      "time_gnu_ms": 0.783,
+      "time_f00_ms": 0.321,
+      "ratio": 2.44,
       "status": "ok"
     },
     {
@@ -764,9 +764,9 @@
       "command_f00": "f00-who --core",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.869,
+      "time_gnu_ms": 0.81,
       "time_f00_ms": 0.309,
-      "ratio": 2.82,
+      "ratio": 2.62,
       "status": "ok"
     },
     {
@@ -775,9 +775,9 @@
       "command_f00": "f00-pinky --core",
       "output_gnu": "Login Name TTY Idle When Where",
       "output_f00": "",
-      "time_gnu_ms": 0.866,
-      "time_f00_ms": 0.311,
-      "ratio": 2.78,
+      "time_gnu_ms": 0.809,
+      "time_f00_ms": 0.313,
+      "ratio": 2.59,
       "status": "ok"
     },
     {
@@ -786,9 +786,9 @@
       "command_f00": "f00-fold --core -w 40 fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvw xyz 0123456789 suite-bench line abcdefghijklmnopqrstuvw xyz 0123456789 suite-bench line abcdefghijklmnopqrstuvw xyz 01\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvw xyz 0123456789 suite-bench line abcdefghijklmnopqrstuvw xyz 0123456789 suite-bench line abcdefghijklmnopqrstuvw xyz 01\u2026",
-      "time_gnu_ms": 0.904,
-      "time_f00_ms": 0.397,
-      "ratio": 2.28,
+      "time_gnu_ms": 0.853,
+      "time_f00_ms": 0.404,
+      "ratio": 2.11,
       "status": "ok"
     },
     {
@@ -797,9 +797,9 @@
       "command_f00": "f00-fmt --core -w 40 fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.986,
-      "time_f00_ms": 0.369,
-      "ratio": 2.67,
+      "time_gnu_ms": 0.924,
+      "time_f00_ms": 0.362,
+      "ratio": 2.55,
       "status": "ok"
     },
     {
@@ -808,9 +808,9 @@
       "command_f00": "f00-expand --core fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.873,
-      "time_f00_ms": 0.379,
-      "ratio": 2.31,
+      "time_gnu_ms": 0.822,
+      "time_f00_ms": 0.388,
+      "ratio": 2.12,
       "status": "ok"
     },
     {
@@ -819,9 +819,9 @@
       "command_f00": "f00-unexpand --core fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.861,
-      "time_f00_ms": 0.435,
-      "ratio": 1.98,
+      "time_gnu_ms": 0.813,
+      "time_f00_ms": 0.439,
+      "ratio": 1.85,
       "status": "ok"
     },
     {
@@ -830,9 +830,9 @@
       "command_f00": "f00-tac --core fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.867,
-      "time_f00_ms": 0.386,
-      "ratio": 2.25,
+      "time_gnu_ms": 0.812,
+      "time_f00_ms": 0.357,
+      "ratio": 2.27,
       "status": "ok"
     },
     {
@@ -841,20 +841,20 @@
       "command_f00": "f00-rev --core fixture.txt",
       "output_gnu": "9876543210 zyxwvutsrqponmlkjihgfedcba enil hcneb-etius 9876543210 zyxwvutsrqponmlkjihgfedcba enil hcneb-etius 9876543210 zyxwvutsrqponmlkjihgfedcba enil hcneb-\u2026",
       "output_f00": "9876543210 zyxwvutsrqponmlkjihgfedcba enil hcneb-etius 9876543210 zyxwvutsrqponmlkjihgfedcba enil hcneb-etius 9876543210 zyxwvutsrqponmlkjihgfedcba enil hcneb-\u2026",
-      "time_gnu_ms": 1.162,
-      "time_f00_ms": 0.408,
-      "ratio": 2.85,
+      "time_gnu_ms": 1.088,
+      "time_f00_ms": 0.41,
+      "ratio": 2.66,
       "status": "ok"
     },
     {
       "tool": "ptx",
       "command_gnu": "ptx -A fixture.txt",
       "command_f00": "f00-ptx --core -A fixture.txt",
-      "output_gnu": "/tmp/f00-suite-bench.u36ghr6l/fix.txt:1: 0/ /line abcdefghijklmnopqrstuvwxyz /tmp/f00-suite-bench.u36ghr6l/fix.txt:2: 0/ /line abcdefghijklmnopqrstuvwxyz /tmp/\u2026",
+      "output_gnu": "/tmp/f00-suite-bench.v3htcw45/fix.txt:1: 0/ /line abcdefghijklmnopqrstuvwxyz /tmp/f00-suite-bench.v3htcw45/fix.txt:2: 0/ /line abcdefghijklmnopqrstuvwxyz /tmp/\u2026",
       "output_f00": "suite bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 1.57,
-      "time_f00_ms": 0.419,
-      "ratio": 3.75,
+      "time_gnu_ms": 1.549,
+      "time_f00_ms": 0.42,
+      "ratio": 3.68,
       "status": "ok"
     },
     {
@@ -863,9 +863,9 @@
       "command_f00": "f00-pr --core -t fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 1.045,
-      "time_f00_ms": 0.372,
-      "ratio": 2.81,
+      "time_gnu_ms": 0.993,
+      "time_f00_ms": 0.359,
+      "ratio": 2.77,
       "status": "ok"
     },
     {
@@ -874,9 +874,9 @@
       "command_f00": "f00-shuf --core fixture.txt",
       "output_gnu": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
       "output_f00": "suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 0123456789 suite-bench line abcdefghijklmnopqrstuvwxyz 01234\u2026",
-      "time_gnu_ms": 0.874,
-      "time_f00_ms": 0.593,
-      "ratio": 1.47,
+      "time_gnu_ms": 0.822,
+      "time_f00_ms": 0.537,
+      "ratio": 1.53,
       "status": "ok"
     },
     {
@@ -885,9 +885,9 @@
       "command_f00": "f00-tsort --core",
       "output_gnu": "a b c",
       "output_f00": "a b c",
-      "time_gnu_ms": 0.848,
-      "time_f00_ms": 0.328,
-      "ratio": 2.59,
+      "time_gnu_ms": 0.787,
+      "time_f00_ms": 0.34,
+      "ratio": 2.31,
       "status": "ok"
     },
     {
@@ -896,9 +896,9 @@
       "command_f00": "f00-tee --core tee.out",
       "output_gnu": "tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee da\u2026",
       "output_f00": "tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee data tee da\u2026",
-      "time_gnu_ms": 0.916,
-      "time_f00_ms": 0.405,
-      "ratio": 2.26,
+      "time_gnu_ms": 0.853,
+      "time_f00_ms": 0.397,
+      "ratio": 2.15,
       "status": "ok"
     },
     {
@@ -907,9 +907,9 @@
       "command_f00": "f00-split --core -l 50 fixture.txt out",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 1.268,
-      "time_f00_ms": 1.332,
-      "ratio": 0.95,
+      "time_gnu_ms": 1.189,
+      "time_f00_ms": 1.378,
+      "ratio": 0.86,
       "status": "ok"
     },
     {
@@ -918,9 +918,9 @@
       "command_f00": "f00-csplit --core -f xx fixture 5",
       "output_gnu": "220 21780",
       "output_f00": "",
-      "time_gnu_ms": 1.051,
-      "time_f00_ms": 0.328,
-      "ratio": 3.21,
+      "time_gnu_ms": 0.959,
+      "time_f00_ms": 0.325,
+      "ratio": 2.95,
       "status": "ok"
     },
     {
@@ -929,9 +929,9 @@
       "command_f00": "f00-chmod --core 644 fixture.txt",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.831,
-      "time_f00_ms": 0.314,
-      "ratio": 2.65,
+      "time_gnu_ms": 0.781,
+      "time_f00_ms": 0.326,
+      "ratio": 2.39,
       "status": "ok"
     },
     {
@@ -940,9 +940,9 @@
       "command_f00": "f00-touch --core touched",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.832,
-      "time_f00_ms": 0.363,
-      "ratio": 2.29,
+      "time_gnu_ms": 0.768,
+      "time_f00_ms": 0.393,
+      "ratio": 1.95,
       "status": "ok"
     },
     {
@@ -951,9 +951,9 @@
       "command_f00": "f00-truncate --core -s 0 trunc",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.825,
-      "time_f00_ms": 0.326,
-      "ratio": 2.53,
+      "time_gnu_ms": 0.783,
+      "time_f00_ms": 0.332,
+      "ratio": 2.36,
       "status": "ok"
     },
     {
@@ -962,9 +962,9 @@
       "command_f00": "f00-cp --core fixture.txt cp.out",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 1.209,
-      "time_f00_ms": 0.401,
-      "ratio": 3.02,
+      "time_gnu_ms": 1.157,
+      "time_f00_ms": 0.392,
+      "ratio": 2.95,
       "status": "ok"
     },
     {
@@ -973,9 +973,9 @@
       "command_f00": "f00-dd --core if=fixture of=dd.out bs=4k count=1",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.917,
-      "time_f00_ms": 0.381,
-      "ratio": 2.4,
+      "time_gnu_ms": 0.863,
+      "time_f00_ms": 0.387,
+      "ratio": 2.23,
       "status": "ok"
     },
     {
@@ -984,9 +984,9 @@
       "command_f00": "f00-install --core -m 644 fixture inst.out",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 1.202,
-      "time_f00_ms": 0.406,
-      "ratio": 2.96,
+      "time_gnu_ms": 1.139,
+      "time_f00_ms": 0.409,
+      "ratio": 2.79,
       "status": "ok"
     },
     {
@@ -994,10 +994,10 @@
       "command_gnu": "yes --version",
       "command_f00": "f00-yes --core --version",
       "output_gnu": "yes (GNU coreutils) 9.4 Copyright (C) 2023 Free Software Foundation, Inc. License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>. This \u2026",
-      "output_f00": "f00-yes (f00) 0.15.2 License: MIT \u00b7 https://f00.sh",
-      "time_gnu_ms": 0.806,
-      "time_f00_ms": 0.246,
-      "ratio": 3.28,
+      "output_f00": "f00-yes (f00) 0.15.3 License: MIT \u00b7 https://f00.sh",
+      "time_gnu_ms": 0.765,
+      "time_f00_ms": 0.247,
+      "ratio": 3.1,
       "status": "ok"
     },
     {
@@ -1006,9 +1006,9 @@
       "command_f00": "f00-[ --core -f fixture.txt",
       "output_gnu": "",
       "output_f00": "",
-      "time_gnu_ms": 0.794,
-      "time_f00_ms": 0.3,
-      "ratio": 2.64,
+      "time_gnu_ms": 0.763,
+      "time_f00_ms": 0.304,
+      "ratio": 2.51,
       "status": "ok"
     }
   ]
