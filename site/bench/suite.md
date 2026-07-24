@@ -9,7 +9,8 @@ Host: x86_64 · Linux 6.17.0-1020-azure
 Tools timed: 91 · wins: 90 · median 2.63× · total-time 2.949×
 
 | Tool | Command (f00) | GNU ms | f00 ms | Speedup | Sample output (f00) |
-|------|---------------|-------:|-------:|--------:|---------------------|| `true` | `f00-true --core` | 0.552 | **0.256** | **2.15×** | `` |
+|------|---------------|-------:|-------:|--------:|---------------------|
+| `true` | `f00-true --core` | 0.552 | **0.256** | **2.15×** | `` |
 | `false` | `f00-false --core` | 0.538 | **0.246** | **2.19×** | `` |
 | `basename` | `f00-basename --core /usr/bin/ls` | 0.814 | **0.260** | **3.13×** | `ls` |
 | `dirname` | `f00-dirname --core /usr/bin/ls` | 0.808 | **0.298** | **2.72×** | `/usr/bin` |
