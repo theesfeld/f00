@@ -34,9 +34,6 @@ Thumbs.db
 !/asm/benches/**
 
 # local release staging (publish via gh release assets)
-/dist/*.tar.gz
-/dist/*.deb
-/dist/*.rpm
-/dist/*.pkg.tar.zst
+/dist/
 /asm/benches/smoke-report.txt
 /xx*
