@@ -64,7 +64,7 @@ help_msg:
     db "   or: f00 [OPTION]... [FILE]...", 10
     db "List directory contents (f00 suite).", 10
     db 10
-    db "Default is modern mode (color, emoji icons on TTY, git). Use --core for", 10
+    db "Default is modern mode (color, glyph icons on TTY, git). Use --core for", 10
     db "strict GNU coreutils ls-compatible output.", 10
     db 10
     db "Coreutils flags:", 10
@@ -113,8 +113,8 @@ help_msg:
     db "      --csv / --tsv          detailed delimited machine output", 10
     db "      --tree                 tree view", 10
     db "      --git / --no-git       git status annotation", 10
-    db "      --icons[=STYLE]        icons: auto|emoji|nerd|ascii|never", 10
-    db "                             (default auto=emoji on TTY; nerd is opt-in)", 10
+    db "      --icons[=STYLE]        icons: auto|glyph|emoji|nerd|ascii|never", 10
+    db "                             (default auto=glyph on TTY; emoji/nerd opt-in)", 10
     db "      --browse / --tui       interactive dual-pane browser", 10
     db "      --ignore-files         honor .gitignore / .f00ignore", 10
     db "      --hyperlink            OSC-8 hyperlinks on TTY", 10
@@ -554,7 +554,7 @@ util_ls_ok:
     mov qword [rec_sp], 0
     mov qword [g_now_sec], 0
     mov byte [g_icons_when], ICONS_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_EMOJI
+    mov byte [g_icons_style], ICONS_STYLE_GLYPH
     mov byte [g_sort], SORT_NAME
     mov byte [g_time_field], TIME_MTIME
     mov byte [g_quoting], QUOTE_LITERAL
@@ -1085,7 +1085,7 @@ util_ls_ok:
     and dword [g_opts2], ~OPT2_GIT
     jmp .next_arg
 .j9:
-    ; --icons / --icons=auto|emoji|nerd|ascii|never|always
+    ; --icons / --icons=auto|glyph|emoji|nerd|ascii|never|always
     push rdi
     lea rsi, [opt_icons]
     call strcmp
@@ -1093,7 +1093,7 @@ util_ls_ok:
     test eax, eax
     jnz .j10a
     mov byte [g_icons_when], ICONS_ALWAYS
-    ; keep style (default emoji)
+    ; keep style (default glyph)
     or dword [g_opts2], OPT2_ICONS
     and dword [g_opts2], ~OPT2_NO_ICONS
     jmp .next_arg
@@ -1118,9 +1118,9 @@ util_ls_ok:
     or dword [g_opts2], OPT2_NO_ICONS
     jmp .next_arg
 .ic_fallback:
-    ; unknown value → auto emoji
+    ; unknown value → auto glyph
     mov byte [g_icons_when], ICONS_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_EMOJI
+    mov byte [g_icons_style], ICONS_STYLE_GLYPH
     jmp .next_arg
 .j10:
     push rdi

@@ -44,7 +44,7 @@ spinner = false
 |-----|--------|--------|
 | `core` | `true`/`false`, `yes`/`no`, `1`/`0` | Force `--core` presentation |
 | `color` | `auto`, `always`, `never` (also `on`/`off`) | Color when |
-| `icons` | `auto`, `emoji`, `nerd`, `ascii`, `never`, `always` | Icon when + style (default **emoji**, no font pack; **nerd** opt-in) |
+| `icons` | `auto`, `glyph`, `emoji`, `nerd`, `ascii`, `never`, `always` | Icon when + style (default **glyph** single-width Unicode; emoji/nerd opt-in) |
 | `animations` | bool | Master switch for motion (spinners, …) |
 | `spinner` | bool | Per-spinner enable (also needs `animations`) |
 | `git` | `auto`/`always`/`never` or bool | ls git decorations |

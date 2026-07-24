@@ -18,6 +18,10 @@ jobs:
   asm-linux:
     name: pure ASM (linux x86_64)
     runs-on: ubuntu-latest
+    # Avoid re-running full matrix for the bench auto-commit (loop guard)
+    if: >-
+      github.event_name != 'push' ||
+      !contains(github.event.head_commit.message || '', 'chore(bench): refresh suite')
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +44,31 @@ jobs:
         working-directory: asm
         run: bash benches/speed-gate.sh
 
+      - name: Suite benchmarks (site + README tables)
+        env:
+          # enough samples for a stable median; keep CI wall time reasonable
+          N: "15"
+        run: |
+          set -euo pipefail
+          python3 scripts/gen-suite-bench.py
+          test -f site/bench/suite.json
+          test -f site/bench/suite.md
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path("site/bench/suite.json").read_text())
+          tools = p.get("tools") or []
+          ok = [t for t in tools if t.get("status") == "ok"]
+          assert len(ok) >= 40, f"too few ok tools: {len(ok)}"
+          # require some known winners present
+          names = {t["tool"] for t in ok}
+          for need in ("true", "cat", "wc", "md5sum", "ls"):
+              assert need in names, f"missing {need} in suite"
+          print(f"suite bench ok: {len(ok)}/{len(tools)} tools")
+          PY
+          grep -q 'bench-table:start' README.md
+          grep -q 'f00-true' README.md
+
       - name: Version surface
         working-directory: asm
         run: |
@@ -50,6 +79,124 @@ jobs:
           n=$(find . -maxdepth 1 -type l -name 'f00-*' | wc -l)
           echo "f00-* links: $n"
           test "$n" -ge 100
+
+      - name: Upload suite bench artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-bench
+          path: |
+            site/bench/suite.json
+            site/bench/suite.md
+            README.md
+          if-no-files-found: error
+
+  # On main: commit regenerated bench tables so README + site stay live.
+  publish-bench:
+    name: publish bench tables
+    needs: asm-linux
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Download suite bench
+        uses: actions/download-artifact@v4
+        with:
+          name: suite-bench
+          path: _bench
+
+      - name: Apply bench outputs
+        run: |
+          set -euo pipefail
+          mkdir -p site/bench
+          cp -f _bench/site/bench/suite.json site/bench/suite.json
+          cp -f _bench/site/bench/suite.md site/bench/suite.md
+          # README from artifact has refreshed <!-- bench-table --> block
+          # Merge only the marker region into current README (avoid clobbering concurrent edits)
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          START, END = "<!-- bench-table:start -->", "<!-- bench-table:end -->"
+          art = Path("_bench/README.md").read_text(encoding="utf-8")
+          cur = Path("README.md").read_text(encoding="utf-8")
+          m = re.search(re.escape(START) + r".*?" + re.escape(END), art, flags=re.S)
+          if not m:
+              raise SystemExit("artifact README missing bench markers")
+          block = m.group(0)
+          if START in cur and END in cur:
+              cur2 = re.sub(re.escape(START) + r".*?" + re.escape(END), block, cur, count=1, flags=re.S)
+          else:
+              cur2 = cur.rstrip() + "\n\n" + block + "\n"
+          Path("README.md").write_text(cur2, encoding="utf-8")
+          print("README bench table merged")
+          PY
+
+      - name: Commit if suite metrics changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Round times so timer noise does not spam commits; ignore meta.generated_at.
+          python3 - <<'PY'
+          import json, hashlib, pathlib, subprocess
+
+          def tools_hash_from_text(text: str) -> str:
+              data = json.loads(text)
+              stable = []
+              for t in data.get("tools") or []:
+                  def rnd_ms(x):
+                      if x is None:
+                          return None
+                      return round(float(x), 1)  # 0.1 ms — kill timer noise
+                  def rnd_r(x):
+                      if x is None:
+                          return None
+                      return round(float(x), 1)
+                  stable.append(
+                      {
+                          "tool": t.get("tool"),
+                          "time_gnu_ms": rnd_ms(t.get("time_gnu_ms")),
+                          "time_f00_ms": rnd_ms(t.get("time_f00_ms")),
+                          "ratio": rnd_r(t.get("ratio")),
+                          "status": t.get("status"),
+                      }
+                  )
+              blob = json.dumps(stable, sort_keys=True, separators=(",", ":")).encode()
+              return hashlib.sha256(blob).hexdigest()
+
+          new_text = pathlib.Path("site/bench/suite.json").read_text()
+          new_h = tools_hash_from_text(new_text)
+          head = subprocess.run(
+              ["git", "show", "HEAD:site/bench/suite.json"],
+              capture_output=True,
+              text=True,
+          )
+          old_h = tools_hash_from_text(head.stdout) if head.returncode == 0 and head.stdout else ""
+          changed = old_h != new_h
+          pathlib.Path("/tmp/bench-changed").write_text("1" if changed else "0")
+          print(f"suite tools hash old={old_h[:12] or '-'} new={new_h[:12]} changed={changed}")
+          PY
+
+          if [[ "$(cat /tmp/bench-changed)" != "1" ]]; then
+            echo "suite metrics unchanged (within 0.1 ms) — skip commit"
+            exit 0
+          fi
+
+          git add site/bench/suite.json site/bench/suite.md README.md
+          if git diff --staged --quiet; then
+            echo "no staged changes"
+            exit 0
+          fi
+          # No [skip ci]: Pages must still deploy site/bench. Loop stops when
+          # the next CI run sees the same rounded suite metrics and skips commit.
+          git commit -m "chore(bench): refresh suite.json and README scoreboard from CI"
+          git push origin HEAD:main
 
   man-present:
     name: man pages present

@@ -32,6 +32,6 @@ README, GitHub Pages (`site/`), man pages under `asm/man/man1/`, and `docs/ROADM
 
 - [ ] Version bumped in man page `.TH` lines and release notes
 - [ ] `cd asm && make smoke && make speed`
-- [ ] `python3 scripts/gen-suite-bench.py` (refresh site benches)
+- [ ] `N=25 python3 scripts/gen-suite-bench.py` (refresh site/bench + README `<!-- bench-table -->`; CI does this on main)
 - [ ] Package assets: tarball · deb · rpm · Arch (`scripts/build-linux-packages.sh`)
 - [ ] Tag `vX.Y.Z` triggers release workflow

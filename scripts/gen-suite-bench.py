@@ -28,7 +28,25 @@ ASM = ROOT / "asm"
 F00 = ASM / "f00"
 OUT_JSON = ROOT / "site" / "bench" / "suite.json"
 OUT_MD = ROOT / "site" / "bench" / "suite.md"
+README = ROOT / "README.md"
 N = int(os.environ.get("N", "25"))
+
+# Snapshot tools embedded in README (must match suite cases)
+README_TOOLS = (
+    "true",
+    "basename",
+    "nproc",
+    "whoami",
+    "cat",
+    "wc",
+    "md5sum",
+    "sha256sum",
+    "sort",
+    "ls",
+)
+
+BENCH_START = "<!-- bench-table:start -->"
+BENCH_END = "<!-- bench-table:end -->"
 
 
 def find_gnu(name: str) -> str | None:
@@ -329,6 +347,7 @@ def main() -> int:
         lines.append("Full machine-readable data: [suite.json](suite.json)")
         lines.append("")
         OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        update_readme_table(rows, meta)
         print(f"wrote {OUT_JSON}")
         print(f"wrote {OUT_MD}")
         ok = sum(1 for r in rows if r["status"] == "ok")
@@ -338,6 +357,67 @@ def main() -> int:
         import shutil
 
         shutil.rmtree(work, ignore_errors=True)
+
+
+def update_readme_table(rows: list[dict], meta: dict) -> None:
+    """Refresh the README representative bench table between HTML markers."""
+    if not README.is_file():
+        return
+    by_tool = {r["tool"]: r for r in rows if r.get("status") == "ok"}
+    table_lines = [
+        "| Tool | Command | GNU | f00 `--core` | vs GNU |",
+        "|------|---------|-----|--------------|--------|",
+    ]
+    for name in README_TOOLS:
+        r = by_tool.get(name)
+        if not r:
+            table_lines.append(f"| `{name}` | `f00-{name} --core` | — | — | see suite |")
+            continue
+        g = r.get("time_gnu_ms")
+        f = r.get("time_f00_ms")
+        ratio = r.get("ratio")
+        g_s = f"{g:.2f} ms" if isinstance(g, (int, float)) else "—"
+        f_s = f"**{f:.2f} ms**" if isinstance(f, (int, float)) else "—"
+        r_s = f"**~{ratio:.1f}×**" if isinstance(ratio, (int, float)) else "see suite"
+        cmd = r.get("command_f00") or f"f00-{name} --core"
+        table_lines.append(f"| `{name}` | `{cmd}` | {g_s} | {f_s} | {r_s} |")
+
+    stamp = (
+        f"_CI / suite bench · `{meta.get('generated_at', '?')}` · "
+        f"N={meta.get('n_runs', N)} median · {meta.get('machine', '?')} · "
+        f"{meta.get('system', '?')}_"
+    )
+    block = (
+        f"{BENCH_START}\n"
+        f"{stamp}\n\n"
+        + "\n".join(table_lines)
+        + f"\n{BENCH_END}"
+    )
+
+    text = README.read_text(encoding="utf-8")
+    if BENCH_START in text and BENCH_END in text:
+        import re
+
+        text2 = re.sub(
+            re.escape(BENCH_START) + r".*?" + re.escape(BENCH_END),
+            block,
+            text,
+            count=1,
+            flags=re.S,
+        )
+    else:
+        # Insert after "## Benchmarks" intro if markers missing
+        import re
+
+        m = re.search(r"(## Benchmarks\n(?:.*?\n)*?)(Representative results[^\n]*\n)", text)
+        if m:
+            text2 = text[: m.end()] + "\n" + block + "\n" + text[m.end() :]
+        else:
+            text2 = text + "\n\n## Benchmarks\n\n" + block + "\n"
+
+    if text2 != text:
+        README.write_text(text2, encoding="utf-8")
+        print(f"updated {README} bench table")
 
 
 if __name__ == "__main__":

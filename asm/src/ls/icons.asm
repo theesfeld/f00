@@ -1,10 +1,11 @@
-; f00tils — icons: default emoji/Unicode (no font pack), optional Nerd, ASCII fallback
-; --icons=auto|emoji|nerd|ascii|never
+; f00tils — icons: default single-width Unicode glyphs; emoji/nerd/ascii opt-in
+; --icons=auto|glyph|emoji|nerd|ascii|never
 BITS 64
 DEFAULT REL
 %include "syscalls.inc"
 
 global icon_for_entry, icon_for_path, icon_enabled, icon_set_style_from_str
+global icon_disp_cells
 extern g_opts2, g_tty, g_icons_when, g_icons_style, g_color
 extern strlen
 
@@ -38,38 +39,79 @@ extern strlen
 %define IK_COUNT      26
 
 section .rodata
-; ── emoji / standard Unicode (default — no Nerd Font) ─────────────
-; 📁 U+1F4C1
-em_folder:      db 0xf0, 0x9f, 0x93, 0x81, 0
-; 📂 U+1F4C2
-em_folder_cfg:  db 0xf0, 0x9f, 0x93, 0x82, 0
-; 📄 U+1F4C4
-em_file:        db 0xf0, 0x9f, 0x93, 0x84, 0
-; 🔗 U+1F517
-em_link:        db 0xf0, 0x9f, 0x94, 0x97, 0
-; ⚙️  U+2699 U+FE0F
-em_exec:        db 0xe2, 0x9a, 0x99, 0xef, 0xb8, 0x8f, 0
-em_rs:          db 0xf0, 0x9f, 0xa6, 0x80, 0          ; 🦀
-em_py:          db 0xf0, 0x9f, 0x90, 0x8d, 0          ; 🐍
-em_js:          db 0xf0, 0x9f, 0x92, 0xac, 0          ; 💬
-em_ts:          db 0xf0, 0x9f, 0x93, 0x9a, 0          ; 📚
-em_c:           db 0xf0, 0x9f, 0x93, 0x9d, 0          ; 📝
+; ── glyph (default): single-width Unicode, no emoji, no Nerd Font ──
+; ▸ U+25B8
+gl_folder:      db 0xe2, 0x96, 0xb8, 0
+; ▹ U+25B9
+gl_folder_cfg:  db 0xe2, 0x96, 0xb9, 0
+; · U+00B7
+gl_file:        db 0xc2, 0xb7, 0
+; ↪ U+21AA
+gl_link:        db 0xe2, 0x86, 0xaa, 0
+; ★ U+2605
+gl_exec:        db 0xe2, 0x98, 0x85, 0
+; λ U+03BB  (source-ish)
+gl_rs:          db 0xce, 0xbb, 0
+gl_py:          db 0xce, 0xbb, 0
+gl_js:          db 0xce, 0xbb, 0
+gl_ts:          db 0xce, 0xbb, 0
+gl_c:           db 0xce, 0xbb, 0
+gl_cpp:         db 0xce, 0xbb, 0
+gl_go:          db 0xce, 0xbb, 0
+; ¶ U+00B6
+gl_md:          db 0xc2, 0xb6, 0
+; ≡ U+2261  (structured data)
+gl_json:        db 0xe2, 0x89, 0xa1, 0
+gl_toml:        db 0xe2, 0x89, 0xa1, 0
+gl_yml:         db 0xe2, 0x89, 0xa1, 0
+; $
+gl_sh:          db '$', 0
+; ▣ U+25A3
+gl_img:         db 0xe2, 0x96, 0xa3, 0
+; ▤ U+25A4
+gl_zip:         db 0xe2, 0x96, 0xa4, 0
+; ⌥ U+2325  (branch-ish)
+gl_git:         db 0xe2, 0x8c, 0xa5, 0
+; @
+gl_html:        db '@', 0
+; ~
+gl_css:         db '~', 0
+; § U+00A7
+gl_pdf:         db 0xc2, 0xa7, 0
+; ⊘ U+2298
+gl_lock:        db 0xe2, 0x8a, 0x98, 0
+; ◇ U+25C7
+gl_src:         db 0xe2, 0x97, 0x87, 0
+; ∗ U+2217
+gl_cfg:         db 0xe2, 0x88, 0x97, 0
+
+; ── emoji (opt-in) ────────────────────────────────────────────────
+em_folder:      db 0xf0, 0x9f, 0x93, 0x81, 0          ; 📁
+em_folder_cfg:  db 0xf0, 0x9f, 0x93, 0x82, 0          ; 📂
+em_file:        db 0xf0, 0x9f, 0x93, 0x84, 0          ; 📄
+em_link:        db 0xe2, 0x86, 0xaa, 0                  ; ↪ (not 🔗)
+em_exec:        db 0xe2, 0x9a, 0xa1, 0                  ; ⚡
+em_rs:          db 0xf0, 0x9f, 0xa6, 0x80, 0            ; 🦀
+em_py:          db 0xf0, 0x9f, 0x90, 0x8d, 0            ; 🐍
+em_js:          db 0xf0, 0x9f, 0x92, 0xbb, 0            ; 💻
+em_ts:          db 0xf0, 0x9f, 0x92, 0xbb, 0
+em_c:           db 0xf0, 0x9f, 0x93, 0x9d, 0            ; 📝
 em_cpp:         db 0xf0, 0x9f, 0x93, 0x9d, 0
-em_go:          db 0xf0, 0x9f, 0x90, 0xb5, 0          ; 🐯 (placeholder spirit)
-em_md:          db 0xf0, 0x9f, 0x93, 0x83, 0          ; 📃
-em_json:        db 0xf0, 0x9f, 0x93, 0x8b, 0          ; 📋
+em_go:          db 0xf0, 0x9f, 0x90, 0xb5, 0            ; 🐯 (legacy)
+em_md:          db 0xf0, 0x9f, 0x93, 0x91, 0            ; 📑
+em_json:        db 0xf0, 0x9f, 0x93, 0x8b, 0            ; 📋
 em_toml:        db 0xf0, 0x9f, 0x93, 0x8b, 0
 em_yml:         db 0xf0, 0x9f, 0x93, 0x8b, 0
-em_sh:          db 0xf0, 0x9f, 0x90, 0xa7, 0          ; 🐧
-em_img:         db 0xf0, 0x9f, 0x96, 0xbc, 0xef, 0xb8, 0x8f, 0  ; 🖼️
-em_zip:         db 0xf0, 0x9f, 0x93, 0xa6, 0          ; 📦
-em_git:         db 0xf0, 0x9f, 0x93, 0x81, 0          ; 📁
-em_html:        db 0xf0, 0x9f, 0x8c, 0x90, 0          ; 🌐
-em_css:         db 0xf0, 0x9f, 0x8e, 0xa8, 0          ; 🎨
+em_sh:          db 0xf0, 0x9f, 0x90, 0xa7, 0            ; 🐧
+em_img:         db 0xf0, 0x9f, 0x96, 0xbc, 0xef, 0xb8, 0x8f, 0
+em_zip:         db 0xf0, 0x9f, 0x93, 0xa6, 0            ; 📦
+em_git:         db 0xf0, 0x9f, 0x8c, 0xbf, 0            ; 🌿
+em_html:        db 0xf0, 0x9f, 0x8c, 0x90, 0            ; 🌐
+em_css:         db 0xf0, 0x9f, 0x8e, 0xa8, 0            ; 🎨
 em_pdf:         db 0xf0, 0x9f, 0x93, 0x84, 0
-em_lock:        db 0xf0, 0x9f, 0x94, 0x92, 0          ; 🔒
+em_lock:        db 0xf0, 0x9f, 0x94, 0x92, 0            ; 🔒
 em_src:         db 0xf0, 0x9f, 0x93, 0x81, 0
-em_cfg:         db 0xe2, 0x9a, 0x99, 0xef, 0xb8, 0x8f, 0
+em_cfg:         db 0xe2, 0x9a, 0x99, 0                  ; ⚙ (no VS16)
 
 ; ── Nerd Font PUA (opt-in) ────────────────────────────────────────
 nf_folder:      db 0xef, 0x81, 0xbb, 0
@@ -130,7 +172,12 @@ as_cfg:         db "[cfg]", 0
 empty_icon:     db 0
 
 align 8
-; pointer tables: emoji / nerd / ascii  (IK_COUNT quads each)
+; pointer tables: glyph / emoji / nerd / ascii
+tbl_glyph:
+    dq gl_folder, gl_folder_cfg, gl_file, gl_link, gl_exec
+    dq gl_rs, gl_py, gl_js, gl_ts, gl_c, gl_cpp, gl_go
+    dq gl_md, gl_json, gl_toml, gl_yml, gl_sh, gl_img, gl_zip
+    dq gl_git, gl_html, gl_css, gl_pdf, gl_lock, gl_src, gl_cfg
 tbl_emoji:
     dq em_folder, em_folder_cfg, em_file, em_link, em_exec
     dq em_rs, em_py, em_js, em_ts, em_c, em_cpp, em_go
@@ -195,6 +242,9 @@ bn_makefile:    db "Makefile", 0
 bn_cargo:       db "Cargo.toml", 0
 
 s_auto:         db "auto", 0
+s_glyph:        db "glyph", 0
+s_glyphs:       db "glyphs", 0
+s_unicode:      db "unicode", 0
 s_emoji:        db "emoji", 0
 s_nerd:         db "nerd", 0
 s_ascii:        db "ascii", 0
@@ -213,10 +263,16 @@ icon_resolve:
     cmp eax, IK_COUNT
     jae .empty
     movzx ecx, byte [g_icons_style]
+    cmp cl, ICONS_STYLE_EMOJI
+    je .emoji
     cmp cl, ICONS_STYLE_NERD
     je .nerd
     cmp cl, ICONS_STYLE_ASCII
     je .ascii
+    ; default / glyph
+    lea rdx, [tbl_glyph]
+    jmp .pick
+.emoji:
     lea rdx, [tbl_emoji]
     jmp .pick
 .nerd:
@@ -229,6 +285,31 @@ icon_resolve:
     ret
 .empty:
     lea rsi, [empty_icon]
+    ret
+
+; icon_disp_cells(rsi=glyph cstr) → eax terminal cells (no trailing space)
+; glyph/nerd ≈ 1, emoji ≈ 2, ascii = strlen
+icon_disp_cells:
+    cmp byte [rsi], 0
+    je .z
+    movzx eax, byte [g_icons_style]
+    cmp al, ICONS_STYLE_ASCII
+    je .ascii
+    cmp al, ICONS_STYLE_EMOJI
+    je .emoji
+    mov eax, 1
+    ret
+.emoji:
+    mov eax, 2
+    ret
+.ascii:
+    push rsi
+    mov rdi, rsi
+    call strlen
+    pop rsi
+    ret
+.z:
+    xor eax, eax
     ret
 
 icon_enabled:
@@ -251,8 +332,8 @@ icon_enabled:
     xor al, al
     ret
 
-; icon_set_style_from_str(rdi=cstr) — parse auto|emoji|nerd|ascii|never|always|on|off
-; sets g_icons_when + g_icons_style; returns al=1 if recognized
+; icon_set_style_from_str(rdi=cstr)
+; auto|glyph|glyphs|unicode|emoji|nerd|ascii|never|always|on|off
 icon_set_style_from_str:
     push rbx
     mov rbx, rdi
@@ -280,6 +361,21 @@ icon_set_style_from_str:
     call streq
     test al, al
     jnz .emoji
+    mov rdi, rbx
+    lea rsi, [s_glyph]
+    call streq
+    test al, al
+    jnz .glyph
+    mov rdi, rbx
+    lea rsi, [s_glyphs]
+    call streq
+    test al, al
+    jnz .glyph
+    mov rdi, rbx
+    lea rsi, [s_unicode]
+    call streq
+    test al, al
+    jnz .glyph
     mov rdi, rbx
     lea rsi, [s_always]
     call streq
@@ -321,19 +417,28 @@ icon_set_style_from_str:
     mov al, 1
     pop rbx
     ret
+.glyph:
+    mov byte [g_icons_when], ICONS_ALWAYS
+    mov byte [g_icons_style], ICONS_STYLE_GLYPH
+    mov al, 1
+    pop rbx
+    ret
 .always:
     mov byte [g_icons_when], ICONS_ALWAYS
-    ; keep current style (default emoji)
+    ; keep current style (default glyph)
     mov al, 1
     pop rbx
     ret
 .auto:
     mov byte [g_icons_when], ICONS_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_EMOJI
+    mov byte [g_icons_style], ICONS_STYLE_GLYPH
     mov al, 1
     pop rbx
     ret
 
+; icon_for_entry(rdi=Entry*) → rsi glyph
+; Order: dir → name specials → exec (incl. followed symlink targets) →
+;        extension → pure link → file
 icon_for_entry:
     push rbx
     mov rbx, rdi
@@ -344,10 +449,7 @@ icon_for_entry:
     jnz .dir
     cmp byte [rbx + Entry.dtype], DT_DIR
     je .dir
-    test byte [rbx + Entry.flags], EF_LNK
-    jnz .lnk
-    cmp byte [rbx + Entry.dtype], DT_LNK
-    je .lnk
+
     mov rdi, [rbx + Entry.name]
     lea rsi, [bn_dockerfile]
     call streq
@@ -363,22 +465,31 @@ icon_for_entry:
     call streq
     test al, al
     jnz .ic_toml
+
     test byte [rbx + Entry.flags], EF_EXEC
     jnz .maybe_exec
+
     mov rdi, [rbx + Entry.name]
     call find_ext_lc
     test rax, rax
-    jz .file
+    jz .maybe_lnk
     mov rdi, rax
     call map_ext_kind
     cmp eax, -1
-    je .file
+    je .maybe_lnk
     call icon_resolve
     jmp .done
+
+.maybe_lnk:
+    test byte [rbx + Entry.flags], EF_LNK
+    jnz .lnk
+    cmp byte [rbx + Entry.dtype], DT_LNK
+    je .lnk
 .file:
     mov eax, IK_FILE
     call icon_resolve
     jmp .done
+
 .maybe_exec:
     mov rdi, [rbx + Entry.name]
     call find_ext_lc
@@ -398,6 +509,7 @@ icon_for_entry:
     mov eax, IK_EXEC
     call icon_resolve
     jmp .done
+
 .dir:
     mov rdi, [rbx + Entry.name]
     lea rsi, [bn_git]
@@ -618,11 +730,32 @@ map_ext_kind:
     lea rsi, [ext_ts]
     call streq
     test al, al
-    jz .4
+    jz .3b
     mov eax, IK_TS
+    jmp .ok
+.3b: mov rdi, rbx
+    lea rsi, [ext_tsx]
+    call streq
+    test al, al
+    jz .3c
+    mov eax, IK_TS
+    jmp .ok
+.3c: mov rdi, rbx
+    lea rsi, [ext_jsx]
+    call streq
+    test al, al
+    jz .4
+    mov eax, IK_JS
     jmp .ok
 .4: mov rdi, rbx
     lea rsi, [ext_asm]
+    call streq
+    test al, al
+    jz .4b
+    mov eax, IK_C
+    jmp .ok
+.4b: mov rdi, rbx
+    lea rsi, [ext_s]
     call streq
     test al, al
     jz .5
@@ -632,45 +765,66 @@ map_ext_kind:
     lea rsi, [ext_c]
     call streq
     test al, al
+    jz .5b
+    mov eax, IK_C
+    jmp .ok
+.5b: mov rdi, rbx
+    lea rsi, [ext_h]
+    call streq
+    test al, al
     jz .6
     mov eax, IK_C
     jmp .ok
 .6: mov rdi, rbx
-    lea rsi, [ext_go]
+    lea rsi, [ext_cpp]
+    call streq
+    test al, al
+    jz .6b
+    mov eax, IK_CPP
+    jmp .ok
+.6b: mov rdi, rbx
+    lea rsi, [ext_cc]
     call streq
     test al, al
     jz .7
-    mov eax, IK_GO
+    mov eax, IK_CPP
     jmp .ok
 .7: mov rdi, rbx
-    lea rsi, [ext_md]
+    lea rsi, [ext_go]
     call streq
     test al, al
     jz .8
-    mov eax, IK_MD
+    mov eax, IK_GO
     jmp .ok
 .8: mov rdi, rbx
-    lea rsi, [ext_json]
+    lea rsi, [ext_md]
     call streq
     test al, al
     jz .9
-    mov eax, IK_JSON
+    mov eax, IK_MD
     jmp .ok
 .9: mov rdi, rbx
-    lea rsi, [ext_toml]
+    lea rsi, [ext_json]
     call streq
     test al, al
     jz .10
-    mov eax, IK_TOML
+    mov eax, IK_JSON
     jmp .ok
 .10: mov rdi, rbx
-    lea rsi, [ext_yml]
+    lea rsi, [ext_toml]
     call streq
     test al, al
     jz .11
-    mov eax, IK_YML
+    mov eax, IK_TOML
     jmp .ok
 .11: mov rdi, rbx
+    lea rsi, [ext_yml]
+    call streq
+    test al, al
+    jz .11b
+    mov eax, IK_YML
+    jmp .ok
+.11b: mov rdi, rbx
     lea rsi, [ext_yaml]
     call streq
     test al, al
@@ -681,50 +835,106 @@ map_ext_kind:
     lea rsi, [ext_sh]
     call streq
     test al, al
+    jz .12b
+    mov eax, IK_SH
+    jmp .ok
+.12b: mov rdi, rbx
+    lea rsi, [ext_bash]
+    call streq
+    test al, al
+    jz .12c
+    mov eax, IK_SH
+    jmp .ok
+.12c: mov rdi, rbx
+    lea rsi, [ext_zsh]
+    call streq
+    test al, al
     jz .13
     mov eax, IK_SH
     jmp .ok
 .13: mov rdi, rbx
-    lea rsi, [ext_bash]
-    call streq
-    test al, al
-    jz .14
-    mov eax, IK_SH
-    jmp .ok
-.14: mov rdi, rbx
     lea rsi, [ext_png]
     call streq
     test al, al
-    jz .15
+    jz .13b
     mov eax, IK_IMG
     jmp .ok
-.15: mov rdi, rbx
+.13b: mov rdi, rbx
     lea rsi, [ext_jpg]
     call streq
     test al, al
-    jz .16
+    jz .13c
     mov eax, IK_IMG
     jmp .ok
-.16: mov rdi, rbx
+.13c: mov rdi, rbx
+    lea rsi, [ext_jpeg]
+    call streq
+    test al, al
+    jz .13d
+    mov eax, IK_IMG
+    jmp .ok
+.13d: mov rdi, rbx
+    lea rsi, [ext_gif]
+    call streq
+    test al, al
+    jz .13e
+    mov eax, IK_IMG
+    jmp .ok
+.13e: mov rdi, rbx
+    lea rsi, [ext_svg]
+    call streq
+    test al, al
+    jz .14
+    mov eax, IK_IMG
+    jmp .ok
+.14: mov rdi, rbx
     lea rsi, [ext_zip]
     call streq
     test al, al
-    jz .17
+    jz .14b
     mov eax, IK_ZIP
     jmp .ok
-.17: mov rdi, rbx
+.14b: mov rdi, rbx
+    lea rsi, [ext_tar]
+    call streq
+    test al, al
+    jz .14c
+    mov eax, IK_ZIP
+    jmp .ok
+.14c: mov rdi, rbx
+    lea rsi, [ext_gz]
+    call streq
+    test al, al
+    jz .15
+    mov eax, IK_ZIP
+    jmp .ok
+.15: mov rdi, rbx
     lea rsi, [ext_html]
     call streq
     test al, al
-    jz .18
+    jz .16
     mov eax, IK_HTML
     jmp .ok
-.18: mov rdi, rbx
+.16: mov rdi, rbx
     lea rsi, [ext_css]
     call streq
     test al, al
-    jz .19
+    jz .17
     mov eax, IK_CSS
+    jmp .ok
+.17: mov rdi, rbx
+    lea rsi, [ext_pdf]
+    call streq
+    test al, al
+    jz .18
+    mov eax, IK_PDF
+    jmp .ok
+.18: mov rdi, rbx
+    lea rsi, [ext_lock]
+    call streq
+    test al, al
+    jz .19
+    mov eax, IK_LOCK
     jmp .ok
 .19: mov rdi, rbx
     lea rsi, [ext_so]
@@ -735,8 +945,6 @@ map_ext_kind:
     jmp .ok
 .no:
     mov eax, -1
-    pop rbx
-    ret
 .ok:
     pop rbx
     ret

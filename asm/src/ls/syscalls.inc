@@ -503,10 +503,11 @@ endstruc
 %define ICONS_AUTO   0
 %define ICONS_ALWAYS 1
 %define ICONS_NEVER  2
-; icons style: 0=emoji (default, no font pack) 1=nerd 2=ascii
-%define ICONS_STYLE_EMOJI 0
-%define ICONS_STYLE_NERD  1
-%define ICONS_STYLE_ASCII 2
+; icons style: 0=glyph (default, single-width Unicode) 1=emoji 2=nerd 3=ascii
+%define ICONS_STYLE_GLYPH 0
+%define ICONS_STYLE_EMOJI 1
+%define ICONS_STYLE_NERD  2
+%define ICONS_STYLE_ASCII 3
 
 ; color when stored separately in g_color_when: 0=auto 1=always 2=never
 

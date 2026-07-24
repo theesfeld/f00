@@ -8,7 +8,7 @@ extern g_entries, g_entry_count
 extern g_opts, g_opts2, g_color, g_cols, g_tty, g_now_sec
 extern out_byte, out_str, out_strn, out_u64, out_spaces, out_pad, out_write
 extern human_size, u64_to_dec_buf, strlen, memcpy
-extern icon_for_entry, icon_enabled
+extern icon_for_entry, icon_enabled, icon_disp_cells
 extern git_status_char
 extern format_json, format_csv, format_tsv, format_tree
 extern uid_to_name, gid_to_name
@@ -209,12 +209,14 @@ entry_disp_width:
     jnz .nogitw
     add r12d, 2
 .nogitw:
-    ; icon: one terminal cell + trailing space (Nerd Fonts are typically width-1)
+    ; icon cells depend on style (glyph/nerd≈1, emoji≈2, ascii=strlen) + space
     mov rdi, rbx
     call icon_for_entry
     cmp byte [rsi], 0
     je .noiconw
-    add r12d, 2
+    call icon_disp_cells
+    add r12d, eax
+    inc r12d                        ; trailing space after icon
 .noiconw:
     mov eax, r12d
     pop r12

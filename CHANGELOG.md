@@ -9,11 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Default icons: **glyph** (single-width Unicode), not emoji — select emoji with `--icons=emoji` / `F00_ICONS=emoji`
+- Symlink icons follow target type (exec/dir) when possible; link mark is `↪`
+- Column layout uses real icon cell widths (fixes grid spacing)
+- Brand screenshots use glyph icons (not emoji)
+
+### Added
+- `--icons=glyph` (aliases `glyphs`, `unicode`); emoji remains opt-in
+- CI suite benchmarks → `site/bench/suite.json` + README `<!-- bench-table -->` (auto-commit on main)
+
 ## [0.15.2] - 2026-07-24
 
 ### Added
 - XDG config (`~/.config/f00/config`) global + per-util; env `F00_*`
-- Default **emoji** icons (`--icons=auto|emoji|nerd|ascii|never`); Nerd opt-in
+- Icon styles: glyph (default) / emoji / nerd / ascii
 - Suite modern chrome: file headers, path icons, spinners
 - Expanded website suite benchmarks; single scoreboard table
 

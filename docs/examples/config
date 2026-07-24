@@ -4,7 +4,8 @@
 core = false
 color = auto
 icons = auto
-# icons = emoji   # force emoji (default style)
+# icons = glyph   # default: single-width Unicode (▸ · ★ ↪ …)
+# icons = emoji   # colorful emoji (opt-in)
 # icons = nerd    # Nerd Font PUA (needs patched font)
 # icons = ascii   # [D]/[F]/… always works
 animations = true

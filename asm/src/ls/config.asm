@@ -82,7 +82,7 @@ config_load:
     mov byte [g_cfg_spinner], 1
     mov byte [g_cfg_color_when], CFG_AUTO
     mov byte [g_cfg_icons_when], CFG_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_EMOJI
+    mov byte [g_icons_style], ICONS_STYLE_GLYPH
     mov byte [g_cfg_git], CFG_AUTO
     mov byte [sec_name], 0          ; current section = global
 
@@ -494,7 +494,7 @@ apply_key:
     call strcmp
     test eax, eax
     jnz .a5
-    ; icons = auto|emoji|nerd|ascii|never|always
+    ; icons = auto|glyph|emoji|nerd|ascii|never|always
     mov rdi, r12
     call icon_set_style_from_str
     test al, al

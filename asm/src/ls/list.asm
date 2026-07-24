@@ -213,6 +213,39 @@ statx_fill:
     cmp ecx, S_IFLNK
     jne .notlnk
     or bl, EF_LNK
+    ; follow target once so icons see dir/exec (keep EF_LNK)
+    push r12
+    push r13
+    push r14
+    mov r14b, bl
+    mov rsi, [r12 + Entry.name]
+    mov rax, SYS_statx
+    mov rdi, r13
+    xor edx, edx                    ; follow symlinks
+    mov r10, STATX_BASIC_STATS
+    lea r8, [statx_buf]
+    syscall
+    mov bl, r14b
+    test rax, rax
+    js .lnk_follow_done
+    lea rsi, [statx_buf]
+    mov eax, [rsi + STX_MODE]
+    mov ecx, eax
+    and ecx, S_IFMT
+    cmp ecx, S_IFDIR
+    jne .lnk_notdir
+    or bl, EF_DIR
+    jmp .lnk_follow_done
+.lnk_notdir:
+    cmp ecx, S_IFREG
+    jne .lnk_follow_done
+    test eax, 0o111
+    jz .lnk_follow_done
+    or bl, EF_EXEC
+.lnk_follow_done:
+    pop r14
+    pop r13
+    pop r12
     jmp .type_done
 .notlnk:
     cmp ecx, S_IFREG

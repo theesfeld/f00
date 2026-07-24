@@ -47,7 +47,7 @@ g_color:        resb 1          ; 1 = emit ANSI
 g_now_sec:      resq 1
 g_opts2:        resd 1
 g_icons_when:   resb 1              ; auto/always/never
-g_icons_style:  resb 1              ; emoji/nerd/ascii (default emoji)
+g_icons_style:  resb 1              ; glyph/emoji/nerd/ascii (default glyph)
 g_sort:         resb 1
 g_time_field:   resb 1
 g_quoting:      resb 1

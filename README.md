@@ -10,7 +10,8 @@ One multicall x86-64 Linux binary (no libc). Modern defaults for interactive wor
 |---|---|
 | **Project** | **f00tils** (coreutils replacement suite) |
 | **Binary** | `f00` multicall + `f00-*` links + optional short names (`ls`, `cat`, …) |
-| **Default** | Modern (color, richer layout, `--json` / `--csv`) |
+| **Default** | Modern (color, **glyph** icons, richer layout, `--json` / `--csv`) |
+| **Icons** | Glyph default · `emoji` / `nerd` / `ascii` opt-in · `--icons=never` off |
 | **Scripts** | `--core` — strict coreutils-compatible presentation |
 | **Engine** | Pure ASM multicall · ~650K static · no libc |
 | **License** | MIT |
@@ -207,31 +208,39 @@ Detail: [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md) · scoreboard: [docs/CO
 
 ## Benchmarks
 
-Warm cache, **spawn-inclusive**, median of 20+ runs. Compare `f00-* --core` to `/usr/bin/*` on Linux x86-64.
+Warm cache, **spawn-inclusive**, median of N runs. Compare `f00-* --core` to `/usr/bin/*` on Linux x86-64.
+
+CI regenerates the full suite and this snapshot table on every push to `main` (same data as the website scoreboard).
 
 Per-tool tables (command, sample output, GNU time, f00 time):
 
-- Website: [https://f00.sh/#benchmarks](https://f00.sh/#benchmarks)
+- Website: [https://f00.sh/#scoreboard](https://f00.sh/#scoreboard)
 - Data: [site/bench/suite.json](site/bench/suite.json) · [site/bench/suite.md](site/bench/suite.md)
 
-Representative results (host-dependent; re-run to verify):
+Representative results (from latest suite bench — do not hand-edit; CI overwrites):
+
+<!-- bench-table:start -->
+_CI / suite bench · `2026-07-24T12:00:10Z` · N=5 median · x86_64 · Linux 7.1.4-arch1-1_
 
 | Tool | Command | GNU | f00 `--core` | vs GNU |
 |------|---------|-----|--------------|--------|
-| `true` | `f00-true --core` | 0.26 ms | **0.08 ms** | **~3.5×** |
-| `basename` | `f00-basename --core PATH` | 0.28 ms | **0.09 ms** | **~3.2×** |
-| `nproc` | `f00-nproc --core` | 0.32 ms | **0.08 ms** | **~3.8×** |
-| `whoami` | `f00-whoami --core` | 1.43 ms | **0.08 ms** | **~17×** |
-| `cat` | `f00-cat --core file` | 0.27 ms | **0.10 ms** | **~2.6×** |
-| `wc -l` | `f00-wc --core -l file` | 0.41 ms | **0.29 ms** | **~1.4×** |
-| `md5sum` | `f00-md5sum --core file` | 0.99 ms | **0.21 ms** | **~4.8×** |
-| `ls -1` | `f00-ls --core -1 dir` | — | — | see suite |
+| `true` | `f00-true --core` | 0.38 ms | **0.08 ms** | **~4.6×** |
+| `basename` | `f00-basename --core /usr/bin/ls` | 0.28 ms | **0.09 ms** | **~3.3×** |
+| `nproc` | `f00-nproc --core` | 0.24 ms | **0.08 ms** | **~3.0×** |
+| `whoami` | `f00-whoami --core` | 1.22 ms | **0.08 ms** | **~14.8×** |
+| `cat` | `f00-cat --core fixture.txt` | 0.25 ms | **0.10 ms** | **~2.5×** |
+| `wc` | `f00-wc --core -l fixture.txt` | 0.34 ms | **0.15 ms** | **~2.3×** |
+| `md5sum` | `f00-md5sum --core fixture.txt` | 0.79 ms | **0.17 ms** | **~4.6×** |
+| `sha256sum` | `f00-sha256sum --core fixture.txt` | 0.79 ms | **0.20 ms** | **~3.9×** |
+| `sort` | `f00-sort --core fixture.txt` | 0.43 ms | **0.33 ms** | **~1.3×** |
+| `ls` | `f00-ls --core -1 dir` | 0.28 ms | **0.19 ms** | **~1.5×** |
+<!-- bench-table:end -->
 
 Reproduce:
 
 ```bash
 cd asm && make
-python3 ../scripts/gen-suite-bench.py
+N=25 python3 ../scripts/gen-suite-bench.py   # writes site/bench/* + README table
 make speed
 bash benches/parity.sh
 ```

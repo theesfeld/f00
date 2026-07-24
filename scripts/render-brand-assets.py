@@ -604,13 +604,13 @@ def main() -> int:
         prepare_demo_tree(demo)
 
         # 1) ls -la color
-        # Capture is a pipe (non-TTY): force emoji icons (default style, no Nerd Font).
+        # Capture is a pipe (non-TTY): force glyph icons (default style).
         out_ls = run_f00(
             [
                 "f00-ls",
                 "-la",
                 "--color=always",
-                "--icons=emoji",
+                "--icons=glyph",
                 str(demo),
             ]
         )
@@ -621,7 +621,7 @@ def main() -> int:
         ):
             render_terminal(
                 "f00tils · f00-ls",
-                [f"$ f00-ls -la --color=always --icons=emoji {demo.name}/"],
+                [f"$ f00-ls -la --color=always --icons=glyph {demo.name}/"],
                 out_ls,
                 dest,
                 width=1000,
@@ -630,7 +630,7 @@ def main() -> int:
 
         # 2) short modern ls
         out_ls2 = run_f00(
-            ["f00-ls", "--color=always", "--icons=emoji", str(demo)]
+            ["f00-ls", "--color=always", "--icons=glyph", str(demo)]
         )
         for dest in (
             shots / "f00-ls.png",
@@ -639,7 +639,7 @@ def main() -> int:
         ):
             render_terminal(
                 "f00tils · f00-ls",
-                [f"$ f00-ls --color=always --icons=emoji {demo.name}/"],
+                [f"$ f00-ls --color=always --icons=glyph {demo.name}/"],
                 out_ls2,
                 dest,
                 width=880,
@@ -700,11 +700,11 @@ def main() -> int:
 
         # 4) core vs modern comparison style
         modern = run_f00(
-            ["f00-ls", "--color=always", "--icons=emoji", "-1", str(demo)]
+            ["f00-ls", "--color=always", "--icons=glyph", "-1", str(demo)]
         )
         core = run_f00(["f00-ls", "--core", "-1", str(demo)])
         compare = (
-            "\x1b[1m# modern (emoji icons + color)\x1b[0m\n"
+            "\x1b[1m# modern (glyph icons + color)\x1b[0m\n"
             + modern.rstrip()
             + "\n\n"
             + "\x1b[1m# --core (scripts)\x1b[0m\n"
@@ -719,7 +719,7 @@ def main() -> int:
             render_terminal(
                 "f00tils · modern vs --core",
                 [
-                    f"$ f00-ls --color=always --icons=emoji -1 {demo.name}/",
+                    f"$ f00-ls --color=always --icons=glyph -1 {demo.name}/",
                     f"$ f00-ls --core -1 {demo.name}/",
                 ],
                 compare,
@@ -743,7 +743,7 @@ def main() -> int:
                 "f00tils · https://f00.sh",
                 [
                     "$ f00-ls --version",
-                    f"$ f00-ls --color=always --icons=emoji {demo.name}/",
+                    f"$ f00-ls --color=always --icons=glyph {demo.name}/",
                 ],
                 hero,
                 dest,

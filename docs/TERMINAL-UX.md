@@ -34,15 +34,18 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ## Icons (suite-wide)
 
-- **Default style: emoji / standard Unicode** — no Nerd Font pack required.
+- **Default style: glyph** — single-width Unicode (`▸` `·` `★` `↪` …); no emoji, no Nerd Font.
 - **CLI (ls):** `--icons[=STYLE]` where `STYLE` is:
-  - `auto` — on modern TTY, **emoji** style (default)
-  - `emoji` — force on, emoji/Unicode table
-  - `nerd` — force on, Nerd Font PUA (opt-in for people with that font)
+  - `auto` — on modern TTY, **glyph** style (default)
+  - `glyph` / `glyphs` / `unicode` — force on, glyph table
+  - `emoji` — force on, emoji table (opt-in)
+  - `nerd` — force on, Nerd Font PUA (opt-in; needs patched font)
   - `ascii` — force on, `[D]`/`[F]`/… (always works)
   - `never` — off
-  - bare `--icons` — force on, keep current style (default emoji)
-- **Config / env:** `icons = auto|emoji|nerd|ascii|never` · `F00_ICONS=…`
+  - bare `--icons` — force on, keep current style (default glyph)
+- Symlinks classify by **target** (dir/exec) when follow-stat succeeds; pure links use `↪`.
+- Column width accounts for style (glyph/nerd ≈ 1 cell, emoji ≈ 2, ascii = `strlen`).
+- **Config / env:** `icons = auto|glyph|emoji|nerd|ascii|never` · `F00_ICONS=…`
 - **API:**
   - `icon_for_entry(Entry*)` — ls / tree
   - `icon_for_path(path)` — cat headers, hash paths, any path print
