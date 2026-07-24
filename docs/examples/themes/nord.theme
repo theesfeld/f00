@@ -1,0 +1,9 @@
+# f00tils theme: nord
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;136;192;208
+num = 38;2;235;203;139
+ok = 38;2;163;190;140
+err = 38;2;191;97;106
+hdr = 38;2;129;161;193
+dim = 2;38;2;76;86;106

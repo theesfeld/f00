@@ -11,7 +11,8 @@ extern out_init, out_flush, out_str, out_byte, out_strn
 extern g_exit, g_tty, g_color, g_envp
 extern is_tty
 extern theme_list_print, theme_apply_name, theme_current_name, theme_init
-extern theme_apply_default
+extern theme_apply_default, theme_seed_user_dir
+extern theme_count_builtins, theme_name_by_index
 extern g_theme_name, g_cfg_theme
 extern strcmp, strlen, memcpy, memset
 extern color_path, color_num, color_ok, color_err, color_hdr, color_dim, color_reset
@@ -42,12 +43,16 @@ usage:
     db "  (none) | show       Current theme + token preview + chrome sample", 10
     db "  init                Create XDG config tree + starter config (idempotent)", 10
     db "  theme list|themes   Gallery of builtin (+ user) themes", 10
+    db "  theme pick          Interactive numbered picker (TTY)", 10
     db "  theme get           Print theme name only (script-safe)", 10
     db "  theme set NAME      Apply + write theme=NAME to XDG config", 10
+    db "  theme set auto      Dark/light from COLORFGBG (catppuccin)", 10
     db "  paths               Print config / themes paths", 10
     db 10
     db "Default theme 'terminal' = ANSI 16 colors (your palette).", 10
-    db "Named themes use truecolor. User files: ~/.config/f00/themes/*.theme", 10
+    db "theme=auto picks catppuccin mocha/latte from COLORFGBG.", 10
+    db "Named themes use truecolor. User: ~/.config/f00/themes/*.theme", 10
+    db "ls file colors still use LS_COLORS (orthogonal to suite theme).", 10
     db 10
     db "f00tils · pure assembly · MIT · https://f00.sh", 10, 0
 v_cfg: db "f00-config (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
@@ -59,8 +64,12 @@ s_set: db "set", 0
 s_list: db "list", 0
 s_paths: db "paths", 0
 s_init: db "init", 0
+s_pick: db "pick", 0
 s_help: db "help", 0
 s_ver: db "version", 0
+pick_hdr: db "Pick a theme (number + Enter, or q):", 10, 0
+pick_prompt: db "> ", 0
+seeded_msg: db "seeded themes → ", 0
 lbl_theme: db "theme: ", 0
 lbl_preview: db 10, "tokens:", 10, 0
 lbl_chrome: db 10, "chrome sample:", 10, "  ", 0
@@ -99,6 +108,8 @@ starter:
     db "# f00-config theme list  →  f00-config theme set <name>", 10
     db 10
     db "theme = terminal", 10
+    db "# theme = auto", 10
+    db "# theme = dracula", 10
     db "core = false", 10
     db "color = auto", 10
     db "icons = auto", 10
@@ -189,6 +200,11 @@ config_main:
     test eax, eax
     jz .get
     mov rdi, [r13+16]
+    lea rsi, [s_pick]
+    call strcmp
+    test eax, eax
+    jz .pick
+    mov rdi, [r13+16]
     lea rsi, [s_set]
     call strcmp
     test eax, eax
@@ -199,8 +215,9 @@ config_main:
     call theme_apply_name
     test eax, eax
     jz .bad
-    ; persist
-    mov rdi, [r13+24]
+    ; persist (store logical name: auto or concrete)
+    call theme_current_name
+    mov rdi, rax
     call config_upsert_theme
     test eax, eax
     jnz .set_ok
@@ -211,7 +228,8 @@ config_main:
 .set_ok:
     lea rsi, [wrote_pre]
     call out_str
-    mov rsi, [r13+24]
+    call theme_current_name
+    mov rsi, rax
     call out_str
     lea rsi, [wrote_mid]
     call out_str
@@ -224,6 +242,10 @@ config_main:
 
 .list:
     call theme_list_print
+    jmp .exit
+
+.pick:
+    call theme_pick_interactive
     jmp .exit
 
 .get:
@@ -658,7 +680,7 @@ config_init_tree:
     call out_str
     lea rsi, [nl]
     call out_str
-    jmp .ok
+    jmp .seed
 .write:
     mov rax, SYS_openat
     mov rdi, AT_FDCWD
@@ -685,6 +707,19 @@ config_init_tree:
     call out_str
     lea rsi, [nl]
     call out_str
+.seed:
+    ; always seed/refresh user theme files under XDG themes/
+    call resolve_themes_dir
+    test eax, eax
+    jz .ok
+    lea rdi, [path_thdir]
+    call theme_seed_user_dir
+    lea rsi, [seeded_msg]
+    call out_str
+    lea rsi, [path_thdir]
+    call out_str
+    lea rsi, [nl]
+    call out_str
 .ok:
     mov eax, 1
     pop rbx
@@ -696,6 +731,160 @@ config_init_tree:
     xor eax, eax
     pop rbx
     ret
+
+; interactive pick: list numbered, read line from stdin, set+persist
+theme_pick_interactive:
+    push rbx
+    push r12
+    push r13
+    lea rsi, [pick_hdr]
+    call out_str
+    call theme_count_builtins
+    mov r12d, eax
+    xor ebx, ebx
+.plp:
+    cmp ebx, r12d
+    jae .prompt
+    mov edi, ebx
+    call theme_name_by_index
+    test rax, rax
+    jz .prompt
+    mov r13, rax
+    ; print "  N) name"
+    mov dil, ' '
+    call out_byte
+    call out_byte
+    mov edi, ebx
+    call out_u64_simple
+    mov dil, ')'
+    call out_byte
+    mov dil, ' '
+    call out_byte
+    mov rsi, r13
+    call out_str
+    lea rsi, [nl]
+    call out_str
+    inc ebx
+    jmp .plp
+.prompt:
+    call out_flush
+    lea rsi, [pick_prompt]
+    call out_str
+    call out_flush
+    ; read line
+    mov rax, SYS_read
+    xor rdi, rdi
+    lea rsi, [name_tmp]
+    mov rdx, 63
+    syscall
+    test rax, rax
+    jle .cancel
+    mov byte [name_tmp + rax], 0
+    ; strip nl
+    lea rdi, [name_tmp]
+.st:
+    mov al, [rdi]
+    test al, al
+    jz .empty
+    cmp al, 10
+    je .z
+    cmp al, 13
+    je .z
+    cmp al, 'q'
+    je .cancel
+    cmp al, 'Q'
+    je .cancel
+    inc rdi
+    jmp .st
+.z: mov byte [rdi], 0
+.empty:
+    cmp byte [name_tmp], 0
+    je .cancel
+    ; parse number
+    lea rdi, [name_tmp]
+    call parse_u32_simple
+    cmp eax, r12d
+    jae .badp
+    mov edi, eax
+    call theme_name_by_index
+    test rax, rax
+    jz .badp
+    mov rdi, rax
+    call theme_apply_name
+    test eax, eax
+    jz .badp
+    call theme_current_name
+    mov rdi, rax
+    call config_upsert_theme
+    test eax, eax
+    jz .failw
+    lea rsi, [wrote_pre]
+    call out_str
+    call theme_current_name
+    mov rsi, rax
+    call out_str
+    lea rsi, [wrote_mid]
+    call out_str
+    lea rsi, [path_cfg]
+    call out_str
+    lea rsi, [wrote_end]
+    call out_str
+    call do_show
+    jmp .done
+.badp:
+    lea rsi, [err_unknown]
+    call out_str
+    mov dword [g_exit], 1
+    jmp .done
+.failw:
+    lea rsi, [err_write]
+    call out_str
+    mov dword [g_exit], 1
+    jmp .done
+.cancel:
+    xor eax, eax
+.done:
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+out_u64_simple:
+    ; edi = small u32 print decimal
+    push rbx
+    push r12
+    mov eax, edi
+    lea r12, [name_tmp+20]
+    mov byte [r12], 0
+    mov ebx, 10
+.lp:
+    xor edx, edx
+    div ebx
+    add dl, '0'
+    dec r12
+    mov [r12], dl
+    test eax, eax
+    jnz .lp
+    mov rsi, r12
+    call out_str
+    pop r12
+    pop rbx
+    ret
+
+parse_u32_simple:
+    xor eax, eax
+.lp:
+    movzx ecx, byte [rdi]
+    cmp cl, '0'
+    jb .d
+    cmp cl, '9'
+    ja .d
+    imul eax, eax, 10
+    sub cl, '0'
+    add eax, ecx
+    inc rdi
+    jmp .lp
+.d: ret
 
 ; ── upsert theme = NAME ───────────────────────────────────
 ; rdi = theme name cstr → eax=1 ok

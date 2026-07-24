@@ -35,6 +35,8 @@ icons = auto
 animations = true
 spinner = true
 theme = terminal
+# theme = auto          # COLORFGBG → catppuccin mocha/latte
+# theme = dracula
 
 [ls]
 icons = always
@@ -105,6 +107,8 @@ f00-config init             # create XDG tree + starter config (idempotent)
 f00-config                 # current theme + token preview
 f00-config theme list      # builtins + user-theme path
 f00-config theme set dracula
+f00-config theme pick          # interactive numbered picker
+f00-config init                # seed ~/.config/f00 + all theme files
 # persist: theme = dracula  in ~/.config/f00/config
 F00_THEME=nord f00-ls
 ```
@@ -142,3 +146,17 @@ CLI always wins (e.g. explicit `--core` or `--icons=always`).
 - Loader: `asm/src/ls/config.asm` (`config_load`, `config_apply`)
 - Invoked from `suite_runtime_init` for every multicall util (including `ls`)
 - Spinners honor `animations` + `spinner` in `suite_ux.asm`
+
+
+## Why these defaults (design notes)
+
+| Choice | Why |
+|--------|-----|
+| Default `theme = terminal` | ANSI 16-color indices inherit **your** Ghostty/Kitty/… palette. No forced Dracula on a carefully tuned terminal. |
+| `theme = auto` | Optional dark/light via `COLORFGBG` only (no OSC queries that hang pipes/CI). Maps to catppuccin mocha/latte. |
+| Config under **XDG** `~/.config/f00` | Never random files under bare `$HOME`. Install and `init` only touch this tree. |
+| No auto-write on `f00-ls` | Tools stay pure; config is created by **install** / **`f00-config init`** / **`theme set`**. |
+| No network from the binary | Freestanding ASM does not download themes. Catalog is **builtin** + files under `~/.config/f00/themes/` (seeded by init/install). |
+| `LS_COLORS` separate | File-type colors for `ls` stay dircolors; suite chrome (path/num/ok/…) is the theme. Two systems, both under your control. |
+| One CLI: `f00-config` | Themes are settings, not a second multicall product (`f00-themes`). Use `theme list|pick|set`. |
+

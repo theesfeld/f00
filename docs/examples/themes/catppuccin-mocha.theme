@@ -1,7 +1,9 @@
-# Catppuccin Mocha
+# f00tils theme: catppuccin-mocha
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
 path = 38;2;137;180;250
-num  = 38;2;249;226;175
-ok   = 38;2;166;227;161
-err  = 38;2;243;139;168
-hdr  = 38;2;203;166;247
-dim  = 2;38;2;108;112;134
+num = 38;2;249;226;175
+ok = 38;2;166;227;161
+err = 38;2;243;139;168
+hdr = 38;2;203;166;247
+dim = 2;38;2;108;112;134

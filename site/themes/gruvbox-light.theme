@@ -1,0 +1,9 @@
+# f00tils theme: gruvbox-light
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;7;102;120
+num = 38;2;181;118;20
+ok = 38;2;121;116;14
+err = 38;2;157;0;6
+hdr = 38;2;143;63;113
+dim = 2;38;2;124;111;100

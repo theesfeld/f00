@@ -1,0 +1,9 @@
+# f00tils theme: monokai
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;102;217;239
+num = 38;2;230;219;116
+ok = 38;2;166;226;46
+err = 38;2;249;38;114
+hdr = 38;2;174;129;255
+dim = 2;38;2;117;113;94

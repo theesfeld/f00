@@ -1,0 +1,9 @@
+# f00tils theme: one-dark
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;97;175;239
+num = 38;2;229;192;123
+ok = 38;2;152;195;121
+err = 38;2;224;108;117
+hdr = 38;2;198;120;221
+dim = 2;38;2;92;99;112

@@ -1,0 +1,9 @@
+# f00tils theme: rose-pine
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;156;207;216
+num = 38;2;246;193;119
+ok = 38;2;49;116;143
+err = 38;2;235;111;146
+hdr = 38;2;196;167;231
+dim = 2;38;2;110;106;134

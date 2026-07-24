@@ -290,10 +290,64 @@ main() {
   [[ "${#SELECTED[@]}" -gt 0 ]] || die "no tools selected (F00_TOOLS=${F00_TOOLS:-all})"
   install_links "$dir" "${SELECTED[@]}"
   maybe_alias "$dir" "${SELECTED[@]}"
+  seed_xdg_config "$dir"
 
   ensure_path "$dir"
-  printf "\n${BOLD}done${RESET}. try: ${BOLD}f00-ls --help${RESET} · ${BOLD}f00-wc -l${RESET} · ${BOLD}f00 --version${RESET}\n" >&2
+  printf "\n${BOLD}done${RESET}. try: ${BOLD}f00-ls --help${RESET} · ${BOLD}f00-config theme list${RESET} · ${BOLD}f00 --version${RESET}\n" >&2
   printf "${DIM}knobs: F00_TOOLS=all|ls,cat,…  F00_SUPERSEDE=1  F00_ALIAS=1  F00_LOCAL=asm  F00_VERSION=v0.15.9${RESET}\n" >&2
+  printf "${DIM}config: \$XDG_CONFIG_HOME/f00 or ~/.config/f00  ·  themes: f00-config theme list|set|pick${RESET}\n" >&2
+}
+
+# Seed XDG config + theme files once (never clobber existing config).
+# Always under $XDG_CONFIG_HOME/f00 or ~/.config/f00 — never random paths under $HOME alone.
+seed_xdg_config() {
+  local bindir="${1:-${INSTALL_DIR:-$HOME/.local/bin}}"
+  local cfg_root="${XDG_CONFIG_HOME:-$HOME/.config}/f00"
+  local themes_dir="${cfg_root}/themes"
+  mkdir -p "${themes_dir}"
+  if [[ ! -f "${cfg_root}/config" ]]; then
+    cat >"${cfg_root}/config" <<'EOF'
+# f00tils — https://f00.sh  (docs/CONFIG.md)
+# Uses your terminal palette by default (theme = terminal).
+# theme = auto          # catppuccin mocha/latte from COLORFGBG
+# theme = dracula       # f00-config theme list | set | pick
+theme = terminal
+core = false
+color = auto
+icons = auto
+animations = true
+spinner = true
+
+[ls]
+git = true
+EOF
+    ok "seeded ${cfg_root}/config"
+  else
+    ok "kept existing ${cfg_root}/config"
+  fi
+  # Prefer local checkout themes; else `f00-config init` seeds builtins into XDG
+  local src=""
+  if [[ -n "${F00_LOCAL:-}" ]]; then
+    local base="${F00_LOCAL%/}"
+    [[ -d "${base}/../docs/examples/themes" ]] && src="${base}/../docs/examples/themes"
+    [[ -d "${base}/docs/examples/themes" ]] && src="${base}/docs/examples/themes"
+  fi
+  if [[ -n "$src" && -d "$src" ]]; then
+    local n=0
+    local f
+    for f in "$src"/*.theme; do
+      [[ -f "$f" ]] || continue
+      local bn
+      bn="$(basename "$f")"
+      if [[ ! -f "${themes_dir}/${bn}" ]]; then
+        install -m 644 "$f" "${themes_dir}/${bn}"
+        n=$((n + 1))
+      fi
+    done
+    [[ "$n" -gt 0 ]] && ok "seeded ${n} theme files → ${themes_dir}"
+  elif [[ -x "${bindir}/f00" ]]; then
+    "${bindir}/f00" config init >/dev/null 2>&1 || true
+  fi
 }
 
 main "$@"

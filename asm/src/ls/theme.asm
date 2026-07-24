@@ -277,6 +277,87 @@ theme_apply_default:
     lea rdi, [name_terminal]
     jmp theme_apply_name
 
+name_auto: db "auto", 0
+env_colorfgbg: db "COLORFGBG", 0
+n_auto_dark: db "catppuccin-mocha", 0
+n_auto_light: db "catppuccin-latte", 0
+
+; theme_apply_auto — COLORFGBG=fg;bg → dark if bg in 0..7 else light
+; falls back to terminal if COLORFGBG missing
+theme_apply_auto:
+    push rbx
+    push r12
+    mov r12, [g_envp]
+    test r12, r12
+    jz .term
+.elp:
+    mov rdi, [r12]
+    test rdi, rdi
+    jz .term
+    push rdi
+    lea rsi, [env_colorfgbg]
+    call env_key_match
+    pop rdi
+    test al, al
+    jnz .got
+    add r12, 8
+    jmp .elp
+.got:
+    push rdi
+    lea rdi, [env_colorfgbg]
+    call strlen
+    mov rcx, rax
+    pop rdi
+    add rdi, rcx
+    cmp byte [rdi], '='
+    jne .term
+    inc rdi
+    ; scan to ; then parse bg digit(s)
+.sc:
+    mov al, [rdi]
+    test al, al
+    jz .term
+    cmp al, ';'
+    je .bg
+    inc rdi
+    jmp .sc
+.bg:
+    inc rdi
+    ; parse small int
+    xor eax, eax
+.pd:
+    movzx ecx, byte [rdi]
+    cmp cl, '0'
+    jb .have
+    cmp cl, '9'
+    ja .have
+    imul eax, eax, 10
+    sub cl, '0'
+    add eax, ecx
+    inc rdi
+    jmp .pd
+.have:
+    ; bg 0-7 → dark truecolor; 8-15 → light
+    cmp eax, 8
+    jae .light
+    lea rdi, [n_auto_dark]
+    call theme_apply_name
+    jmp .out
+.light:
+    lea rdi, [n_auto_light]
+    call theme_apply_name
+    jmp .out
+.term:
+    call theme_apply_default
+.out:
+    ; record logical name "auto" for get/show
+    lea rdi, [name_auto]
+    call store_theme_name
+    pop r12
+    pop rbx
+    mov eax, 1
+    ret
+
 ; theme_apply_name(rdi=name cstr) → eax=1 ok, 0 miss
 theme_apply_name:
     push rbx
@@ -287,7 +368,15 @@ theme_apply_name:
     jz .fail
     cmp byte [r12], 0
     je .fail
-    ; empty → terminal
+    ; auto → COLORFGBG heuristic
+    mov rdi, r12
+    lea rsi, [name_auto]
+    call strcmp
+    test eax, eax
+    jnz .builtins
+    call theme_apply_auto
+    jmp .out
+.builtins:
     ; try builtins
     lea r13, [theme_table]
 .blp:
@@ -340,6 +429,8 @@ theme_apply_name:
     mov eax, 1
     jmp .out
 .fail:
+    ; runtime soft-fallback: stay terminal, do not abort caller
+    call theme_apply_default
     xor eax, eax
 .out:
     pop r13
@@ -936,3 +1027,171 @@ theme_current_name:
     jne .r
     lea rax, [name_terminal]
 .r: ret
+
+; theme_seed_user_dir(rdi=themes_dir absolute path) — write all builtins as .theme files
+; eax = count written
+global theme_seed_user_dir
+theme_seed_user_dir:
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    mov r15, rdi                    ; base dir
+    ; ensure dir exists
+    mov rax, SYS_mkdir
+    mov rdi, r15
+    mov rsi, 0o755
+    syscall
+    lea r12, [theme_table]
+    xor r14d, r14d
+.lp:
+    mov rdi, [r12]
+    test rdi, rdi
+    jz .done
+    ; skip duplicate f00 (same as terminal bodies)
+    lea rsi, [name_f00]
+    call strcmp
+    test eax, eax
+    jz .nx
+    ; build path: dir/name.theme into theme_path
+    lea rdi, [theme_path]
+    mov rsi, r15
+    call strcpy_theme
+    lea rdi, [theme_path]
+    call strlen
+    lea rdi, [theme_path + rax]
+    mov byte [rdi], '/'
+    inc rdi
+    mov rsi, [r12]
+    call strcpy_theme
+    lea rdi, [theme_path]
+    call strlen
+    lea rdi, [theme_path + rax]
+    lea rsi, [ext_theme]
+    call strcpy_theme
+    ; write file
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [theme_path]
+    mov rdx, O_WRONLY|O_CREAT|O_TRUNC
+    mov r10, 0o644
+    syscall
+    cmp rax, -4096
+    jae .nx
+    mov r13, rax
+    call seed_write_one
+    mov rdi, r13
+    mov rax, SYS_close
+    syscall
+    inc r14d
+.nx:
+    add r12, 56
+    jmp .lp
+.done:
+    mov eax, r14d
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+; seed_write_one: r13=fd, r12=theme row
+seed_write_one:
+    push rbx
+    ; path
+    lea rsi, [tk_path]
+    mov rdi, [r12+8]
+    call seed_write_kv
+    lea rsi, [tk_num]
+    mov rdi, [r12+16]
+    call seed_write_kv
+    lea rsi, [tk_ok]
+    mov rdi, [r12+24]
+    call seed_write_kv
+    lea rsi, [tk_err]
+    mov rdi, [r12+32]
+    call seed_write_kv
+    lea rsi, [tk_hdr]
+    mov rdi, [r12+40]
+    call seed_write_kv
+    lea rsi, [tk_dim]
+    mov rdi, [r12+48]
+    call seed_write_kv
+    pop rbx
+    ret
+
+; seed_write_kv(rsi=key, rdi=body) to fd r13
+seed_write_kv:
+    push rbx
+    push r12
+    mov rbx, rsi                    ; key
+    mov r12, rdi                    ; body
+    mov rdi, rbx
+    call strlen
+    mov rdx, rax
+    mov rax, SYS_write
+    mov rdi, r13
+    mov rsi, rbx
+    syscall
+    lea rsi, [kv_eq]
+    mov rdx, 3
+    mov rax, SYS_write
+    mov rdi, r13
+    syscall
+    mov rdi, r12
+    call strlen
+    mov rdx, rax
+    mov rax, SYS_write
+    mov rdi, r13
+    mov rsi, r12
+    syscall
+    lea rsi, [nl]
+    mov rdx, 1
+    mov rax, SYS_write
+    mov rdi, r13
+    syscall
+    pop r12
+    pop rbx
+    ret
+
+kv_eq: db " = ", 0
+
+; theme_count_builtins → eax
+global theme_count_builtins
+theme_count_builtins:
+    push r12
+    lea r12, [theme_table]
+    xor eax, eax
+.lp:
+    cmp qword [r12], 0
+    je .d
+    inc eax
+    add r12, 56
+    jmp .lp
+.d: pop r12
+    ret
+
+; theme_name_by_index(edi=0-based) → rax=name or 0
+global theme_name_by_index
+theme_name_by_index:
+    push r12
+    mov eax, edi
+    lea r12, [theme_table]
+.lp:
+    cmp qword [r12], 0
+    je .miss
+    test eax, eax
+    jz .hit
+    dec eax
+    add r12, 56
+    jmp .lp
+.hit:
+    mov rax, [r12]
+    pop r12
+    ret
+.miss:
+    xor eax, eax
+    pop r12
+    ret

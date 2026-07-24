@@ -1,0 +1,9 @@
+# f00tils theme: tokyo-night
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;125;207;255
+num = 38;2;224;175;104
+ok = 38;2;158;206;106
+err = 38;2;247;118;142
+hdr = 38;2;187;154;247
+dim = 2;38;2;86;95;137

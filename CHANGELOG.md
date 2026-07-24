@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Website Bun-style **fluid race-bar charts** + **cold-startup line chart** (`#benchmarks`), fed by `site/bench/suite.json` (`summary`, `showcase`, `cold_startup`)
 
 ### Added
+- **`theme = auto`** (COLORFGBG dark/light), **`theme pick`**, install/init **seeds** `~/.config/f00/themes/*`
 - **`f00-config theme set` persists** `theme=` to XDG; **`init`** seeds config tree (never auto-write on normal tools)
 - **Themes**: semantic color tokens; default `terminal` inherits 16-color palette; builtins (dracula, tokyo-night, catppuccin, monokai, nord, gruvbox, solarized, …); user `~/.config/f00/themes/*.theme`
 - **`f00-config`**: `init`, `theme set` **persists** to XDG, gallery swatches, chrome sample;

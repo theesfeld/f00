@@ -1,0 +1,9 @@
+# f00tils theme: solarized-dark
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;38;139;210
+num = 38;2;181;137;0
+ok = 38;2;133;153;0
+err = 38;2;220;50;47
+hdr = 38;2;108;113;196
+dim = 2;38;2;88;110;117

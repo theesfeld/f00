@@ -1,0 +1,9 @@
+# f00tils theme: catppuccin-latte
+# Install: f00-config init   or copy to ~/.config/f00/themes/
+
+path = 38;2;30;102;245
+num = 38;2;223;142;29
+ok = 38;2;64;160;43
+err = 38;2;210;15;57
+hdr = 38;2;136;57;239
+dim = 2;38;2;156;160;176
