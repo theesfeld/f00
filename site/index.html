@@ -3,32 +3,40 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>f00 — pure assembly coreutils monorepo</title>
-  <meta name="description" content="f00 is a complete GNU coreutils replacement suite in pure freestanding assembly. Modern by default. --core for scripts. Faster than coreutils. MIT." />
+  <title>f00tils — freestanding assembly coreutils</title>
+  <meta name="description" content="f00tils replaces GNU coreutils with one freestanding x86-64 assembly multicall binary (f00). Modern by default. --core for scripts. Faster than coreutils. MIT." />
   <meta name="theme-color" content="#0a0c0f" />
   <link rel="canonical" href="https://f00.sh/" />
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-  <meta property="og:title" content="f00 — pure assembly coreutils monorepo" />
-  <meta property="og:description" content="Drop-in f00-* tools. Modern defaults. --core for GNU-compatible scripts. Pure ASM multicall. v0.15.0." />
+  <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="icon" href="assets/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta property="og:title" content="f00tils — freestanding assembly coreutils" />
+  <meta property="og:description" content="f00tils: drop-in f00-* tools. Modern defaults. --core for GNU-compatible scripts. Pure ASM multicall. v0.15.0." />
   <meta property="og:url" content="https://f00.sh/" />
-  <meta property="og:image" content="https://f00.sh/assets/og.svg" />
+  <meta property="og:image" content="https://f00.sh/assets/og.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://f00.sh/assets/og.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="logo" href="/" aria-label="f00 home">
+      <a class="logo" href="/" aria-label="f00tils home">
         <img class="logo-mark" src="assets/logo.svg" width="32" height="32" alt="" />
         <span class="logo-text">f00<span class="dot">.sh</span></span>
       </a>
       <nav class="site-nav nav" id="site-nav" aria-label="Primary">
         <a href="#laws">Laws</a>
-        <a href="#features">Features</a>
-        <a href="#speed">Speed</a>
+        <a href="#shots">Shots</a>
+        <a href="#benchmarks">Benchmarks</a>
         <a href="#install">Install</a>
         <a href="#packages">Packages</a>
-        <a href="#release">Release</a>
         <a href="#matrix">Matrix</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/theesfeld/f00">GitHub</a>
       </nav>
@@ -39,12 +47,12 @@
     <section class="hero" id="top">
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">monorepo · pure assembly · MIT · v0.15.0 full-use</p>
-          <h1>GNU coreutils, replaced</h1>
+          <p class="eyebrow">f00tils · pure assembly · multicall · MIT · <span data-version>v0.15.0</span></p>
+          <h1>coreutils → f00tils</h1>
           <p class="lead">
-            <strong>f00</strong> is a complete coreutils replacement suite in
-            <strong>pure freestanding x86-64 assembly</strong> — one multicall binary,
-            no libc. Default mode is modern (color, richer layout,
+            <strong>f00tils</strong> is the complete coreutils replacement suite in
+            <strong>pure freestanding x86-64 assembly</strong> — one multicall binary
+            named <code class="mono">f00</code>, no libc. Default mode is modern (color, richer layout,
             <code class="mono">--json</code> / <code class="mono">--csv</code>).
             <code class="mono">--core</code> is script-safe coreutils presentation.
             The core path is built to <strong>beat coreutils on speed</strong>.
@@ -63,9 +71,42 @@
           </div>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#install">Install</a>
-            <a class="btn btn-ghost" href="#speed">Speed</a>
+            <a class="btn btn-ghost" href="#benchmarks">Benchmarks</a>
             <a class="btn btn-ghost" href="https://github.com/theesfeld/f00#readme">README</a>
           </div>
+        </div>
+        <div class="hero-visual" aria-hidden="false">
+          <figure class="shot-frame">
+            <img
+              class="shot"
+              src="assets/screenshots/hero.png"
+              width="1040"
+              height="420"
+              alt="Color terminal: f00-ls version and directory listing"
+              loading="eager"
+            />
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="shots">
+      <div class="wrap">
+        <h2>In color</h2>
+        <p class="muted">Real <code class="mono">f00-*</code> output, rendered with ANSI colors for the suite brand.</p>
+        <div class="shot-grid">
+          <figure class="shot-card">
+            <img src="assets/screenshots/f00-ls-la.png" alt="f00-ls -la with colorized modes, users, dates, and names" loading="lazy" width="1000" height="420" />
+            <figcaption><code class="mono">f00-ls -la</code> — modes, owners, dates, dirs, executables</figcaption>
+          </figure>
+          <figure class="shot-card">
+            <img src="assets/screenshots/f00-core-vs-modern.png" alt="f00-ls modern color listing versus --core plain listing" loading="lazy" width="920" height="592" />
+            <figcaption>Modern default vs <code class="mono">--core</code></figcaption>
+          </figure>
+          <figure class="shot-card">
+            <img src="assets/screenshots/f00-suite.png" alt="f00-id, f00-nproc, f00-uname, f00-sha256sum, f00-wc" loading="lazy" width="960" height="480" />
+            <figcaption>Multicall suite — <code class="mono">id</code>, <code class="mono">nproc</code>, hashes, <code class="mono">wc</code></figcaption>
+          </figure>
         </div>
       </div>
     </section>
@@ -85,14 +126,14 @@
     <section class="section" id="features">
       <div class="wrap">
         <h2>Feature parity</h2>
-        <p class="muted">How f00 sits against coreutils and other replacement families.</p>
+        <p class="muted">How f00tils sits against coreutils and other replacement families.</p>
         <div class="table-wrap">
           <table class="matrix">
             <thead>
               <tr>
                 <th>Area</th>
                 <th>GNU coreutils</th>
-                <th>f00 (ASM)</th>
+                <th>f00tils (ASM)</th>
                 <th>uutils</th>
                 <th>busybox / toybox</th>
               </tr>
@@ -101,9 +142,9 @@
               <tr>
                 <td>Full tool <em>names</em></td>
                 <td>Yes</td>
-                <td><strong>Yes (~107 multicall)</strong></td>
-                <td>Yes (growing)</td>
-                <td>Applets / subset</td>
+                <td><strong>106/106</strong></td>
+                <td>Growing</td>
+                <td>Subset</td>
               </tr>
               <tr>
                 <td>Script drop-in</td>
@@ -140,77 +181,46 @@
                 <td>Optional</td>
                 <td>Yes</td>
               </tr>
-              <tr>
-                <td><code>ls</code> modern depth</td>
-                <td>No</td>
-                <td><strong>Deep</strong> (icons/git/tree/TUI)</td>
-                <td>Basic</td>
-                <td>Basic</td>
-              </tr>
             </tbody>
           </table>
         </div>
-        <p class="muted small">*coreutils ships many separate binaries. Flag-depth tracking: <a href="https://github.com/theesfeld/f00/blob/main/docs/GNU-COMPLIANCE.md">GNU-COMPLIANCE.md</a>.</p>
-
-        <h3>Modern surface (every util)</h3>
-        <div class="table-wrap">
-          <table class="matrix">
-            <thead>
-              <tr><th>Capability</th><th>Default</th><th><code>--core</code></th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Color (TTY)</td><td><strong>On</strong> (<code>NO_COLOR</code> honored)</td><td>Off</td></tr>
-              <tr><td><code>--json</code></td><td>Rich <code>f00/v1</code> metadata</td><td>Available · <code>mode: "core"</code></td></tr>
-              <tr><td><code>--csv</code></td><td>Same facts, tabular</td><td>Available</td></tr>
-              <tr><td>Help</td><td>Coreutils flags + Modern flags</td><td>Same structure</td></tr>
-              <tr><td>Speed</td><td>Optimized</td><td><strong>Must beat coreutils</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <p class="muted small">*coreutils ships many separate binaries.</p>
       </div>
     </section>
 
-    <section class="section" id="speed">
+    <section class="section" id="benchmarks">
       <div class="wrap">
-        <h2>Speed parity</h2>
-        <p class="muted">Warm cache, spawn-inclusive, median of 40 · <code class="mono">f00-* --core</code> vs <code class="mono">/usr/bin/*</code> (representative Linux x86-64). Re-run <code class="mono">cd asm &amp;&amp; make speed</code>.</p>
-        <div class="table-wrap">
-          <table class="matrix">
+        <h2>Benchmarks</h2>
+        <p class="muted">
+          Per-tool comparison: command, sample output, wall time.
+          Method: warm cache, spawn-inclusive, median of
+          <span id="bench-n">N</span> runs.
+          f00tils is timed as <code class="mono">f00-TOOL --core</code> against <code class="mono">/usr/bin/TOOL</code>.
+        </p>
+        <p class="muted small" id="bench-meta">Loading suite data…</p>
+        <div class="table-wrap bench-scroll">
+          <table class="matrix" id="bench-table">
             <thead>
               <tr>
-                <th>Workload</th>
-                <th>coreutils</th>
-                <th>f00 <code>--core</code></th>
-                <th>vs coreutils</th>
+                <th>Tool</th>
+                <th>Command</th>
+                <th>Sample output (f00)</th>
+                <th>GNU ms</th>
+                <th>f00 ms</th>
+                <th>vs GNU</th>
               </tr>
             </thead>
-            <tbody>
-              <tr><td><code>true</code></td><td>0.22 ms</td><td><strong>0.07 ms</strong></td><td><strong>~3.1×</strong></td></tr>
-              <tr><td><code>basename</code></td><td>0.24 ms</td><td><strong>0.07 ms</strong></td><td><strong>~3.2×</strong></td></tr>
-              <tr><td><code>wc -l</code></td><td>0.51 ms</td><td><strong>0.24 ms</strong></td><td><strong>~2.1×</strong></td></tr>
-              <tr><td><code>cat</code> (small)</td><td>0.27 ms</td><td><strong>0.19 ms</strong></td><td><strong>~1.4×</strong></td></tr>
-              <tr><td><code>ls -1</code></td><td>0.29 ms</td><td><strong>0.21 ms</strong></td><td><strong>~1.4×</strong></td></tr>
-              <tr><td><code>ls -la</code></td><td>0.99 ms</td><td><strong>0.23 ms</strong></td><td><strong>~4.3×</strong></td></tr>
-              <tr><td><code>md5sum</code></td><td>0.91 ms</td><td><strong>0.39 ms</strong></td><td><strong>~2.3×</strong></td></tr>
-              <tr><td><code>seq</code></td><td>0.24 ms</td><td><strong>0.13 ms</strong></td><td><strong>~1.8×</strong></td></tr>
-              <tr><td><code>nproc</code></td><td>0.32 ms</td><td><strong>0.08 ms</strong></td><td><strong>~3.9×</strong></td></tr>
-              <tr><td><code>id</code></td><td>1.33 ms</td><td><strong>0.13 ms</strong></td><td><strong>~10×</strong></td></tr>
+            <tbody id="bench-body">
+              <tr><td colspan="6" class="muted">Load <code class="mono">bench/suite.json</code>…</td></tr>
             </tbody>
           </table>
         </div>
-        <div class="table-wrap" style="margin-top:1.5rem">
-          <table class="matrix">
-            <thead>
-              <tr><th>Competitor class</th><th>Profile</th><th>f00 stance</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>GNU coreutils</td><td>libc, portable C</td><td>Beat on freestanding hot paths</td></tr>
-              <tr><td>uutils/coreutils</td><td>Rust, portable</td><td>Lower latency target, not portability breadth</td></tr>
-              <tr><td>busybox / toybox</td><td>Embedded applets</td><td>Full suite + modern UX</td></tr>
-              <tr><td>Single-tool rewrites</td><td>Deep one-tool UX</td><td>Full suite + deep f00-ls / f00-cat</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <p class="muted small" style="margin-top:1rem">
+          Data:
+          <a href="bench/suite.json">suite.json</a> ·
+          <a href="bench/suite.md">suite.md</a> ·
+          regenerate with <code class="mono">python3 scripts/gen-suite-bench.py</code>
+        </p>
       </div>
     </section>
 
@@ -247,7 +257,7 @@ curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
 # local build
 curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
 
-# side-by-side short names
+# short names beside f00-*
 curl -fsSL https://f00.sh/install.sh | F00_SUPERSEDE=1 bash</code></pre>
 
         <h3>From source</h3>
@@ -260,22 +270,31 @@ make &amp;&amp; make smoke &amp;&amp; make install
 
     <section class="section" id="packages">
       <div class="wrap">
-        <h2>Package managers</h2>
-        <p class="muted">Packages: recipes are migrating from the historical Rust <code class="mono">ls</code> product to the ASM multicall suite. Prefer the install script or source build for <code class="mono">v0.15.0</code>.</p>
+        <h2>Packages</h2>
+        <p class="muted">Release assets ship tarball, deb, rpm, and Arch packages for Linux x86-64.</p>
         <div class="table-wrap">
           <table class="matrix">
             <thead><tr><th>Channel</th><th>Status</th><th>Notes</th></tr></thead>
             <tbody>
               <tr><td>Install script</td><td><strong>Primary</strong></td><td><code>curl -fsSL https://f00.sh/install.sh | bash</code></td></tr>
-              <tr><td>From source</td><td>Supported</td><td><code>cd asm &amp;&amp; make install</code></td></tr>
-              <tr><td>AUR</td><td>Updating</td><td><code>packaging/aur/PKGBUILD</code></td></tr>
-              <tr><td>Homebrew</td><td>Updating</td><td><code>Formula/f00.rb</code></td></tr>
-              <tr><td>nfpm (deb/rpm)</td><td>Updating</td><td><code>packaging/nfpm/f00.yaml</code></td></tr>
-              <tr><td>Scoop / Winget</td><td>Windows later</td><td>Linux-first ASM product</td></tr>
-              <tr><td>Nix</td><td>Experimental</td><td><code>flake.nix</code></td></tr>
+              <tr><td>GitHub Releases</td><td><strong>Shipped</strong></td><td><code>.tar.gz</code>, <code>.deb</code>, <code>.rpm</code>, <code>.pkg.tar.zst</code></td></tr>
+              <tr><td>Homebrew</td><td>Formula</td><td><code>Formula/f00.rb</code> · Linux bottle from release tarball</td></tr>
+              <tr><td>AUR</td><td>PKGBUILD</td><td><code>packaging/aur/PKGBUILD</code> builds from tag</td></tr>
+              <tr><td>Debian / Ubuntu</td><td><code>.deb</code></td><td><code>sudo dpkg -i f00_*_amd64.deb</code></td></tr>
+              <tr><td>Fedora / RHEL</td><td><code>.rpm</code></td><td><code>sudo rpm -Uvh f00-*.x86_64.rpm</code></td></tr>
+              <tr><td>Arch (local package)</td><td><code>.pkg.tar.zst</code></td><td><code>sudo pacman -U f00-*-x86_64.pkg.tar.zst</code></td></tr>
+              <tr><td>Nix</td><td>Experimental</td><td><code>flake.nix</code> · x86_64-linux</td></tr>
             </tbody>
           </table>
         </div>
+        <pre class="code-block"><code>curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.0/f00_0.15.0_amd64.deb
+sudo dpkg -i f00_0.15.0_amd64.deb
+
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.0/f00-0.15.0-1.x86_64.rpm
+sudo rpm -Uvh f00-0.15.0-1.x86_64.rpm
+
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.0/f00-0.15.0-1-x86_64.pkg.tar.zst
+sudo pacman -U f00-0.15.0-1-x86_64.pkg.tar.zst</code></pre>
       </div>
     </section>
 
@@ -286,8 +305,9 @@ make &amp;&amp; make smoke &amp;&amp; make install
           <table class="matrix">
             <tbody>
               <tr><td><strong>Tag</strong></td><td><code>v0.15.0</code></td></tr>
-              <tr><td><strong>Status</strong></td><td><strong>Full-use</strong> pure-ASM multicall coreutils suite (Linux x86-64)</td></tr>
+              <tr><td><strong>Status</strong></td><td><strong>Full-use</strong> f00tils — pure-ASM multicall coreutils suite (Linux x86-64)</td></tr>
               <tr><td><strong>Scoreboard</strong></td><td><strong>106/106</strong> full · modern · speed win</td></tr>
+              <tr><td><strong>Assets</strong></td><td>tarball · deb · rpm · Arch package</td></tr>
               <tr><td><strong>Tracking</strong></td><td><a href="https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md">COREUTILS-PROGRESS.md</a> · <a href="https://github.com/theesfeld/f00/issues">Issues</a></td></tr>
             </tbody>
           </table>
@@ -299,7 +319,7 @@ make &amp;&amp; make smoke &amp;&amp; make install
     <section class="section" id="matrix">
       <div class="wrap">
         <h2>Coreutils replacement progress</h2>
-        <p class="muted"><strong>Goal: replace every GNU coreutils program.</strong> This table is the live scoreboard (synced with the README).</p>
+        <p class="muted"><strong>Goal: f00tils replaces every GNU coreutils program.</strong> Live scoreboard (synced with the README).</p>
         <div class="progress-bar" role="img" aria-label="shipped 106 of 106">
           <div class="progress-fill" style="width:100.0%"></div>
         </div>
@@ -308,7 +328,7 @@ make &amp;&amp; make smoke &amp;&amp; make install
           <strong>0</strong> partial ·
           <strong>0</strong> missing</p>
         <div class="table-wrap">
-          <table class="matrix">
+          <table class="matrix" id="matrix-table">
             <thead>
               <tr>
                 <th>#</th>
@@ -320,135 +340,21 @@ make &amp;&amp; make smoke &amp;&amp; make install
                 <th>speed vs GNU</th>
               </tr>
             </thead>
-            <tbody>
-<tr class="shipped"><td>1</td><td><code>arch</code></td><td><code>f00-arch</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>2</td><td><code>b2sum</code></td><td><code>f00-b2sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>3</td><td><code>base32</code></td><td><code>f00-base32</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>4</td><td><code>base64</code></td><td><code>f00-base64</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>5</td><td><code>basename</code></td><td><code>f00-basename</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>6</td><td><code>basenc</code></td><td><code>f00-basenc</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>7</td><td><code>cat</code></td><td><code>f00-cat</code></td><td>yes</td><td><strong>full</strong></td><td>deep</td><td>win</td></tr>
-<tr class="shipped"><td>8</td><td><code>chcon</code></td><td><code>f00-chcon</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>9</td><td><code>chgrp</code></td><td><code>f00-chgrp</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>10</td><td><code>chmod</code></td><td><code>f00-chmod</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>11</td><td><code>chown</code></td><td><code>f00-chown</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>12</td><td><code>chroot</code></td><td><code>f00-chroot</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>13</td><td><code>cksum</code></td><td><code>f00-cksum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>14</td><td><code>comm</code></td><td><code>f00-comm</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>15</td><td><code>cp</code></td><td><code>f00-cp</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>16</td><td><code>csplit</code></td><td><code>f00-csplit</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>17</td><td><code>cut</code></td><td><code>f00-cut</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>18</td><td><code>date</code></td><td><code>f00-date</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>19</td><td><code>dd</code></td><td><code>f00-dd</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>20</td><td><code>df</code></td><td><code>f00-df</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>21</td><td><code>dir</code></td><td><code>f00-dir</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>22</td><td><code>dircolors</code></td><td><code>f00-dircolors</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>23</td><td><code>dirname</code></td><td><code>f00-dirname</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>24</td><td><code>du</code></td><td><code>f00-du</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>25</td><td><code>echo</code></td><td><code>f00-echo</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>26</td><td><code>env</code></td><td><code>f00-env</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>27</td><td><code>expand</code></td><td><code>f00-expand</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>28</td><td><code>expr</code></td><td><code>f00-expr</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>29</td><td><code>factor</code></td><td><code>f00-factor</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>30</td><td><code>false</code></td><td><code>f00-false</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>31</td><td><code>fmt</code></td><td><code>f00-fmt</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>32</td><td><code>fold</code></td><td><code>f00-fold</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>33</td><td><code>groups</code></td><td><code>f00-groups</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>34</td><td><code>head</code></td><td><code>f00-head</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>35</td><td><code>hostid</code></td><td><code>f00-hostid</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>36</td><td><code>id</code></td><td><code>f00-id</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>37</td><td><code>install</code></td><td><code>f00-install</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>38</td><td><code>join</code></td><td><code>f00-join</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>39</td><td><code>link</code></td><td><code>f00-link</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>40</td><td><code>ln</code></td><td><code>f00-ln</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>41</td><td><code>logname</code></td><td><code>f00-logname</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>42</td><td><code>ls</code></td><td><code>f00-ls</code></td><td>yes</td><td><strong>full</strong></td><td>deep</td><td>win</td></tr>
-<tr class="shipped"><td>43</td><td><code>md5sum</code></td><td><code>f00-md5sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>44</td><td><code>mkdir</code></td><td><code>f00-mkdir</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>45</td><td><code>mkfifo</code></td><td><code>f00-mkfifo</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>46</td><td><code>mknod</code></td><td><code>f00-mknod</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>47</td><td><code>mktemp</code></td><td><code>f00-mktemp</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>48</td><td><code>mv</code></td><td><code>f00-mv</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>49</td><td><code>nice</code></td><td><code>f00-nice</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>50</td><td><code>nl</code></td><td><code>f00-nl</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>51</td><td><code>nohup</code></td><td><code>f00-nohup</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>52</td><td><code>nproc</code></td><td><code>f00-nproc</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>53</td><td><code>numfmt</code></td><td><code>f00-numfmt</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>54</td><td><code>od</code></td><td><code>f00-od</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>55</td><td><code>paste</code></td><td><code>f00-paste</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>56</td><td><code>pathchk</code></td><td><code>f00-pathchk</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>57</td><td><code>pinky</code></td><td><code>f00-pinky</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>58</td><td><code>pr</code></td><td><code>f00-pr</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>59</td><td><code>printenv</code></td><td><code>f00-printenv</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>60</td><td><code>printf</code></td><td><code>f00-printf</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>61</td><td><code>ptx</code></td><td><code>f00-ptx</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>62</td><td><code>pwd</code></td><td><code>f00-pwd</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>63</td><td><code>readlink</code></td><td><code>f00-readlink</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>64</td><td><code>realpath</code></td><td><code>f00-realpath</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>65</td><td><code>rm</code></td><td><code>f00-rm</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>66</td><td><code>rmdir</code></td><td><code>f00-rmdir</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>67</td><td><code>runcon</code></td><td><code>f00-runcon</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>68</td><td><code>seq</code></td><td><code>f00-seq</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>69</td><td><code>sha1sum</code></td><td><code>f00-sha1sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>70</td><td><code>sha224sum</code></td><td><code>f00-sha224sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>71</td><td><code>sha256sum</code></td><td><code>f00-sha256sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>72</td><td><code>sha384sum</code></td><td><code>f00-sha384sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>73</td><td><code>sha512sum</code></td><td><code>f00-sha512sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>74</td><td><code>shred</code></td><td><code>f00-shred</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>75</td><td><code>shuf</code></td><td><code>f00-shuf</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>76</td><td><code>sleep</code></td><td><code>f00-sleep</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>77</td><td><code>sort</code></td><td><code>f00-sort</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>78</td><td><code>split</code></td><td><code>f00-split</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>79</td><td><code>stat</code></td><td><code>f00-stat</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>80</td><td><code>stdbuf</code></td><td><code>f00-stdbuf</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>81</td><td><code>stty</code></td><td><code>f00-stty</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>82</td><td><code>sum</code></td><td><code>f00-sum</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>83</td><td><code>sync</code></td><td><code>f00-sync</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>84</td><td><code>tac</code></td><td><code>f00-tac</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>85</td><td><code>tail</code></td><td><code>f00-tail</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>86</td><td><code>tee</code></td><td><code>f00-tee</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>87</td><td><code>test</code></td><td><code>f00-test</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>88</td><td><code>timeout</code></td><td><code>f00-timeout</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>89</td><td><code>touch</code></td><td><code>f00-touch</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>90</td><td><code>tr</code></td><td><code>f00-tr</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>91</td><td><code>true</code></td><td><code>f00-true</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>92</td><td><code>truncate</code></td><td><code>f00-truncate</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>93</td><td><code>tsort</code></td><td><code>f00-tsort</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>94</td><td><code>tty</code></td><td><code>f00-tty</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>95</td><td><code>uname</code></td><td><code>f00-uname</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>96</td><td><code>unexpand</code></td><td><code>f00-unexpand</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>97</td><td><code>uniq</code></td><td><code>f00-uniq</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>98</td><td><code>unlink</code></td><td><code>f00-unlink</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>99</td><td><code>uptime</code></td><td><code>f00-uptime</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>100</td><td><code>users</code></td><td><code>f00-users</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>101</td><td><code>vdir</code></td><td><code>f00-vdir</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>102</td><td><code>wc</code></td><td><code>f00-wc</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>103</td><td><code>who</code></td><td><code>f00-who</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>104</td><td><code>whoami</code></td><td><code>f00-whoami</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>105</td><td><code>yes</code></td><td><code>f00-yes</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
-<tr class="shipped"><td>106</td><td><code>[</code></td><td><code>f00-[ / test</code></td><td>yes</td><td><strong>full</strong></td><td>yes</td><td>win</td></tr>
+            <tbody id="matrix-body">
+              <!-- filled by app.js from coreutils-progress.json when present; static fallback below -->
             </tbody>
           </table>
         </div>
-        <p class="muted small">Extras also shipped: <code>hostname</code>, <code>kill</code>, <code>rev</code>. Per-flag detail:
+        <p class="muted small">Extras: <code>hostname</code>, <code>kill</code>, <code>rev</code>. Detail:
           <a href="https://github.com/theesfeld/f00/blob/main/docs/GNU-COMPLIANCE.md">GNU-COMPLIANCE.md</a> ·
           <a href="https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md">COREUTILS-PROGRESS.md</a></p>
       </div>
     </section>
 
-
-
-
-
-
-
-
-
-
     <section class="section" id="f00-ls">
       <div class="wrap">
         <h2>f00-ls</h2>
-        <p>Gold reference util: modern listing with icons, git, tree, JSON/CSV, dual-pane <code class="mono">--browse</code> TUI. <code class="mono">--core</code> for GNU-compatible plain lists — and still faster.</p>
+        <p>Gold-reference util: modern listing with icons, git, tree, JSON/CSV, dual-pane <code class="mono">--browse</code>. Use <code class="mono">--core</code> for GNU-compatible plain lists — and still faster.</p>
         <pre class="code-block"><code>f00-ls -la
 f00-ls --core -la
 f00-ls --json .
@@ -460,7 +366,7 @@ f00-ls --browse</code></pre>
       <div class="wrap">
         <h2>Docs</h2>
         <ul>
-          <li><a href="https://github.com/theesfeld/f00#readme">GitHub README</a> (source of truth for tables)</li>
+          <li><a href="https://github.com/theesfeld/f00#readme">GitHub README</a></li>
           <li><a href="https://github.com/theesfeld/f00/blob/main/docs/GNU-COMPLIANCE.md">GNU compliance</a></li>
           <li><a href="https://github.com/theesfeld/f00/blob/main/docs/TERMINAL-UX.md">Terminal UX</a></li>
           <li><a href="https://github.com/theesfeld/f00/blob/main/CHANGELOG.md">Changelog</a></li>
@@ -472,8 +378,9 @@ f00-ls --browse</code></pre>
 
   <footer class="site-footer">
     <div class="wrap footer-inner">
-      <p>f00 · pure assembly coreutils monorepo · MIT · v0.15.0 full-use</p>
-      <p><a href="https://github.com/theesfeld/f00">GitHub</a> · <a href="#install">Install</a></p>
+      <p>f00tils · freestanding assembly coreutils · binary <code class="mono">f00</code> · MIT · <span data-version>v0.15.0</span></p>
+      <p><a href="https://github.com/theesfeld/f00">GitHub</a> · <a href="#install">Install</a> · <a href="#shots">Shots</a>
+        <a href="#benchmarks">Benchmarks</a></p>
     </div>
   </footer>
 

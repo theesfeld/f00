@@ -1,12 +1,19 @@
 /**
- * f00.sh — progressive enhancement.
- * Version labels, copy buttons, tabs, mobile nav, GitHub stats.
- * Works offline without JS.
+ * f00tils (f00.sh) — progressive enhancement.
+ * Version labels, copy buttons, benchmark table, scoreboard matrix.
  */
 (() => {
   "use strict";
 
-  const FALLBACK_VERSION = "v0.12.0";
+  const FALLBACK_VERSION = "v0.15.0";
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
   /* ── version labels from GitHub latest ───────────────── */
   function setVersionLabels(tag) {
@@ -100,76 +107,111 @@
     });
   }
 
-  /* ── generic tabs (demos + install + bench) ──────────── */
-  function wireTabs(rootSel, tabAttr, paneAttr) {
-    const rootEl = document.querySelector(rootSel);
-    if (!rootEl) return;
-    const tabs = [...rootEl.querySelectorAll("[role=tab]")];
-    const panes = [...document.querySelectorAll(`[${paneAttr}]`)];
-    const select = (name) => {
-      tabs.forEach((t) => {
-        const on = t.getAttribute(tabAttr) === name;
-        t.setAttribute("aria-selected", String(on));
-        t.tabIndex = on ? 0 : -1;
-      });
-      panes.forEach((p) => {
-        p.hidden = p.getAttribute(paneAttr) !== name;
-      });
-    };
-    tabs.forEach((t) => {
-      t.addEventListener("click", () => select(t.getAttribute(tabAttr)));
-      t.addEventListener("keydown", (e) => {
-        const i = tabs.indexOf(t);
-        let next = i;
-        if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
-        if (e.key === "ArrowLeft") next = (i - 1 + tabs.length) % tabs.length;
-        if (next !== i) {
-          e.preventDefault();
-          tabs[next].focus();
-          select(tabs[next].getAttribute(tabAttr));
-        }
-      });
-    });
-    if (tabs[0]) select(tabs[0].getAttribute(tabAttr));
+  /* ── suite benchmarks ────────────────────────────────── */
+  function renderBench(data) {
+    const body = document.getElementById("bench-body");
+    const meta = document.getElementById("bench-meta");
+    const nEl = document.getElementById("bench-n");
+    if (!body) return;
+    const tools = (data && data.tools) || [];
+    const m = (data && data.meta) || {};
+    if (nEl && m.n_runs) nEl.textContent = String(m.n_runs);
+    if (meta) {
+      meta.textContent =
+        (m.generated_at ? `Generated ${m.generated_at}` : "Suite benchmarks") +
+        (m.machine ? ` · ${m.machine}` : "") +
+        (m.system ? ` · ${m.system}` : "") +
+        (m.method ? ` · ${m.method}` : "");
+    }
+    const rows = tools.filter((t) => t.status === "ok");
+    if (!rows.length) {
+      body.innerHTML =
+        '<tr><td colspan="6" class="muted">No benchmark rows.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows
+      .map((t) => {
+        const ratio =
+          t.ratio != null ? `<strong>${esc(t.ratio.toFixed(2))}×</strong>` : "—";
+        const g =
+          t.time_gnu_ms != null ? t.time_gnu_ms.toFixed(3) : "—";
+        const f =
+          t.time_f00_ms != null
+            ? `<strong>${esc(t.time_f00_ms.toFixed(3))}</strong>`
+            : "—";
+        const out = t.output_f00 ? esc(t.output_f00) : "—";
+        return (
+          `<tr>` +
+          `<td><code>${esc(t.tool)}</code></td>` +
+          `<td><code>${esc(t.command_f00)}</code></td>` +
+          `<td class="bench-out"><code>${out}</code></td>` +
+          `<td>${esc(g)}</td>` +
+          `<td>${f}</td>` +
+          `<td>${ratio}</td>` +
+          `</tr>`
+        );
+      })
+      .join("");
   }
 
-  wireTabs("[data-demo-tabs]", "data-demo-tab", "data-demo-pane");
-  wireTabs("[data-install-tabs]", "data-install-tab", "data-install-pane");
-  wireTabs("[data-bench-tabs]", "data-bench-tab", "data-bench-pane");
+  try {
+    fetch("bench/suite.json", { headers: { Accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) renderBench(data);
+        else {
+          const body = document.getElementById("bench-body");
+          if (body) {
+            body.innerHTML =
+              '<tr><td colspan="6" class="muted">Could not load <code>bench/suite.json</code>.</td></tr>';
+          }
+        }
+      })
+      .catch(() => {
+        const body = document.getElementById("bench-body");
+        if (body) {
+          body.innerHTML =
+            '<tr><td colspan="6" class="muted">Could not load <code>bench/suite.json</code>.</td></tr>';
+        }
+      });
+  } catch (_) {}
+
+  /* ── scoreboard matrix ───────────────────────────────── */
+  function renderMatrix(data) {
+    const body = document.getElementById("matrix-body");
+    if (!body || !data || !data.rows) return;
+    body.innerHTML = data.rows
+      .map((r) => {
+        const depth =
+          r.depth === "full" ? `<strong>full</strong>` : esc(r.depth);
+        return (
+          `<tr class="shipped">` +
+          `<td>${esc(r.n)}</td>` +
+          `<td><code>${esc(r.util)}</code></td>` +
+          `<td><code>${esc(r.f00)}</code></td>` +
+          `<td>${esc(r.shipped)}</td>` +
+          `<td>${depth}</td>` +
+          `<td>${esc(r.modern)}</td>` +
+          `<td>${esc(r.speed)}</td>` +
+          `</tr>`
+        );
+      })
+      .join("");
+  }
+
+  try {
+    fetch("coreutils-progress.json", {
+      headers: { Accept: "application/json" },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) renderMatrix(data);
+      })
+      .catch(() => {});
+  } catch (_) {}
 
   /* ── year ────────────────────────────────────────────── */
   document.querySelectorAll("[data-year]").forEach((el) => {
     el.textContent = String(new Date().getFullYear());
   });
-
-  /* ── live GitHub popularity ──────────────────────────── */
-  const formatCount = (n) => {
-    if (typeof n !== "number" || Number.isNaN(n)) return "—";
-    if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
-    return String(n);
-  };
-
-  const setAll = (selector, value) => {
-    document.querySelectorAll(selector).forEach((node) => {
-      node.textContent = value;
-    });
-  };
-
-  const applyGithub = (data) => {
-    setAll("[data-github-stars]", formatCount(data.stargazers_count || 0));
-    setAll("[data-github-forks]", formatCount(data.forks_count || 0));
-    setAll("[data-github-watchers]", formatCount(data.subscribers_count || 0));
-    setAll("[data-github-issues]", formatCount(data.open_issues_count || 0));
-  };
-
-  try {
-    fetch("https://api.github.com/repos/theesfeld/f00", {
-      headers: { Accept: "application/vnd.github+json" },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) applyGithub(data);
-      })
-      .catch(() => {});
-  } catch (_) {}
 })();

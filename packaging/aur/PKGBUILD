@@ -2,7 +2,7 @@
 pkgname=f00
 pkgver=0.15.0
 pkgrel=1
-pkgdesc="Pure assembly GNU coreutils replacement suite (multicall, freestanding)"
+pkgdesc="f00tils — pure assembly coreutils replacement (multicall, freestanding)"
 arch=('x86_64')
 url="https://f00.sh"
 license=('MIT')
@@ -10,34 +10,33 @@ depends=()
 makedepends=('nasm' 'binutils')
 provides=('f00')
 conflicts=('f00')
-source=("https://github.com/theesfeld/f00/archive/refs/tags/v0.15.0.tar.gz")
+source=("https://github.com/theesfeld/f00/archive/refs/tags/v${pkgver}.tar.gz")
 sha256sums=('SKIP')
 
 build() {
-  cd "${srcdir}/f00-0.15.0/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
+  cd "${srcdir}/f00-${pkgver}/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
   make
 }
 
 package() {
-  cd "${srcdir}/f00-0.15.0/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
+  cd "${srcdir}/f00-${pkgver}/asm" 2>/dev/null || cd "${srcdir}/f00-"*/asm
   install -Dm755 f00 "${pkgdir}/usr/bin/f00"
   local u
-  for u in ls cat head tail wc true false yes id date uname md5sum sha256sum \
-           cp mv rm mkdir basename dirname pwd echo env sort uniq cut tr \
-           df du stat realpath readlink nproc whoami tty; do
+  for u in ls cat true false yes nproc tty whoami basename dirname \
+           head tail wc tee seq echo pwd sleep \
+           env printenv realpath readlink pathchk mktemp link unlink sync truncate \
+           mkdir rmdir chmod touch logname hostid \
+           cut tr sort uniq rev tac nl fold expand unexpand paste join comm fmt od \
+           split csplit shuf tsort pr ptx factor numfmt expr \
+           cp mv rm ln chown chgrp stat df du install mkfifo mknod shred dd dir vdir \
+           id groups uname arch date users who pinky uptime hostname \
+           nice nohup timeout kill test printf \
+           md5sum sha1sum sha256sum sha224sum sha384sum sha512sum b2sum cksum sum \
+           base64 basenc base32 dircolors chroot stty stdbuf runcon chcon; do
     ln -s f00 "${pkgdir}/usr/bin/f00-${u}"
   done
-  # full link set
-  if [[ -f Makefile ]]; then
-    # install all f00-* from make links if present
-    for f in f00-*; do
-      [[ -L "$f" || -f "$f" ]] || continue
-      install -Dm755 f00 "${pkgdir}/usr/bin/${f}"
-    done
-  fi
   install -Dm644 ../LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE" 2>/dev/null || true
   if [[ -d man/man1 ]]; then
-    install -Dm644 man/man1/f00.1 "${pkgdir}/usr/share/man/man1/f00.1"
-    install -Dm644 man/man1/f00-ls.1 "${pkgdir}/usr/share/man/man1/f00-ls.1" 2>/dev/null || true
+    install -Dm644 man/man1/*.1 -t "${pkgdir}/usr/share/man/man1/"
   fi
 }

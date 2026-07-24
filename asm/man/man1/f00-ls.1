@@ -1,64 +1,79 @@
 .TH F00-LS 1 "2026" "f00 0.15.0" "User Commands"
 .SH NAME
-f00-ls \- list directory contents (f00 suite)
+f00-ls \- list directory contents
 .SH SYNOPSIS
 .B f00-ls
 [\fIOPTION\fR]... [\fIFILE\fR]...
 .SH DESCRIPTION
-List information about FILEs (the current directory by default).
-Part of the
+List information about each
+.IR FILE
+(the current directory by default).
+.B f00-ls
+is part of the
 .B f00
-coreutils replacement suite (pure assembly).
+suite (f00tils): one freestanding x86-64 assembly multicall binary that replaces GNU coreutils.
 .PP
 Default mode is
 .B modern
-(color, icons on a TTY, optional git).
+(color and icons on a TTY; optional git and tree views).
+Use
 .B --core
-selects strict GNU coreutils
+for strict GNU coreutils
 .B ls
-compatible output.
+presentation.
 .SH COREUTILS FLAGS
 .TP
 \fB\-a\fR, \fB\-\-all\fR
-do not ignore entries starting with .
+Do not ignore entries that start with
+.BR . .
 .TP
 \fB\-l\fR
-use a long listing format
+Use a long listing format.
 .TP
 \fB\-h\fR, \fB\-\-human\-readable\fR
-with \-l and \-s, print sizes like 1K 234M 2G
+With
+.B \-l
+and
+.BR \-s ,
+print sizes like 1K 234M 2G.
 .TP
 \fB\-\-color\fR[=\fIWHEN\fR]
-colorize the output; WHEN is auto, always, or never
+Colorize the output.
+.I WHEN
+is
+.BR auto ,
+.BR always ,
+or
+.BR never .
 .PP
-See
+Run
 .B f00-ls --help
 for the full coreutils-compatible flag list.
 .SH MODERN FLAGS
 .TP
 \fB\-\-core\fR
-strict coreutils-compatible output (no icons/git/json defaults)
+Use strict coreutils-compatible output (no icons, git, or modern defaults).
 .TP
 \fB\-\-no\-core\fR
-force modern mode even when stdout is not a TTY
+Force modern mode even when standard output is not a TTY.
 .TP
 \fB\-j\fR, \fB\-\-json\fR
-detailed JSON listing (pretty and colored on a TTY)
+Write a detailed JSON listing.
 .TP
 \fB\-\-csv\fR
-detailed CSV listing
+Write a detailed CSV listing.
 .TP
 \fB\-\-tree\fR
-tree view
+Show a tree view.
 .TP
 \fB\-\-git\fR
-annotate with git status
+Annotate entries with git status.
 .TP
 \fB\-\-icons\fR[=\fIWHEN\fR]
-Nerd Font icons
+Show Nerd Font icons.
 .TP
 \fB\-\-browse\fR
-interactive dual-pane browser
+Open the interactive dual-pane browser.
 .SH AUTHOR
 f00 contributors. License MIT.
 .SH SEE ALSO

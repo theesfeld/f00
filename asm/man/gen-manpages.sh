@@ -162,42 +162,47 @@ write_stub() {
   cat >"$out" <<EOF
 .TH ${U} 1 "${YEAR}" "f00 ${VERSION}" "User Commands"
 .SH NAME
-${name} \\- ${d} (f00 suite)
+${name} \\- ${d}
 .SH SYNOPSIS
 .B ${name}
 [\\fIOPTION\\fR]... [\\fIARG\\fR]...
 .SH DESCRIPTION
 ${d}.
-Part of the
+.B ${name}
+is part of the
 .B f00
-coreutils replacement suite (pure assembly multicall).
+suite: one freestanding x86-64 assembly multicall binary  — f00tils (the freestanding coreutils replacement).
 .PP
-Default mode is modern.
+Default mode is modern (color and richer layout where it applies).
+Use
 .B --core
-selects strict GNU coreutils
+for strict GNU coreutils
 .B ${u}
-compatible behavior where applicable.
+presentation in scripts.
 .SH OPTIONS
-Common suite options:
 .TP
 \\fB\\-\\-help\\fR
-display help and exit
+Show help and exit.
 .TP
 \\fB\\-\\-version\\fR
-output version information and exit
+Show version and exit.
 .TP
 \\fB\\-\\-core\\fR
-strict coreutils-compatible mode
+Use strict coreutils-compatible presentation.
 .TP
 \\fB\\-\\-json\\fR
-JSON summary when supported
+Write a JSON summary when the tool supports it.
 .TP
 \\fB\\-\\-csv\\fR
-CSV summary when supported
+Write a CSV summary when the tool supports it.
 .PP
-See
+Run
 .B ${name} --help
 for the full flag list.
+.SH EXIT STATUS
+0 on success. Non-zero on error. Match coreutils classes under
+.BR --core
+when applicable.
 .SH AUTHOR
 f00 contributors. License MIT.
 .SH SEE ALSO
@@ -212,7 +217,7 @@ EOF
 cat >"${MAN1}/f00.1" <<EOF
 .TH F00 1 "${YEAR}" "f00 ${VERSION}" "User Commands"
 .SH NAME
-f00 \\- pure-assembly multicall coreutils replacement suite
+f00 \\- f00tils — freestanding assembly multicall coreutils suite
 .SH SYNOPSIS
 .B f00
 [\\fIOPTION\\fR]... [\\fIFILE\\fR]...
@@ -221,48 +226,51 @@ f00 \\- pure-assembly multicall coreutils replacement suite
 [\\fIOPTION\\fR]... [\\fIARG\\fR]...
 .SH DESCRIPTION
 .B f00
-is a single static binary that implements a full GNU coreutils surface
-in pure x86-64 assembly (no libc). The utility is selected by
+is one static freestanding x86-64 binary that implements the GNU coreutils surface.
+There is no libc.
+.PP
+The tool is selected by
 .BR argv0
-(multicall): install or symlink as
+(multicall). Install or link the binary as
 .BR f00-ls ,
 .BR f00-cat ,
 .BR ls ,
 .BR cat ,
-and so on.
+and other names.
 .PP
 Default mode is
-.B modern
-(color and richer UX where sensible).
+.BR modern .
+Use
 .B --core
-requests strict coreutils-compatible presentation for scripts.
-Many tools also accept
+for script-safe coreutils presentation.
+Many tools accept
 .B --json
 and
 .BR --csv .
 .SH INVOCATION
 .TP
 \\fBf00\\fR / \\fBf00-ls\\fR / \\fBls\\fR
-list directory contents (see
-.BR f00-ls (1))
+List directory contents. See
+.BR f00-ls (1).
 .TP
 \\fBf00-\\fIutil\\fR
-run the named suite tool (e.g.
-.BR f00-wc ,
-.BR f00-sha256sum )
+Run the named suite tool (for example
+.BR f00-wc
+or
+.BR f00-sha256sum ).
 .SH COMMON OPTIONS
 .TP
 \\fB\\-\\-help\\fR
-display help for the selected util
+Show help for the selected tool.
 .TP
 \\fB\\-\\-version\\fR
-print suite version
+Show the suite version.
 .TP
 \\fB\\-\\-core\\fR
-strict coreutils-compatible mode
+Use strict coreutils-compatible presentation.
 .TP
 \\fB\\-\\-json\\fR / \\fB\\-\\-csv\\fR
-machine-readable summaries when supported
+Write machine-readable summaries when supported.
 .SH BUILD
 .nf
 cd asm && make && make smoke

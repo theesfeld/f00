@@ -1,41 +1,46 @@
 .TH F00-PTX 1 "2026" "f00 0.15.0" "User Commands"
 .SH NAME
-f00-ptx \- produce a permuted index of file contents (f00 suite)
+f00-ptx \- produce a permuted index of file contents
 .SH SYNOPSIS
 .B f00-ptx
 [\fIOPTION\fR]... [\fIARG\fR]...
 .SH DESCRIPTION
 produce a permuted index of file contents.
-Part of the
+.B f00-ptx
+is part of the
 .B f00
-coreutils replacement suite (pure assembly multicall).
+suite: one freestanding x86-64 assembly multicall binary  — f00tils (the freestanding coreutils replacement).
 .PP
-Default mode is modern.
+Default mode is modern (color and richer layout where it applies).
+Use
 .B --core
-selects strict GNU coreutils
+for strict GNU coreutils
 .B ptx
-compatible behavior where applicable.
+presentation in scripts.
 .SH OPTIONS
-Common suite options:
 .TP
 \fB\-\-help\fR
-display help and exit
+Show help and exit.
 .TP
 \fB\-\-version\fR
-output version information and exit
+Show version and exit.
 .TP
 \fB\-\-core\fR
-strict coreutils-compatible mode
+Use strict coreutils-compatible presentation.
 .TP
 \fB\-\-json\fR
-JSON summary when supported
+Write a JSON summary when the tool supports it.
 .TP
 \fB\-\-csv\fR
-CSV summary when supported
+Write a CSV summary when the tool supports it.
 .PP
-See
+Run
 .B f00-ptx --help
 for the full flag list.
+.SH EXIT STATUS
+0 on success. Non-zero on error. Match coreutils classes under
+.BR --core
+when applicable.
 .SH AUTHOR
 f00 contributors. License MIT.
 .SH SEE ALSO

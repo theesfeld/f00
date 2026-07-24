@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# f00 suite installer — https://f00.sh
+# f00tils installer (binary: f00) — https://f00.sh
 #   curl -fsSL https://f00.sh/install.sh | bash
 #
 # Pure-assembly multicall coreutils replacement (Linux x86-64).

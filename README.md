@@ -1,15 +1,20 @@
-# f00
+# f00tils
 
-**f00** is a **complete GNU coreutils replacement monorepo**, implemented as a **pure x86-64 Linux freestanding assembly** multicall suite. No libc. One static binary. MIT.
+**f00tils** is the freestanding assembly **coreutils** replacement.
+
+Binary name: **`f00`**. Tool names: **`f00-*`**. Joke: coreutils → **f00tils**.
+
+One multicall x86-64 Linux binary (no libc). Modern defaults for interactive work. `--core` for scripts. Faster than coreutils on the measured path. MIT.
 
 | | |
 |---|---|
-| **Product** | Drop-in `f00-*` tools + optional short names (`ls`, `cat`, …) |
+| **Project** | **f00tils** (coreutils replacement suite) |
+| **Binary** | `f00` multicall + `f00-*` links + optional short names (`ls`, `cat`, …) |
 | **Default** | Modern (color, richer layout, `--json` / `--csv`) |
 | **Scripts** | `--core` — strict coreutils-compatible presentation |
-| **Engine** | Pure ASM multicall · ~600K static |
+| **Engine** | Pure ASM multicall · ~650K static · no libc |
 | **License** | MIT |
-| **Status** | **Released** `v0.15.0` |
+| **Status** | Released `v0.15.0` |
 | **Site** | [https://f00.sh](https://f00.sh) |
 | **Repo** | [github.com/theesfeld/f00](https://github.com/theesfeld/f00) |
 
@@ -17,48 +22,64 @@
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
+<p align="center">
+  <img src="docs/images/hero.png" alt="f00tils terminal: f00-ls version and color listing" width="860" />
+</p>
+
+<p align="center">
+  <img src="press-kit/logo-lockup.svg" alt="f00tils logo" width="420" />
+</p>
+
+---
+
+## Why it matters
+
+Coreutils are correct and portable. They are not the speed or UX ceiling.
+
+**f00tils** ships the full tool surface as one multicall binary written in freestanding assembly. You keep script-safe behavior under `--core`, and you get modern presentation by default.
+
 ---
 
 ## Product laws
 
-1. **Clone first.** Every GNU coreutils tool has a `f00-*` counterpart. Under **`--core`**, flags, inputs, outputs, and exit codes target 1:1 coreutils behavior for scripts.
-2. **Modern on top.** Default mode is never a subset of GNU: color on TTY, better layout, `--json` / `--csv` with rich metadata, interactivity where it fits.
+1. **Clone first.** Every GNU coreutils tool has a `f00-*` counterpart. Under `--core`, flags, inputs, outputs, and exit codes target 1:1 coreutils behavior for scripts.
+2. **Modern on top.** Default mode is never a subset of GNU: color on TTY, better layout, `--json` / `--csv` with rich metadata.
 3. **Faster always.** Freestanding ASM must beat coreutils on the core path. Slow and correct is not done.
 4. **One binary.** Multicall dispatch by `argv0` (`f00-ls`, `ls`, `f00-cat`, …).
 
 ---
 
-## Feature parity (ecosystem)
+## Feature parity
 
-| Area | GNU coreutils | **f00 (ASM)** | uutils (Rust) | busybox | toybox |
-|------|---------------|---------------|---------------|---------|--------|
-| All coreutils *names* | Yes | **Scoreboard below** | Growing | Subset | Subset |
-| Script drop-in | Yes | **`--core`** | Flags vary | Reduced | Reduced |
-| Modern default UX | No | **Yes** | Partial | Minimal | Minimal |
-| Suite-wide `--json`/`--csv` | No | **Yes (f00/v1)** | Limited | No | No |
-| Pure freestanding ASM | No | **Yes** | No | C | C |
-| Multicall single binary | No* | **Yes** | Optional | Yes | Yes |
+| Area | GNU coreutils | **f00tils (ASM)** | uutils | busybox / toybox |
+|------|---------------|---------------|--------|------------------|
+| All coreutils *names* | Yes | **106/106 scoreboard** | Growing | Subset |
+| Script drop-in | Yes | **`--core`** | Flags vary | Reduced |
+| Modern default UX | No | **Yes** | Partial | Minimal |
+| Suite-wide `--json`/`--csv` | No | **Yes (`f00/v1`)** | Limited | No |
+| Pure freestanding ASM | No | **Yes** | No | C |
+| Multicall single binary | No* | **Yes** | Optional | Yes |
 
 \*coreutils ships many separate binaries.
 
-### Suite modern surface (every util)
+### Suite modern surface
 
 | Capability | Default | `--core` |
 |------------|---------|----------|
 | Color (TTY) | **On** (respects `NO_COLOR`) | Off |
 | `--json` | Rich `f00/v1` metadata | Available |
 | `--csv` | Same facts, tabular | Available |
-| Help | Coreutils flags + Modern flags | Same structure |
+| Help | Coreutils flags + modern flags | Same structure |
 | Speed | Optimized | **Must beat coreutils** |
 
 ---
 
 ## Coreutils replacement progress
 
-**Goal: replace every GNU coreutils program.** This table is the scoreboard.
+**Goal: replace every GNU coreutils program.**
 
 <!-- progress: total=106 shipped=106 core_full=106 core_partial=0 core_missing=0 -->
-**Progress (goal = replace every coreutil):** **106/106** tools shipped · **`--core` depth:** 106 full · 0 partial · 0 missing
+**Progress:** **106/106** tools shipped · **`--core` depth:** 106 full · 0 partial · 0 missing
 
 | Status | Count | Meaning |
 |--------|------:|---------|
@@ -67,7 +88,7 @@ curl -fsSL https://f00.sh/install.sh | bash
 | `--core` partial | 0 | Tool works; some GNU flags still deepening |
 | `--core` **missing** | 0 | Not yet in multicall |
 
-Legend — **speed:** `win` = faster than coreutils under `--core` (full-speed-gate payload races, or safe entry/help race where a payload race is not applicable). `—` = not shipped.
+Legend — **speed:** `win` = faster than coreutils under `--core`. `—` = not shipped.
 
 | # | coreutils | f00 | shipped | `--core` depth | modern | speed vs GNU |
 |--:|:----------|:----|:--------|:---------------|:-------|:-------------|
@@ -178,40 +199,41 @@ Legend — **speed:** `win` = faster than coreutils under `--core` (full-speed-g
 | 105 | `yes` | `f00-yes` | yes | **full** | yes | win |
 | 106 | `[` | `f00-[ / test` | yes | **full** | yes | win |
 
-Also shipped (useful multicall extras; not always in the coreutils package): `f00-hostname`, `f00-kill`, `f00-rev`.
+Also shipped (useful multicall extras): `f00-hostname`, `f00-kill`, `f00-rev`.
 
-Detailed per-flag matrix: [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md) · scoreboard source: [docs/COREUTILS-PROGRESS.md](docs/COREUTILS-PROGRESS.md)
+Detail: [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md) · scoreboard: [docs/COREUTILS-PROGRESS.md](docs/COREUTILS-PROGRESS.md)
 
+---
 
-## Speed parity
+## Benchmarks
 
-Warm cache, **spawn-inclusive**, median of 40 runs, `f00-* --core` vs `/usr/bin/*` on Linux x86-64 (representative host; re-run `make speed`).
+Warm cache, **spawn-inclusive**, median of 20+ runs. Compare `f00-* --core` to `/usr/bin/*` on Linux x86-64.
 
-| Workload | coreutils | **f00 `--core`** | vs coreutils | Notes |
-|----------|-----------|------------------|--------------|--------|
-| `true` | 0.22 ms | **0.07 ms** | **~3.1×** | Multicall entry |
-| `basename` | 0.24 ms | **0.07 ms** | **~3.2×** | |
-| `wc -l` | 0.51 ms | **0.24 ms** | **~2.1×** | |
-| `cat` (small file) | 0.27 ms | **0.19 ms** | **~1.4×** | Bulk path |
-| `ls -1` | 0.29 ms | **0.21 ms** | **~1.4×** | |
-| `ls -la` | 0.99 ms | **0.23 ms** | **~4.3×** | Large win |
-| `md5sum` | 0.91 ms | **0.39 ms** | **~2.3×** | Pure ASM MD5 |
-| `seq 1…` | 0.24 ms | **0.13 ms** | **~1.8×** | |
-| `nproc` | 0.32 ms | **0.08 ms** | **~3.9×** | |
-| `id` | 1.33 ms | **0.13 ms** | **~10×** | |
+Per-tool tables (command, sample output, GNU time, f00 time):
 
-| Competitor class | Typical profile | f00 stance |
-|------------------|-----------------|------------|
-| **GNU coreutils** | libc, portable C | Beat on freestanding hot paths |
-| **uutils/coreutils** | Rust, safe/portable | f00 targets lower latency, not portability breadth |
-| **busybox / toybox** | Small embedded applets | f00 targets full desktop/server flag surface + modern UX |
-| **Single-tool rewrites** (eza, bat, …) | Deep one-tool UX | f00 ships **full suite** + deep `f00-ls` / `f00-cat` |
+- Website: [https://f00.sh/#benchmarks](https://f00.sh/#benchmarks)
+- Data: [site/bench/suite.json](site/bench/suite.json) · [site/bench/suite.md](site/bench/suite.md)
+
+Representative results (host-dependent; re-run to verify):
+
+| Tool | Command | GNU | f00 `--core` | vs GNU |
+|------|---------|-----|--------------|--------|
+| `true` | `f00-true --core` | 0.26 ms | **0.08 ms** | **~3.5×** |
+| `basename` | `f00-basename --core PATH` | 0.28 ms | **0.09 ms** | **~3.2×** |
+| `nproc` | `f00-nproc --core` | 0.32 ms | **0.08 ms** | **~3.8×** |
+| `whoami` | `f00-whoami --core` | 1.43 ms | **0.08 ms** | **~17×** |
+| `cat` | `f00-cat --core file` | 0.27 ms | **0.10 ms** | **~2.6×** |
+| `wc -l` | `f00-wc --core -l file` | 0.41 ms | **0.29 ms** | **~1.4×** |
+| `md5sum` | `f00-md5sum --core file` | 0.99 ms | **0.21 ms** | **~4.8×** |
+| `ls -1` | `f00-ls --core -1 dir` | — | — | see suite |
 
 Reproduce:
 
 ```bash
-cd asm && make && make speed      # speed-gate vs coreutils
-bash benches/parity.sh            # functional --core diffs
+cd asm && make
+python3 ../scripts/gen-suite-bench.py
+make speed
+bash benches/parity.sh
 ```
 
 ---
@@ -224,15 +246,15 @@ bash benches/parity.sh            # functional --core diffs
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-Installs multicall `f00` + all `f00-*` links into `~/.local/bin` (override with `INSTALL_DIR`).
+The script installs multicall `f00` and all `f00-*` links into `~/.local/bin`.
 
 | Env | Effect |
 |-----|--------|
 | `INSTALL_DIR` | Target bin dir (default `~/.local/bin`) |
 | `F00_VERSION` | Release tag (default: latest) |
-| `F00_LOCAL` | Path to local `asm/` build containing `./f00` (skip download) |
+| `F00_LOCAL` | Path to local `asm/` build that contains `./f00` |
 | `F00_TOOLS` | `all` or comma list |
-| `F00_SUPERSEDE=1` | Also install short names (`ls`, `cat`, …) in `INSTALL_DIR` |
+| `F00_SUPERSEDE=1` | Also install short names (`ls`, `cat`, …) |
 | `F00_ALIAS=1` | Append shell aliases |
 | `F00_MAN=1` | Install man pages (default on) |
 
@@ -240,21 +262,23 @@ Installs multicall `f00` + all `f00-*` links into `~/.local/bin` (override with 
 # pin version
 curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
 
-# from a local build
+# local build
 curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
 
-# side-by-side + short names
+# short names beside f00-*
 curl -fsSL https://f00.sh/install.sh | F00_SUPERSEDE=1 bash
 ```
+
+**Platform:** Linux x86-64 release assets. Build from source on other hosts is not the product path yet.
 
 ### From source
 
 ```bash
 git clone https://github.com/theesfeld/f00.git
 cd f00/asm
-make            # needs nasm + ld
+make
 make smoke
-make install    # ~/.local/bin + man pages
+make install
 ```
 
 Requires: `nasm`, `ld` (binutils). Target: **Linux x86-64**.
@@ -263,53 +287,31 @@ Requires: `nasm`, `ld` (binutils). Target: **Linux x86-64**.
 
 ## Package managers
 
-> Package recipes ship the **ASM multicall suite**. Prefer the install script or `cd asm && make install` for v0.15.0.
+Release assets for `v0.15.0` include tarball, **deb**, **rpm**, and **Arch** packages.
 
-| Channel | Status | Command / notes |
-|---------|--------|-----------------|
-| **Install script** | **Primary** | `curl -fsSL https://f00.sh/install.sh \| bash` |
-| **From source** | Supported | `cd asm && make install` |
-| **AUR** | Updating | `packaging/aur/PKGBUILD` — rebuild for ASM static binary |
-| **Homebrew** | Updating | `Formula/f00.rb` — tap recipe (Linux bottle TBD) |
-| **nfpm (deb/rpm)** | Updating | `packaging/nfpm/f00.yaml` |
-| **Scoop / Winget** | Windows later | Manifests present; ASM product is Linux-first |
-| **Nix** | Experimental | `flake.nix` |
-
-Arch (after PKGBUILD points at ASM release assets):
-
-```bash
-# AUR helper example (when published)
-yay -S f00
-```
-
-Debian/Fedora (when release artifacts ship):
+| Channel | Status | Notes |
+|---------|--------|-------|
+| **Install script** | Primary | `curl -fsSL https://f00.sh/install.sh \| bash` |
+| **GitHub Releases** | Shipped | `.tar.gz`, `.deb`, `.rpm`, `.pkg.tar.zst` |
+| **Homebrew** | Formula | `Formula/f00.rb` → `brew install theesfeld/tap/f00` (Linux bottle from release tarball) |
+| **AUR** | PKGBUILD | `packaging/aur/PKGBUILD` (build from tag) |
+| **Debian / Ubuntu** | `.deb` asset | `sudo dpkg -i f00_*_amd64.deb` |
+| **Fedora / RHEL** | `.rpm` asset | `sudo rpm -Uvh f00-*.x86_64.rpm` |
+| **Arch (local)** | `.pkg.tar.zst` asset | `sudo pacman -U f00-*-x86_64.pkg.tar.zst` |
+| **Nix** | Experimental | `flake.nix` (x86_64-linux) |
 
 ```bash
-# illustrative — use published .deb / .rpm from GitHub Releases
-sudo dpkg -i f00_*_amd64.deb
-# or
-sudo rpm -Uvh f00-*.x86_64.rpm
-```
+# Debian / Ubuntu example
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.0/f00_0.15.0_amd64.deb
+sudo dpkg -i f00_0.15.0_amd64.deb
 
----
+# Fedora / RHEL example
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.0/f00-0.15.0-1.x86_64.rpm
+sudo rpm -Uvh f00-0.15.0-1.x86_64.rpm
 
-## Release `v0.15.0`
-
-| | |
-|---|---|
-| **Tag** | `v0.15.0` |
-| **Status** | **Full-use** pure-ASM multicall coreutils suite (Linux x86-64) |
-| **Scoreboard** | **106/106** shipped · `--core` **full** · modern · speed **win** |
-| **Install** | `curl -fsSL https://f00.sh/install.sh \| bash` (tracks latest) |
-| **Platforms** | Linux x86-64 freestanding now; Darwin / multi-arch next |
-| **Feedback** | [GitHub Issues](https://github.com/theesfeld/f00/issues) |
-
-```bash
-curl -fsSL https://f00.sh/install.sh | bash
-# pin
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.0 bash
-# source
-git fetch --tags && git checkout v0.15.0 && cd asm && make && make install
+# Arch example (release package)
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.0/f00-0.15.0-1-x86_64.pkg.tar.zst
+sudo pacman -U f00-0.15.0-1-x86_64.pkg.tar.zst
 ```
 
 ---
@@ -318,13 +320,30 @@ git fetch --tags && git checkout v0.15.0 && cd asm && make && make install
 
 ```bash
 f00-ls -la
-f00-ls --core -la          # script-safe
-f00-cat -n README.md       # modern line numbers on TTY
+f00-ls --core -la
+f00-cat -n README.md
 f00-wc --json Makefile
 f00-sha256sum --core file
-f00-df -h                  # modern table
-f00-id --core              # match GNU id
-f00 --list-utils           # when argv0 is f00
+f00-df -h
+f00-id --core
+f00 --list-utils
+```
+
+### Screenshots (color)
+
+Color terminal captures from the multicall suite (`f00` / `f00-*`).
+
+| | |
+|---|---|
+| **f00-ls -la** | ![f00-ls -la color](docs/images/f00-ls-la.png) |
+| **modern vs --core** | ![modern vs core](docs/images/f00-core-vs-modern.png) |
+| **suite tools** | ![suite](docs/images/f00-suite.png) |
+
+Regenerate brand assets and screenshots:
+
+```bash
+cd asm && make
+python3 ../scripts/render-brand-assets.py
 ```
 
 ---
@@ -336,35 +355,37 @@ asm/                 pure assembly product (canonical)
   src/ls/            multicall sources + suite_*.asm modules
   man/man1/          f00(1) + f00-*(1)
   benches/           speed-gate, parity, smoke
-site/                f00.sh (GitHub Pages) + install.sh
-docs/                compliance, UX, modern features
-packaging/           AUR, nfpm, scoop, winget
-crates/              historical Rust f00-ls (reference only)
+site/                f00.sh (GitHub Pages) + install.sh + bench data
+docs/                compliance, UX, modern features, scoreboard
+packaging/           AUR + nfpm (deb/rpm/arch)
+Formula/             Homebrew
+scripts/             package and bench generators
+install.sh           curl installer
 ```
 
 ---
 
 ## Documentation
 
-| Doc | |
-|-----|--|
-| [docs/COREUTILS-PROGRESS.md](docs/COREUTILS-PROGRESS.md) | **Scoreboard — every coreutil** (shipped / `--core` depth / modern / speed) |
+| Doc | Topic |
+|-----|-------|
+| [docs/COREUTILS-PROGRESS.md](docs/COREUTILS-PROGRESS.md) | Scoreboard for every coreutil |
 | [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md) | Per-flag full / partial / missing |
-| [docs/TERMINAL-UX.md](docs/TERMINAL-UX.md) | Color tokens, help structure, JSON envelope |
-| [docs/MODERN-FEATURES.md](docs/MODERN-FEATURES.md) | Modern extras survey |
+| [docs/TERMINAL-UX.md](docs/TERMINAL-UX.md) | Color tokens, help, JSON envelope |
+| [docs/MODERN-FEATURES.md](docs/MODERN-FEATURES.md) | Modern extras |
 | [CHANGELOG.md](CHANGELOG.md) | Releases |
 | Man | `man f00` · `man f00-ls` · `man f00-cat` · … |
 
 ---
 
-## Build & quality gates
+## Build and quality gates
 
 ```bash
 cd asm
-make              # f00 + f00-* links
-make smoke        # functional smoke
-make speed        # must beat coreutils (+5% gate)
-make ux-check     # speed + parity
+make
+make smoke
+make speed
+make ux-check
 ```
 
 ---

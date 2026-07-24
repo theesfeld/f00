@@ -1,48 +1,54 @@
-# Contributing to f00
+# Contributing to f00tils
 
-Thanks for helping improve f00 — a cross-platform `ls` rewrite in Rust.
+**f00tils** is a pure x86-64 Linux freestanding assembly multicall suite.
+It replaces GNU coreutils (coreutils → f00tils).
 
-## Getting started
+Binary name: `f00`. Tools: `f00-*`.
 
-1. Install a recent [Rust stable](https://rustup.rs/) toolchain.
-2. Fork and clone the repo.
-3. Build and test:
+## Requirements
+
+- Linux x86-64 host
+- `nasm`
+- `ld` (binutils)
+- `make`
+- `python3` (benches and progress generators)
+
+## Build and test
 
 ```bash
-cargo build --workspace
-cargo test --workspace
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings
+cd asm
+make
+make smoke
+make speed
+bash benches/parity.sh
 ```
 
-Binary crate: `crates/f00-cli` → binary name `f00`.
+Install a local build:
 
-## Project layout
-
-| Crate | Role |
-|-------|------|
-| `f00-cli` | CLI entrypoint, flags, UX |
-| `f00-core` | Walk, metadata, sort |
-| `f00-format` | Color, columns, tree, JSON, icons |
-| `f00-git` | Git status integration |
-| `f00-compat` | GNU mode / flag translation |
+```bash
+make install
+# or
+F00_LOCAL=$PWD/asm bash ../install.sh
+```
 
 ## Guidelines
 
-- **Accuracy over hype** — label planned work clearly; don’t claim unfinished features in user-facing docs.
-- **Small PRs** — easier to review; one concern per change when practical.
-- **Tests** — add or update tests for behavior changes, especially flag parsing and format output.
-- **Style** — run `cargo fmt` and `clippy` cleanly before opening a PR.
-- **Platforms** — call out Windows / macOS / Linux behavior differences in the PR description when relevant.
+- Keep product code in assembly under `asm/`.
+- Match coreutils under `--core`. Improve the modern default without breaking scripts.
+- Measure speed. A slower core path is a defect.
+- Prefer small pull requests with one clear purpose.
+- Use Conventional Commits (`feat:`, `fix:`, `docs:`, …).
+- Update man pages and website copy when user-visible behavior changes.
+- User-facing narrative names the project **f00tils**; keep CLI names as `f00` / `f00-*`.
+- User-facing text follows house language rules (STE for procedures; plain public narrative for README/site).
 
 ## Pull requests
 
-1. Open an issue for larger features when in doubt.
-2. Branch from `main`.
-3. Ensure CI checks pass (fmt, clippy, tests on Linux / macOS / Windows).
-4. Fill in a short summary: what changed, why, and how you tested.
+1. Branch from `main`.
+2. Run the build and quality gates above.
+3. Describe what changed, why, and how you tested.
 
 ## License
 
-By contributing, you agree that your contributions are dual-licensed under
-**MIT OR Apache-2.0**, the same as the project, without additional terms.
+By contributing, you agree that your contributions are licensed under **MIT**,
+the same as the project, without additional terms.

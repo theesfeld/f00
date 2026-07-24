@@ -1,33 +1,27 @@
-# f00 Roadmap
+# f00tils Roadmap
 
 **Repo:** https://github.com/theesfeld/f00  
-**Latest:** [v0.6.0](https://github.com/theesfeld/f00/releases)  
-**Domain:** https://f00.sh · DNS guide: [DNS-f00.sh.md](DNS-f00.sh.md)
+**Latest:** [v0.15.0](https://github.com/theesfeld/f00/releases/tag/v0.15.0)  
+**Site:** https://f00.sh
 
-## v0.6 — io_uring · dual-pane FM · locale goldens (this release)
+## Shipped (v0.15.0)
 
-| Track | Deliverables |
-|-------|----------------|
-| **io_uring** | Linux batch `statx` via io_uring (feature `io-uring`, threshold + fallback) |
-| **Dual-pane FM** | Two panes in `--browse`, Tab, copy/move/delete with confirm |
-| **Locale goldens** | `LC_ALL=C` + UTF-8 locale sort tests |
+| Track | Status |
+|-------|--------|
+| Full GNU coreutils name surface | **106/106** multicall |
+| `--core` presentation | Full for tracked tools |
+| Pure freestanding Linux x86-64 ASM | **Yes** |
+| Install script | `curl -fsSL https://f00.sh/install.sh \| bash` |
+| Release packages | tarball · deb · rpm · Arch |
+| Suite benchmarks on site | tool / command / output / time |
 
-Phase: [#47](https://github.com/theesfeld/f00/issues/47) · Impl: [#48](https://github.com/theesfeld/f00/issues/48)
-
-## Shipped earlier
-
-- **v0.5** — cheap short path, uid cache, git map, Linux `statx`, TUI preview/sort/open  
-- **v0.4.x** — self-update, plugins ABI, packaging stubs  
-- **v0.3** — completions, man, parallel list, goldens, FreeBSD CI, HTTPS  
-- **v0.2** — GNU surface, TUI base, archives, ignore, machine formats  
-
-## Still open / later
+## Near term
 
 | Item | Notes |
 |------|--------|
-| Package managers (Homebrew, deb/rpm, AUR, Scoop, Winget) | [#81](https://github.com/theesfeld/f00/issues/81) — auto on release; needs secrets |
-| crates.io publish on tag | Needs `CARGO_REGISTRY_TOKEN` (wired in release workflow) |
-| Official distro packages | Later (Debian/Fedora/homebrew-core) — not phase #81 |
+| Homebrew / AUR publish automation | Secrets + tap/AUR push on release |
+| Deeper flag parity | See [GNU-COMPLIANCE.md](GNU-COMPLIANCE.md) |
+| Darwin / multi-arch | Not product path yet |
 
 ## Tracking
 

@@ -1,15 +1,16 @@
-# nfpm template for f00 ASM suite. Env: VERSION, ARCH (amd64|arm64), BIN_PATH, OUT_DIR, MAN_PATH
+# nfpm template for f00 ASM suite.
+# Placeholders: VERSION, ARCH (amd64), BIN_PATH, MAN_DIR, LINKS_DIR
 name: f00
 arch: ${ARCH}
 platform: linux
 version: ${VERSION}
 section: utils
 priority: optional
-maintainer: theesfeld <noreply@f00.sh>
+maintainer: William Theesfeld <william@theesfeld.net>
 description: |
-  f00 — pure freestanding assembly GNU coreutils replacement suite (multicall).
-  Modern UX by default; strict coreutils presentation under --core.
-  Faster core path; --json/--csv with rich metadata.
+  f00tils (f00) is a complete GNU coreutils replacement suite.
+  One freestanding x86-64 assembly multicall binary (no libc).
+  Modern defaults; --core for script-safe coreutils presentation.
 homepage: https://f00.sh
 license: MIT
 contents:
@@ -17,8 +18,14 @@ contents:
     dst: /usr/bin/f00
     file_info:
       mode: 0755
-  - src: ${MAN_PATH}
-    dst: /usr/share/man/man1/f00.1
+  - src: ${LINKS_DIR}/
+    dst: /usr/bin/
+    type: tree
+    file_info:
+      mode: 0755
+  - src: ${MAN_DIR}/
+    dst: /usr/share/man/man1/
+    type: tree
     file_info:
       mode: 0644
 overrides:

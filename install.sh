@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# f00 suite installer — https://f00.sh
+# f00tils installer (binary: f00) — https://f00.sh
 #   curl -fsSL https://f00.sh/install.sh | bash
 #
-# Pure-assembly multicall coreutils replacement (Linux x86-64).
+# f00tils: pure-assembly multicall coreutils replacement (Linux x86-64 only).
 # Installs multicall `f00` + f00-* links for the full coreutils surface.
 #
 # Beta pin example:
@@ -80,6 +80,14 @@ ensure_path() {
     *":${dir}:"*) return 0 ;;
   esac
   [[ "${ADD_PATH:-1}" == "1" ]] || return 0
+  # Only auto-edit shell rc for installs under $HOME (avoid /tmp pollution).
+  case "$dir" in
+    "$HOME"/*) ;;
+    *)
+      log "${DIM}add to PATH: export PATH=\"${dir}:\$PATH\"${RESET}"
+      return 0
+      ;;
+  esac
   local rc marker="# f00 installer: PATH (${dir})"
   for rc in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     [[ -f "$rc" ]] || continue
@@ -210,27 +218,37 @@ fetch_release() {
     *) die "unsupported arch: $arch" ;;
   esac
   case "$os" in
-    linux|darwin) ;;
-    *) die "unsupported OS: $os (targets linux/darwin)" ;;
+    linux) ;;
+    *)
+      die "unsupported OS: $os (product is Linux x86-64 freestanding ASM; use F00_LOCAL for a local build)"
+      ;;
+  esac
+  case "$arch" in
+    x86_64) ;;
+    *)
+      die "unsupported arch: $arch (release assets are linux-x86_64; use F00_LOCAL for a local build)"
+      ;;
   esac
 
   # Preferred asset names for ASM multicall releases
-  asset="f00-${tag#v}-${os}-${arch}.tar.gz"
+  asset="f00-${tag#v}-linux-x86_64.tar.gz"
   url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
 
   log "fetch ${url}"
   if ! curl -fsSL "$url" -o "${tmp}/f00.tgz"; then
-    asset="f00-${os}-${arch}.tar.gz"
+    asset="f00-${tag#v}-x86_64-linux.tar.gz"
     url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
     log "retry ${url}"
-    curl -fsSL "$url" -o "${tmp}/f00.tgz" || die "download failed (or set F00_LOCAL=path/to/asm)"
+    if ! curl -fsSL "$url" -o "${tmp}/f00.tgz"; then
+      die "download failed (set F00_VERSION=vX.Y.Z or F00_LOCAL=path/to/asm)"
+    fi
   fi
   tar -xzf "${tmp}/f00.tgz" -C "$tmp"
   echo "$tmp"
 }
 
 main() {
-  printf "\n${BOLD}f00${RESET} ${DIM}suite installer (0.15.0 multicall)${RESET}\n" >&2
+  printf "\n${BOLD}f00tils${RESET} ${DIM}installer · binary f00 · 0.15.0 multicall${RESET}\n" >&2
 
   local dir bin
   local tmp=""

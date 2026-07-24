@@ -1099,3 +1099,69 @@ pre.code {
 tr.partial td { opacity: 0.92; }
 tr.missing td { color: var(--warn); }
 tr.missing code { color: var(--warn); }
+
+/* suite benchmarks */
+.bench-scroll {
+  max-height: min(70vh, 42rem);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.bench-scroll table.matrix {
+  margin: 0;
+}
+.bench-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-elevated);
+}
+.bench-out {
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bench-out code {
+  font-size: 0.8em;
+  color: var(--text-dim);
+}
+
+/* screenshots / brand shots */
+.shot-frame {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: var(--bg-elevated);
+}
+.shot-frame .shot,
+.shot-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.shot-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+@media (min-width: 800px) {
+  .shot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.shot-card {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+.shot-card figcaption {
+  padding: 0.75rem 1rem 1rem;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  border-top: 1px solid var(--border);
+}

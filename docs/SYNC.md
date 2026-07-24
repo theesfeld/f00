@@ -1,43 +1,37 @@
 # Docs sync process
 
-README, GitHub Pages (`site/`), GitHub Issues/milestones, `man/f00.1`, and `docs/ROADMAP.md` must stay consistent with **shipped** behavior.
+README, GitHub Pages (`site/`), man pages under `asm/man/man1/`, and `docs/ROADMAP.md` must stay consistent with **shipped** behavior.
 
-## Hard rule — man page
+## Hard rule — man pages
 
-**`man/f00.1` must ALWAYS match the current state of the project.**
+**`asm/man/man1/f00*.1` must match the current product surface.**
 
-- Source of truth for the manual is the tracked file `man/f00.1` (not `f00 --generate-man`).
-- Every PR that changes public flags, user-visible modes, install/update story, or `Cargo.toml` version **must** update `man/f00.1` in the same unit.
-- CI job **man page sync** runs `scripts/check-man-sync.sh` and **must stay green**.
-- Local check: `scripts/check-man-sync.sh`
-
-See `man/README.md`.
+- Overview: `asm/man/man1/f00.1`
+- Per-tool pages: `asm/man/man1/f00-*.1`
+- Generator: `asm/man/gen-manpages.sh` (stubs); keep hand pages for deep tools
+- Every change that alters public flags, modes, install, or version should update man pages in the same unit
 
 ## When you change user-facing behavior
 
-1. Update CLI help / flag surface in code.
-2. Update **man/f00.1** (same PR — hard rule).
-3. Update **README.md** (features table, usage, shipped vs planned labels).
-4. Update **site/index.html** (feature cards, demos; refresh before releases).
-5. Update **docs/ROADMAP.md** milestone status when used.
-6. Comment on or close related **GitHub Issues**; open new ones for follow-ups.
-7. If install/release URLs change, update **site/install.sh** (and packaging) together.
+1. Update CLI help in assembly sources.
+2. Update man pages under `asm/man/man1/`.
+3. Update **README.md** (features, install, benchmarks).
+4. Update **site/index.html** and bench data when speed claims change.
+5. Update **docs/ROADMAP.md** when milestones move.
+6. If install/release URLs change, update **install.sh** and **site/install.sh** together.
 
 ## PR checklist
 
-- [ ] README claims match what `cargo run -p f00 -- --help` shows
-- [ ] **`scripts/check-man-sync.sh` passes** (man version + every public long flag)
+- [ ] README claims match `./f00 --help` / `./f00-TOOL --help`
+- [ ] Man pages updated for user-visible changes
 - [ ] Site does not advertise unshipped features as done
-- [ ] ROADMAP status bits match open/closed milestones
+- [ ] ROADMAP status matches reality
 - [ ] No broken badge/repo links (`theesfeld/f00`, `https://f00.sh`)
 
 ## Release checklist
 
-- [ ] Version bumped in workspace `Cargo.toml` **and** `man/f00.1` `.TH` version
-- [ ] `scripts/check-man-sync.sh` green
-- [ ] Speed/bench tables on site re-run and updated for this version
-- [ ] Site reflects current features/functionality
-- [ ] Tag `vX.Y.Z` triggers release workflow (archives include `f00.1`)
-- [ ] SHA256SUMS uploaded
-- [ ] `curl -fsSL https://f00.sh/install.sh | bash` installs binary + man
-- [ ] Close milestone issues that shipped
+- [ ] Version bumped in man page `.TH` lines and release notes
+- [ ] `cd asm && make smoke && make speed`
+- [ ] `python3 scripts/gen-suite-bench.py` (refresh site benches)
+- [ ] Package assets: tarball · deb · rpm · Arch (`scripts/build-linux-packages.sh`)
+- [ ] Tag `vX.Y.Z` triggers release workflow

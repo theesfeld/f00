@@ -13,7 +13,6 @@ fi
 
 sha_for() {
   local name="$1"
-  # SHA256SUMS lines: "<hash>  <filename>" or "<hash> <filename>"
   awk -v f="$name" '$2 == f || $2 == ("./" f) { print $1; exit }' "${SUMS}"
 }
 
@@ -27,60 +26,64 @@ need() {
   printf '%s' "${h}"
 }
 
-SHA_AARCH64_DARWIN="$(need "f00-aarch64-apple-darwin.tar.gz")"
-SHA_X86_64_DARWIN="$(need "f00-x86_64-apple-darwin.tar.gz")"
-SHA_AARCH64_LINUX="$(need "f00-aarch64-unknown-linux-gnu.tar.gz")"
-SHA_X86_64_LINUX="$(need "f00-x86_64-unknown-linux-gnu.tar.gz")"
+# Prefer ASM asset names
+if sha_for "f00-${VERSION}-linux-x86_64.tar.gz" >/dev/null 2>&1 \
+  && [[ -n "$(sha_for "f00-${VERSION}-linux-x86_64.tar.gz")" ]]; then
+  ASSET="f00-${VERSION}-linux-x86_64.tar.gz"
+else
+  ASSET="f00-${VERSION}-x86_64-linux.tar.gz"
+fi
+SHA_X86_64_LINUX="$(need "${ASSET}")"
 
 mkdir -p "$(dirname "${OUT}")"
 cat > "${OUT}" <<EOF
-# Homebrew formula for f00.
+# Homebrew formula for f00 (pure assembly multicall coreutils suite).
 #
 # Install:
 #   brew install theesfeld/tap/f00
 #
-# Official installer (any platform):
+# Official installer:
 #   curl -fsSL https://f00.sh/install.sh | bash
-#
-# This file is auto-updated on release (Refs: packaging phase).
 
 class F00 < Formula
-  desc "Modern, friendly directory lister (ls rewrite in Rust)"
+  desc "f00tils — pure assembly coreutils replacement (multicall, freestanding)"
   homepage "https://f00.sh"
   version "${VERSION}"
-  license any_of: ["MIT", "Apache-2.0"]
-
-  on_macos do
-    on_arm do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-apple-darwin.tar.gz"
-      sha256 "${SHA_AARCH64_DARWIN}"
-    end
-    on_intel do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-apple-darwin.tar.gz"
-      sha256 "${SHA_X86_64_DARWIN}"
-    end
-  end
+  license "MIT"
 
   on_linux do
-    on_arm do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "${SHA_AARCH64_LINUX}"
-    end
     on_intel do
-      url "https://github.com/theesfeld/f00/releases/download/v#{version}/f00-x86_64-unknown-linux-gnu.tar.gz"
+      url "https://github.com/theesfeld/f00/releases/download/v#{version}/${ASSET}"
       sha256 "${SHA_X86_64_LINUX}"
     end
   end
 
   def install
-    # Release tarball root is f00-<target-triple>/f00
-    bin.install Dir["f00-*/f00"].first
+    bin.install "f00"
+    utils = %w[
+      ls cat true false yes nproc tty whoami basename dirname
+      head tail wc tee seq echo pwd sleep
+      env printenv realpath readlink pathchk mktemp link unlink sync truncate
+      mkdir rmdir chmod touch logname hostid
+      cut tr sort uniq rev tac nl fold expand unexpand paste join comm fmt od
+      split csplit shuf tsort pr ptx factor numfmt expr
+      cp mv rm ln chown chgrp stat df du install mkfifo mknod shred dd dir vdir
+      id groups uname arch date users who pinky uptime hostname
+      nice nohup timeout kill test printf
+      md5sum sha1sum sha256sum sha224sum sha384sum sha512sum b2sum cksum sum
+      base64 basenc base32 dircolors chroot stty stdbuf runcon chcon
+    ]
+    utils.each do |u|
+      bin.install_symlink "f00" => "f00-#{u}"
+    end
+    man1.install Dir["man/man1/*.1"] if Dir.exist?("man/man1")
   end
 
   test do
-    assert_match "f00", shell_output("#{bin}/f00 --version")
+    assert_match "f00", shell_output("#{bin}/f00-ls --version")
+    system bin/"f00-true"
   end
 end
 EOF
 
-echo "wrote ${OUT} for v${VERSION}"
+echo "wrote ${OUT} for v${VERSION} (${ASSET})"

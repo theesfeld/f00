@@ -1,23 +1,19 @@
-# f00 public benchmarks
+# f00tils suite benchmarks
 
-Reproduced with [hyperfine](https://github.com/sharkdp/hyperfine) on a warm directory of **20 000** small files.
+Machine-readable and markdown tables for the website and README.
 
-## Two tracks (do not mix)
+| File | Role |
+|------|------|
+| [suite.json](suite.json) | Per-tool: command, sample output, GNU ms, f00 ms, ratio |
+| [suite.md](suite.md) | Human table |
 
-| Track | Opponent | f00 command |
-|-------|----------|-------------|
-| **A · drop-in** | coreutils `ls` | **`f00 --gnu`** only |
-| **B · modern** | eza / lsd | default **`f00`** (no `--gnu`) |
-
-Colors forced off (`--color=never`) for all tools.
-
-## Reproduce
+## Regenerate
 
 ```bash
-cargo build -p f00 --release
-# real coreutils binary (not an f00 symlink named ls)
-# eza, lsd, hyperfine on PATH
-./scripts/bench-compare.sh 20000
+cd asm
+make
+N=25 python3 ../scripts/gen-suite-bench.py
 ```
 
-Numbers on the site: Linux x86_64 · coreutils 9.11 · eza 0.23 · lsd 1.2 · f00 0.12.
+Method: warm cache, spawn-inclusive, median of `N` runs.
+f00 is timed as `f00-TOOL --core …` against `/usr/bin/TOOL`.

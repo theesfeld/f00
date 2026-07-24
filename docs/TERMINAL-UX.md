@@ -1,7 +1,7 @@
 # Terminal UX conventions (f00 suite)
 
 Tiny suite-wide contract for help text, semantic color, `--core`, and machine-readable JSON.
-Applies to the freestanding ASM multicall (`asm/`) and should stay aligned with the Rust crates.
+Applies to the freestanding ASM multicall product under `asm/`.
 
 Implementation anchors:
 

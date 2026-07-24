@@ -1,7 +1,7 @@
 name: Release
 
 # Pure assembly multicall release (Linux x86-64 freestanding).
-# Tag: vX.Y.Z → assets f00-X.Y.Z-linux-x86_64.tar.gz (+ alias ordering).
+# Tag: vX.Y.Z → tarball + deb + rpm + Arch package.
 
 on:
   push:
@@ -20,6 +20,13 @@ jobs:
 
       - name: Install nasm
         run: sudo apt-get update -qq && sudo apt-get install -y -qq nasm
+
+      - name: Install nfpm
+        run: |
+          set -euo pipefail
+          curl -sSLf https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_Linux_x86_64.tar.gz \
+            | tar -xz -C /usr/local/bin nfpm
+          nfpm --version
 
       - name: Version from tag
         id: meta
@@ -53,20 +60,26 @@ jobs:
           STAGE="dist/f00-${VER}-linux-x86_64"
           mkdir -p "$STAGE/man/man1"
           install -m755 asm/f00 "$STAGE/f00"
-          # ship man pages if present
           if [[ -d asm/man/man1 ]]; then
             cp -a asm/man/man1/f00*.1 "$STAGE/man/man1/" 2>/dev/null || true
           fi
-          for f in README.md LICENSE LICENSE-MIT CHANGELOG.md; do
+          for f in README.md LICENSE CHANGELOG.md; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done
           mkdir -p dist
           tar -C dist -czf "dist/f00-${VER}-linux-x86_64.tar.gz" "f00-${VER}-linux-x86_64"
-          # installer-friendly alias (arch-os order used historically by some scripts)
           cp "dist/f00-${VER}-linux-x86_64.tar.gz" "dist/f00-${VER}-x86_64-linux.tar.gz"
           (cd dist && sha256sum "f00-${VER}-linux-x86_64.tar.gz" "f00-${VER}-x86_64-linux.tar.gz" > SHA256SUMS)
           cat dist/SHA256SUMS
           echo "primary=dist/f00-${VER}-linux-x86_64.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Build deb/rpm/arch packages
+        run: |
+          set -euo pipefail
+          chmod +x scripts/build-linux-packages.sh
+          scripts/build-linux-packages.sh "${{ steps.meta.outputs.version }}" dist dist
+          (cd dist && sha256sum f00*.deb f00*.rpm f00*.pkg.tar.zst 2>/dev/null >> SHA256SUMS || true)
+          cat dist/SHA256SUMS
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -75,6 +88,9 @@ jobs:
           path: |
             dist/f00-*-linux-x86_64.tar.gz
             dist/f00-*-x86_64-linux.tar.gz
+            dist/f00_*.deb
+            dist/f00-*.rpm
+            dist/f00-*.pkg.tar.zst
             dist/SHA256SUMS
           if-no-files-found: error
 
@@ -94,7 +110,6 @@ jobs:
           VERSION="${TAG#v}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          # prerelease if tag contains - (e.g. v0.15.0-beta.1)
           if [[ "$VERSION" == *-* ]]; then
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           else
@@ -121,22 +136,23 @@ jobs:
           body: |
             # f00 ${{ steps.meta.outputs.tag }}
 
-            **Pure assembly GNU coreutils monorepo** (Linux x86-64 freestanding multicall).
+            **f00tils** — pure assembly GNU coreutils monorepo (Linux x86-64 freestanding multicall; binary `f00`).
 
             ## Install
 
             ```bash
             curl -fsSL https://f00.sh/install.sh | bash
-            # pin
             curl -fsSL https://f00.sh/install.sh | F00_VERSION=${{ steps.meta.outputs.tag }} bash
-            # source
             git checkout ${{ steps.meta.outputs.tag }} && cd asm && make && make install
             ```
 
             ## Assets
 
-            - `f00-${{ steps.meta.outputs.version }}-linux-x86_64.tar.gz` (preferred)
+            - `f00-${{ steps.meta.outputs.version }}-linux-x86_64.tar.gz` (preferred tarball)
             - `f00-${{ steps.meta.outputs.version }}-x86_64-linux.tar.gz` (alias)
+            - `f00_${{ steps.meta.outputs.version }}_amd64.deb`
+            - `f00-${{ steps.meta.outputs.version }}-1.x86_64.rpm`
+            - `f00-${{ steps.meta.outputs.version }}-1-x86_64.pkg.tar.zst`
 
             See [README](https://github.com/theesfeld/f00#readme) · [progress](https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md) · https://f00.sh
         env:

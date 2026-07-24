@@ -6,14 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       channels:
-        description: "Comma list: homebrew,scoop,aur,winget,all"
+        description: "Comma list: homebrew,aur,all"
         required: false
         default: "all"
-      version:
-        description: "Version for winget (no v prefix); default 0.11.0"
-        required: false
-        default: "0.11.0"
-
 
 permissions:
   contents: read
@@ -33,14 +28,6 @@ jobs:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: scripts/publish-homebrew-tap.sh Formula/f00.rb
 
-      - name: Publish Scoop bucket
-        if: ${{ github.event.inputs.channels == 'all' || contains(github.event.inputs.channels, 'scoop') }}
-        env:
-          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: scripts/publish-scoop.sh packaging/scoop/f00.json
-
       - name: Publish AUR
         if: ${{ github.event.inputs.channels == 'all' || contains(github.event.inputs.channels, 'aur') }}
         env:
@@ -48,9 +35,3 @@ jobs:
           AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
           AUR_EMAIL: ${{ secrets.AUR_EMAIL }}
         run: scripts/publish-aur.sh packaging/aur
-
-      - name: Publish winget (PR to winget-pkgs)
-        if: ${{ github.event.inputs.channels == 'all' || contains(github.event.inputs.channels, 'winget') }}
-        env:
-          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
-        run: scripts/publish-winget.sh "${{ github.event.inputs.version }}"

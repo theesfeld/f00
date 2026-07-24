@@ -5,30 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-**Note:** While f00 is `0.x`, minor versions may include breaking changes (documented here).
+**Note:** Product name **f00tils** (coreutils → f00tils); binary `f00`. While the project is `0.x`, minor versions may include breaking changes (documented here).
 
 ## [Unreleased]
 
+### Changed
+- Product brand **f00tils** (coreutils replacement naming)
+- Docs, man pages, website rewrite under house communication standards (STE / NASA-AP)
+- Website per-tool benchmarks: tool, command, sample output, GNU vs f00 time
+- Release assets: **deb**, **rpm**, and **Arch** packages alongside tarballs
+- House scaffold: `AGENTS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, pre-commit, issue templates
+
+### Removed
+- Historical Rust workspace (`crates/`, `Cargo.toml`, dual Apache license artifacts)
+- Windows Scoop/Winget packaging stubs (product is Linux x86-64 freestanding ASM)
+
 ## [0.15.0] - 2026-07-23
 
-### Beta — pure assembly coreutils monorepo
+### Full-use — pure assembly coreutils monorepo
 
 #### Added
-- **Full multicall GNU coreutils *surface*** as freestanding x86-64 Linux ASM (no libc), ~600K static binary
+- **Full multicall GNU coreutils surface** as freestanding x86-64 Linux ASM (no libc), ~650K static binary
 - Suite-wide **`--core`**, **`--json`** (`f00/v1` rich metadata), **`--csv`**, modern TTY color/UX
 - Terminal design system (`suite_ux.asm`), docs: `GNU-COMPLIANCE.md`, `TERMINAL-UX.md`
 - Quality gates: `make speed` (must beat coreutils), `benches/parity.sh`
-- Installer + GitHub Pages site aligned with monorepo README (STE100)
+- Installer + GitHub Pages site aligned with monorepo README
 - Man pages: `f00(1)` + `f00-*(1)` for the full util set
+- Release packages: `.tar.gz`, `.deb`, `.rpm`, `.pkg.tar.zst`
 
 #### Changed
-- Product focus: **ASM suite is canonical**; Rust crates retained as historical reference
-- README / site: feature parity tables, speed tables, package manager notes, beta install pin
+- Product focus: **ASM suite is the only product surface**
 
-#### Known limitations (beta)
+#### Known limitations
 - Not every obscure GNU long-option on every util is complete (see `docs/GNU-COMPLIANCE.md`)
-- Linux x86-64 first; Darwin/Windows later
-- Distro packages migrating off Rust ls packaging
+- Linux x86-64 first; Darwin / multi-arch later
 
 
 ## [0.12.0] - 2026-07-21

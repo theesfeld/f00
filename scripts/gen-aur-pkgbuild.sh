@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate packaging/aur/PKGBUILD from version + SHA256SUMS.
+# Generate packaging/aur/PKGBUILD from version + SHA256SUMS (source tarball optional).
 # Usage: gen-aur-pkgbuild.sh <version> <SHA256SUMS-path> [output-path]
 set -euo pipefail
 
@@ -11,24 +11,7 @@ if [[ -z "${OUT}" ]]; then
   OUT="${ROOT}/packaging/aur/PKGBUILD"
 fi
 
-sha_for() {
-  local name="$1"
-  awk -v f="$name" '$2 == f || $2 == ("./" f) { print $1; exit }' "${SUMS}"
-}
-
-need() {
-  local h
-  h="$(sha_for "$1")"
-  if [[ -z "${h}" ]]; then
-    echo "missing sha256 for $1 in ${SUMS}" >&2
-    exit 1
-  fi
-  printf '%s' "${h}"
-}
-
-SHA_X86="$(need "f00-x86_64-unknown-linux-gnu.tar.gz")"
-SHA_ARM="$(need "f00-aarch64-unknown-linux-gnu.tar.gz")"
-
+# Prefer building from tagged source (AUR-friendly). SHA for release binary is optional.
 mkdir -p "$(dirname "${OUT}")"
 cat > "${OUT}" <<EOF
 # Maintainer: theesfeld
@@ -36,34 +19,44 @@ cat > "${OUT}" <<EOF
 pkgname=f00
 pkgver=${VERSION}
 pkgrel=1
-pkgdesc="Modern, friendly directory lister (ls rewrite in Rust)"
-arch=('x86_64' 'aarch64')
+pkgdesc="f00tils — pure assembly coreutils replacement (multicall, freestanding)"
+arch=('x86_64')
 url="https://f00.sh"
-license=('MIT' 'Apache')
-depends=('glibc' 'gcc-libs')
+license=('MIT')
+depends=()
+makedepends=('nasm' 'binutils')
 provides=('f00')
-source_x86_64=("https://github.com/theesfeld/f00/releases/download/v\${pkgver}/f00-x86_64-unknown-linux-gnu.tar.gz")
-source_aarch64=("https://github.com/theesfeld/f00/releases/download/v\${pkgver}/f00-aarch64-unknown-linux-gnu.tar.gz")
-sha256sums_x86_64=('${SHA_X86}')
-sha256sums_aarch64=('${SHA_ARM}')
+conflicts=('f00')
+source=("https://github.com/theesfeld/f00/archive/refs/tags/v\${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "\${srcdir}/f00-\${pkgver}/asm" 2>/dev/null || cd "\${srcdir}/f00-"*/asm
+  make
+}
 
 package() {
-  local dir
-  if [[ "\${CARCH}" == "x86_64" ]]; then
-    dir="f00-x86_64-unknown-linux-gnu"
-  else
-    dir="f00-aarch64-unknown-linux-gnu"
-  fi
-  install -Dm755 "\${srcdir}/\${dir}/f00" "\${pkgdir}/usr/bin/f00"
-  if [[ -f "\${srcdir}/\${dir}/LICENSE-MIT" ]]; then
-    install -Dm644 "\${srcdir}/\${dir}/LICENSE-MIT" \\
-      "\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE-MIT"
-  fi
-  if [[ -f "\${srcdir}/\${dir}/LICENSE-APACHE" ]]; then
-    install -Dm644 "\${srcdir}/\${dir}/LICENSE-APACHE" \\
-      "\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE-APACHE"
+  cd "\${srcdir}/f00-\${pkgver}/asm" 2>/dev/null || cd "\${srcdir}/f00-"*/asm
+  install -Dm755 f00 "\${pkgdir}/usr/bin/f00"
+  local u
+  for u in ls cat true false yes nproc tty whoami basename dirname \\
+           head tail wc tee seq echo pwd sleep \\
+           env printenv realpath readlink pathchk mktemp link unlink sync truncate \\
+           mkdir rmdir chmod touch logname hostid \\
+           cut tr sort uniq rev tac nl fold expand unexpand paste join comm fmt od \\
+           split csplit shuf tsort pr ptx factor numfmt expr \\
+           cp mv rm ln chown chgrp stat df du install mkfifo mknod shred dd dir vdir \\
+           id groups uname arch date users who pinky uptime hostname \\
+           nice nohup timeout kill test printf \\
+           md5sum sha1sum sha256sum sha224sum sha384sum sha512sum b2sum cksum sum \\
+           base64 basenc base32 dircolors chroot stty stdbuf runcon chcon; do
+    ln -s f00 "\${pkgdir}/usr/bin/f00-\${u}"
+  done
+  install -Dm644 ../LICENSE "\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE" 2>/dev/null || true
+  if [[ -d man/man1 ]]; then
+    install -Dm644 man/man1/*.1 -t "\${pkgdir}/usr/share/man/man1/"
   fi
 }
 EOF
 
-echo "wrote ${OUT} for v${VERSION}"
+echo "wrote ${OUT} for v${VERSION} (SUMS=${SUMS} recorded for release tooling)"
