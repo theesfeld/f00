@@ -169,7 +169,7 @@
         </div>
         <p class="muted small">*coreutils ships many separate binaries.</p>
 
-        <h3 class="subhead">Speed snapshot</h3>
+        <h3 class="subhead">Tools — ship status + speed</h3>
         <p class="muted small" id="bench-meta">Loading measured times…</p>
         <div class="stat-row" id="bench-stats" hidden>
           <div class="stat"><span class="stat-val" id="stat-tools">—</span><span class="stat-lbl">tools timed</span></div>
@@ -177,34 +177,13 @@
           <div class="stat"><span class="stat-val" id="stat-best">—</span><span class="stat-lbl">best win</span></div>
           <div class="stat"><span class="stat-val" id="stat-n">—</span><span class="stat-lbl">runs (median)</span></div>
         </div>
-        <div class="table-wrap">
-          <table class="matrix compact" id="highlight-table">
-            <thead>
-              <tr>
-                <th>Tool</th>
-                <th>Command</th>
-                <th>GNU ms</th>
-                <th>f00 ms</th>
-                <th>× GNU</th>
-              </tr>
-            </thead>
-            <tbody id="highlight-body">
-              <tr><td colspan="5" class="muted">…</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="muted small">Top measured wins (spawn-inclusive, warm cache). Full machine data:
-          <a href="bench/suite.json">suite.json</a> ·
-          <a href="bench/suite.md">suite.md</a>
-        </p>
-
-        <h3 class="subhead">Every tool — feature + speed</h3>
         <div class="progress-bar" role="img" aria-label="shipped 106 of 106">
           <div class="progress-fill" style="width:100%"></div>
         </div>
         <p class="muted small">
-          One row per coreutil: ship status, <code class="mono">--core</code> depth, modern surface, and
-          measured time when available (no nested scroll — use the page).
+          One table: every coreutil with ship / <code class="mono">--core</code> / modern, plus timed
+          <code class="mono">f00-* --core</code> vs GNU when a safe payload race exists.
+          Destructive or privileged tools use a light entry race or show the speed-gate result only.
         </p>
         <div class="table-wrap">
           <table class="matrix compact" id="scoreboard-table">
@@ -227,8 +206,11 @@
           </table>
         </div>
         <p class="muted small">
-          Extras also shipped: <code>hostname</code>, <code>kill</code>, <code>rev</code>.
-          Flag depth:
+          Machine data:
+          <a href="bench/suite.json">suite.json</a> ·
+          <a href="bench/suite.md">suite.md</a>
+          · extras: <code>hostname</code>, <code>kill</code>, <code>rev</code>
+          · flag depth:
           <a href="https://github.com/theesfeld/f00/blob/main/docs/GNU-COMPLIANCE.md">GNU-COMPLIANCE.md</a>
         </p>
       </div>

@@ -153,21 +153,29 @@ def main() -> int:
             ("join", "a.txt b.txt", [str(a), str(b)], None),
             ("base64", "fixture.txt", [str(fix)], None),
             ("base32", "fixture.txt", [str(fix)], None),
+            ("basenc", "--base64 fixture.txt", ["--base64", str(fix)], None),
             ("md5sum", "fixture.txt", [str(fix)], None),
             ("sha1sum", "fixture.txt", [str(fix)], None),
+            ("sha224sum", "fixture.txt", [str(fix)], None),
             ("sha256sum", "fixture.txt", [str(fix)], None),
+            ("sha384sum", "fixture.txt", [str(fix)], None),
             ("sha512sum", "fixture.txt", [str(fix)], None),
+            ("b2sum", "fixture.txt", [str(fix)], None),
             ("cksum", "fixture.txt", [str(fix)], None),
             ("sum", "fixture.txt", [str(fix)], None),
             ("ls", "-1 dir", ["-1", str(d)], None),
             ("dir", "-1 dir", ["-1", str(d)], None),
+            ("vdir", "-1 dir", ["-1", str(d)], None),
             ("stat", "-c %s fixture.txt", ["-c", "%s", str(fix)], None),
             ("realpath", ".", [str(ASM)], None),
+            ("readlink", "/proc/self/exe", ["/proc/self/exe"], None),
             ("df", "-P /", ["-P", "/"], None),
             ("du", "-s dir", ["-s", str(d)], None),
             ("dircolors", "-p", ["-p"], None),
             ("env", "-i true", ["-i", "true"], None),
             ("timeout", "5 true", ["5", "true"], None),
+            ("nice", "true", ["true"], None),
+            ("nohup", "true", ["true"], None),
             ("sleep", "0", ["0"], None),
             ("test", "-f fixture.txt", ["-f", str(fix)], None),
             ("pathchk", "ok-name", ["ok-name"], None),
@@ -181,33 +189,54 @@ def main() -> int:
             ("arch", "", [], None),
             ("hostname", "", [], None),
             ("users", "", [], None),
+            ("who", "", [], None),
+            ("pinky", "", [], None),
             ("fold", "-w 40 fixture.txt", ["-w", "40", str(fix)], None),
             ("fmt", "-w 40 fixture.txt", ["-w", "40", str(fix)], None),
             ("expand", "fixture.txt", [str(fix)], None),
+            ("unexpand", "fixture.txt", [str(fix)], None),
             ("tac", "fixture.txt", [str(fix)], None),
             ("rev", "fixture.txt", [str(fix)], None),
             ("ptx", "-A fixture.txt", ["-A", str(fix)], None),
             ("pr", "-t fixture.txt", ["-t", str(fix)], None),
             ("shuf", "fixture.txt", [str(fix)], None),
             ("tsort", "", [], b"a b\nb c\n"),
+            ("tee", "tee.out", [str(work / "tee.out")], b"tee data\n" * 20),
+            ("split", "-l 50 fixture.txt out", ["-l", "50", str(fix), str(work / "spl")], None),
+            ("csplit", "-f xx fixture 5", ["-f", str(work / "xx"), str(fix), "5"], None),
+            ("chmod", "644 fixture.txt", ["644", str(fix)], None),
+            ("touch", "touched", [str(work / "touched")], None),
+            ("truncate", "-s 0 trunc", ["-s", "0", str(work / "trunc")], None),
+            ("cp", "fixture.txt cp.out", [str(fix), str(work / "cp.out")], None),
+            ("dd", "if=fixture of=dd.out bs=4k count=1", [
+                f"if={fix}", f"of={work / 'dd.out'}", "bs=4k", "count=1", "status=none"
+            ], None),
+            ("install", "-m 644 fixture inst.out", ["-m", "644", str(fix), str(work / "inst.out")], None),
             ("yes", "--version", ["--version"], None),
+            # entry/help races for tools without a fair payload race
+            ("[", "-f fixture.txt", ["-f", str(fix)], None),
         ]
 
         rows = []
         for name, disp_args, argl, stdin in cases:
-            gnu = find_gnu(name)
-            link = ASM / f"f00-{name}"
-            if not link.exists() and name != "test":
-                # try bracket
+            gnu_name = "test" if name == "[" else name
+            gnu = find_gnu(gnu_name)
+            if name == "[":
+                link = ASM / "f00-["
+                if not link.exists():
+                    link = ASM / "f00-test"
+            else:
+                link = ASM / f"f00-{name}"
+            if not link.exists() and name not in ("test", "["):
                 continue
             if name == "test" and not (ASM / "f00-test").exists():
                 continue
 
-            f_bin = str(ASM / f"f00-{name}") if (ASM / f"f00-{name}").exists() else str(F00)
+            f_bin = str(link) if link.exists() else str(F00)
             f_cmd = [f_bin, "--core", *argl]
             # display command strings
             f_disp = f"f00-{name} --core" + (f" {disp_args}" if disp_args else "")
-            g_disp = f"{name}" + (f" {disp_args}" if disp_args else "")
+            g_disp = f"{gnu_name}" + (f" {disp_args}" if disp_args else "")
 
             if not gnu:
                 rows.append(
