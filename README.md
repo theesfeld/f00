@@ -9,7 +9,7 @@ One multicall x86-64 Linux binary (no libc). Modern defaults for interactive wor
 | | |
 |---|---|
 | **Project** | **f00tils** (coreutils replacement suite) |
-| **Binary** | `f00` multicall + `f00-*` links + optional short names (`ls`, `cat`, …) |
+| **Binary** | `f00` multicall + `f00-*` (side-by-side; never replaces system `ls`/`cat` by default) |
 | **Default** | Modern (color, **Nerd File Icons**, table columns, chromed JSON/CSV) |
 | **Icons** | On by default (Nerd; ascii fallback if no font) · `emoji`/`glyph`/`ascii` skins · off under `--core` |
 | **Scripts** | `--core` — strict coreutils-compatible presentation |
@@ -259,7 +259,14 @@ bash benches/parity.sh
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-The script installs multicall `f00` and all `f00-*` links into `~/.local/bin`.
+**Default is side-by-side.** Installs multicall `f00` and every `f00-*` name into `~/.local/bin` (and puts that dir on your `PATH` if needed). System coreutils stay untouched — use `f00-ls`, `f00-cat`, … next to `/usr/bin/ls`.
+
+| Method | What you get | Shadows bare `ls`/`cat`? |
+|--------|----------------|--------------------------|
+| **curl** (default) | `f00` + `f00-*` in `~/.local/bin` | **No** |
+| **Homebrew / AUR / deb / rpm** | `f00` + `f00-*` under the package prefix | **No** (packages never ship bare names) |
+| curl + `F00_SUPERSEDE=1` | also bare names in `~/.local/bin` | Only if that dir wins on `PATH` (opt-in) |
+| curl + `F00_ALIAS=1` | shell aliases for a few interactive tools | Only in that shell rc (opt-in) |
 
 | Env | Effect |
 |-----|--------|
@@ -267,8 +274,8 @@ The script installs multicall `f00` and all `f00-*` links into `~/.local/bin`.
 | `F00_VERSION` | Release tag (default: latest) |
 | `F00_LOCAL` | Path to local `asm/` build that contains `./f00` |
 | `F00_TOOLS` | `all` or comma list |
-| `F00_SUPERSEDE=1` | Also install short names (`ls`, `cat`, …) |
-| `F00_ALIAS=1` | Append shell aliases |
+| `F00_SUPERSEDE=1` | **Opt-in takeover:** also install unprefixed names (`ls`, `cat`, …) in `INSTALL_DIR` |
+| `F00_ALIAS=1` | **Opt-in:** append a few interactive aliases (`ls='f00-ls'`, …) |
 | `F00_MAN=1` | Install man pages (default on) |
 
 ```bash
@@ -278,9 +285,11 @@ curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.9 bash
 # local build
 curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
 
-# short names beside f00-*
+# opt-in only — not recommended as the default story
 curl -fsSL https://f00.sh/install.sh | F00_SUPERSEDE=1 bash
 ```
+
+Config (`~/.config/f00/config`) controls **presentation** (color, icons, `--core`), not which binary wins on `PATH`. Takeover stays install-time / alias-time.
 
 **Platform:** Linux x86-64 release assets. Build from source on other hosts is not the product path yet.
 

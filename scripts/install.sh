@@ -3,7 +3,7 @@
 #   curl -fsSL https://f00.sh/install.sh | bash
 #
 # f00tils: pure-assembly multicall coreutils replacement (Linux x86-64 only).
-# Installs multicall `f00` + f00-* links for the full coreutils surface.
+# Default: side-by-side — multicall `f00` + f00-* only (does not replace system ls/cat).
 #
 # Beta pin example:
 #   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.9 bash
@@ -15,8 +15,8 @@
 #   F00_LOCAL        path to a local build directory containing ./f00
 #                    (e.g. /path/to/f00/asm) — skips download
 #   F00_TOOLS        comma list or "all" (default: all shipped tools)
-#   F00_SUPERSEDE    1 = also install unprefixed names (ls, cat, …) in INSTALL_DIR
-#   F00_ALIAS        1 = append shell aliases for selected tools (ls, cat, …)
+#   F00_SUPERSEDE    1 = opt-in: also unprefixed names (ls, cat, …) in INSTALL_DIR
+#   F00_ALIAS        1 = opt-in: append shell aliases for a few interactive tools
 #   ADD_PATH         1 = ensure INSTALL_DIR on PATH (default: 1 when missing)
 #   F00_NO_COLOR     1 = plain logs
 #   F00_MAN          1 = install man pages if present (default: 1)
