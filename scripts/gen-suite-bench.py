@@ -650,7 +650,7 @@ def update_file_id_diz(summary: dict, meta: dict) -> None:
     if not lines:
         return
 
-    # Version line: "… · v0.15.10 …"
+    # Version line: "… · v0.15.11 …"
     ver = None
     fv = meta.get("f00_version") or ""
     import re

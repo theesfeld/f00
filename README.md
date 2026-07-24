@@ -9,13 +9,13 @@ One multicall x86-64 Linux binary (no libc). Modern defaults for interactive wor
 | | |
 |---|---|
 | **Project** | **f00tils** (coreutils replacement suite) |
-| **Binary** | `f00` multicall + `f00-*` (side-by-side; never replaces system `ls`/`cat` by default) |
+| **Binary** | `f00` multicall + `f00-*` + **bare names by default** (`ls`/`cat`/… via PATH) |
 | **Default** | Modern (color, **Nerd File Icons**, table columns, chromed JSON/CSV) |
 | **Icons** | On by default (Nerd; ascii fallback if no font) · `emoji`/`glyph`/`ascii` skins · off under `--core` |
 | **Scripts** | `--core` — strict coreutils-compatible presentation |
 | **Engine** | Pure ASM multicall · ~650K static · no libc |
 | **License** | MIT |
-| **Status** | Released `v0.15.10` |
+| **Status** | Released `v0.15.11` |
 | **Site** | [https://f00.sh](https://f00.sh) |
 | **Repo** | [github.com/theesfeld/f00](https://github.com/theesfeld/f00) |
 
@@ -259,37 +259,42 @@ bash benches/parity.sh
 curl -fsSL https://f00.sh/install.sh | bash
 ```
 
-**Default is side-by-side.** Installs multicall `f00` and every `f00-*` name into `~/.local/bin` (and puts that dir on your `PATH` if needed). System coreutils stay untouched — use `f00-ls`, `f00-cat`, … next to `/usr/bin/ls`.
+**Default is replace.** Installs multicall `f00`, every `f00-*`, and **bare names** (`ls`, `cat`, …) so f00tils is what you run when you type `cat`. GNU coreutils stay on disk; f00 wins on **PATH**.
 
-| Method | What you get | Shadows bare `ls`/`cat`? |
-|--------|----------------|--------------------------|
-| **curl** (default) | `f00` + `f00-*` in `~/.local/bin` | **No** |
-| **Homebrew / AUR / deb / rpm** | `f00` + `f00-*` under the package prefix | **No** (packages never ship bare names) |
-| curl + `F00_SUPERSEDE=1` | also bare names in `~/.local/bin` | Only if that dir wins on `PATH` (opt-in) |
-| curl + `F00_ALIAS=1` | shell aliases for a few interactive tools | Only in that shell rc (opt-in) |
+| Method | What you get | Bare `ls`/`cat`? |
+|--------|----------------|------------------|
+| **curl** (default) | `f00` + `f00-*` + bare names in `~/.local/bin` | **Yes** (dir first on PATH) |
+| **AUR / deb / rpm** | `f00` + `f00-*` in `/usr/bin`; bare names in `/usr/lib/f00/bin` | **Yes** via `/etc/profile.d/f00.sh` |
+| **Homebrew** | `f00` + `f00-*` in `bin`; bare names in `libexec` | **Yes** after PATH caveat / shellenv |
+| curl + `F00_SUPERSEDE=0` | `f00` + `f00-*` only | No (side-by-side) |
+| config `replace = false` | packages still install bare names | **PATH snippet skips them** |
 
-| Env | Effect |
-|-----|--------|
+| Env / config | Effect |
+|--------------|--------|
 | `INSTALL_DIR` | Target bin dir (default `~/.local/bin`) |
 | `F00_VERSION` | Release tag (default: latest) |
 | `F00_LOCAL` | Path to local `asm/` build that contains `./f00` |
 | `F00_TOOLS` | `all` or comma list |
-| `F00_SUPERSEDE=1` | **Opt-in takeover:** also install unprefixed names (`ls`, `cat`, …) in `INSTALL_DIR` |
-| `F00_ALIAS=1` | **Opt-in:** append a few interactive aliases (`ls='f00-ls'`, …) |
+| `F00_SUPERSEDE=0` | **Opt-out:** do not install bare names (curl) |
+| `replace = true` / `false` | XDG config — shell integration honors this (**default true**) |
+| `f00-config replace on\|off` | Persist `replace =` |
 | `F00_MAN=1` | Install man pages (default on) |
 
 ```bash
 # pin version
-curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.10 bash
+curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.11 bash
 
 # local build
 curl -fsSL https://f00.sh/install.sh | F00_LOCAL=$PWD/asm bash
 
-# opt-in only — not recommended as the default story
-curl -fsSL https://f00.sh/install.sh | F00_SUPERSEDE=1 bash
+# side-by-side only (no bare names)
+curl -fsSL https://f00.sh/install.sh | F00_SUPERSEDE=0 bash
+
+# keep GNU bare names later
+f00-config replace off    # writes replace = false; new shell
 ```
 
-Config (`~/.config/f00/config`) controls **presentation** (color, icons, `--core`), not which binary wins on `PATH`. Takeover stays install-time / alias-time.
+Config (`~/.config/f00/config`): presentation (theme, color, icons, `--core`) **and** `replace` for PATH takeover. Packages never overwrite `/usr/bin/cat` files (no distro package conflicts).
 
 **Platform:** Linux x86-64 release assets. Build from source on other hosts is not the product path yet.
 
@@ -309,7 +314,7 @@ Requires: `nasm`, `ld` (binutils). Target: **Linux x86-64**.
 
 ## Package managers
 
-Release assets for `v0.15.10` include tarball, **deb**, **rpm**, and **Arch** packages.
+Release assets for `v0.15.11` include tarball, **deb**, **rpm**, and **Arch** packages.
 
 | Channel | Status | Notes |
 |---------|--------|-------|
@@ -324,16 +329,16 @@ Release assets for `v0.15.10` include tarball, **deb**, **rpm**, and **Arch** pa
 
 ```bash
 # Debian / Ubuntu example
-curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.10/f00_0.15.10_amd64.deb
-sudo dpkg -i f00_0.15.10_amd64.deb
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.11/f00_0.15.11_amd64.deb
+sudo dpkg -i f00_0.15.11_amd64.deb
 
 # Fedora / RHEL example
-curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.10/f00-0.15.10-1.x86_64.rpm
-sudo rpm -Uvh f00-0.15.10-1.x86_64.rpm
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.11/f00-0.15.11-1.x86_64.rpm
+sudo rpm -Uvh f00-0.15.11-1.x86_64.rpm
 
 # Arch example (release package)
-curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.10/f00-0.15.10-1-x86_64.pkg.tar.zst
-sudo pacman -U f00-0.15.10-1-x86_64.pkg.tar.zst
+curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.11/f00-0.15.11-1-x86_64.pkg.tar.zst
+sudo pacman -U f00-0.15.11-1-x86_64.pkg.tar.zst
 ```
 
 ---
@@ -408,7 +413,7 @@ same file as an asset. Keep monospaced when you view it.
 
 ```text
 ░▒▓████████████████████████████████████████████▓▒░░░
-█▓▒░  f 0 0 t i l s  ·  scene card  ·  v0.15.10 ░▒▓█ 
+█▓▒░  f 0 0 t i l s  ·  scene card  ·  v0.15.11 ░▒▓█ 
 ████████████████████████████████████████████████████
 █  ▄████████▄   ▄███████▄   ▄███████▄              █
 █  ███▀▀▀▀███   ███▀▀▀▀███  ███▀▀▀▀███  freest.    █

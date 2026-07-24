@@ -37,3 +37,4 @@ Thumbs.db
 /dist/
 /asm/benches/smoke-report.txt
 /xx*
+scripts/__pycache__/

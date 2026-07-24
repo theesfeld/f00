@@ -1,5 +1,6 @@
 # nfpm template for f00 ASM suite.
-# Placeholders: VERSION, ARCH (amd64), BIN_PATH, MAN_DIR, LINKS_DIR
+# Placeholders: VERSION, ARCH (amd64), BIN_PATH, MAN_DIR, LINKS_DIR,
+#               SUPERSEDE_DIR, PROFILE_SH, PROFILE_FISH
 name: f00
 arch: ${ARCH}
 platform: linux
@@ -10,7 +11,9 @@ maintainer: William Theesfeld <william@theesfeld.net>
 description: |
   f00tils (f00) is a complete GNU coreutils replacement suite.
   One freestanding x86-64 assembly multicall binary (no libc).
-  Modern defaults; --core for script-safe coreutils presentation.
+  Default: bare names (ls/cat/…) via /usr/lib/f00/bin on PATH.
+  Toggle: replace = false in ~/.config/f00/config, or f00-config replace off.
+  --core for script-safe coreutils presentation.
 homepage: https://f00.sh
 license: MIT
 contents:
@@ -23,6 +26,21 @@ contents:
     type: tree
     file_info:
       mode: 0755
+  # Bare coreutils names — not in /usr/bin (avoids package file conflicts).
+  # /etc/profile.d/f00.sh prepends this dir by default.
+  - src: ${SUPERSEDE_DIR}/
+    dst: /usr/lib/f00/bin/
+    type: tree
+    file_info:
+      mode: 0755
+  - src: ${PROFILE_SH}
+    dst: /etc/profile.d/f00.sh
+    file_info:
+      mode: 0644
+  - src: ${PROFILE_FISH}
+    dst: /etc/fish/conf.d/f00.fish
+    file_info:
+      mode: 0644
   - src: ${MAN_DIR}/
     dst: /usr/share/man/man1/
     type: tree

@@ -40,25 +40,33 @@ TOOLS_ALL=(
 )
 
 render_nfpm() {
-  local arch="$1" bin_path="$2" man_dir="$3" links_dir="$4" cfg="$5"
+  local arch="$1" bin_path="$2" man_dir="$3" links_dir="$4" supersede_dir="$5" cfg="$6"
   sed \
     -e "s|\${VERSION}|${VERSION}|g" \
     -e "s|\${ARCH}|${arch}|g" \
     -e "s|\${BIN_PATH}|${bin_path}|g" \
     -e "s|\${MAN_DIR}|${man_dir}|g" \
     -e "s|\${LINKS_DIR}|${links_dir}|g" \
+    -e "s|\${SUPERSEDE_DIR}|${supersede_dir}|g" \
+    -e "s|\${PROFILE_SH}|${ROOT}/packaging/shell/f00.sh|g" \
+    -e "s|\${PROFILE_FISH}|${ROOT}/packaging/shell/f00.fish|g" \
     "${TEMPLATE}" > "${cfg}"
 }
 
 stage_links() {
   local links_dir="$1"
-  mkdir -p "${links_dir}"
+  local supersede_dir="$2"
+  mkdir -p "${links_dir}" "${supersede_dir}"
   local t
   for t in "${TOOLS_ALL[@]}"; do
+    # /usr/bin/f00-* (always; no conflict with coreutils)
     ln -sfn f00 "${links_dir}/f00-${t}"
+    # /usr/lib/f00/bin/<bare> → ../../../bin/f00 (PATH supersede; default ON)
+    ln -sfn ../../../bin/f00 "${supersede_dir}/${t}"
   done
   # test/[ pair
   ln -sfn f00 "${links_dir}/f00-["
+  ln -sfn ../../../bin/f00 "${supersede_dir}/["
 }
 
 build_one() {
@@ -101,10 +109,11 @@ build_one() {
   fi
 
   local links_dir="${WORKDIR}/links-${arch}"
-  stage_links "${links_dir}"
+  local supersede_dir="${WORKDIR}/supersede-${arch}"
+  stage_links "${links_dir}" "${supersede_dir}"
 
   local cfg="${WORKDIR}/nfpm-${arch}.yaml"
-  render_nfpm "${arch}" "${bin}" "${man_dir}" "${links_dir}" "${cfg}"
+  render_nfpm "${arch}" "${bin}" "${man_dir}" "${links_dir}" "${supersede_dir}" "${cfg}"
 
   "${NFPM}" package --config "${cfg}" --packager deb --target "${OUT}"
   "${NFPM}" package --config "${cfg}" --packager rpm --target "${OUT}"

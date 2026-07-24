@@ -3,20 +3,21 @@
 #   curl -fsSL https://f00.sh/install.sh | bash
 #
 # f00tils: pure-assembly multicall coreutils replacement (Linux x86-64 only).
-# Default: side-by-side — multicall `f00` + f00-* only (does not replace system ls/cat).
+# Default: REPLACE coreutils — multicall `f00` + f00-* + bare names (ls, cat, …)
+# in INSTALL_DIR (must win on PATH). Opt out: F00_SUPERSEDE=0 or config replace=false.
 #
 # Beta pin example:
-#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.10 bash
+#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.11 bash
 #
 # Env:
 #   INSTALL_DIR      default ~/.local/bin
-#   F00_VERSION      release tag (default: latest; default: latest / v0.15.10)
+#   F00_VERSION      release tag (default: latest; default: latest / v0.15.11)
 #   F00_REPO         GitHub owner/repo (default: theesfeld/f00)
 #   F00_LOCAL        path to a local build directory containing ./f00
 #                    (e.g. /path/to/f00/asm) — skips download
 #   F00_TOOLS        comma list or "all" (default: all shipped tools)
-#   F00_SUPERSEDE    1 = opt-in: also unprefixed names (ls, cat, …) in INSTALL_DIR
-#   F00_ALIAS        1 = opt-in: append shell aliases for a few interactive tools
+#   F00_SUPERSEDE    default 1: bare names in INSTALL_DIR; 0 = f00-* only
+#   F00_ALIAS        1 = also append shell aliases (usually unnecessary with SUPERSEDE)
 #   ADD_PATH         1 = ensure INSTALL_DIR on PATH (default: 1 when missing)
 #   F00_NO_COLOR     1 = plain logs
 #   F00_MAN          1 = install man pages if present (default: 1)
@@ -149,15 +150,19 @@ install_links() {
   local t
   for t in "$@"; do
     ln -sfn f00 "${dir}/f00-${t}"
-    if [[ "${F00_SUPERSEDE:-0}" == "1" ]]; then
-      # unprefixed short name (PATH must prefer INSTALL_DIR)
+    # Default ON: bare coreutils names (ls, cat, …) next to f00 / f00-*
+    if [[ "${F00_SUPERSEDE:-1}" == "1" ]]; then
       if [[ "$t" == "test" ]]; then
         ln -sfn f00 "${dir}/["
       fi
       ln -sfn f00 "${dir}/${t}"
     fi
   done
-  ok "links: f00-* × $# → f00${F00_SUPERSEDE:+ (and unprefixed names)}"
+  if [[ "${F00_SUPERSEDE:-1}" == "1" ]]; then
+    ok "links: f00-* × $# + bare names → f00 (replace default; F00_SUPERSEDE=0 to skip)"
+  else
+    ok "links: f00-* × $# → f00 (side-by-side; bare names off)"
+  fi
 }
 
 maybe_alias() {
@@ -248,7 +253,7 @@ fetch_release() {
 }
 
 main() {
-  printf "\n${BOLD}f00tils${RESET} ${DIM}installer · binary f00 · 0.15.10 multicall${RESET}\n" >&2
+  printf "\n${BOLD}f00tils${RESET} ${DIM}installer · binary f00 · 0.15.11 multicall${RESET}\n" >&2
 
   local dir bin
   local tmp=""
@@ -293,9 +298,11 @@ main() {
   seed_xdg_config "$dir"
 
   ensure_path "$dir"
-  printf "\n${BOLD}done${RESET}. try: ${BOLD}f00-ls --help${RESET} · ${BOLD}f00-config theme list${RESET} · ${BOLD}f00 --version${RESET}\n" >&2
-  printf "${DIM}knobs: F00_TOOLS=all|ls,cat,…  F00_SUPERSEDE=1  F00_ALIAS=1  F00_LOCAL=asm  F00_VERSION=v0.15.10${RESET}\n" >&2
-  printf "${DIM}config: \$XDG_CONFIG_HOME/f00 or ~/.config/f00  ·  themes: f00-config theme list|set|pick${RESET}\n" >&2
+  printf "\n${BOLD}done${RESET}. try: ${BOLD}cat --version${RESET} · ${BOLD}ls --help${RESET} · ${BOLD}f00-config replace status${RESET}\n" >&2
+  printf "${DIM}default: bare names replace coreutils when INSTALL_DIR wins on PATH${RESET}\n" >&2
+  printf "${DIM}opt-out: F00_SUPERSEDE=0  or  f00-config replace off  (replace = false)${RESET}\n" >&2
+  printf "${DIM}knobs: F00_TOOLS=all|ls,cat,…  F00_SUPERSEDE=0  F00_LOCAL=asm  F00_VERSION=v0.15.11${RESET}\n" >&2
+  printf "${DIM}config: ~/.config/f00  ·  themes: f00-config theme list|set|pick${RESET}\n" >&2
 }
 
 # Seed XDG config + theme files once (never clobber existing config).
@@ -308,6 +315,9 @@ seed_xdg_config() {
   if [[ ! -f "${cfg_root}/config" ]]; then
     cat >"${cfg_root}/config" <<'EOF'
 # f00tils — https://f00.sh  (docs/CONFIG.md)
+# replace = true  → bare names (ls/cat/…) via installer PATH or /usr/lib/f00/bin
+# replace = false → f00-* only (side-by-side with GNU coreutils)
+replace = true
 # Uses your terminal palette by default (theme = terminal).
 # theme = auto          # catppuccin mocha/latte from COLORFGBG
 # theme = dracula       # f00-config theme list | set | pick

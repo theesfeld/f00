@@ -29,6 +29,8 @@ Simple line-oriented `key = value` (INI-like). Comments start with `#` or `;`.
 # ~/.config/f00/config
 
 # Global defaults (or under [global])
+replace = true          # bare ls/cat on PATH (default); false = GNU bare names
+# replace = false
 core = false
 color = auto
 icons = auto
@@ -55,6 +57,7 @@ spinner = false
 
 | Key | Values | Effect |
 |-----|--------|--------|
+| `replace` | `true`/`false` (also `yes`/`no`/`1`/`0`/`none`) | **Default true.** Shell integration prepends bare-name dir (`/usr/lib/f00/bin` or curl `INSTALL_DIR`). `false` → GNU keeps bare names; use `f00-*` |
 | `core` | `true`/`false`, `yes`/`no`, `1`/`0` | Force `--core` presentation |
 | `color` | `auto`, `always`, `never` (also `on`/`off`) | Color when |
 | `theme` | `terminal` / `dracula` / `tokyo-night` / … | Semantic chrome palette (see Themes) |
@@ -63,6 +66,13 @@ spinner = false
 | `animations` | bool | Master switch for motion (spinners, …) |
 | `spinner` | bool | Per-spinner enable (also needs `animations`) |
 | `git` | `auto`/`always`/`never` or bool | ls git decorations |
+
+```bash
+f00-config replace status   # true|false
+f00-config replace on       # write replace = true
+f00-config replace off      # write replace = false (then open a new shell)
+eval "$(f00-config shell-init)"   # PATH=/usr/lib/f00/bin:…
+```
 
 Unknown keys are ignored (forward compatible).
 

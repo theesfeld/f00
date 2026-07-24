@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.15.11] - 2026-07-24
+
+### Changed
+- **Default: replace coreutils** — bare names (`ls`, `cat`, …) on PATH
+  - **curl installer:** `F00_SUPERSEDE=1` by default (opt out: `F00_SUPERSEDE=0`)
+  - **deb/rpm/arch:** bare names in `/usr/lib/f00/bin` + `/etc/profile.d/f00.sh` (default ON)
+  - **Config toggle:** `replace = true|false` in `~/.config/f00/config`
+  - **`f00-config replace on|off|status`** and **`f00-config shell-init`**
+  - Does **not** overwrite `/usr/bin/cat` from the coreutils package (no file conflicts)
+
 ## [0.15.10] - 2026-07-24
 
 ### Added

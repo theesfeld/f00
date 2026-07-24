@@ -47,15 +47,20 @@ usage:
     db "  theme get           Print theme name only (script-safe)", 10
     db "  theme set NAME      Apply + write theme=NAME to XDG config", 10
     db "  theme set auto      Dark/light from COLORFGBG (catppuccin)", 10
+    db "  replace on|off|status   Coreutils takeover (default on)", 10
+    db "  shell-init          Print PATH export for bare names (eval)", 10
     db "  paths               Print config / themes paths", 10
     db 10
+    db "Default: replace coreutils (bare ls/cat/…) via PATH.", 10
+    db "  f00-config replace off   # keep GNU; use f00-* only", 10
+    db "  f00-config replace on    # default", 10
     db "Default theme 'terminal' = ANSI 16 colors (your palette).", 10
     db "theme=auto picks catppuccin mocha/latte from COLORFGBG.", 10
     db "Named themes use truecolor. User: ~/.config/f00/themes/*.theme", 10
     db "ls file colors still use LS_COLORS (orthogonal to suite theme).", 10
     db 10
     db "f00tils · pure assembly · MIT · https://f00.sh", 10, 0
-v_cfg: db "f00-config (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
+v_cfg: db "f00-config (f00) 0.15.11", 10, "License: MIT · https://f00.sh", 10, 0
 s_theme: db "theme", 0
 s_themes: db "themes", 0
 s_show: db "show", 0
@@ -67,6 +72,24 @@ s_init: db "init", 0
 s_pick: db "pick", 0
 s_help: db "help", 0
 s_ver: db "version", 0
+s_replace: db "replace", 0
+s_on: db "on", 0
+s_off: db "off", 0
+s_status: db "status", 0
+s_shell_init: db "shell-init", 0
+s_true: db "true", 0
+s_false: db "false", 0
+key_replace_eq: db "replace = ", 0
+line_replace_pfx: db "replace", 0
+lbl_replace: db "replace: ", 0
+msg_replace_on: db "replace = true  (bare names on PATH when shell integration is active)", 10, 0
+msg_replace_off: db "replace = false  (f00-* only; GNU coreutils keep bare names)", 10, 0
+; shell-init line (avoid $ { } for nasm)
+msg_shell_init:
+    db 'export PATH="/usr/lib/f00/bin:$PATH"', 10, 0
+msg_shell_hint:
+    db "# eval ", 34, "$(f00-config shell-init)", 34, "  or open a new login shell", 10, 0
+err_replace: db "f00-config: replace requires on|off|status", 10, 0
 pick_hdr: db "Pick a theme (number + Enter, or q):", 10, 0
 pick_prompt: db "> ", 0
 seeded_msg: db "seeded themes → ", 0
@@ -104,6 +127,10 @@ suf_dot_cfg: db "/.config/f00/config", 0
 suf_dot_th:  db "/.config/f00/themes", 0
 starter:
     db "# f00tils config — https://f00.sh  (docs/CONFIG.md)", 10
+    db "# replace = true  → bare ls/cat/… via /usr/lib/f00/bin (or curl INSTALL_DIR)", 10
+    db "# replace = false → f00-* only (side-by-side with GNU)", 10
+    db "replace = true", 10
+    db 10
     db "# f00tils uses your terminal palette by default.", 10
     db "# f00-config theme list  →  f00-config theme set <name>", 10
     db 10
@@ -180,11 +207,96 @@ config_main:
     test eax, eax
     jz .paths
     mov rdi, [r13+8]
+    lea rsi, [s_replace]
+    call strcmp
+    test eax, eax
+    jz .replace
+    mov rdi, [r13+8]
+    lea rsi, [s_shell_init]
+    call strcmp
+    test eax, eax
+    jz .shell_init
+    mov rdi, [r13+8]
     lea rsi, [s_help]
     call strcmp
     test eax, eax
     jz .help
     jmp .bad
+
+.replace:
+    cmp r12, 2
+    jle .repl_status
+    mov rdi, [r13+16]
+    lea rsi, [s_status]
+    call strcmp
+    test eax, eax
+    jz .repl_status
+    mov rdi, [r13+16]
+    lea rsi, [s_on]
+    call strcmp
+    test eax, eax
+    jz .repl_on
+    mov rdi, [r13+16]
+    lea rsi, [s_get]
+    call strcmp
+    test eax, eax
+    jz .repl_status
+    mov rdi, [r13+16]
+    lea rsi, [s_off]
+    call strcmp
+    test eax, eax
+    jnz .repl_need
+    ; off
+    lea rdi, [s_false]
+    call config_upsert_replace
+    test eax, eax
+    jz .write_fail
+    lea rsi, [msg_replace_off]
+    call out_str
+    lea rsi, [msg_shell_hint]
+    call out_str
+    jmp .exit
+.repl_on:
+    lea rdi, [s_true]
+    call config_upsert_replace
+    test eax, eax
+    jz .write_fail
+    lea rsi, [msg_replace_on]
+    call out_str
+    lea rsi, [msg_shell_hint]
+    call out_str
+    jmp .exit
+.repl_status:
+    lea rsi, [lbl_replace]
+    call out_str
+    call replace_is_off
+    test eax, eax
+    jnz .st_off
+    lea rsi, [s_true]
+    call out_str
+    mov dil, 10
+    call out_byte
+    jmp .exit
+.st_off:
+    lea rsi, [s_false]
+    call out_str
+    mov dil, 10
+    call out_byte
+    jmp .exit
+.repl_need:
+    lea rsi, [err_replace]
+    call out_str
+    mov dword [g_exit], 1
+    jmp .exit
+.shell_init:
+    lea rsi, [msg_shell_init]
+    call out_str
+    jmp .exit
+.write_fail:
+    lea rsi, [err_write]
+    call out_str
+    mov dword [g_exit], 1
+    jmp .exit
 
 .theme:
     cmp r12, 2
@@ -297,6 +409,19 @@ config_main:
 ; ── show ──────────────────────────────────────────────────
 do_show:
     push rbx
+    lea rsi, [lbl_replace]
+    call out_str
+    call replace_is_off
+    test eax, eax
+    jnz .show_off
+    lea rsi, [s_true]
+    jmp .show_rv
+.show_off:
+    lea rsi, [s_false]
+.show_rv:
+    call out_str
+    lea rsi, [nl]
+    call out_str
     lea rsi, [lbl_theme]
     call out_str
     call theme_current_name
@@ -885,6 +1010,339 @@ parse_u32_simple:
     inc rdi
     jmp .lp
 .d: ret
+
+; replace_is_off → eax=1 if config has replace=false|no|0|none; else 0 (default ON)
+replace_is_off:
+    push rbx
+    push r12
+    push r13
+    call resolve_cfg_path
+    test eax, eax
+    jz .on
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [path_cfg]
+    mov rdx, O_RDONLY
+    xor r10, r10
+    syscall
+    cmp rax, -4096
+    jae .on
+    mov r13, rax
+    mov rax, SYS_read
+    mov rdi, r13
+    lea rsi, [rw_buf]
+    mov rdx, 16000
+    syscall
+    mov r12, rax
+    mov rdi, r13
+    mov rax, SYS_close
+    syscall
+    test r12, r12
+    jle .on
+    cmp r12, 16000
+    jb .cap
+    mov r12, 15999
+.cap:
+    mov byte [rw_buf + r12], 0
+    lea rbx, [rw_buf]
+.line:
+    cmp byte [rbx], 0
+    je .on
+    mov rdi, rbx
+    call line_is_replace_key
+    test eax, eax
+    jz .next
+    ; skip key to value
+    mov rdi, rbx
+    call line_replace_val_is_off
+    test eax, eax
+    jnz .off
+.next:
+    mov al, [rbx]
+    test al, al
+    jz .on
+    inc rbx
+    cmp al, 10
+    je .line
+    jmp .next
+.off:
+    mov eax, 1
+    jmp .out
+.on:
+    xor eax, eax
+.out:
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+; rdi=line with replace key → eax=1 if value is false/no/0/none
+line_replace_val_is_off:
+    push rbx
+    mov rbx, rdi
+.skk:
+    mov al, [rbx]
+    cmp al, '='
+    je .after
+    test al, al
+    jz .no
+    cmp al, 10
+    je .no
+    inc rbx
+    jmp .skk
+.after:
+    inc rbx
+.sp:
+    mov al, [rbx]
+    cmp al, ' '
+    je .s
+    cmp al, 9
+    jne .val
+.s: inc rbx
+    jmp .sp
+.val:
+    ; false
+    cmp byte [rbx], 'f'
+    je .tryf
+    cmp byte [rbx], 'F'
+    je .tryf
+    cmp byte [rbx], 'n'
+    je .tryn
+    cmp byte [rbx], 'N'
+    je .tryn
+    cmp byte [rbx], '0'
+    je .yes
+    jmp .no
+.tryf:
+    ; false / False
+    cmp byte [rbx+1], 'a'
+    je .fa
+    cmp byte [rbx+1], 'A'
+    je .fa
+    jmp .no
+.fa:
+    cmp byte [rbx+2], 'l'
+    je .yesf
+    cmp byte [rbx+2], 'L'
+    je .yesf
+    jmp .no
+.yesf:
+    jmp .yes
+.tryn:
+    ; no / none
+    cmp byte [rbx+1], 'o'
+    je .yes
+    cmp byte [rbx+1], 'O'
+    je .yes
+    jmp .no
+.yes:
+    mov eax, 1
+    pop rbx
+    ret
+.no:
+    xor eax, eax
+    pop rbx
+    ret
+
+; ── upsert replace = VALUE ────────────────────────────────
+; rdi = "true"/"false" cstr → eax=1 ok
+config_upsert_replace:
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    mov r15, rdi                    ; value
+    call mkdir_p_f00
+    call resolve_cfg_path
+    test eax, eax
+    jz .fail
+    mov qword [rw_buf], 0
+    mov r14, 0
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [path_cfg]
+    mov rdx, O_RDONLY
+    xor r10, r10
+    syscall
+    cmp rax, -4096
+    jae .build
+    mov r13, rax
+    mov rax, SYS_read
+    mov rdi, r13
+    lea rsi, [rw_buf]
+    mov rdx, 16000
+    syscall
+    mov r14, rax
+    mov rdi, r13
+    mov rax, SYS_close
+    syscall
+    test r14, r14
+    jg .okrd
+    xor r14, r14
+.okrd:
+    cmp r14, 16000
+    jb .cap
+    mov r14, 15999
+.cap:
+    mov byte [rw_buf + r14], 0
+.build:
+    lea r12, [rw_buf]
+    lea r13, [out_buf]
+    xor ebx, ebx
+.line:
+    cmp byte [r12], 0
+    je .eof
+    mov rdi, r12
+    call line_is_replace_key
+    test eax, eax
+    jz .copyl
+    test ebx, ebx
+    jnz .skipl
+    call write_replace_line_to_r13
+    mov ebx, 1
+    jmp .skipl
+.copyl:
+.clp:
+    mov al, [r12]
+    test al, al
+    jz .line
+    mov [r13], al
+    inc r12
+    inc r13
+    cmp al, 10
+    je .line
+    jmp .clp
+.skipl:
+.sk:
+    mov al, [r12]
+    test al, al
+    jz .line
+    inc r12
+    cmp al, 10
+    je .line
+    jmp .sk
+.eof:
+    test ebx, ebx
+    jnz .wfile
+    cmp r13, out_buf
+    je .app
+    cmp byte [r13-1], 10
+    je .app
+    mov byte [r13], 10
+    inc r13
+.app:
+    call write_replace_line_to_r13
+.wfile:
+    mov byte [r13], 0
+    lea rdi, [out_buf]
+    call strlen
+    mov r14, rax
+    mov rax, SYS_openat
+    mov rdi, AT_FDCWD
+    lea rsi, [path_cfg]
+    mov rdx, O_WRONLY|O_CREAT|O_TRUNC
+    mov r10, 0o644
+    syscall
+    cmp rax, -4096
+    jae .fail
+    mov rbx, rax
+    mov rax, SYS_write
+    mov rdi, rbx
+    lea rsi, [out_buf]
+    mov rdx, r14
+    syscall
+    mov rdi, rbx
+    mov rax, SYS_close
+    syscall
+    mov eax, 1
+    jmp .out
+.fail:
+    xor eax, eax
+.out:
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+
+write_replace_line_to_r13:
+    push rsi
+    lea rsi, [key_replace_eq]
+.cp1:
+    mov al, [rsi]
+    test al, al
+    jz .nm
+    mov [r13], al
+    inc rsi
+    inc r13
+    jmp .cp1
+.nm:
+    mov rsi, r15
+.cp2:
+    mov al, [rsi]
+    test al, al
+    jz .nl
+    mov [r13], al
+    inc rsi
+    inc r13
+    jmp .cp2
+.nl:
+    mov byte [r13], 10
+    inc r13
+    pop rsi
+    ret
+
+line_is_replace_key:
+    push rbx
+    mov rbx, rdi
+.sk:
+    mov al, [rbx]
+    cmp al, ' '
+    je .s
+    cmp al, 9
+    jne .k
+.s: inc rbx
+    jmp .sk
+.k:
+    lea rsi, [line_replace_pfx]
+.m:
+    mov al, [rsi]
+    test al, al
+    jz .after
+    cmp al, [rbx]
+    jne .no
+    inc rsi
+    inc rbx
+    jmp .m
+.after:
+    mov al, [rbx]
+    cmp al, '='
+    je .yes
+    cmp al, ' '
+    je .sp
+    cmp al, 9
+    je .sp
+    jmp .no
+.sp:
+    inc rbx
+    mov al, [rbx]
+    cmp al, ' '
+    je .sp
+    cmp al, 9
+    je .sp
+    cmp al, '='
+    je .yes
+    jmp .no
+.yes:
+    mov eax, 1
+    pop rbx
+    ret
+.no:
+    xor eax, eax
+    pop rbx
+    ret
 
 ; ── upsert theme = NAME ───────────────────────────────────
 ; rdi = theme name cstr → eax=1 ok
