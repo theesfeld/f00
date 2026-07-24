@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6] - 2026-07-24
+
+### Changed
+- **Icons ON by default** in modern mode: **Nerd Font File Icons** (eza-class, 1 cell)
+- Off under `--core`; skins: `emoji` / `glyph` / `ascii` / `never`
+
 ## [0.15.5] - 2026-07-24
 
 ### Changed

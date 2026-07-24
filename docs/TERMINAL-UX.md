@@ -34,10 +34,12 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ## Icons (suite-wide)
 
-- **Default: off.** Modern type signal is **color** (dir blue, exec green, link cyan, …) + table geometry — not prefix letters.
-- **Opt-in only:** `--icons` / `--icons=ascii|glyph|emoji|nerd` (fixed cell width so columns never shift).
+- **Default: ON** in modern color mode — **Nerd Font File Icons** (eza-class, 1 terminal cell).
+- Needs a **Nerd Font** (or equivalent) in the terminal for correct glyphs.
 - **Always off under `--core`.**
-- `auto` / `never` = off. Config/env: `icons = never|ascii|glyph|emoji|nerd` · `F00_ICONS=…`
+- Styles: `auto`/`nerd` (default) · `emoji` · `glyph` · `ascii` · `never`
+- Fixed cell width so columns never shift.
+- Config/env: `icons = auto|nerd|emoji|glyph|ascii|never` · `F00_ICONS=…`
 
 ## JSON / CSV chrome
 

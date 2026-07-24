@@ -3,11 +3,12 @@
 
 core = false
 color = auto
-icons = never     # default: color + tables, no prefix icons
-# icons = ascii   # opt-in 1-cell d/l/x/-
-# icons = glyph
-# icons = emoji
+icons = auto      # modern: Nerd File Icons when color on (needs Nerd Font)
 # icons = nerd
+# icons = emoji
+# icons = glyph
+# icons = ascii
+# icons = never
 animations = true
 spinner = true
 

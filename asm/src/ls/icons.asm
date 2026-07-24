@@ -314,18 +314,19 @@ icon_disp_cells:
     ret
 
 icon_enabled:
-    ; Default OFF. Color + table columns carry type; prefix letters (d/-/x)
-    ; were not intuitive. Opt-in: --icons / --icons=ascii|glyph|emoji|nerd.
-    ; Always off under --core.
+    ; Modern: ICONS ON (Nerd File Icons, 1 cell) when color is on.
+    ; --core / never → off. Style default = nerd (eza-class).
     mov eax, [g_opts2]
     test eax, OPT2_NO_ICONS | OPT2_CORE
     jnz .no
     movzx eax, byte [g_icons_when]
+    cmp al, ICONS_NEVER
+    je .no
     cmp al, ICONS_ALWAYS
     je .yes
-    ; AUTO and NEVER → no prefix chrome
-    xor al, al
-    ret
+    ; AUTO: on with color (TTY auto-color or --color=always)
+    cmp byte [g_color], 0
+    je .no
 .yes:
     mov al, 1
     ret
@@ -432,7 +433,7 @@ icon_set_style_from_str:
     ret
 .auto:
     mov byte [g_icons_when], ICONS_AUTO
-    mov byte [g_icons_style], ICONS_STYLE_ASCII   ; sensible 1-cell type letters
+    mov byte [g_icons_style], ICONS_STYLE_NERD    ; eza-class File Icons
     mov al, 1
     pop rbx
     ret

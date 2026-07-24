@@ -47,7 +47,7 @@ g_color:        resb 1          ; 1 = emit ANSI
 g_now_sec:      resq 1
 g_opts2:        resd 1
 g_icons_when:   resb 1              ; auto/always/never
-g_icons_style:  resb 1              ; glyph/emoji/nerd/ascii (default glyph)
+g_icons_style:  resb 1              ; nerd (default) / emoji / glyph / ascii
 g_sort:         resb 1
 g_time_field:   resb 1
 g_quoting:      resb 1
@@ -98,7 +98,7 @@ c_hdr:      db 27, "[1;34m", 0
 env_nocolor: db "NO_COLOR", 0
 j_schema:   db "{", 10, '  "schema": "f00/v1",', 10, 0
 j_suite:    db '  "suite": "f00",', 10, 0
-j_ver:      db '  "version": "0.15.5",', 10, 0
+j_ver:      db '  "version": "0.15.6",', 10, 0
 j_util_a:   db '  "util": "', 0
 j_util_b:   db '",', 10, 0
 j_mode_m:   db '  "mode": "modern",', 10, 0
