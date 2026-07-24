@@ -6,11 +6,11 @@
 # Default: side-by-side — multicall `f00` + f00-* only (does not replace system ls/cat).
 #
 # Beta pin example:
-#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.9 bash
+#   curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.10 bash
 #
 # Env:
 #   INSTALL_DIR      default ~/.local/bin
-#   F00_VERSION      release tag (default: latest; default: latest / v0.15.9)
+#   F00_VERSION      release tag (default: latest; default: latest / v0.15.10)
 #   F00_REPO         GitHub owner/repo (default: theesfeld/f00)
 #   F00_LOCAL        path to a local build directory containing ./f00
 #                    (e.g. /path/to/f00/asm) — skips download
@@ -248,7 +248,7 @@ fetch_release() {
 }
 
 main() {
-  printf "\n${BOLD}f00tils${RESET} ${DIM}installer · binary f00 · 0.15.9 multicall${RESET}\n" >&2
+  printf "\n${BOLD}f00tils${RESET} ${DIM}installer · binary f00 · 0.15.10 multicall${RESET}\n" >&2
 
   local dir bin
   local tmp=""
@@ -294,7 +294,7 @@ main() {
 
   ensure_path "$dir"
   printf "\n${BOLD}done${RESET}. try: ${BOLD}f00-ls --help${RESET} · ${BOLD}f00-config theme list${RESET} · ${BOLD}f00 --version${RESET}\n" >&2
-  printf "${DIM}knobs: F00_TOOLS=all|ls,cat,…  F00_SUPERSEDE=1  F00_ALIAS=1  F00_LOCAL=asm  F00_VERSION=v0.15.9${RESET}\n" >&2
+  printf "${DIM}knobs: F00_TOOLS=all|ls,cat,…  F00_SUPERSEDE=1  F00_ALIAS=1  F00_LOCAL=asm  F00_VERSION=v0.15.10${RESET}\n" >&2
   printf "${DIM}config: \$XDG_CONFIG_HOME/f00 or ~/.config/f00  ·  themes: f00-config theme list|set|pick${RESET}\n" >&2
 }
 

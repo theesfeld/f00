@@ -9,26 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.10] - 2026-07-24
+
 ### Added
 - Root `file_id.diz` release scene card (ACiD / 16colo.rs-style block ASCII); README + site preview; `man f00` FILES; release workflow attaches the asset with every tag
 - **Overall suite speed headline** (geo mean of per-tool speedups) stamped into `file_id.diz`, README, and site hero — e.g. **2.5× / 148% faster overall**
 - Website Bun-style **fluid race-bar charts** + **cold-startup line chart** (`#benchmarks`), fed by `site/bench/suite.json` (`summary`, `showcase`, `cold_startup`)
-
-### Added
 - **`theme = auto`** (COLORFGBG dark/light), **`theme pick`**, install/init **seeds** `~/.config/f00/themes/*`
 - **`f00-config theme set` persists** `theme=` to XDG; **`init`** seeds config tree (never auto-write on normal tools)
 - **Themes**: semantic color tokens; default `terminal` inherits 16-color palette; builtins (dracula, tokyo-night, catppuccin, monokai, nord, gruvbox, solarized, …); user `~/.config/f00/themes/*.theme`
-- **`f00-config`**: `init`, `theme set` **persists** to XDG, gallery swatches, chrome sample;
-- **`f00-config` (base): `theme list|get|set`, token preview, paths help; config `theme=` + `F00_THEME`
+- **`f00-config`**: `init`, `theme set` **persists** to XDG, gallery swatches, chrome sample; `theme list|get|set`, token preview, paths help; config `theme=` + `F00_THEME`
 
 ### Changed
 - Suite modern polish (not `--core`):
-  - **pwd**: cyan path on TTY
+  - **pwd**: themed path on TTY
   - **wc** multi-file: labeled rows + total (same chrome as single-file)
   - **cp** / **mv** multi-file: stderr spinner
   - **dd**: spinner for `status=progress` or modern TTY (off with `status=none`)
-  - **od**: dim address, yellow hex, green ASCII dump
+  - **od**: dim address / themed hex / ASCII dump
   - **df**: Nerd/ascii icon before mountpoint
+- **Full suite theming**: remaining hardcodes map to semantic tokens (`path`/`num`/`ok`/`err`/`hdr`/`dim`):
+  - **cat** syntax/gutter/markers
+  - **help** sections, rules, footers, use bars / severity `%`
+  - **env** key=value chrome
+  - **ls** git status chrome + JSON/CSV/TSV table colors
+  - **tui** dim/header/reset hues
+  - spinner SGR length uses themed `c_spin`/`c_reset` (truecolor-safe)
+
+### Fixed
+- Theme truecolor **dim** token truncated (`c_dim` 16→32 bytes)
+- `theme_set_token_body_to` dropped trailing `m` (memcpy clobbered body length in `rcx`)
 
 ## [0.15.9] - 2026-07-24
 

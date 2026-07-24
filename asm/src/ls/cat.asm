@@ -10,6 +10,7 @@ extern is_tty, exit_code, strlen, strcmp, memcpy
 extern g_exit, g_tty, g_color, g_opts2, g_json_core
 extern json_meta_open, json_meta_close, json_key_u64, json_key_bool, json_comma_nl
 extern ui_file_header
+extern color_dim, color_hdr, color_num, color_reset
 
 ; local option bits in cat_opts
 %define C_NUMBER       1
@@ -49,10 +50,7 @@ j_bytes:      resq 1
 name_tmp:     resb 32
 
 section .rodata
-c_cmt:   db 27, "[2;37m", 0       ; dim comments
-c_kw:    db 27, "[1;35m", 0       ; magenta keywords/headers
-c_strc:  db 27, "[32m", 0         ; green strings-ish
-c_rstc:  db 27, "[0m", 0
+; syntax/gutter chrome uses suite theme tokens (c_dim/c_hdr/c_num/c_ok/c_reset)
 ext_asm: db "asm", 0
 ext_s:   db "s", 0
 ext_S:   db "S", 0
@@ -97,19 +95,13 @@ cat_help:
 cat_help_len equ $-cat_help
 
 cat_version:
-    db "f00-cat (f00) 0.15.9", 10
+    db "f00-cat (f00) 0.15.10", 10
     db "GNU coreutils cat drop-in + modern chrome — pure assembly", 10
     db "License: MIT · https://f00.sh", 10
 cat_version_len equ $-cat_version
 
 ; bat-class gutter: dim vertical bar + space (UTF-8 BOX DRAWINGS LIGHT VERTICAL)
 pipe_mark: db 0xe2, 0x94, 0x82, ' ', 0
-c_num:    db 27, "[2;37m", 0
-c_pipe:   db 27, "[2;37m", 0
-c_mark:   db 27, "[1;33m", 0
-c_reset:  db 27, "[0m", 0
-c_key:    db 27, "[1;34m", 0
-c_str:    db 27, "[0;32m", 0
 dash:     db "-", 0
 nl:       db 10, 0
 nm_cat:   db "cat", 0
@@ -123,7 +115,7 @@ jk_show_tabs: db "show_tabs", 0
 jk_show_np: db "show_nonprinting", 0
 
 csv_hdr:    db "util,version,files,lines_out,bytes_out", 10, 0
-csv_util:   db "cat,0.15.9,", 0
+csv_util:   db "cat,0.15.10,", 0
 
 section .text
 
@@ -648,24 +640,21 @@ paint_line_start:
 .skn: inc rsi
     dec rcx
     jmp .skl
-.cmt: lea rsi, [c_cmt]
-    call out_str
+.cmt: call color_dim
     ret
 .md:
     test r13, r13
     jz .r
     cmp byte [r12], '#'
     jne .r
-    lea rsi, [c_kw]
-    call out_str
+    call color_hdr
     ret
 .sh:
     test r13, r13
     jz .r
     cmp byte [r12], '#'
     jne .r
-    lea rsi, [c_cmt]
-    call out_str
+    call color_dim
     ret
 .c:
     test r13, r13
@@ -714,8 +703,7 @@ paint_line_end:
     jnz .r
     cmp byte [cat_paint], 0
     je .r
-    lea rsi, [c_rstc]
-    call out_str
+    call color_reset
 .r: ret
 
 ; cat_one_path(rdi=path)  "-" = stdin
@@ -917,19 +905,15 @@ emit_line:
     jnz .nplain
     cmp byte [g_color], 0
     je .nplain
-    ; modern bat-class: dim numbers + dim pipe marker
-    lea rsi, [c_num]
-    call out_str
+    ; modern bat-class: themed dim numbers + pipe marker
+    call color_dim
     mov rdi, [cat_line_no]
     call out_u64_pad6
-    lea rsi, [c_reset]
-    call out_str
-    lea rsi, [c_pipe]
-    call out_str
+    call color_reset
+    call color_dim
     lea rsi, [pipe_mark]
     call out_str
-    lea rsi, [c_reset]
-    call out_str
+    call color_reset
     jmp .body
 .nplain:
     ; print line number width 6 + TAB (GNU cat)
@@ -957,8 +941,7 @@ emit_line:
     je .dollar
     test eax, C_CORE
     jnz .dollar
-    lea rsi, [c_mark]
-    call out_str
+    call color_num
 .dollar:
     mov dil, '$'
     call out_byte
@@ -966,8 +949,7 @@ emit_line:
     je .nl
     test dword [cat_opts], C_CORE
     jnz .nl
-    lea rsi, [c_reset]
-    call out_str
+    call color_reset
 .nl:
     mov dil, 10
     call out_byte
@@ -1088,16 +1070,14 @@ mark_on:
     je .r
     test dword [cat_opts], C_CORE
     jnz .r
-    lea rsi, [c_mark]
-    jmp out_str
+    jmp color_num
 .r: ret
 mark_off:
     cmp byte [g_color], 0
     je .r
     test dword [cat_opts], C_CORE
     jnz .r
-    lea rsi, [c_reset]
-    jmp out_str
+    jmp color_reset
 .r: ret
 
 out_u64_pad6:

@@ -17,6 +17,7 @@ extern color_seq_for_entry, color_reset_seq
 extern quote_emit_name
 extern g_opts2
 extern meta_paint
+extern c_num, c_ok, c_err
 
 section .bss
 align 64
@@ -30,20 +31,8 @@ gid_buf:        resb 16
 size_buf:       resb 32
 
 section .rodata
-; ANSI
-c_reset:        db 27, "[0m", 0
-c_dir:          db 27, "[01;34m", 0
-c_lnk:          db 27, "[01;36m", 0
-c_exe:          db 27, "[01;32m", 0
-c_fifo:         db 27, "[40;33m", 0
-c_sock:         db 27, "[01;35m", 0
-c_blk:          db 27, "[40;33;01m", 0
-c_chr:          db 27, "[40;33;01m", 0
-c_orhpan:       db 27, "[40;31;01m", 0
-c_git_m:        db 27, "[33m", 0        ; modified / renamed
-c_git_a:        db 27, "[32m", 0        ; added
-c_git_d:        db 27, "[31m", 0        ; deleted / conflict
-c_git_u:        db 27, "[31m", 0        ; untracked
+; git status chrome uses suite theme tokens (num/ok/err)
+; file-type colors come from LS_COLORS via colors.asm
 
 ; 4 bytes each: 3-letter month + NUL
 months:
@@ -99,16 +88,16 @@ git_paint_prefix:
     je .del
     jmp .no
 .mod:
-    lea rsi, [c_git_m]
+    lea rsi, [c_num]                ; modified / renamed → num
     jmp .emit
 .add:
-    lea rsi, [c_git_a]
+    lea rsi, [c_ok]                 ; added → ok
     jmp .emit
 .del:
-    lea rsi, [c_git_d]
+    lea rsi, [c_err]                ; deleted / conflict → err
     jmp .emit
 .unt:
-    lea rsi, [c_git_u]
+    lea rsi, [c_err]                ; untracked → err
 .emit:
     call out_str
     mov al, 1

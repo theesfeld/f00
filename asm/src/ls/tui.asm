@@ -10,7 +10,8 @@ extern out_init, out_flush, out_str, out_byte, out_u64
 extern arena_alloc, memcpy, strlen
 extern emit_name_public
 extern get_winsize
-extern color_path, color_num, color_reset
+extern color_path, color_num, color_reset, color_dim, color_hdr
+extern c_dim, c_reset, c_hdr
 
 %define MAX_MARK 256
 %define MAX_ENT  4096
@@ -43,13 +44,11 @@ path_a:    resb 4096
 path_b:    resb 4096
 
 section .rodata
+; cursor/screen control stays raw CSI; hue chrome uses theme tokens
 ansi_home:  db 27,"[H",0
 ansi_clear: db 27,"[H",27,"[2J",0
 ansi_el:    db 27,"[K",0            ; erase to end of line
-ansi_rev:   db 27,"[7m",0
-ansi_sgr0:  db 27,"[0m",0
-ansi_dim:   db 27,"[2m",0
-ansi_bold:  db 27,"[1m",0
+ansi_rev:   db 27,"[7m",0           ; reverse video (selection attribute)
 ansi_hide:  db 27,"[?25l",0
 ansi_show:  db 27,"[?25h",0
 ansi_alt:   db 27,"[?1049h",0
@@ -476,7 +475,7 @@ draw:
     call draw_dual
 .flush:
     ; ensure SGR clean at end of frame
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     call out_flush
     ret
@@ -484,13 +483,13 @@ draw:
 ; status: dim chrome + cyan path + yellow count/sel
 draw_status_bar:
     ; title (dim)
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
     lea rsi, [hdr]
     call out_str
     lea rsi, [sp2]
     call out_str
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     ; path (cyan / path token)
     call color_path
@@ -499,11 +498,11 @@ draw_status_bar:
     call out_str
     call color_reset
     ; mid-dot chrome
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
     lea rsi, [mid_dot]
     call out_str
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     ; count (yellow)
     call color_num
@@ -511,13 +510,13 @@ draw_status_bar:
     mov rdi, [rax]
     call out_u64
     call color_reset
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
     lea rsi, [items_lbl]
     call out_str
     lea rsi, [sel_lbl]
     call out_str
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     call color_num
     call sel_ptr
@@ -530,11 +529,11 @@ draw_status_bar:
 .nosel:
     call out_u64
     call color_reset
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
     mov dil, '/'
     call out_byte
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     call color_num
     call cnt_ptr
@@ -544,13 +543,13 @@ draw_status_bar:
     ; dual pane secondary path hint
     cmp byte [dual], 0
     je .nl
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
     lea rsi, [mid_dot]
     call out_str
     lea rsi, [sep]
     call out_str
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     call color_path
     call other_cwd
@@ -565,11 +564,11 @@ draw_status_bar:
     ret
 
 draw_keys_line:
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
     lea rsi, [keys_help]
     call out_str
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     lea rsi, [ansi_el]
     call out_str
@@ -591,7 +590,7 @@ draw_confirm:
 .c3: lea rsi, [st_del]
 .cst:
     call out_str
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     lea rsi, [ansi_el]
     call out_str
@@ -620,7 +619,7 @@ draw_pane_full:
     ; mark column (dim when not selected)
     cmp rbx, r15
     je .mk
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
 .mk:
     cmp byte [r14 + rbx], 0
@@ -636,9 +635,9 @@ draw_pane_full:
     call out_byte
     cmp rbx, r15
     je .nm3
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
-    lea rsi, [ansi_bold]
+    lea rsi, [c_hdr]
     call out_str
 .nm3:
     mov rsi, [r13 + rbx*8]
@@ -649,7 +648,7 @@ draw_pane_full:
     mov dil, '/'
     call out_byte
 .nf:
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     lea rsi, [ansi_el]
     call out_str
@@ -687,7 +686,7 @@ draw_dual:
 .l1:
     test r15, r15
     jnz .lm
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
 .lm:
     cmp byte [p0_mark + rbx], 0
@@ -701,9 +700,9 @@ draw_dual:
 .l3:
     test r15, r15
     jnz .l3b
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
-    lea rsi, [ansi_bold]
+    lea rsi, [c_hdr]
     call out_str
 .l3b:
     mov rsi, [p0_names + rbx*8]
@@ -713,15 +712,15 @@ draw_dual:
     mov dil, '/'
     call out_byte
 .l4:
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
 .padL:
     ; dim separator chrome
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
     lea rsi, [sep]
     call out_str
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
     ; ---- right (pane1) ----
     cmp rbx, [p1_count]
@@ -737,7 +736,7 @@ draw_dual:
 .r1:
     test r15, r15
     jnz .rm
-    lea rsi, [ansi_dim]
+    lea rsi, [c_dim]
     call out_str
 .rm:
     cmp byte [p1_mark + rbx], 0
@@ -751,9 +750,9 @@ draw_dual:
 .r3:
     test r15, r15
     jnz .r3b
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
-    lea rsi, [ansi_bold]
+    lea rsi, [c_hdr]
     call out_str
 .r3b:
     mov rsi, [p1_names + rbx*8]
@@ -763,7 +762,7 @@ draw_dual:
     mov dil, '/'
     call out_byte
 .r4:
-    lea rsi, [ansi_sgr0]
+    lea rsi, [c_reset]
     call out_str
 .nl:
     lea rsi, [ansi_el]

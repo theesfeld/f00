@@ -36,15 +36,8 @@ s_hdr_rule:  db "╰", 0
 s_hdr_rule2: db "────────────────────────────────────────────────────────────", 10, 0
 s_hdr_plain_pre:  db "==> ", 0
 s_hdr_plain_post: db " <==", 10, 0
-c_sec:       db 27, "[1;35m", 0      ; bold magenta section (help only)
-; c_banner / c_spin are themable BSS in util.asm
-extern c_banner, c_spin
-c_muted:     db 27, "[2;37m", 0
-c_use_hi:    db 27, "[1;31m", 0      ; severity stays semantic
-c_use_mid:   db 27, "[1;33m", 0
-c_use_lo:    db 27, "[1;32m", 0
-c_bar_on:    db 27, "[32m", 0
-c_bar_off:   db 27, "[2;37m", 0
+; suite chrome tokens live in util.asm BSS (theme-filled)
+extern c_banner, c_spin, c_hdr, c_dim, c_err, c_num, c_ok, c_reset
 bar_fill:    db "█", 0               ; UTF-8; fallback if needed
 bar_empty:   db "░", 0
 bar_fill_a:  db "#", 0
@@ -102,7 +95,7 @@ ui_help_section:
     call out_byte
     cmp byte [g_color], 0
     je .p
-    lea rsi, [c_sec]
+    lea rsi, [c_hdr]
     call color_set
 .p: pop rsi
     call out_str
@@ -112,7 +105,7 @@ ui_help_section:
     ret
 
 ; ui_help_print(rsi=full help cstr)
-; When g_color: colorize "Coreutils flags:" / "Modern flags:" / "Examples:" lines magenta.
+; When g_color: colorize section titles with theme hdr token.
 ; Otherwise plain out_str. Section titles must be whole lines ending with ':' before NL.
 ui_help_print:
     cmp byte [g_color], 0
@@ -163,7 +156,7 @@ ui_help_print:
     call out_str
     jmp .nl
 .sec:
-    lea rsi, [c_sec]
+    lea rsi, [c_hdr]
     call color_set
     lea rsi, [help_line]
     call out_str
@@ -186,7 +179,7 @@ ui_help_footer:
     call out_byte
     cmp byte [g_color], 0
     je .p
-    lea rsi, [c_muted]
+    lea rsi, [c_dim]
     call color_set
 .p: lea rsi, [s_footer]
     call out_str
@@ -195,7 +188,7 @@ ui_help_footer:
 ui_rule:
     cmp byte [g_color], 0
     je .p
-    lea rsi, [c_muted]
+    lea rsi, [c_dim]
     call color_set
 .p: lea rsi, [s_rule]
     call out_str
@@ -348,16 +341,16 @@ ui_emit_bar:
     mov r14d, eax                   ; filled
     cmp byte [g_color], 0
     je .ascii
-    ; color by severity
+    ; severity → theme tokens: hi=err mid=num lo=ok; empty=dim
     cmp r12d, 90
     jae .hi
     cmp r12d, 70
     jae .mid
-    lea rsi, [c_use_lo]
+    lea rsi, [c_ok]
     jmp .col
-.hi: lea rsi, [c_use_hi]
+.hi: lea rsi, [c_err]
     jmp .col
-.mid: lea rsi, [c_use_mid]
+.mid: lea rsi, [c_num]
 .col:
     call color_set
     xor ebx, ebx
@@ -370,7 +363,7 @@ ui_emit_bar:
     jmp .fill
 .empty:
     call color_reset
-    lea rsi, [c_bar_off]
+    lea rsi, [c_dim]
     call color_set
 .e2:
     cmp ebx, r13d
@@ -416,11 +409,11 @@ ui_color_use_pct:
     jae .hi
     cmp ebx, 70
     jae .mid
-    lea rsi, [c_use_lo]
+    lea rsi, [c_ok]
     jmp .c
-.hi: lea rsi, [c_use_hi]
+.hi: lea rsi, [c_err]
     jmp .c
-.mid: lea rsi, [c_use_mid]
+.mid: lea rsi, [c_num]
 .c: call color_set
 .n: mov edi, ebx
     call out_u64
@@ -560,10 +553,14 @@ ui_spinner_tick:
     syscall
     cmp byte [g_color], 0
     je .frm
+    lea rdi, [c_spin]
+    call strlen
+    mov rdx, rax
+    test rdx, rdx
+    jz .frm
     mov rax, SYS_write
     mov rdi, 2
     lea rsi, [c_spin]
-    mov rdx, 7                      ; ESC[1;36m
     syscall
 .frm:
     mov rdi, r12
@@ -578,18 +575,19 @@ ui_spinner_tick:
     lea rsi, [spin_space]
     mov rdx, 1
     syscall
-    ; reset color
+    ; themed reset
+    cmp byte [g_color], 0
+    je .lab
+    lea rdi, [c_reset]
+    call strlen
+    mov rdx, rax
+    test rdx, rdx
+    jz .lab
     mov rax, SYS_write
     mov rdi, 2
-    lea rsi, [c_muted]
-    ; just write ESC[0m via a tiny sequence — reuse banner mute then path? use out buffer no —
-    ; write ESC[0m literal
-    lea r13, [spin_reset]
-    mov rax, SYS_write
-    mov rdi, 2
-    mov rsi, r13
-    mov rdx, 4
+    lea rsi, [c_reset]
     syscall
+.lab:
     mov rsi, [spin_label]
     test rsi, rsi
     jz .done
@@ -619,6 +617,3 @@ ui_spinner_stop:
     syscall
 .ret:
     ret
-
-section .rodata
-spin_reset: db 27, "[0m", 0

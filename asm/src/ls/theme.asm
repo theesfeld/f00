@@ -465,7 +465,7 @@ strcpy_theme:
     ret
 
 ; theme_set_token_body_to(rdi=body cstr "1;36", rsi=dest buffer)
-; writes ESC [ body m NUL  into dest (max TOK_CAP-1)
+; writes ESC [ body m NUL  into dest (cap body 24 → total ≤ 28 of 32)
 theme_set_token_body_to:
     push rbx
     push r12
@@ -474,21 +474,20 @@ theme_set_token_body_to:
     mov r13, rsi                    ; dest
     mov byte [r13], 27
     mov byte [r13+1], '['
-    ; copy body
-    xor ebx, ebx
+    ; copy body — keep length in ebx (memcpy clobbers rcx via cl)
     mov rdi, r12
     call strlen
-    mov ecx, eax
-    cmp ecx, 24
+    mov ebx, eax
+    cmp ebx, 24
     jbe .oklen
-    mov ecx, 24
+    mov ebx, 24
 .oklen:
     lea rdi, [r13+2]
     mov rsi, r12
-    mov edx, ecx
+    mov edx, ebx
     call memcpy
-    mov byte [r13+2+rcx], 'm'
-    mov byte [r13+3+rcx], 0
+    mov byte [r13+2+rbx], 'm'
+    mov byte [r13+3+rbx], 0
     pop r13
     pop r12
     pop rbx

@@ -21,6 +21,7 @@ extern json_meta_open, json_meta_close, json_key_str, json_key_u64, json_key_boo
 extern json_comma_nl
 extern arena_init
 extern g_envp
+extern color_path, color_ok, color_reset
 
 %define F_JSON   1
 %define F_CSV    2
@@ -177,9 +178,6 @@ ejc:      db '}',10,0
 s_logname: db "LOGNAME",0
 s_user:   db "USER",0
 s_tmpenv: db "TMPDIR",0
-ansi_eq:  db 27,"[0m",0
-ansi_val: db 27,"[0;32m",0      ; green value
-ansi_rst: db 27,"[0m",0
 jk_env:   db "env",0
 msg_mkdir_v: db "f00-mkdir: created directory '",0
 msg_rmdir_v: db "f00-rmdir: removing directory, '",0
@@ -402,16 +400,13 @@ emit_kv_colored:
     mov rdx, r12
     sub rdx, rbx
     call out_strn
-    lea rsi, [ansi_eq]
-    call out_str
+    call color_reset
     mov dil, '='
     call out_byte
-    lea rsi, [ansi_val]
-    call out_str
+    call color_ok
     lea rsi, [r12 + 1]
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     pop r12
     pop rbx
     ret
@@ -2599,7 +2594,7 @@ henv:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-venv: db "f00-env (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+venv: db "f00-env (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 ecs:  db "entry",10,0
 
 section .text
@@ -2814,7 +2809,7 @@ hprintenv:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vprintenv: db "f00-printenv (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vprintenv: db "f00-printenv (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -3348,7 +3343,7 @@ hrealpath:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vrealpath: db "f00-realpath (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vrealpath: db "f00-realpath (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -3628,7 +3623,7 @@ hreadlink:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vreadlink: db "f00-readlink (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vreadlink: db "f00-readlink (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -3834,7 +3829,7 @@ hpathchk:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vpathchk: db "f00-pathchk (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vpathchk: db "f00-pathchk (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 section .text
 
 
@@ -4229,7 +4224,7 @@ hmktemp:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vmktemp: db "f00-mktemp (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vmktemp: db "f00-mktemp (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -4329,7 +4324,7 @@ hlink:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vlink: db "f00-link (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vlink: db "f00-link (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -4430,7 +4425,7 @@ hunlink:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vunlink: db "f00-unlink (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vunlink: db "f00-unlink (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -4587,7 +4582,7 @@ hsync:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vsync: db "f00-sync (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vsync: db "f00-sync (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -4931,7 +4926,7 @@ htruncate:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vtruncate: db "f00-truncate (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vtruncate: db "f00-truncate (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -5270,7 +5265,7 @@ hmkdir:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vmkdir: db "f00-mkdir (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vmkdir: db "f00-mkdir (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -5510,7 +5505,7 @@ hrmdir:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vrmdir: db "f00-rmdir (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vrmdir: db "f00-rmdir (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -6408,7 +6403,7 @@ hchmod:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vchmod: db "f00-chmod (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vchmod: db "f00-chmod (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -7042,7 +7037,7 @@ htouch:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vtouch: db "f00-touch (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vtouch: db "f00-touch (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 
 section .text
 
@@ -7297,7 +7292,7 @@ hlogname:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vlogname: db "f00-logname (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vlogname: db "f00-logname (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0
 clog: db "util,user", 10, "logname,", 0
 
 section .text
@@ -7477,4 +7472,4 @@ hhostid:
     db "      --csv      CSV result", 10
     db 10
     db "f00 suite · pure assembly · MIT · https://f00.sh", 10, 0
-vhostid: db "f00-hostid (f00) 0.15.9", 10, "License: MIT · https://f00.sh", 10, 0
+vhostid: db "f00-hostid (f00) 0.15.10", 10, "License: MIT · https://f00.sh", 10, 0

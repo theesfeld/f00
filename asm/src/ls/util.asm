@@ -55,7 +55,7 @@ c_num:          resb 32
 c_ok:           resb 32
 c_err:          resb 32
 c_hdr:          resb 32
-c_dim:          resb 16
+c_dim:          resb 32             ; truecolor dim bodies need ~20B ESC[…m
 c_banner:       resb 32
 c_spin:         resb 32
 alignb 8
@@ -105,7 +105,7 @@ def_c_reset: db 27, "[0m", 0
 env_nocolor: db "NO_COLOR", 0
 j_schema:   db "{", 10, '  "schema": "f00/v1",', 10, 0
 j_suite:    db '  "suite": "f00",', 10, 0
-j_ver:      db '  "version": "0.15.9",', 10, 0
+j_ver:      db '  "version": "0.15.10",', 10, 0
 j_util_a:   db '  "util": "', 0
 j_util_b:   db '",', 10, 0
 j_mode_m:   db '  "mode": "modern",', 10, 0

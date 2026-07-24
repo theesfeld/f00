@@ -10,6 +10,8 @@ extern out_byte, out_str, out_strn, out_u64, out_pad, out_spaces
 extern git_status_str
 extern u64_to_dec_buf, strlen
 extern color_reset, color_path, color_num, color_dim, color_hdr, color_ok
+; themed suite tokens (json chrome maps semantic roles onto these)
+extern c_path, c_num, c_ok, c_dim, c_hdr, c_reset
 
 section .rodata
 j_open:         db "[", 0
@@ -44,13 +46,8 @@ k_dir:          db '"directory"', 0
 k_lnk:          db '"symlink"', 0
 k_other:        db '"other"', 0
 
-; ANSI for machine formats (modern only)
-c_key:          db 27, "[36m", 0       ; cyan keys
-c_str:          db 27, "[32m", 0       ; green strings
-c_num:          db 27, "[33m", 0       ; yellow numbers
-c_pun:          db 27, "[2;37m", 0     ; dim punct
-c_rst:          db 27, "[0m", 0
-c_hdr:          db 27, "[1;36m", 0     ; bold cyan table header
+; JSON/table chrome → theme tokens:
+;   keys=path  strings=ok  numbers=num  punct=dim  headers=hdr  reset=c_reset
 j_nl2:          db 10, "  ", 0
 j_nl4:          db 10, "    ", 0
 j_comma_nl4:    db ",", 10, "    ", 0
@@ -105,11 +102,11 @@ j_pun:                                  ; dim punctuation cstr
     test al, al
     jz .p
     push rsi
-    lea rsi, [c_pun]
+    lea rsi, [c_dim]
     call out_str
     pop rsi
     call out_str
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     jmp out_str
 .p: jmp out_str
 
@@ -118,17 +115,17 @@ j_key:                                  ; key cstr (quoted) + ": "
     test al, al
     jz .plain
     push rsi
-    lea rsi, [c_key]
+    lea rsi, [c_path]
     call out_str
     pop rsi
     call out_str
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
-    lea rsi, [c_pun]
+    lea rsi, [c_dim]
     call out_str
     mov dil, ':'
     call out_byte
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     lea rsi, [j_sp]
     jmp out_str
@@ -146,7 +143,7 @@ j_num_u64:                              ; yellow number rdi
     call out_str
     pop rdi
     call out_u64
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     jmp out_str
 .p: jmp out_u64
 
@@ -161,7 +158,7 @@ json_str:
     call j_chrome
     test al, al
     jz .q0
-    lea rsi, [c_str]
+    lea rsi, [c_ok]
     call out_str
 .q0:
     mov dil, '"'
@@ -217,7 +214,7 @@ json_str:
     call j_chrome
     test al, al
     jz .done
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
 .done:
     pop r13
@@ -337,11 +334,11 @@ format_json:
     mov dil, ' '
     call out_byte
 .brace_only:
-    lea rsi, [c_pun]
+    lea rsi, [c_dim]
     call out_str
     mov dil, '{'
     call out_byte
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     lea rsi, [j_nl4]
     call out_str
@@ -380,11 +377,11 @@ format_json:
     test al, al
     jz .kplain
     push rsi
-    lea rsi, [c_str]
+    lea rsi, [c_ok]
     call out_str
     pop rsi
     call out_str
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     jmp .kdone
 .kplain:
@@ -403,7 +400,7 @@ format_json:
     call j_chrome
     test al, al
     jz .mq
-    lea rsi, [c_str]
+    lea rsi, [c_ok]
     call out_str
 .mq:
     mov dil, '"'
@@ -415,7 +412,7 @@ format_json:
     call j_chrome
     test al, al
     jz .mq2
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
 .mq2:
     call j_field_sep
@@ -492,7 +489,7 @@ format_json:
     call out_str
     lea rsi, [j_null]
     call out_str
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     jmp .close_obj
 .tn:
@@ -788,7 +785,7 @@ format_table_view:
     lea rsi, [th_depth]
     mov eax, 11
     call t_emit_right_lab
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     mov dil, 10
     call out_byte
@@ -800,13 +797,13 @@ format_table_view:
     jae .rdone
     mov r14, [r12 + rbx*8]
     ; name (path color)
-    lea rsi, [c_str]
+    lea rsi, [c_ok]
     call out_str
     mov rsi, [r14 + Entry.name]
     movzx edx, word [r14 + Entry.namelen]
     mov eax, 0
     call t_emit_strn_left
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     ; path
     mov rsi, [r14 + Entry.path]
@@ -832,7 +829,7 @@ format_table_view:
     mov rdi, [r14 + Entry.size]
     mov eax, 3
     call t_emit_u64_right
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     ; mode
     mov edi, [r14 + Entry.mode]
@@ -844,7 +841,7 @@ format_table_view:
     mov rdi, [r14 + Entry.ino]
     mov eax, 5
     call t_emit_u64_right
-    lea rsi, [c_rst]
+    lea rsi, [c_reset]
     call out_str
     mov edi, [r14 + Entry.nlink]
     mov eax, 6
