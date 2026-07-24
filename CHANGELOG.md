@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-07-24
+
 ### Changed
 - Default icons: **glyph** (single-width Unicode), not emoji — select emoji with `--icons=emoji` / `F00_ICONS=emoji`
 - Symlink icons follow target type (exec/dir) when possible; link mark is `↪`

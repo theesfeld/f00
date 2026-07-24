@@ -1,10 +1,10 @@
 # f00tils Roadmap
 
 **Repo:** https://github.com/theesfeld/f00  
-**Latest:** [v0.15.2](https://github.com/theesfeld/f00/releases/tag/v0.15.2)  
+**Latest:** [v0.15.3](https://github.com/theesfeld/f00/releases/tag/v0.15.3)  
 **Site:** https://f00.sh
 
-## Shipped (v0.15.2)
+## Shipped (v0.15.3)
 
 | Track | Status |
 |-------|--------|
