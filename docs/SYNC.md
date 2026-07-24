@@ -1,6 +1,6 @@
 # Docs sync process
 
-README, GitHub Pages (`site/`), man pages under `asm/man/man1/`, and `docs/ROADMAP.md` must stay consistent with **shipped** behavior.
+README, GitHub Pages (`site/`), man pages under `asm/man/man1/`, root `file_id.diz`, and `docs/ROADMAP.md` must stay consistent with **shipped** behavior.
 
 ## Hard rule — man pages
 
@@ -31,7 +31,8 @@ README, GitHub Pages (`site/`), man pages under `asm/man/man1/`, and `docs/ROADM
 ## Release checklist
 
 - [ ] Version bumped in man page `.TH` lines and release notes
+- [ ] Root `file_id.diz` refreshed for this version (scene card); README + `site/` previews match; `f00.1` FILES/SEE ALSO still accurate
 - [ ] `cd asm && make smoke && make speed`
 - [ ] `N=25 python3 scripts/gen-suite-bench.py` (refresh site/bench + README `<!-- bench-table -->`; CI does this on main)
-- [ ] Package assets: tarball · deb · rpm · Arch (`scripts/build-linux-packages.sh`)
-- [ ] Tag `vX.Y.Z` triggers release workflow
+- [ ] Package assets: tarball · deb · rpm · Arch (`scripts/build-linux-packages.sh`) · standalone `file_id.diz`
+- [ ] Tag `vX.Y.Z` triggers release workflow (attaches `file_id.diz`)

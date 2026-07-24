@@ -909,6 +909,24 @@ section {
   white-space: pre;
 }
 
+/* ACiD / 16colo.rs-style release scene card (file_id.diz) */
+.scene-card {
+  color: var(--accent-hot);
+  background: #05070a;
+  border-color: var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  max-width: 100%;
+}
+
+.scene-card code {
+  color: inherit;
+  white-space: pre;
+  tab-size: 4;
+}
+
 /* ── github ─────────────────────────────────────────────── */
 
 .github-layout {

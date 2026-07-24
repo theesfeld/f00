@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Root `file_id.diz` release scene card (ACiD / 16colo.rs-style block ASCII); README + site preview; `man f00` FILES; release workflow attaches the asset with every tag
+
 ## [0.15.8] - 2026-07-24
 
 ### Changed

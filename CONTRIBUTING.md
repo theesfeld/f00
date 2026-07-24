@@ -39,6 +39,7 @@ F00_LOCAL=$PWD/asm bash ../install.sh
 - Prefer small pull requests with one clear purpose.
 - Use Conventional Commits (`feat:`, `fix:`, `docs:`, …).
 - Update man pages and website copy when user-visible behavior changes.
+- On each SemVer **release**: refresh root `file_id.diz` (ACiD / 16colo.rs-style scene card), sync the README and site previews, keep `man f00` FILES accurate, and ship the file as a GitHub Release asset (with the changelog).
 - User-facing narrative names the project **f00tils**; keep CLI names as `f00` / `f00-*`.
 - User-facing text follows house language rules (STE for procedures; plain public narrative for README/site).
 

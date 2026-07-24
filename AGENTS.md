@@ -31,6 +31,7 @@ Shell is allowed only for bootstrap, install, packaging, and benches. Do not add
 | `packaging/` | AUR, nfpm (deb/rpm/arch) |
 | `Formula/` | Homebrew formula |
 | `docs/` | Compliance, UX, progress scoreboard |
+| `file_id.diz` | Release scene card (ACiD / 16colo.rs style); attach on every SemVer GitHub Release |
 | `scripts/` | Release, package, and bench generators |
 
 ## Build and gates

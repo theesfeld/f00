@@ -87,13 +87,20 @@ jobs:
           if [[ -d asm/man/man1 ]]; then
             cp -a asm/man/man1/f00*.1 "$STAGE/man/man1/" 2>/dev/null || true
           fi
-          for f in README.md LICENSE CHANGELOG.md; do
+          for f in README.md LICENSE CHANGELOG.md file_id.diz; do
             [[ -f "$f" ]] && cp "$f" "$STAGE/"
           done
           mkdir -p dist
           tar -C dist -czf "dist/f00-${VER}-linux-x86_64.tar.gz" "f00-${VER}-linux-x86_64"
           cp "dist/f00-${VER}-linux-x86_64.tar.gz" "dist/f00-${VER}-x86_64-linux.tar.gz"
-          (cd dist && sha256sum "f00-${VER}-linux-x86_64.tar.gz" "f00-${VER}-x86_64-linux.tar.gz" > SHA256SUMS)
+          # Standalone release scene card (also inside the tarball)
+          if [[ -f file_id.diz ]]; then
+            cp file_id.diz "dist/file_id.diz"
+          else
+            echo "missing root file_id.diz (required scene card)" >&2
+            exit 1
+          fi
+          (cd dist && sha256sum "f00-${VER}-linux-x86_64.tar.gz" "f00-${VER}-x86_64-linux.tar.gz" file_id.diz > SHA256SUMS)
           cat dist/SHA256SUMS
           echo "primary=dist/f00-${VER}-linux-x86_64.tar.gz" >> "$GITHUB_OUTPUT"
 
@@ -119,6 +126,7 @@ jobs:
             dist/f00_*.deb
             dist/f00-*.rpm
             dist/f00-*.pkg.tar.zst
+            dist/file_id.diz
             dist/SHA256SUMS
           if-no-files-found: error
 
@@ -161,6 +169,7 @@ jobs:
           test -f "release-assets/f00_${VER}_amd64.deb"
           test -f "release-assets/f00-${VER}-1.x86_64.rpm"
           test -f "release-assets/f00-${VER}-1-x86_64.pkg.tar.zst"
+          test -f "release-assets/file_id.diz"
 
       - name: Regenerate Homebrew + AUR manifests from release checksums
         run: |
@@ -209,6 +218,7 @@ jobs:
             - `f00_${{ steps.meta.outputs.version }}_amd64.deb`
             - `f00-${{ steps.meta.outputs.version }}-1.x86_64.rpm`
             - `f00-${{ steps.meta.outputs.version }}-1-x86_64.pkg.tar.zst`
+            - `file_id.diz` (ACiD / 16colo.rs-style release scene card)
             - `SHA256SUMS`
 
             See [README](https://github.com/theesfeld/f00#readme) · https://f00.sh

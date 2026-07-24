@@ -366,6 +366,7 @@ asm/                 pure assembly product (canonical)
   benches/           speed-gate, parity, smoke
 site/                f00.sh (GitHub Pages) + install.sh + bench data
 docs/                compliance, UX, modern features, scoreboard
+file_id.diz          ACiD / 16colo.rs-style release scene card
 packaging/           AUR + nfpm (deb/rpm/arch)
 Formula/             Homebrew
 scripts/             package and bench generators
@@ -383,7 +384,35 @@ install.sh           curl installer
 | [docs/TERMINAL-UX.md](docs/TERMINAL-UX.md) | Color tokens, help, JSON envelope |
 | [docs/MODERN-FEATURES.md](docs/MODERN-FEATURES.md) | Modern extras |
 | [CHANGELOG.md](CHANGELOG.md) | Releases |
+| [file_id.diz](file_id.diz) | Release scene card (ACiD / 16colo.rs style) |
 | Man | `man f00` · `man f00-ls` · `man f00-cat` · … |
+
+## Scene card
+
+Each SemVer release ships a crafted [`file_id.diz`](file_id.diz) scene card (block/high-ASCII,
+ACiD / [16colo.rs](https://16colo.rs/) energy) next to the changelog. GitHub Releases attach the
+same file as an asset. Keep monospaced when you view it.
+
+```text
+░▒▓████████████████████████████████████████████▓▒░░░
+█▓▒░  f 0 0 t i l s  ·  scene card  ·  v0.15.8 ░▒▓█ 
+████████████████████████████████████████████████████
+█  ▄████████▄   ▄███████▄   ▄███████▄              █
+█  ███▀▀▀▀███   ███▀▀▀▀███  ███▀▀▀▀███  freest.    █
+█  ███        ▄ ███     ███ ███     ███  ASM       █
+█  ████████   █ ███     ███ ███     ███  suite     █
+█  ███        █ ███     ███ ███     ███  multi     █
+█  ███        █ ███▄▄▄▄███  ███▄▄▄▄███  call       █
+█  ▀          ▀  ▀██████▀    ▀██████▀   f00-*      █
+████████████████████████████████████████████████████
+█  MIT · 2026-07-24 · 106/106 tools shipped        █
+█  modern default · --core for scripts             █
+█  pretty JSON · CSV tables · cat content paint    █
+█  faster than GNU coreutils (measured path)       █
+█  https://f00.sh · github:theesfeld/f00           █
+████████████████████████████████████████████████████
+  ░▒▓  no libc · Linux x86-64 · curl | bash  ▓▒░    
+```
 
 ---
 
