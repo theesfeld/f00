@@ -220,20 +220,20 @@ Per-tool tables (command, sample output, GNU time, f00 time):
 Representative results (from latest suite bench — do not hand-edit; CI overwrites):
 
 <!-- bench-table:start -->
-_CI / suite bench · `2026-07-24T12:50:02Z` · N=15 median · x86_64 · Linux 6.17.0-1020-azure_
+_CI / suite bench · `2026-07-24T13:00:16Z` · N=15 median · x86_64 · Linux 6.17.0-1020-azure_
 
 | Tool | Command | GNU | f00 `--core` | vs GNU |
 |------|---------|-----|--------------|--------|
-| `true` | `f00-true --core` | 0.56 ms | **0.25 ms** | **~2.2×** |
-| `basename` | `f00-basename --core /usr/bin/ls` | 0.81 ms | **0.25 ms** | **~3.2×** |
-| `nproc` | `f00-nproc --core` | 0.82 ms | **0.26 ms** | **~3.2×** |
-| `whoami` | `f00-whoami --core` | 0.90 ms | **0.25 ms** | **~3.5×** |
-| `cat` | `f00-cat --core fixture.txt` | 0.85 ms | **0.28 ms** | **~3.0×** |
-| `wc` | `f00-wc --core -l fixture.txt` | 0.86 ms | **0.35 ms** | **~2.5×** |
-| `md5sum` | `f00-md5sum --core fixture.txt` | 1.27 ms | **0.40 ms** | **~3.2×** |
+| `true` | `f00-true --core` | 0.62 ms | **0.30 ms** | **~2.1×** |
+| `basename` | `f00-basename --core /usr/bin/ls` | 0.88 ms | **0.30 ms** | **~3.0×** |
+| `nproc` | `f00-nproc --core` | 0.83 ms | **0.25 ms** | **~3.3×** |
+| `whoami` | `f00-whoami --core` | 0.90 ms | **0.26 ms** | **~3.5×** |
+| `cat` | `f00-cat --core fixture.txt` | 0.86 ms | **0.29 ms** | **~3.0×** |
+| `wc` | `f00-wc --core -l fixture.txt` | 0.87 ms | **0.38 ms** | **~2.3×** |
+| `md5sum` | `f00-md5sum --core fixture.txt` | 1.27 ms | **0.38 ms** | **~3.4×** |
 | `sha256sum` | `f00-sha256sum --core fixture.txt` | 1.24 ms | **0.45 ms** | **~2.8×** |
-| `sort` | `f00-sort --core fixture.txt` | 1.36 ms | **0.77 ms** | **~1.8×** |
-| `ls` | `f00-ls --core -1 dir` | 1.06 ms | **0.42 ms** | **~2.5×** |
+| `sort` | `f00-sort --core fixture.txt` | 1.36 ms | **0.76 ms** | **~1.8×** |
+| `ls` | `f00-ls --core -1 dir` | 1.08 ms | **0.45 ms** | **~2.4×** |
 <!-- bench-table:end -->
 
 Reproduce:
