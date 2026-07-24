@@ -565,11 +565,15 @@ util_ls_ok:
     call get_winsize
     mov [g_cols], eax
 
-    ; default color auto: on if tty
-    mov al, [g_tty]
-    mov [g_color], al
+    ; suite runtime: cwd/ids + XDG config + color defaults
+    mov rdi, rbx
+    mov rsi, r12
+    mov rdx, r15
+    call suite_runtime_init
 
-    ; modern TTY defaults: git on (f00 product mode)
+    ; modern TTY defaults: git on unless config forced off/core
+    test dword [g_opts2], OPT2_CORE | OPT2_NO_GIT
+    jnz .no_modern
     cmp byte [g_tty], 0
     je .no_modern
     or dword [g_opts2], OPT2_GIT

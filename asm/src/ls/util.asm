@@ -15,6 +15,9 @@ global json_comma_nl, json_indent, json_key_str_esc
 global color_init_default, color_reset, color_set, color_path, color_num
 global color_ok, color_err, color_hdr, color_dim
 global suite_runtime_init
+global env_key_match
+extern config_load, config_apply
+extern g_cfg_color_when
 global g_arena_base, g_arena_ptr, g_arena_end
 global g_out_buf, g_out_len, g_tty, g_cols, g_opts, g_exit
 global g_color, g_now_sec
@@ -801,17 +804,24 @@ suite_runtime_init:
     syscall
     mov rax, [timespec_tmp]
     mov [g_now_sec], rax
+    ; XDG ~/.config/f00 (and env) then color + apply
+    call config_load
     call color_init_default
+    call config_apply
     pop r13
     pop r12
     pop rbx
     ret
 
 ; color_init_default: modern default COLOR ON for TTY; off if --core later, NO_COLOR, or non-tty
-; Call after is_tty set. Does not force color on pipes (still tty-gated) unless always.
+; Respects g_cfg_color_when from config (0=auto 1=always 2=never).
 color_init_default:
     push rbx
     mov byte [g_color], 0
+    cmp byte [g_cfg_color_when], 2
+    je .done
+    cmp byte [g_cfg_color_when], 1
+    je .on
     cmp byte [g_tty], 0
     je .done
     ; honor NO_COLOR if set non-empty
@@ -829,7 +839,6 @@ color_init_default:
     add rbx, 8
     jmp .env
 .nocol:
-    ; NO_COLOR present → disable
     jmp .done
 .on:
     mov byte [g_color], 1

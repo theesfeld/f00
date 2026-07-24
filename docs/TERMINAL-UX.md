@@ -28,6 +28,8 @@ Implementation anchors:
 
 Honor **`NO_COLOR`**, non-TTY pipes (no SGR / no icons auto), and **`--core`**.
 
+User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.md)) — e.g. `core=true`, `animations=false`, `icons=always`, per-util sections like `[ls]`.
+
 ---
 
 ## Icons (suite-wide)

@@ -1,0 +1,18 @@
+# Example: copy to ~/.config/f00/config
+# See docs/CONFIG.md
+
+core = false
+color = auto
+icons = auto
+animations = true
+spinner = true
+
+[ls]
+git = true
+icons = auto
+
+[cat]
+# future util-specific knobs
+
+[sha256sum]
+spinner = true

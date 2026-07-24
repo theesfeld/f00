@@ -21,6 +21,7 @@ extern strlen
 extern strcmp
 extern icon_for_path, icon_enabled
 extern is_tty
+extern g_cfg_animations, g_cfg_spinner
 
 section .rodata
 s_core_sec:  db "Coreutils flags:", 0
@@ -494,6 +495,11 @@ ui_spinner_start:
     mov dword [spin_idx], 0
     mov qword [spin_label], 0
     cmp byte [g_color], 0
+    je .off
+    ; user config: animations / spinner
+    cmp byte [g_cfg_animations], 0
+    je .off
+    cmp byte [g_cfg_spinner], 0
     je .off
     ; stderr TTY?
     mov rdi, 2
