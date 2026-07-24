@@ -1100,30 +1100,55 @@ tr.partial td { opacity: 0.92; }
 tr.missing td { color: var(--warn); }
 tr.missing code { color: var(--warn); }
 
-/* suite benchmarks */
-.bench-scroll {
-  max-height: min(70vh, 42rem);
-  overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+/* scoreboard */
+.subhead {
+  margin: 1.75rem 0 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
 }
-.bench-scroll table.matrix {
-  margin: 0;
+table.matrix.compact {
+  font-size: 0.82rem;
 }
-.bench-scroll thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--bg-elevated);
-}
-.bench-out {
-  max-width: 22rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
+table.matrix.compact th,
+table.matrix.compact td {
+  padding: 0.35rem 0.5rem;
   white-space: nowrap;
 }
-.bench-out code {
-  font-size: 0.8em;
+table.matrix.compact code.cmd {
+  font-size: 0.78em;
+  color: var(--text-dim);
+  white-space: normal;
+  word-break: break-all;
+}
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem;
+}
+@media (max-width: 700px) {
+  .stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.stat {
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.stat-val {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 650;
+  color: var(--accent);
+}
+.stat-lbl {
+  font-size: 0.78rem;
   color: var(--text-dim);
 }
 

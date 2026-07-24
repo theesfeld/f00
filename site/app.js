@@ -1,11 +1,12 @@
 /**
  * f00tils (f00.sh) — progressive enhancement.
- * Version labels, copy buttons, benchmark table, scoreboard matrix.
+ * Version labels, copy buttons, combined scoreboard (features + benches).
  */
 (() => {
   "use strict";
 
   const FALLBACK_VERSION = "v0.15.1";
+  const HIGHLIGHT_N = 8;
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -15,25 +16,10 @@
       .replace(/"/g, "&quot;");
   }
 
-  /* ── version labels from GitHub latest ───────────────── */
   function setVersionLabels(tag) {
     if (!tag) return;
     document.querySelectorAll("[data-version]").forEach((el) => {
       el.textContent = tag;
-    });
-    document.querySelectorAll("[data-version-href]").forEach((el) => {
-      el.setAttribute(
-        "href",
-        "https://github.com/theesfeld/f00/releases/tag/" +
-          encodeURIComponent(tag)
-      );
-    });
-    document.querySelectorAll("[data-version-pin]").forEach((el) => {
-      if (!el.dataset.versionTemplate) {
-        el.dataset.versionTemplate =
-          el.getAttribute("data-version-pin") || el.textContent || "";
-      }
-      el.textContent = el.dataset.versionTemplate.replace(/__VERSION__/g, tag);
     });
   }
 
@@ -49,16 +35,11 @@
       .catch(() => {});
   } catch (_) {}
 
-  /* ── copy install ────────────────────────────────────── */
   document.querySelectorAll("[data-copy]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const sel = btn.getAttribute("data-copy");
       const target = sel ? document.querySelector(sel) : null;
-      const text = (
-        target
-          ? target.textContent
-          : btn.getAttribute("data-copy-text") || ""
-      ).trim();
+      const text = (target ? target.textContent : "").trim();
       if (!text) return;
       const done = () => {
         const prev = btn.textContent;
@@ -70,148 +51,149 @@
         }, 1400);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done).catch(fallback);
-      } else {
-        fallback();
-      }
-      function fallback() {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand("copy");
-        } catch (_) {}
-        document.body.removeChild(ta);
-        done();
+        navigator.clipboard.writeText(text).then(done).catch(() => {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand("copy");
+          } catch (_) {}
+          document.body.removeChild(ta);
+          done();
+        });
       }
     });
   });
 
-  /* ── mobile nav ──────────────────────────────────────── */
-  const menuBtn = document.querySelector(".menu-button");
-  const nav = document.querySelector(".site-nav");
-  if (menuBtn && nav) {
-    menuBtn.addEventListener("click", () => {
-      const open = menuBtn.getAttribute("aria-expanded") !== "true";
-      menuBtn.setAttribute("aria-expanded", String(open));
-      nav.classList.toggle("open", open);
-      document.body.classList.toggle("nav-open", open);
-    });
-    nav.querySelectorAll("a").forEach((a) => {
-      a.addEventListener("click", () => {
-        menuBtn.setAttribute("aria-expanded", "false");
-        nav.classList.remove("open");
-        document.body.classList.remove("nav-open");
-      });
-    });
+  function fmtMs(v) {
+    if (v == null || Number.isNaN(v)) return "—";
+    return Number(v).toFixed(2);
   }
 
-  /* ── suite benchmarks ────────────────────────────────── */
-  function renderBench(data) {
-    const body = document.getElementById("bench-body");
-    const meta = document.getElementById("bench-meta");
-    const nEl = document.getElementById("bench-n");
+  function fmtRatio(v) {
+    if (v == null || Number.isNaN(v)) return "—";
+    return `<strong>${esc(Number(v).toFixed(2))}×</strong>`;
+  }
+
+  function benchIndex(tools) {
+    const map = Object.create(null);
+    (tools || []).forEach((t) => {
+      if (t && t.tool) map[t.tool] = t;
+    });
+    return map;
+  }
+
+  function renderHighlights(tools, meta) {
+    const body = document.getElementById("highlight-body");
+    const metaEl = document.getElementById("bench-meta");
+    const stats = document.getElementById("bench-stats");
     if (!body) return;
-    const tools = (data && data.tools) || [];
-    const m = (data && data.meta) || {};
-    if (nEl && m.n_runs) nEl.textContent = String(m.n_runs);
-    if (meta) {
-      meta.textContent =
-        (m.generated_at ? `Generated ${m.generated_at}` : "Suite benchmarks") +
-        (m.machine ? ` · ${m.machine}` : "") +
-        (m.system ? ` · ${m.system}` : "") +
-        (m.method ? ` · ${m.method}` : "");
+
+    const ok = (tools || []).filter((t) => t.status === "ok" && t.ratio != null);
+    ok.sort((a, b) => b.ratio - a.ratio);
+
+    if (metaEl) {
+      metaEl.textContent = meta
+        ? `${meta.method || "median"} · ${meta.machine || ""} · ${meta.system || ""} · ${meta.generated_at || ""}`.replace(
+            /\s+·\s+$/,
+            ""
+          )
+        : "";
     }
-    const rows = tools.filter((t) => t.status === "ok");
-    if (!rows.length) {
+
+    if (stats && ok.length) {
+      stats.hidden = false;
+      const ratios = ok.map((t) => t.ratio).sort((a, b) => a - b);
+      const mid = ratios[Math.floor(ratios.length / 2)];
+      const best = ok[0];
+      const set = (id, v) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = v;
+      };
+      set("stat-tools", String(ok.length));
+      set("stat-median", `${mid.toFixed(2)}×`);
+      set("stat-best", `${best.tool} ${best.ratio.toFixed(1)}×`);
+      set("stat-n", meta && meta.n_runs ? String(meta.n_runs) : "—");
+    }
+
+    const top = ok.slice(0, HIGHLIGHT_N);
+    if (!top.length) {
       body.innerHTML =
-        '<tr><td colspan="6" class="muted">No benchmark rows.</td></tr>';
+        '<tr><td colspan="5" class="muted">No timed tools in suite.json.</td></tr>';
       return;
     }
-    body.innerHTML = rows
-      .map((t) => {
-        const ratio =
-          t.ratio != null ? `<strong>${esc(t.ratio.toFixed(2))}×</strong>` : "—";
-        const g =
-          t.time_gnu_ms != null ? t.time_gnu_ms.toFixed(3) : "—";
-        const f =
-          t.time_f00_ms != null
-            ? `<strong>${esc(t.time_f00_ms.toFixed(3))}</strong>`
-            : "—";
-        const out = t.output_f00 ? esc(t.output_f00) : "—";
-        return (
+    body.innerHTML = top
+      .map(
+        (t) =>
           `<tr>` +
           `<td><code>${esc(t.tool)}</code></td>` +
-          `<td><code>${esc(t.command_f00)}</code></td>` +
-          `<td class="bench-out"><code>${out}</code></td>` +
-          `<td>${esc(g)}</td>` +
-          `<td>${f}</td>` +
-          `<td>${ratio}</td>` +
+          `<td><code class="cmd">${esc(t.command_f00 || "")}</code></td>` +
+          `<td>${esc(fmtMs(t.time_gnu_ms))}</td>` +
+          `<td><strong>${esc(fmtMs(t.time_f00_ms))}</strong></td>` +
+          `<td>${fmtRatio(t.ratio)}</td>` +
           `</tr>`
-        );
-      })
+      )
       .join("");
   }
 
-  try {
-    fetch("bench/suite.json", { headers: { Accept: "application/json" } })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data) renderBench(data);
-        else {
-          const body = document.getElementById("bench-body");
-          if (body) {
-            body.innerHTML =
-              '<tr><td colspan="6" class="muted">Could not load <code>bench/suite.json</code>.</td></tr>';
-          }
-        }
-      })
-      .catch(() => {
-        const body = document.getElementById("bench-body");
-        if (body) {
-          body.innerHTML =
-            '<tr><td colspan="6" class="muted">Could not load <code>bench/suite.json</code>.</td></tr>';
-        }
-      });
-  } catch (_) {}
+  function renderScoreboard(progress, bench) {
+    const body = document.getElementById("scoreboard-body");
+    if (!body) return;
+    const rows = (progress && progress.rows) || [];
+    const bi = benchIndex(bench && bench.tools);
 
-  /* ── scoreboard matrix ───────────────────────────────── */
-  function renderMatrix(data) {
-    const body = document.getElementById("matrix-body");
-    if (!body || !data || !data.rows) return;
-    body.innerHTML = data.rows
+    if (!rows.length) {
+      body.innerHTML =
+        '<tr><td colspan="9" class="muted">Missing coreutils-progress.json</td></tr>';
+      return;
+    }
+
+    body.innerHTML = rows
       .map((r) => {
+        const b = bi[r.util] || null;
         const depth =
-          r.depth === "full" ? `<strong>full</strong>` : esc(r.depth);
+          r.depth === "full" ? "<strong>full</strong>" : esc(r.depth);
+        const g = b && b.status === "ok" ? fmtMs(b.time_gnu_ms) : "—";
+        const f =
+          b && b.status === "ok"
+            ? `<strong>${esc(fmtMs(b.time_f00_ms))}</strong>`
+            : "—";
+        const x =
+          b && b.status === "ok" && b.ratio != null ? fmtRatio(b.ratio) : "—";
+        // speed column from progress when no bench sample
+        const speedNote =
+          b && b.status === "ok"
+            ? ""
+            : r.speed && r.speed !== "—"
+              ? ` title="gate: ${esc(r.speed)}"`
+              : "";
         return (
-          `<tr class="shipped">` +
+          `<tr class="shipped"${speedNote}>` +
           `<td>${esc(r.n)}</td>` +
           `<td><code>${esc(r.util)}</code></td>` +
           `<td><code>${esc(r.f00)}</code></td>` +
           `<td>${esc(r.shipped)}</td>` +
           `<td>${depth}</td>` +
           `<td>${esc(r.modern)}</td>` +
-          `<td>${esc(r.speed)}</td>` +
+          `<td>${esc(g)}</td>` +
+          `<td>${f}</td>` +
+          `<td>${x}</td>` +
           `</tr>`
         );
       })
       .join("");
   }
 
-  try {
-    fetch("coreutils-progress.json", {
-      headers: { Accept: "application/json" },
-    })
+  Promise.all([
+    fetch("coreutils-progress.json", { headers: { Accept: "application/json" } })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data) renderMatrix(data);
-      })
-      .catch(() => {});
-  } catch (_) {}
-
-  /* ── year ────────────────────────────────────────────── */
-  document.querySelectorAll("[data-year]").forEach((el) => {
-    el.textContent = String(new Date().getFullYear());
+      .catch(() => null),
+    fetch("bench/suite.json", { headers: { Accept: "application/json" } })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null),
+  ]).then(([progress, suite]) => {
+    if (suite) renderHighlights(suite.tools, suite.meta);
+    renderScoreboard(progress, suite);
   });
 })();

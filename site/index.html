@@ -33,11 +33,9 @@
       </a>
       <nav class="site-nav nav" id="site-nav" aria-label="Primary">
         <a href="#laws">Laws</a>
-        <a href="#shots">Shots</a>
-        <a href="#benchmarks">Benchmarks</a>
+        <a href="#scoreboard">Scoreboard</a>
         <a href="#install">Install</a>
         <a href="#packages">Packages</a>
-        <a href="#matrix">Matrix</a>
         <a class="btn btn-ghost btn-sm" href="https://github.com/theesfeld/f00">GitHub</a>
       </nav>
     </div>
@@ -71,41 +69,20 @@
           </div>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#install">Install</a>
-            <a class="btn btn-ghost" href="#benchmarks">Benchmarks</a>
+            <a class="btn btn-ghost" href="#scoreboard">Scoreboard</a>
             <a class="btn btn-ghost" href="https://github.com/theesfeld/f00#readme">README</a>
           </div>
         </div>
-        <div class="hero-visual" aria-hidden="false">
+        <div class="hero-visual">
           <figure class="shot-frame">
             <img
               class="shot"
               src="assets/screenshots/hero.png"
               width="1040"
               height="420"
-              alt="Color terminal: f00-ls version and directory listing"
+              alt="Color terminal: f00 suite version and directory listing"
               loading="eager"
             />
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="shots">
-      <div class="wrap">
-        <h2>In color</h2>
-        <p class="muted">Real <code class="mono">f00-*</code> output, rendered with ANSI colors for the suite brand.</p>
-        <div class="shot-grid">
-          <figure class="shot-card">
-            <img src="assets/screenshots/f00-ls-la.png" alt="f00-ls -la with colorized modes, users, dates, and names" loading="lazy" width="1000" height="420" />
-            <figcaption><code class="mono">f00-ls -la</code> — modes, owners, dates, dirs, executables</figcaption>
-          </figure>
-          <figure class="shot-card">
-            <img src="assets/screenshots/f00-core-vs-modern.png" alt="f00-ls modern color listing versus --core plain listing" loading="lazy" width="920" height="592" />
-            <figcaption>Modern default vs <code class="mono">--core</code></figcaption>
-          </figure>
-          <figure class="shot-card">
-            <img src="assets/screenshots/f00-suite.png" alt="f00-id, f00-nproc, f00-uname, f00-sha256sum, f00-wc" loading="lazy" width="960" height="480" />
-            <figcaption>Multicall suite — <code class="mono">id</code>, <code class="mono">nproc</code>, hashes, <code class="mono">wc</code></figcaption>
           </figure>
         </div>
       </div>
@@ -123,24 +100,30 @@
       </div>
     </section>
 
-    <section class="section" id="features">
+    <section class="section" id="scoreboard">
       <div class="wrap">
-        <h2>Feature parity</h2>
-        <p class="muted">How f00tils sits against coreutils and other replacement families.</p>
+        <h2>Scoreboard</h2>
+        <p class="muted">
+          Features and speed in one place. Suite status is
+          <strong>106/106</strong> shipped ·
+          <code class="mono">--core</code> full · modern · faster than GNU on measured tools.
+        </p>
+
+        <h3 class="subhead">Ecosystem</h3>
         <div class="table-wrap">
-          <table class="matrix">
+          <table class="matrix compact">
             <thead>
               <tr>
-                <th>Area</th>
-                <th>GNU coreutils</th>
-                <th>f00tils (ASM)</th>
+                <th>Capability</th>
+                <th>GNU</th>
+                <th>f00tils</th>
                 <th>uutils</th>
                 <th>busybox / toybox</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Full tool <em>names</em></td>
+                <td>Tool names</td>
                 <td>Yes</td>
                 <td><strong>106/106</strong></td>
                 <td>Growing</td>
@@ -150,8 +133,8 @@
                 <td>Script drop-in</td>
                 <td>Yes</td>
                 <td><strong><code>--core</code></strong></td>
-                <td>Feature flags</td>
-                <td>Often reduced</td>
+                <td>Varies</td>
+                <td>Reduced</td>
               </tr>
               <tr>
                 <td>Modern default UX</td>
@@ -161,21 +144,21 @@
                 <td>Minimal</td>
               </tr>
               <tr>
-                <td>Suite-wide JSON/CSV</td>
+                <td>Suite JSON/CSV</td>
                 <td>No</td>
-                <td><strong>f00/v1 envelope</strong></td>
+                <td><strong>f00/v1</strong></td>
                 <td>Limited</td>
                 <td>No</td>
               </tr>
               <tr>
-                <td>Pure freestanding ASM</td>
+                <td>Freestanding ASM</td>
                 <td>No</td>
                 <td><strong>Yes</strong></td>
                 <td>No</td>
                 <td>C</td>
               </tr>
               <tr>
-                <td>Multicall single binary</td>
+                <td>Multicall binary</td>
                 <td>No*</td>
                 <td><strong>Yes</strong></td>
                 <td>Optional</td>
@@ -185,42 +168,90 @@
           </table>
         </div>
         <p class="muted small">*coreutils ships many separate binaries.</p>
-      </div>
-    </section>
 
-    <section class="section" id="benchmarks">
-      <div class="wrap">
-        <h2>Benchmarks</h2>
-        <p class="muted">
-          Per-tool comparison: command, sample output, wall time.
-          Method: warm cache, spawn-inclusive, median of
-          <span id="bench-n">N</span> runs.
-          f00tils is timed as <code class="mono">f00-TOOL --core</code> against <code class="mono">/usr/bin/TOOL</code>.
-        </p>
-        <p class="muted small" id="bench-meta">Loading suite data…</p>
-        <div class="table-wrap bench-scroll">
-          <table class="matrix" id="bench-table">
+        <h3 class="subhead">Speed snapshot</h3>
+        <p class="muted small" id="bench-meta">Loading measured times…</p>
+        <div class="stat-row" id="bench-stats" hidden>
+          <div class="stat"><span class="stat-val" id="stat-tools">—</span><span class="stat-lbl">tools timed</span></div>
+          <div class="stat"><span class="stat-val" id="stat-median">—</span><span class="stat-lbl">median vs GNU</span></div>
+          <div class="stat"><span class="stat-val" id="stat-best">—</span><span class="stat-lbl">best win</span></div>
+          <div class="stat"><span class="stat-val" id="stat-n">—</span><span class="stat-lbl">runs (median)</span></div>
+        </div>
+        <div class="table-wrap">
+          <table class="matrix compact" id="highlight-table">
             <thead>
               <tr>
                 <th>Tool</th>
                 <th>Command</th>
-                <th>Sample output (f00)</th>
                 <th>GNU ms</th>
                 <th>f00 ms</th>
-                <th>vs GNU</th>
+                <th>× GNU</th>
               </tr>
             </thead>
-            <tbody id="bench-body">
-              <tr><td colspan="6" class="muted">Load <code class="mono">bench/suite.json</code>…</td></tr>
+            <tbody id="highlight-body">
+              <tr><td colspan="5" class="muted">…</td></tr>
             </tbody>
           </table>
         </div>
-        <p class="muted small" style="margin-top:1rem">
-          Data:
+        <p class="muted small">Top measured wins (spawn-inclusive, warm cache). Full machine data:
           <a href="bench/suite.json">suite.json</a> ·
-          <a href="bench/suite.md">suite.md</a> ·
-          regenerate with <code class="mono">python3 scripts/gen-suite-bench.py</code>
+          <a href="bench/suite.md">suite.md</a>
         </p>
+
+        <h3 class="subhead">Every tool — feature + speed</h3>
+        <div class="progress-bar" role="img" aria-label="shipped 106 of 106">
+          <div class="progress-fill" style="width:100%"></div>
+        </div>
+        <p class="muted small">
+          One row per coreutil: ship status, <code class="mono">--core</code> depth, modern surface, and
+          measured time when available (no nested scroll — use the page).
+        </p>
+        <div class="table-wrap">
+          <table class="matrix compact" id="scoreboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>tool</th>
+                <th>f00</th>
+                <th>shipped</th>
+                <th><code>--core</code></th>
+                <th>modern</th>
+                <th>GNU ms</th>
+                <th>f00 ms</th>
+                <th>× GNU</th>
+              </tr>
+            </thead>
+            <tbody id="scoreboard-body">
+              <tr><td colspan="9" class="muted">Loading scoreboard…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted small">
+          Extras also shipped: <code>hostname</code>, <code>kill</code>, <code>rev</code>.
+          Flag depth:
+          <a href="https://github.com/theesfeld/f00/blob/main/docs/GNU-COMPLIANCE.md">GNU-COMPLIANCE.md</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="shots">
+      <div class="wrap">
+        <h2>In color</h2>
+        <p class="muted">Real <code class="mono">f00-*</code> output with ANSI colors.</p>
+        <div class="shot-grid">
+          <figure class="shot-card">
+            <img src="assets/screenshots/f00-ls-la.png" alt="Color long listing" loading="lazy" width="1000" height="420" />
+            <figcaption><code class="mono">f00-ls -la</code></figcaption>
+          </figure>
+          <figure class="shot-card">
+            <img src="assets/screenshots/f00-core-vs-modern.png" alt="Modern versus --core" loading="lazy" width="920" height="592" />
+            <figcaption>Modern default vs <code class="mono">--core</code></figcaption>
+          </figure>
+          <figure class="shot-card">
+            <img src="assets/screenshots/f00-suite.png" alt="Multicall tools" loading="lazy" width="960" height="480" />
+            <figcaption>Multicall suite samples</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 
@@ -238,7 +269,7 @@
           </div>
         </div>
         <div class="table-wrap" style="margin-top:1.25rem">
-          <table class="matrix">
+          <table class="matrix compact">
             <thead><tr><th>Env</th><th>Effect</th></tr></thead>
             <tbody>
               <tr><td><code>INSTALL_DIR</code></td><td>Bin dir (default <code>~/.local/bin</code>)</td></tr>
@@ -271,18 +302,18 @@ make &amp;&amp; make smoke &amp;&amp; make install
     <section class="section" id="packages">
       <div class="wrap">
         <h2>Packages</h2>
-        <p class="muted">Release assets ship tarball, deb, rpm, and Arch packages for Linux x86-64.</p>
+        <p class="muted">Release assets: tarball, deb, rpm, and Arch package for Linux x86-64.</p>
         <div class="table-wrap">
-          <table class="matrix">
+          <table class="matrix compact">
             <thead><tr><th>Channel</th><th>Status</th><th>Notes</th></tr></thead>
             <tbody>
               <tr><td>Install script</td><td><strong>Primary</strong></td><td><code>curl -fsSL https://f00.sh/install.sh | bash</code></td></tr>
               <tr><td>GitHub Releases</td><td><strong>Shipped</strong></td><td><code>.tar.gz</code>, <code>.deb</code>, <code>.rpm</code>, <code>.pkg.tar.zst</code></td></tr>
-              <tr><td>Homebrew</td><td>Formula</td><td><code>Formula/f00.rb</code> · Linux bottle from release tarball</td></tr>
-              <tr><td>AUR</td><td>PKGBUILD</td><td><code>packaging/aur/PKGBUILD</code> builds from tag</td></tr>
+              <tr><td>Homebrew</td><td>Formula</td><td><code>brew install theesfeld/tap/f00</code></td></tr>
+              <tr><td>AUR</td><td>PKGBUILD</td><td><code>yay -S f00</code></td></tr>
               <tr><td>Debian / Ubuntu</td><td><code>.deb</code></td><td><code>sudo dpkg -i f00_*_amd64.deb</code></td></tr>
               <tr><td>Fedora / RHEL</td><td><code>.rpm</code></td><td><code>sudo rpm -Uvh f00-*.x86_64.rpm</code></td></tr>
-              <tr><td>Arch (local package)</td><td><code>.pkg.tar.zst</code></td><td><code>sudo pacman -U f00-*-x86_64.pkg.tar.zst</code></td></tr>
+              <tr><td>Arch (local)</td><td><code>.pkg.tar.zst</code></td><td><code>sudo pacman -U f00-*-x86_64.pkg.tar.zst</code></td></tr>
               <tr><td>Nix</td><td>Experimental</td><td><code>flake.nix</code> · x86_64-linux</td></tr>
             </tbody>
           </table>
@@ -295,70 +326,6 @@ sudo rpm -Uvh f00-0.15.1-1.x86_64.rpm
 
 curl -fsSLO https://github.com/theesfeld/f00/releases/download/v0.15.1/f00-0.15.1-1-x86_64.pkg.tar.zst
 sudo pacman -U f00-0.15.1-1-x86_64.pkg.tar.zst</code></pre>
-      </div>
-    </section>
-
-    <section class="section" id="release">
-      <div class="wrap">
-        <h2>Release <code class="mono">v0.15.1</code></h2>
-        <div class="table-wrap">
-          <table class="matrix">
-            <tbody>
-              <tr><td><strong>Tag</strong></td><td><code>v0.15.1</code></td></tr>
-              <tr><td><strong>Status</strong></td><td><strong>Full-use</strong> f00tils — pure-ASM multicall coreutils suite (Linux x86-64)</td></tr>
-              <tr><td><strong>Scoreboard</strong></td><td><strong>106/106</strong> full · modern · speed win</td></tr>
-              <tr><td><strong>Assets</strong></td><td>tarball · deb · rpm · Arch package</td></tr>
-              <tr><td><strong>Tracking</strong></td><td><a href="https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md">COREUTILS-PROGRESS.md</a> · <a href="https://github.com/theesfeld/f00/issues">Issues</a></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <pre class="code-block"><code>curl -fsSL https://f00.sh/install.sh | F00_VERSION=v0.15.1 bash</code></pre>
-      </div>
-    </section>
-
-    <section class="section" id="matrix">
-      <div class="wrap">
-        <h2>Coreutils replacement progress</h2>
-        <p class="muted"><strong>Goal: f00tils replaces every GNU coreutils program.</strong> Live scoreboard (synced with the README).</p>
-        <div class="progress-bar" role="img" aria-label="shipped 106 of 106">
-          <div class="progress-fill" style="width:100.0%"></div>
-        </div>
-        <p class="muted small">Shipped <strong>106/106</strong> ·
-          <code>--core</code> depth: <strong>106</strong> full ·
-          <strong>0</strong> partial ·
-          <strong>0</strong> missing</p>
-        <div class="table-wrap">
-          <table class="matrix" id="matrix-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>coreutils</th>
-                <th>f00</th>
-                <th>shipped</th>
-                <th><code>--core</code> depth</th>
-                <th>modern</th>
-                <th>speed vs GNU</th>
-              </tr>
-            </thead>
-            <tbody id="matrix-body">
-              <!-- filled by app.js from coreutils-progress.json when present; static fallback below -->
-            </tbody>
-          </table>
-        </div>
-        <p class="muted small">Extras: <code>hostname</code>, <code>kill</code>, <code>rev</code>. Detail:
-          <a href="https://github.com/theesfeld/f00/blob/main/docs/GNU-COMPLIANCE.md">GNU-COMPLIANCE.md</a> ·
-          <a href="https://github.com/theesfeld/f00/blob/main/docs/COREUTILS-PROGRESS.md">COREUTILS-PROGRESS.md</a></p>
-      </div>
-    </section>
-
-    <section class="section" id="f00-ls">
-      <div class="wrap">
-        <h2>f00-ls</h2>
-        <p>Gold-reference util: modern listing with icons, git, tree, JSON/CSV, dual-pane <code class="mono">--browse</code>. Use <code class="mono">--core</code> for GNU-compatible plain lists — and still faster.</p>
-        <pre class="code-block"><code>f00-ls -la
-f00-ls --core -la
-f00-ls --json .
-f00-ls --browse</code></pre>
       </div>
     </section>
 
@@ -379,8 +346,7 @@ f00-ls --browse</code></pre>
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <p>f00tils · freestanding assembly coreutils · binary <code class="mono">f00</code> · MIT · <span data-version>v0.15.1</span></p>
-      <p><a href="https://github.com/theesfeld/f00">GitHub</a> · <a href="#install">Install</a> · <a href="#shots">Shots</a>
-        <a href="#benchmarks">Benchmarks</a></p>
+      <p><a href="https://github.com/theesfeld/f00">GitHub</a> · <a href="#install">Install</a> · <a href="#scoreboard">Scoreboard</a></p>
     </div>
   </footer>
 
