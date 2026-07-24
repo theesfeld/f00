@@ -177,7 +177,6 @@ ejc:      db '}',10,0
 s_logname: db "LOGNAME",0
 s_user:   db "USER",0
 s_tmpenv: db "TMPDIR",0
-ansi_key: db 27,"[1;36m",0      ; bold cyan KEY
 ansi_eq:  db 27,"[0m",0
 ansi_val: db 27,"[0;32m",0      ; green value
 ansi_rst: db 27,"[0m",0
@@ -398,8 +397,7 @@ emit_kv_colored:
     inc r12
     jmp .f
 .got:
-    lea rsi, [ansi_key]
-    call out_str
+    call color_path
     mov rsi, rbx
     mov rdx, r12
     sub rdx, rbx

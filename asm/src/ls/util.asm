@@ -13,11 +13,14 @@ global err_str, err_missing_operand, err_try_help
 global json_meta_open, json_meta_close, json_key_str, json_key_u64, json_key_bool
 global json_comma_nl, json_indent, json_key_str_esc
 global color_init_default, color_reset, color_set, color_path, color_num
+global c_path, c_num, c_ok, c_err, c_hdr, c_dim, c_reset, c_banner, c_spin
 global color_ok, color_err, color_hdr, color_dim
 global suite_runtime_init
 global env_key_match
 extern config_load, config_apply
 extern g_cfg_color_when
+extern theme_init, theme_apply_env, theme_apply_name
+extern g_cfg_theme
 global g_arena_base, g_arena_ptr, g_arena_end
 global g_out_buf, g_out_len, g_tty, g_cols, g_opts, g_exit
 global g_color, g_now_sec
@@ -43,7 +46,19 @@ g_cols:         resd 1
 g_opts:         resd 1
 g_exit:         resd 1
 g_color:        resb 1          ; 1 = emit ANSI
-                resb 3
+                resb 7
+alignb 8
+; themable SGR tokens (filled by theme.asm; classic 16-color default)
+c_reset:        resb 8
+c_path:         resb 32
+c_num:          resb 32
+c_ok:           resb 32
+c_err:          resb 32
+c_hdr:          resb 32
+c_dim:          resb 16
+c_banner:       resb 32
+c_spin:         resb 32
+alignb 8
 g_now_sec:      resq 1
 g_opts2:        resd 1
 g_icons_when:   resb 1              ; auto/always/never
@@ -51,10 +66,14 @@ g_icons_style:  resb 1              ; nerd (default) / emoji / glyph / ascii
 g_sort:         resb 1
 g_time_field:   resb 1
 g_quoting:      resb 1
+                resb 3              ; pad to 4-byte
 g_max_depth:    resd 1
 g_width_override: resd 1
+alignb 8
 g_envp:         resq 1
 g_json_core:    resd 1              ; 1 if --core for JSON mode field
+                resd 1
+alignb 8
 g_argc:         resq 1
 g_argv:         resq 1
 g_argv0:        resq 1              ; full argv[0]
@@ -62,6 +81,7 @@ g_util_name:    resq 1              ; basename of argv0
 g_pid:          resd 1
 g_uid:          resd 1
 g_euid:         resd 1
+                resd 1
 g_cwd:          resb 4096
 
 ; scratch for number conversion (max 20 digits + NUL)
@@ -80,21 +100,8 @@ human_units:    db "BKMGTPE"
 err_missing_msg: db ": missing operand", 10, 0
 err_try_pre:     db "Try '", 0
 err_try_mid:     db " --help' for more information.", 10, 0
-; ANSI (modern color defaults)
-c_reset:    db 27, "[0m", 0
-c_bold:     db 27, "[1m", 0
-c_dim:      db 27, "[2m", 0
-c_red:      db 27, "[31m", 0
-c_green:    db 27, "[32m", 0
-c_yellow:   db 27, "[33m", 0
-c_blue:     db 27, "[34m", 0
-c_magenta:  db 27, "[35m", 0
-c_cyan:     db 27, "[36m", 0
-c_path:     db 27, "[1;36m", 0      ; bold cyan paths
-c_num:      db 27, "[1;33m", 0      ; bold yellow numbers
-c_ok:       db 27, "[1;32m", 0
-c_err:      db 27, "[1;31m", 0
-c_hdr:      db 27, "[1;34m", 0
+; Default SGR bodies — theme.asm owns live c_* BSS; these are fallbacks only
+def_c_reset: db 27, "[0m", 0
 env_nocolor: db "NO_COLOR", 0
 j_schema:   db "{", 10, '  "schema": "f00/v1",', 10, 0
 j_suite:    db '  "suite": "f00",', 10, 0
@@ -805,8 +812,15 @@ suite_runtime_init:
     syscall
     mov rax, [timespec_tmp]
     mov [g_now_sec], rax
-    ; XDG ~/.config/f00 (and env) then color + apply
+    ; XDG config → theme (default → config theme → F00_THEME) → color when
     call config_load
+    call theme_init
+    lea rdi, [g_cfg_theme]
+    cmp byte [rdi], 0
+    je .thenv
+    call theme_apply_name
+.thenv:
+    call theme_apply_env             ; env wins over config file
     call color_init_default
     call config_apply
     pop r13
@@ -818,6 +832,7 @@ suite_runtime_init:
 ; Respects g_cfg_color_when from config (0=auto 1=always 2=never).
 color_init_default:
     push rbx
+    push r12
     mov byte [g_color], 0
     cmp byte [g_cfg_color_when], 2
     je .done
@@ -825,25 +840,26 @@ color_init_default:
     je .on
     cmp byte [g_tty], 0
     je .done
-    ; honor NO_COLOR if set non-empty
-    mov rbx, [g_envp]
-    test rbx, rbx
+    ; honor NO_COLOR if set (env_key_match clobbers rbx — use r12 cursor)
+    mov r12, [g_envp]
+    test r12, r12
     jz .on
 .env:
-    mov rdi, [rbx]
+    mov rdi, [r12]
     test rdi, rdi
     jz .on
     lea rsi, [env_nocolor]
     call env_key_match
     test al, al
     jnz .nocol
-    add rbx, 8
+    add r12, 8
     jmp .env
 .nocol:
     jmp .done
 .on:
     mov byte [g_color], 1
 .done:
+    pop r12
     pop rbx
     ret
 
@@ -871,9 +887,26 @@ env_key_match:
     pop rbx
     ret
 
+; ensure c_reset always valid before first theme_init
+color_tokens_seed_reset:
+    lea rdi, [c_reset]
+    lea rsi, [def_c_reset]
+    mov rcx, 5
+.cp: mov al, [rsi]
+    mov [rdi], al
+    inc rsi
+    inc rdi
+    dec rcx
+    jnz .cp
+    ret
+
 color_reset:
     cmp byte [g_color], 0
     je .r
+    cmp byte [c_reset], 0
+    jne .ok
+    call color_tokens_seed_reset
+.ok:
     lea rsi, [c_reset]
     call out_str
 .r: ret

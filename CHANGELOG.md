@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Overall suite speed headline** (geo mean of per-tool speedups) stamped into `file_id.diz`, README, and site hero — e.g. **2.5× / 148% faster overall**
 - Website Bun-style **fluid race-bar charts** + **cold-startup line chart** (`#benchmarks`), fed by `site/bench/suite.json` (`summary`, `showcase`, `cold_startup`)
 
+### Added
+- **Themes**: semantic color tokens; default `terminal` inherits 16-color palette; builtins (dracula, tokyo-night, catppuccin, monokai, nord, gruvbox, solarized, …); user `~/.config/f00/themes/*.theme`
+- **`f00-config`**: `theme list|get|set`, token preview, paths help; config `theme=` + `F00_THEME`
+
 ### Changed
 - Suite modern polish (not `--core`):
   - **pwd**: cyan path on TTY

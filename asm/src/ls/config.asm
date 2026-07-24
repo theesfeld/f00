@@ -12,6 +12,7 @@ DEFAULT REL
 global config_load, config_apply
 global g_cfg_core, g_cfg_animations, g_cfg_spinner
 global g_cfg_color_when, g_cfg_icons_when, g_cfg_git
+global g_cfg_theme
 
 extern g_envp, g_util_name, g_opts2, g_icons_when, g_icons_style, g_color, g_tty, g_json_core
 extern strlen, strcmp, memcpy, memset
@@ -31,7 +32,8 @@ g_cfg_spinner:      resb 1
 g_cfg_color_when:   resb 1
 g_cfg_icons_when:   resb 1
 g_cfg_git:          resb 1          ; 0=auto(tty) 1=force on 2=force off
-                    resb 2
+                    resb 1
+g_cfg_theme:        resb 64         ; theme name (empty = terminal/default)
 cfg_buf:            resb 8192
 cfg_path:           resb 1024
 line_buf:           resb 512
@@ -47,6 +49,7 @@ env_f00_color:  db "F00_COLOR", 0
 env_f00_icons:  db "F00_ICONS", 0
 env_f00_anim:   db "F00_ANIMATIONS", 0
 env_f00_spin:   db "F00_SPINNER", 0
+env_f00_theme:  db "F00_THEME", 0
 suf_cfg:        db "/f00/config", 0
 suf_dot_cfg:    db "/.config/f00/config", 0
 sec_global:     db "global", 0
@@ -56,6 +59,7 @@ k_icons:        db "icons", 0
 k_anim:         db "animations", 0
 k_spin:         db "spinner", 0
 k_git:          db "git", 0
+k_theme:        db "theme", 0
 v_true:         db "true", 0
 v_yes:          db "yes", 0
 v_on:           db "on", 0
@@ -84,6 +88,7 @@ config_load:
     mov byte [g_cfg_icons_when], CFG_AUTO
     mov byte [g_icons_style], ICONS_STYLE_NERD
     mov byte [g_cfg_git], CFG_AUTO
+    mov byte [g_cfg_theme], 0
     mov byte [sec_name], 0          ; current section = global
 
     ; 1) XDG_CONFIG_HOME/f00/config
@@ -512,10 +517,32 @@ apply_key:
     lea rsi, [k_git]
     call strcmp
     test eax, eax
-    jnz .done
+    jnz .a6
     mov rdi, r12
     call parse_when_or_bool
     mov [g_cfg_git], al
+    jmp .done
+.a6:
+    mov rdi, rbx
+    lea rsi, [k_theme]
+    call strcmp
+    test eax, eax
+    jnz .done
+    ; theme = name
+    lea rdi, [g_cfg_theme]
+    mov rsi, r12
+    xor ecx, ecx
+.tcopy:
+    cmp ecx, 63
+    jae .tzero
+    mov al, [rsi + rcx]
+    mov [rdi + rcx], al
+    test al, al
+    jz .done
+    inc ecx
+    jmp .tcopy
+.tzero:
+    mov byte [rdi + 63], 0
 .done:
     pop r12
     pop rbx

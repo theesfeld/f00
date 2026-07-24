@@ -48,6 +48,7 @@ extern printf_main
 ; suite_hash
 extern md5sum_main, sha1sum_main, sha256sum_main, sha224sum_main
 extern sha384sum_main, sha512sum_main, b2sum_main, cksum_main, sum_main
+extern config_main
 extern base64_main, basenc_main, base32_main, dircolors_main
 ; suite_misc
 extern chroot_main, stty_main, stdbuf_main, runcon_main, chcon_main
@@ -249,6 +250,7 @@ N stty, "stty"
 N stdbuf, "stdbuf"
 N runcon, "runcon"
 N chcon, "chcon"
+N config, "config"
 name_bracket: db "[", 0
 name_f00_bracket: db "f00-[", 0
 
@@ -363,6 +365,7 @@ util_table:
     dq name_stdbuf, stdbuf_main, name_f00_stdbuf, stdbuf_main
     dq name_runcon, runcon_main, name_f00_runcon, runcon_main
     dq name_chcon, chcon_main, name_f00_chcon, chcon_main
+    dq name_config, config_main, name_f00_config, config_main
     dq 0, 0
 
 dot_path:       db ".", 0

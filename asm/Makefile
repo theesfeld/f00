@@ -20,7 +20,7 @@ UTILS := ls cat true false yes nproc tty whoami basename dirname \
 	id groups uname arch date users who pinky uptime hostname \
 	nice nohup timeout kill test printf \
 	md5sum sha1sum sha256sum sha224sum sha384sum sha512sum b2sum cksum sum \
-	base64 basenc base32 dircolors chroot stty stdbuf runcon chcon
+	base64 basenc base32 dircolors chroot stty stdbuf runcon chcon config
 
 .PHONY: all clean install links test smoke parity speed ux-check
 

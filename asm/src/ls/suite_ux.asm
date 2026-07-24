@@ -36,13 +36,13 @@ s_hdr_rule:  db "╰", 0
 s_hdr_rule2: db "────────────────────────────────────────────────────────────", 10, 0
 s_hdr_plain_pre:  db "==> ", 0
 s_hdr_plain_post: db " <==", 10, 0
-c_sec:       db 27, "[1;35m", 0      ; bold magenta section
-c_banner:    db 27, "[1;36m", 0
+c_sec:       db 27, "[1;35m", 0      ; bold magenta section (help only)
+; c_banner / c_spin are themable BSS in util.asm
+extern c_banner, c_spin
 c_muted:     db 27, "[2;37m", 0
-c_spin:      db 27, "[1;36m", 0      ; spinner accent
-c_use_hi:    db 27, "[1;31m", 0      ; >90% red
-c_use_mid:   db 27, "[1;33m", 0      ; >70% yellow
-c_use_lo:    db 27, "[1;32m", 0      ; else green
+c_use_hi:    db 27, "[1;31m", 0      ; severity stays semantic
+c_use_mid:   db 27, "[1;33m", 0
+c_use_lo:    db 27, "[1;32m", 0
 c_bar_on:    db 27, "[32m", 0
 c_bar_off:   db 27, "[2;37m", 0
 bar_fill:    db "█", 0               ; UTF-8; fallback if needed

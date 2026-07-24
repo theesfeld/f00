@@ -4308,8 +4308,7 @@ uniq_main:
     je .ucplain
     test dword [flags], F_CORE
     jnz .ucplain
-    lea rsi, [c_ucount]
-    call out_str
+    call color_num
     lea rsi, [scratch]
     mov edx, r8d
     call out_strn
@@ -4397,7 +4396,6 @@ huniq: db "Usage: f00-uniq [OPTION]... [INPUT [OUTPUT]]",10
       db 10
       db "f00 suite · pure assembly · MIT · https://f00.sh",10,0
 vuniq: db "f00-uniq (f00) 0.15.9",10,"License: MIT · https://f00.sh",10,0
-c_ucount: db 27, "[1;36m", 0
 c_ureset: db 27, "[0m", 0
 
 section .text

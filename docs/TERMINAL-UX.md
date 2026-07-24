@@ -114,6 +114,12 @@ Hash suite starts/stops a spinner around each file; sort spins while loading/sor
 
 ---
 
+## Themes
+
+Default **`terminal`**: ANSI 16-color indices → inherits the user terminal palette.
+Named themes and `~/.config/f00/themes/*.theme` recolor semantic tokens (`path`/`num`/`ok`/`err`/`hdr`/`dim`).
+CLI: `f00-config theme list|set|get`. Env: `F00_THEME`. See [CONFIG.md](CONFIG.md).
+
 ## Color tokens
 
 Semantic SGR tokens (modern TTY only). Prefer helpers over raw escapes.

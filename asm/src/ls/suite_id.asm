@@ -14,7 +14,7 @@ extern g_exit, g_tty, g_color, g_envp, g_json_core
 extern err_missing_operand, err_str
 extern json_meta_open, json_meta_close, json_key_str, json_key_u64, json_key_bool
 extern json_comma_nl, json_indent, json_indent
-extern color_reset, color_num, color_path, color_dim, color_set
+extern color_reset, color_num, color_path, color_dim, color_set, color_hdr
 extern ui_help_print
 
 %define F_JSON 1
@@ -159,12 +159,7 @@ paren_l: db "(",0
 paren_r: db ")",0
 comma: db ",",0
 utc_lbl: db " UTC ",0
-ansi_num: db 27,"[1;33m",0          ; bright yellow for id numbers
-ansi_name: db 27,"[1;36m",0         ; cyan for names
-ansi_rst: db 27,"[0m",0
-ansi_soft: db 27,"[36m",0           ; soft cyan (date weekday)
-ansi_soft2: db 27,"[35m",0          ; soft magenta (date month)
-ansi_sep: db 27,"[2;37m",0          ; dim group separators
+; id colors go through theme tokens (color_num/path/dim) — no hardcoded SGR
 grp_sep: db " · ",0                 ; modern groups separator
 err_id_nr: db "id: printing only names or real IDs requires -u, -g, or -G",10,0
 err_id_z: db "id: option --zero not permitted in default format",10,0
@@ -1414,12 +1409,10 @@ id_main:
     cmp byte [g_color], 0
     je .ig_comma
     push rsi
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
     lea rsi, [grp_sep]
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     pop rsi
     jmp .ig1
 .ig_comma:
@@ -1648,41 +1641,20 @@ id_ensure_primary_group:
     pop rbx
     ret
 
-; color helpers for id (no-op when g_color==0 or --core)
+; color helpers for id — theme tokens via util.asm
 id_c_num:
-    cmp byte [g_color], 0
-    je .r
-    push rsi
-    lea rsi, [ansi_num]
-    call out_str
-    pop rsi
-.r: ret
+    jmp color_num
 id_c_name:
-    cmp byte [g_color], 0
-    je .r
-    push rsi
-    lea rsi, [ansi_name]
-    call out_str
-    pop rsi
-.r: ret
+    jmp color_path
 id_c_rst:
-    cmp byte [g_color], 0
-    je .r
-    push rsi
-    lea rsi, [ansi_rst]
-    call out_str
-    pop rsi
-.r: ret
+    jmp color_reset
 ; dim label (uid=/gid=/groups=)
 id_out_lbl:
     push rsi
-    cmp byte [g_color], 0
-    je .p
-    lea rsi, [ansi_sep]
+    call color_dim
+    pop rsi
     call out_str
-.p: pop rsi
-    call out_str
-    call id_c_rst
+    call color_reset
     ret
 
 ; print id number edi with optional color
@@ -1870,12 +1842,10 @@ groups_main:
     cmp byte [g_color], 0
     je .gsp
     push rsi
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
     lea rsi, [grp_sep]
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     pop rsi
     jmp .g1
 .gsp:
@@ -1889,12 +1859,10 @@ groups_main:
     cmp byte [g_color], 0
     je .gnc
     push rsi
-    lea rsi, [ansi_name]
-    call out_str
+    call color_path
     pop rsi
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     jmp .gnxt
 .gnc:
     call out_str
@@ -2229,12 +2197,10 @@ emit_field_rel:
     cmp byte [g_color], 0
     je .plain
     push rsi
-    lea rsi, [ansi_num]
-    call out_str
+    call color_num
     pop rsi
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     mov ebx, 1
     ret
 .plain:
@@ -2928,12 +2894,10 @@ date_print_human:
     cmp byte [g_color], 0
     je .wd
     push rsi
-    lea rsi, [ansi_soft]
-    call out_str
+    call color_path
     pop rsi
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     jmp .wd1
 .wd: call out_str
 .wd1:
@@ -2947,12 +2911,10 @@ date_print_human:
     cmp byte [g_color], 0
     je .mo
     push rsi
-    lea rsi, [ansi_soft2]
-    call out_str
+    call color_hdr
     pop rsi
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     jmp .mo1
 .mo: call out_str
 .mo1:
@@ -2979,12 +2941,10 @@ date_print_human:
     cmp byte [g_color], 0
     je .yr
     push rdi
-    lea rsi, [ansi_num]
-    call out_str
+    call color_num
     pop rdi
     call out_u64
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     ret
 .yr: call out_u64
     ret
@@ -3858,12 +3818,10 @@ read_utmp_users:
     cmp byte [g_color], 0
     je .p_sp
     push rsi
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
     lea rsi, [grp_sep]
     call out_str
-    lea rsi, [ansi_rst]
-    call out_str
+    call color_reset
     pop rsi
     jmp .p1
 .p_sp:
@@ -3945,8 +3903,7 @@ read_utmp_who:
     call out_byte
     cmp byte [g_color], 0
     je .who_line
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
 .who_line:
     lea rsi, [utmp_buf + UT_LINE]
     call out_str
@@ -3955,8 +3912,7 @@ read_utmp_who:
     call out_byte
     cmp byte [g_color], 0
     je .who_host
-    lea rsi, [ansi_soft]
-    call out_str
+    call color_path
 .who_host:
     lea rsi, [utmp_buf + UT_HOST]
     call out_str
@@ -4279,8 +4235,7 @@ uptime_main:
     ; modern: dim "up", yellow numbers, dim unit words
     cmp byte [g_color], 0
     je .up_lbl
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
 .up_lbl:
     lea rsi, [s_up]
     call out_str
@@ -4308,8 +4263,7 @@ uptime_main:
     call id_c_rst
     cmp byte [g_color], 0
     je .days_plain
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
 .days_plain:
     cmp r14, 1
     jne .days_pl
@@ -4329,8 +4283,7 @@ uptime_main:
     call id_c_rst
     cmp byte [g_color], 0
     je .hrs_plain
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
 .hrs_plain:
     cmp r15, 1
     jne .hrs_pl
@@ -4348,8 +4301,7 @@ uptime_main:
     call id_c_rst
     cmp byte [g_color], 0
     je .min_plain
-    lea rsi, [ansi_sep]
-    call out_str
+    call color_dim
 .min_plain:
     cmp rbx, 1
     jne .min_pl

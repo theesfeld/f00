@@ -1,0 +1,9 @@
+# Dracula — truecolor semantic tokens for f00tils
+# Install: mkdir -p ~/.config/f00/themes && cp dracula.theme ~/.config/f00/themes/
+# Config:  theme = dracula
+path = 38;2;139;233;253
+num  = 38;2;241;250;140
+ok   = 38;2;80;250;123
+err  = 38;2;255;85;85
+hdr  = 38;2;189;147;249
+dim  = 2;38;2;98;114;164
