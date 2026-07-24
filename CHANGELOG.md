@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-07-24
+
+### Changed
+- Prefix icons **off by default** again (no more `d`/`-` gutter noise); color + tables only
+- Opt-in: `--icons=ascii|glyph|emoji|nerd`
+
 ## [0.15.4] - 2026-07-24
 
 ### Changed

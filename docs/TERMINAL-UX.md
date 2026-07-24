@@ -32,14 +32,12 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ---
 
-## Icons / type gutter (suite-wide)
+## Icons (suite-wide)
 
-- **Modern default: 1-cell ASCII type gutter** when color is on: `d` dir · `-` file · `l` link · `x` exec · `#` code · `z` zip · …
-- Primary type signal remains **color** (LS_COLORS); gutter is fixed-width chrome, never shifts columns.
-- **Off under `--core`**, pipes without color, or `icons=never`.
-- **CLI:** `--icons[=STYLE]` — `auto` (default) | `ascii` | `glyph` | `emoji` | `nerd` | `never`
-- Emoji/Nerd/glyph are skins; ascii is the stylish default.
-- **Config / env:** `icons = auto|ascii|glyph|emoji|nerd|never` · `F00_ICONS=…`
+- **Default: off.** Modern type signal is **color** (dir blue, exec green, link cyan, …) + table geometry — not prefix letters.
+- **Opt-in only:** `--icons` / `--icons=ascii|glyph|emoji|nerd` (fixed cell width so columns never shift).
+- **Always off under `--core`.**
+- `auto` / `never` = off. Config/env: `icons = never|ascii|glyph|emoji|nerd` · `F00_ICONS=…`
 
 ## JSON / CSV chrome
 

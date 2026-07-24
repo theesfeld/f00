@@ -3,12 +3,11 @@
 
 core = false
 color = auto
-icons = auto      # modern: 1-cell type gutter (d/l/x/-) when color on
-# icons = never   # color/table only
-# icons = glyph   # Unicode glyph skin
-# icons = emoji   # emoji skin
-# icons = nerd    # Nerd Font PUA
-# icons = ascii   # force ascii letters
+icons = never     # default: color + tables, no prefix icons
+# icons = ascii   # opt-in 1-cell d/l/x/-
+# icons = glyph
+# icons = emoji
+# icons = nerd
 animations = true
 spinner = true
 

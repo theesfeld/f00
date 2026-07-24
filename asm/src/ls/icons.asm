@@ -314,19 +314,18 @@ icon_disp_cells:
     ret
 
 icon_enabled:
-    ; Modern: 1-cell type gutter ON for TTY+color (style default = ascii).
-    ; --core / pipes / never → off. Explicit --icons=STYLE still ALWAYS.
+    ; Default OFF. Color + table columns carry type; prefix letters (d/-/x)
+    ; were not intuitive. Opt-in: --icons / --icons=ascii|glyph|emoji|nerd.
+    ; Always off under --core.
     mov eax, [g_opts2]
     test eax, OPT2_NO_ICONS | OPT2_CORE
     jnz .no
     movzx eax, byte [g_icons_when]
-    cmp al, ICONS_NEVER
-    je .no
     cmp al, ICONS_ALWAYS
     je .yes
-    ; AUTO: chrome whenever color is on (TTY auto-color or --color=always)
-    cmp byte [g_color], 0
-    je .no
+    ; AUTO and NEVER → no prefix chrome
+    xor al, al
+    ret
 .yes:
     mov al, 1
     ret

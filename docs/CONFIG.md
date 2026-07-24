@@ -54,7 +54,7 @@ spinner = false
 |-----|--------|--------|
 | `core` | `true`/`false`, `yes`/`no`, `1`/`0` | Force `--core` presentation |
 | `color` | `auto`, `always`, `never` (also `on`/`off`) | Color when |
-| `icons` | `auto` (1-cell ascii gutter when color on), `ascii`, `glyph`, `emoji`, `nerd`, `never` | Type gutter chrome; off under `--core` |
+| `icons` | `auto`/`never` (off), `ascii`, `glyph`, `emoji`, `nerd`, `always` | Prefix icons **off by default**; opt-in style when set |
 | `animations` | bool | Master switch for motion (spinners, …) |
 | `spinner` | bool | Per-spinner enable (also needs `animations`) |
 | `git` | `auto`/`always`/`never` or bool | ls git decorations |
