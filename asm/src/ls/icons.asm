@@ -6,7 +6,7 @@ DEFAULT REL
 
 global icon_for_entry, icon_for_path, icon_enabled, icon_set_style_from_str
 global icon_disp_cells
-extern g_opts2, g_tty, g_icons_when, g_icons_style, g_color
+extern g_opts2, g_tty, g_icons_when, g_icons_style, g_color, g_envp
 extern strlen
 
 ; icon kind indices (must match tables)
@@ -253,24 +253,181 @@ s_never:        db "never", 0
 s_always:       db "always", 0
 s_on:           db "on", 0
 s_off:          db "off", 0
+env_f00_nerd:   db "F00_NERD=", 0
+env_term:       db "TERM=", 0
+env_colorterm:  db "COLORTERM=", 0
+term_linux:     db "linux", 0
+term_dumb:      db "dumb", 0
+term_vt100:     db "vt100", 0
+term_vt220:     db "vt220", 0
+term_ansi:      db "ansi", 0
+term_cons:      db "cons25", 0
 
 section .bss
 ext_scratch: resb 32
 
 section .text
 
+; nerd_font_likely → al=1 if we should emit Nerd PUA glyphs
+; No true font probe in freestanding ASM. Heuristic:
+;   F00_NERD=0 → no; F00_NERD=1 → yes
+;   TERM=linux|dumb|vt100|vt220|ansi|cons25 → no (console / no PUA fonts)
+;   else → yes (modern terminal: user needs Nerd Font for correct glyphs;
+;          without it they see tofu — set icons=ascii or F00_NERD=0)
+nerd_font_likely:
+    push rbx
+    push r12
+    mov r12, [g_envp]
+    test r12, r12
+    jz .yes
+    ; F00_NERD=
+    mov rbx, r12
+.fn:
+    mov rdi, [rbx]
+    test rdi, rdi
+    jz .term
+    lea rsi, [env_f00_nerd]
+    mov ecx, 9
+    call env_pfx
+    test al, al
+    jz .fnn
+    mov al, [rdi+9]
+    cmp al, '0'
+    je .no
+    cmp al, '1'
+    je .yes
+.fnn:
+    add rbx, 8
+    jmp .fn
+.term:
+    mov rbx, r12
+.tl:
+    mov rdi, [rbx]
+    test rdi, rdi
+    jz .ct
+    lea rsi, [env_term]
+    mov ecx, 5
+    call env_pfx
+    test al, al
+    jz .tln
+    push rbx
+    lea rbx, [rdi+5]                ; TERM value (stable)
+    mov rdi, rbx
+    lea rsi, [term_linux]
+    call streq
+    test al, al
+    jnz .term_no
+    mov rdi, rbx
+    lea rsi, [term_dumb]
+    call streq
+    test al, al
+    jnz .term_no
+    mov rdi, rbx
+    lea rsi, [term_vt100]
+    call streq
+    test al, al
+    jnz .term_no
+    mov rdi, rbx
+    lea rsi, [term_vt220]
+    call streq
+    test al, al
+    jnz .term_no
+    mov rdi, rbx
+    lea rsi, [term_ansi]
+    call streq
+    test al, al
+    jnz .term_no
+    mov rdi, rbx
+    lea rsi, [term_cons]
+    call streq
+    test al, al
+    jnz .term_no
+    pop rbx
+    jmp .tln
+.term_no:
+    pop rbx
+    jmp .no
+.tln:
+    add rbx, 8
+    jmp .tl
+.ct:
+    ; COLORTERM present → graphical terminal, try nerd
+    mov rbx, r12
+.cl:
+    mov rdi, [rbx]
+    test rdi, rdi
+    jz .yes
+    lea rsi, [env_colorterm]
+    mov ecx, 10
+    call env_pfx
+    test al, al
+    jnz .yes
+    add rbx, 8
+    jmp .cl
+.yes:
+    mov al, 1
+    pop r12
+    pop rbx
+    ret
+.no:
+    xor al, al
+    pop r12
+    pop rbx
+    ret
+
+; env_pfx(rdi=env "KEY=val", rsi=prefix, ecx=len) → al=1 match; rdi unchanged base
+env_pfx:
+    push rbx
+    push rcx
+    mov rbx, rdi
+.lp:
+    test ecx, ecx
+    jz .y
+    mov al, [rsi]
+    cmp al, [rbx]
+    jne .n
+    inc rsi
+    inc rbx
+    dec ecx
+    jmp .lp
+.y: mov al, 1
+    pop rcx
+    pop rbx
+    ret
+.n: xor al, al
+    pop rcx
+    pop rbx
+    ret
+
+; icon_style_effective → al style (may demote nerd → ascii)
+icon_style_effective:
+    movzx eax, byte [g_icons_style]
+    cmp al, ICONS_STYLE_NERD
+    jne .ret
+    push rax
+    call nerd_font_likely
+    test al, al
+    pop rax
+    jnz .ret
+    mov al, ICONS_STYLE_ASCII      ; no Nerd Font likely → readable ascii
+.ret:
+    ret
+
 ; icon_resolve(eax=kind) → rsi glyph
 icon_resolve:
     cmp eax, IK_COUNT
     jae .empty
-    movzx ecx, byte [g_icons_style]
+    push rax
+    call icon_style_effective
+    mov ecx, eax
+    pop rax
     cmp cl, ICONS_STYLE_EMOJI
     je .emoji
     cmp cl, ICONS_STYLE_NERD
     je .nerd
     cmp cl, ICONS_STYLE_ASCII
     je .ascii
-    ; default / glyph
+    ; glyph
     lea rdx, [tbl_glyph]
     jmp .pick
 .emoji:
@@ -289,11 +446,12 @@ icon_resolve:
     ret
 
 ; icon_disp_cells(rsi=glyph cstr) → eax terminal cells (no trailing space)
-; glyph/nerd ≈ 1, emoji ≈ 2, ascii = strlen
 icon_disp_cells:
     cmp byte [rsi], 0
     je .z
-    movzx eax, byte [g_icons_style]
+    push rsi
+    call icon_style_effective
+    pop rsi
     cmp al, ICONS_STYLE_ASCII
     je .ascii
     cmp al, ICONS_STYLE_EMOJI

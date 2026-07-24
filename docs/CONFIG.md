@@ -54,7 +54,8 @@ spinner = false
 |-----|--------|--------|
 | `core` | `true`/`false`, `yes`/`no`, `1`/`0` | Force `--core` presentation |
 | `color` | `auto`, `always`, `never` (also `on`/`off`) | Color when |
-| `icons` | `auto`/`nerd` (default on with color), `emoji`, `glyph`, `ascii`, `never` | Nerd File Icons by default; off under `--core` |
+| `icons` | `auto`/`nerd` (default), `emoji`, `glyph`, `ascii`, `never` | Nerd File Icons by default; auto-falls back to ascii on console `TERM` |
+| `F00_NERD` | `0` / `1` (env) | Force disable/enable Nerd PUA (override heuristic) |
 | `animations` | bool | Master switch for motion (spinners, …) |
 | `spinner` | bool | Per-spinner enable (also needs `animations`) |
 | `git` | `auto`/`always`/`never` or bool | ls git decorations |

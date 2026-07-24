@@ -3,12 +3,12 @@
 
 core = false
 color = auto
-icons = auto      # modern: Nerd File Icons when color on (needs Nerd Font)
-# icons = nerd
+icons = auto      # Nerd File Icons when color on; ascii on linux console
+# icons = ascii   # no Nerd Font installed
+# icons = never
+# icons = nerd    # force Nerd (install a Nerd Font in the terminal)
 # icons = emoji
 # icons = glyph
-# icons = ascii
-# icons = never
 animations = true
 spinner = true
 

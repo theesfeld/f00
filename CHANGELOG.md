@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.7] - 2026-07-24
+
+### Added
+- Nerd icons **auto-fallback to ascii** when no Nerd Font is likely (`TERM=linux`/`dumb`/…, or `F00_NERD=0`)
+- `F00_NERD=1` forces Nerd PUA even on console
+
 ## [0.15.6] - 2026-07-24
 
 ### Changed

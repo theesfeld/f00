@@ -34,12 +34,17 @@ User defaults: XDG config under `~/.config/f00/config` (see [CONFIG.md](CONFIG.m
 
 ## Icons (suite-wide)
 
-- **Default: ON** in modern color mode — **Nerd Font File Icons** (eza-class, 1 terminal cell).
-- Needs a **Nerd Font** (or equivalent) in the terminal for correct glyphs.
+- **Default: ON** in modern color mode — **Nerd Font File Icons** (eza-class, 1 cell).
+- **If there is no Nerd Font:**
+  - Linux console / dumb `TERM` (`linux`, `dumb`, `vt100`, …) → automatic **ascii** fallback (`d`/`-`/`l`/`x`/…).
+  - Modern GUI terminal without a Nerd Font → you may see empty boxes (PUA); fix with:
+    - install a [Nerd Font](https://www.nerdfonts.com/) and set it in the terminal, **or**
+    - `icons = ascii` / `icons = never` in `~/.config/f00/config`, **or**
+    - `F00_ICONS=ascii` / `F00_NERD=0`
+  - Force Nerd even on console: `F00_NERD=1`
 - **Always off under `--core`.**
 - Styles: `auto`/`nerd` (default) · `emoji` · `glyph` · `ascii` · `never`
-- Fixed cell width so columns never shift.
-- Config/env: `icons = auto|nerd|emoji|glyph|ascii|never` · `F00_ICONS=…`
+- Config/env: `icons = …` · `F00_ICONS=…` · `F00_NERD=0|1`
 
 ## JSON / CSV chrome
 
