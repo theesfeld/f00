@@ -775,6 +775,100 @@ section {
   }
 }
 
+/* ── overall speed badge (hero) ─────────────────────────── */
+.speed-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 1rem 0 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(61, 255, 154, 0.28);
+  background: linear-gradient(
+    120deg,
+    rgba(61, 255, 154, 0.1),
+    rgba(125, 255, 224, 0.04)
+  );
+  max-width: 28rem;
+}
+
+.speed-x {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.speed-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.92rem;
+}
+
+.speed-copy strong {
+  font-weight: 600;
+}
+
+/* ── overall hero (benchmarks section) ──────────────────── */
+.overall-hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.25rem 1.75rem;
+  align-items: center;
+  margin: 1.25rem 0 1.5rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: calc(var(--radius) + 4px);
+  border: 1px solid rgba(61, 255, 154, 0.22);
+  background:
+    radial-gradient(ellipse 80% 120% at 0% 0%, rgba(61, 255, 154, 0.12), transparent 55%),
+    var(--bg-panel);
+  box-shadow: var(--shadow);
+}
+
+.overall-num {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 6.5rem;
+}
+
+.overall-x {
+  font-family: var(--font-mono);
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.overall-unit {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-mute);
+}
+
+.overall-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.overall-body p {
+  margin: 0.2rem 0;
+}
+
+@media (max-width: 640px) {
+  .overall-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── race cards (Bun-style fluid bars) ──────────────────── */
 .bench-card {
   padding: 1.1rem 1.15rem;
   border: 1px solid var(--border);
@@ -782,13 +876,205 @@ section {
   background: var(--code-bg);
 }
 
-.bench-card.hl-win {
-  border-color: rgba(61, 255, 154, 0.28);
+.bench-card.hl-win,
+.race-card {
+  border-color: rgba(61, 255, 154, 0.18);
+}
+
+.race-card {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.5s var(--ease),
+    transform 0.5s var(--ease),
+    border-color 0.3s ease;
+  transition-delay: var(--d, 0s);
+}
+
+#race-grid.animate .race-card {
+  opacity: 1;
+  transform: none;
+}
+
+.race-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
 }
 
 .bench-card h3 {
   margin: 0 0 0.4rem;
   font-size: 1rem;
+}
+
+.race-head h3 {
+  margin: 0;
+}
+
+.race-cmd {
+  margin: 0 0 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.bar.fluid {
+  width: 0;
+  height: 100%;
+  min-width: 0;
+  border-radius: 999px;
+  transition: width 1.1s var(--ease);
+  transition-delay: calc(var(--d, 0s) + 0.15s);
+}
+
+#race-grid.animate .bar.fluid {
+  width: var(--w, 50%);
+}
+
+.bar.fluid.f00 {
+  background: linear-gradient(90deg, #1fd97a, var(--accent-hot));
+  box-shadow: 0 0 16px rgba(61, 255, 154, 0.35);
+}
+
+.bar.fluid.gnu,
+.bar.dim {
+  background: linear-gradient(90deg, #3a4558, #5c6678);
+  box-shadow: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .bar.fluid {
+    width: var(--w, 50%);
+    transition: none;
+  }
+}
+
+/* ── cold startup line chart ────────────────────────────── */
+.cold-panel {
+  margin: 1.75rem 0 1rem;
+  padding: 1.15rem 1.25rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+}
+
+.cold-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.cold-chart-wrap {
+  position: relative;
+}
+
+.cold-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.cold-chart .grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.cold-chart .axis {
+  fill: var(--text-mute);
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.cold-chart .line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  transition: stroke-dashoffset 1.4s var(--ease);
+}
+
+.cold-chart.drawn .line {
+  stroke-dashoffset: 0;
+}
+
+.cold-chart .gnu-line {
+  stroke: #7a8499;
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.cold-chart .f00-line {
+  stroke: var(--accent);
+  filter: drop-shadow(0 0 6px rgba(61, 255, 154, 0.45));
+}
+
+.cold-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+  align-items: center;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.cold-legend .leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cold-legend .leg i {
+  display: inline-block;
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.cold-legend .leg.f00 {
+  color: var(--accent);
+}
+
+.cold-legend .leg.gnu {
+  color: #8b95a8;
+}
+
+.bench-foot-links {
+  margin-top: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cold-chart .line {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    transition: none;
+  }
 }
 
 .bench-tag {
@@ -827,7 +1113,7 @@ section {
 
 .bar-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) auto;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
   gap: 0.55rem;
   align-items: center;
   font-family: var(--font-mono);
@@ -858,7 +1144,8 @@ section {
 .bar-val {
   color: var(--text);
   text-align: right;
-  min-width: 4.2rem;
+  min-width: 4.8rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .bench-foot {

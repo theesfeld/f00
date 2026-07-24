@@ -33,6 +33,7 @@
       </a>
       <nav class="site-nav nav" id="site-nav" aria-label="Primary">
         <a href="#laws">Laws</a>
+        <a href="#benchmarks">Benchmarks</a>
         <a href="#scoreboard">Scoreboard</a>
         <a href="#install">Install</a>
         <a href="#packages">Packages</a>
@@ -51,11 +52,18 @@
           <p class="lead">
             <strong>f00tils</strong> is the complete coreutils replacement suite in
             <strong>pure freestanding x86-64 assembly</strong> — one multicall binary
-            named <code class="mono">f00</code>, no libc. Default mode is modern (color, glyph icons, richer layout,
+            named <code class="mono">f00</code>, no libc. Default mode is modern (color, Nerd icons, richer layout,
             <code class="mono">--json</code> / <code class="mono">--csv</code>).
             <code class="mono">--core</code> is script-safe coreutils presentation.
             The core path is built to <strong>beat coreutils on speed</strong>.
           </p>
+          <div class="speed-badge" id="hero-speed" hidden>
+            <span class="speed-x" id="hero-speed-x">—</span>
+            <span class="speed-copy">
+              <strong id="hero-speed-label">faster than GNU coreutils overall</strong>
+              <span class="muted small" id="hero-speed-sub">CI suite · geo mean</span>
+            </span>
+          </div>
           <div class="install-block">
             <div class="install-row">
               <div class="install-cmd">
@@ -70,8 +78,8 @@
           </div>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#install">Install</a>
+            <a class="btn btn-ghost" href="#benchmarks">Benchmarks</a>
             <a class="btn btn-ghost" href="#scoreboard">Scoreboard</a>
-            <a class="btn btn-ghost" href="https://github.com/theesfeld/f00#readme">README</a>
           </div>
         </div>
         <div class="hero-visual">
@@ -101,13 +109,62 @@
       </div>
     </section>
 
+    <section class="section" id="benchmarks">
+      <div class="wrap">
+        <h2>Benchmarks</h2>
+        <p class="muted">
+          Spawn-inclusive <code class="mono">f00-* --core</code> vs <code class="mono">/usr/bin/*</code>.
+          Same data as CI · animated like the Bun landing race charts.
+        </p>
+
+        <div class="overall-hero" id="overall-hero" hidden>
+          <div class="overall-num">
+            <span class="overall-x" id="overall-x">—</span>
+            <span class="overall-unit">overall</span>
+          </div>
+          <div class="overall-body">
+            <p class="overall-title" id="overall-title">faster than GNU coreutils</p>
+            <p class="muted small" id="overall-detail">Loading suite summary…</p>
+            <p class="muted small" id="overall-method"></p>
+          </div>
+        </div>
+
+        <div class="bench-grid two" id="race-grid" aria-live="polite">
+          <!-- filled by app.js from suite.json showcase -->
+        </div>
+
+        <div class="cold-panel" id="cold-panel" hidden>
+          <div class="cold-head">
+            <h3 class="subhead" style="margin:0">Cold process spawn</h3>
+            <p class="muted small" id="cold-caption">Entry tools · mean wall ms per run</p>
+          </div>
+          <div class="cold-chart-wrap">
+            <svg class="cold-chart" id="cold-chart" viewBox="0 0 640 220" role="img" aria-label="Cold startup line chart: f00 vs GNU"></svg>
+            <div class="cold-legend">
+              <span class="leg f00"><i></i> f00tils</span>
+              <span class="leg gnu"><i></i> GNU coreutils</span>
+              <span class="muted small" id="cold-ratio"></span>
+            </div>
+          </div>
+        </div>
+
+        <p class="muted small bench-foot-links">
+          Machine data:
+          <a href="bench/suite.json">suite.json</a> ·
+          <a href="bench/suite.md">suite.md</a> ·
+          full table below
+        </p>
+      </div>
+    </section>
+
     <section class="section" id="scoreboard">
       <div class="wrap">
         <h2>Scoreboard</h2>
         <p class="muted">
           Features and speed in one place. Suite status is
           <strong>106/106</strong> shipped ·
-          <code class="mono">--core</code> full · modern · faster than GNU on measured tools.
+          <code class="mono">--core</code> full · modern ·
+          <span id="scoreboard-speed-claim">faster than GNU on measured tools</span>.
         </p>
 
         <h3 class="subhead">Ecosystem</h3>
@@ -173,6 +230,8 @@
         <h3 class="subhead">Tools — ship status + speed</h3>
         <p class="muted small" id="bench-meta">Loading measured times…</p>
         <div class="stat-row" id="bench-stats" hidden>
+          <div class="stat"><span class="stat-val" id="stat-overall">—</span><span class="stat-lbl">overall (geo)</span></div>
+          <div class="stat"><span class="stat-val" id="stat-pct">—</span><span class="stat-lbl">% faster</span></div>
           <div class="stat"><span class="stat-val" id="stat-tools">—</span><span class="stat-lbl">tools timed</span></div>
           <div class="stat"><span class="stat-val" id="stat-median">—</span><span class="stat-lbl">median vs GNU</span></div>
           <div class="stat"><span class="stat-val" id="stat-best">—</span><span class="stat-lbl">best win</span></div>
@@ -335,10 +394,11 @@ sudo pacman -U f00-0.15.9-1-x86_64.pkg.tar.zst</code></pre>
 █  MIT · 2026-07-24 · 106/106 tools shipped        █
 █  modern default · --core for scripts             █
 █  pretty JSON · CSV tables · cat content paint    █
-█  faster than GNU coreutils (measured path)       █
+█  overall 2.5× · 148% faster than coreutils       █
+█  geo mean · spawn-incl · f00-* --core vs GNU     █
 █  https://f00.sh · github:theesfeld/f00           █
 ████████████████████████████████████████████████████
-  ░▒▓  no libc · Linux x86-64 · curl | bash  ▓▒░    </code></pre>
+  ░▒▓  no libc · Linux x86-64 · curl | bash  ▓▒░</code></pre>
       </div>
     </section>
 

@@ -107,6 +107,7 @@ jobs:
             site/bench/suite.json
             site/bench/suite.md
             README.md
+            file_id.diz
           if-no-files-found: error
 
   # On main: commit regenerated bench tables so README + site stay live.
@@ -135,24 +136,52 @@ jobs:
           mkdir -p site/bench
           cp -f _bench/site/bench/suite.json site/bench/suite.json
           cp -f _bench/site/bench/suite.md site/bench/suite.md
-          # README from artifact has refreshed <!-- bench-table --> block
-          # Merge only the marker region into current README (avoid clobbering concurrent edits)
+          # README: merge headline + table markers; file_id.diz overall speed line
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          START, END = "<!-- bench-table:start -->", "<!-- bench-table:end -->"
-          art = Path("_bench/README.md").read_text(encoding="utf-8")
-          cur = Path("README.md").read_text(encoding="utf-8")
-          m = re.search(re.escape(START) + r".*?" + re.escape(END), art, flags=re.S)
-          if not m:
-              raise SystemExit("artifact README missing bench markers")
-          block = m.group(0)
-          if START in cur and END in cur:
-              cur2 = re.sub(re.escape(START) + r".*?" + re.escape(END), block, cur, count=1, flags=re.S)
-          else:
-              cur2 = cur.rstrip() + "\n\n" + block + "\n"
+          import re, shutil
+
+          art_readme = Path("_bench/README.md")
+          cur_readme = Path("README.md")
+          art = art_readme.read_text(encoding="utf-8") if art_readme.is_file() else ""
+          cur = cur_readme.read_text(encoding="utf-8")
+
+          def merge_region(cur_text, art_text, start, end):
+              m = re.search(re.escape(start) + r".*?" + re.escape(end), art_text, flags=re.S)
+              if not m:
+                  return cur_text, False
+              block = m.group(0)
+              if start in cur_text and end in cur_text:
+                  return re.sub(re.escape(start) + r".*?" + re.escape(end), block, cur_text, count=1, flags=re.S), True
+              # insert after ## Benchmarks if missing
+              if "## Benchmarks" in cur_text:
+                  return re.sub(r"(## Benchmarks\n)", r"\1\n" + block + "\n", cur_text, count=1), True
+              return cur_text.rstrip() + "\n\n" + block + "\n", True
+
+          cur2, _ = merge_region(cur, art, "<!-- bench-table:start -->", "<!-- bench-table:end -->")
+          cur2, _ = merge_region(cur2, art, "<!-- bench-headline:start -->", "<!-- bench-headline:end -->")
+          # opening blurb speed claim if present in artifact
+          m = re.search(r"\*\*[^*]+\*\* faster than GNU coreutils overall \(CI suite geo mean\)\.", art)
+          if m:
+              cur2 = re.sub(
+                  r"(Faster than coreutils on the measured path\.|\*\*[^*]+\*\* faster than GNU coreutils overall \(CI suite geo mean\)\.)",
+                  m.group(0),
+                  cur2,
+                  count=1,
+              )
           Path("README.md").write_text(cur2, encoding="utf-8")
-          print("README bench table merged")
+          print("README bench markers merged")
+
+          # file_id.diz from artifact if present
+          src = Path("_bench/file_id.diz")
+          if not src.is_file():
+              # gen-suite-bench writes to repo root; artifact may nest differently
+              for p in Path("_bench").rglob("file_id.diz"):
+                  src = p
+                  break
+          if src.is_file():
+              shutil.copyfile(src, "file_id.diz")
+              print("file_id.diz updated from artifact")
           PY
 
       - name: Commit if suite metrics changed
@@ -207,14 +236,14 @@ jobs:
             exit 0
           fi
 
-          git add site/bench/suite.json site/bench/suite.md README.md
+          git add site/bench/suite.json site/bench/suite.md README.md file_id.diz
           if git diff --staged --quiet; then
             echo "no staged changes"
             exit 0
           fi
           # No [skip ci]: Pages must still deploy site/bench. Loop stops when
           # the next CI run sees the same rounded suite metrics and skips commit.
-          git commit -m "chore(bench): refresh suite.json and README scoreboard from CI"
+          git commit -m "chore(bench): refresh suite.json, headline, and file_id.diz from CI"
           git push origin HEAD:main
 
   man-present:

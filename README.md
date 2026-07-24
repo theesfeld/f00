@@ -4,7 +4,7 @@
 
 Binary name: **`f00`**. Tool names: **`f00-*`**. Joke: coreutils → **f00tils**.
 
-One multicall x86-64 Linux binary (no libc). Modern defaults for interactive work. `--core` for scripts. Faster than coreutils on the measured path. MIT.
+One multicall x86-64 Linux binary (no libc). Modern defaults for interactive work. `--core` for scripts. **2.5× faster than GNU coreutils overall** (CI suite geo mean). MIT.
 
 | | |
 |---|---|
@@ -208,13 +208,17 @@ Detail: [docs/GNU-COMPLIANCE.md](docs/GNU-COMPLIANCE.md) · scoreboard: [docs/CO
 
 ## Benchmarks
 
+<!-- bench-headline:start -->
+**Overall: 2.5× faster than GNU coreutils** (148% faster overall; geometric mean of 91 timed tools · 90 wins · median 2.44×).
+<!-- bench-headline:end -->
+
 Warm cache, **spawn-inclusive**, median of N runs. Compare `f00-* --core` to `/usr/bin/*` on Linux x86-64.
 
 CI regenerates the full suite and this snapshot table on every push to `main` (same data as the website scoreboard).
 
 Per-tool tables (command, sample output, GNU time, f00 time):
 
-- Website: [https://f00.sh/#scoreboard](https://f00.sh/#scoreboard)
+- Website: [https://f00.sh/#benchmarks](https://f00.sh/#benchmarks) · [scoreboard](https://f00.sh/#scoreboard)
 - Data: [site/bench/suite.json](site/bench/suite.json) · [site/bench/suite.md](site/bench/suite.md)
 
 Representative results (from latest suite bench — do not hand-edit; CI overwrites):
@@ -408,7 +412,8 @@ same file as an asset. Keep monospaced when you view it.
 █  MIT · 2026-07-24 · 106/106 tools shipped        █
 █  modern default · --core for scripts             █
 █  pretty JSON · CSV tables · cat content paint    █
-█  faster than GNU coreutils (measured path)       █
+█  overall 2.5× · 148% faster than coreutils       █
+█  geo mean · spawn-incl · f00-* --core vs GNU     █
 █  https://f00.sh · github:theesfeld/f00           █
 ████████████████████████████████████████████████████
   ░▒▓  no libc · Linux x86-64 · curl | bash  ▓▒░    

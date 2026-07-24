@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Root `file_id.diz` release scene card (ACiD / 16colo.rs-style block ASCII); README + site preview; `man f00` FILES; release workflow attaches the asset with every tag
+- **Overall suite speed headline** (geo mean of per-tool speedups) stamped into `file_id.diz`, README, and site hero — e.g. **2.5× / 148% faster overall**
+- Website Bun-style **fluid race-bar charts** + **cold-startup line chart** (`#benchmarks`), fed by `site/bench/suite.json` (`summary`, `showcase`, `cold_startup`)
 
 ## [0.15.9] - 2026-07-24
 

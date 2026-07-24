@@ -1,8 +1,12 @@
 # Suite benchmarks (f00 vs GNU coreutils)
 
+**Overall: 2.5× faster than GNU coreutils overall** (148% faster overall; geo mean of per-tool speedups)
+
 Generated: `2026-07-24T13:40:17Z` · N=15 median · warm-cache spawn-inclusive median
 
 Host: x86_64 · Linux 6.17.0-1020-azure
+
+Tools timed: 91 · wins: 90 · median 2.44× · total-time 2.776×
 
 | Tool | Command (f00) | GNU ms | f00 ms | Speedup | Sample output (f00) |
 |------|---------------|-------:|-------:|--------:|---------------------|
