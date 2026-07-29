@@ -9,7 +9,7 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme.css",
+    "css": "https://f00.sh/theme/f00-theme.css?v=2",
     "css_path": "site/theme/f00-theme.css",
     "font_display": "Onyx",
     "font_body": "Kurt",
@@ -38,10 +38,10 @@
       "local": "f00tils",
       "license": "MIT",
       "one_liner": "Freestanding assembly GNU userland (`f00` multicall)",
-      "blurb": "Freestanding assembly GNU userland — coreutils, grep, findutils, diffutils. One multicall binary. <code class=\"mono\">--core</code> is byte-identical and faster.",
+      "blurb": "Freestanding assembly GNU userland \u2014 coreutils, grep, findutils, diffutils. One multicall binary. <code class=\"mono\">--core</code> is byte-identical and faster.",
       "facts": [
-        "115 tools · x86-64 + aarch64 port",
-        "no libc · MIT"
+        "115 tools \u00b7 x86-64 + aarch64 port",
+        "no libc \u00b7 MIT"
       ]
     },
     {
@@ -57,9 +57,9 @@
       "local": "clun",
       "license": "MIT",
       "one_liner": "JS/TS toolkit in pure Common Lisp",
-      "blurb": "JavaScript and TypeScript toolkit. Implementation is pure Common Lisp. Install, test, bundle, serve — Bun-shaped commands, different soul.",
+      "blurb": "JavaScript and TypeScript toolkit. Implementation is pure Common Lisp. Install, test, bundle, serve \u2014 Bun-shaped commands, different soul.",
       "facts": [
-        "native releases · man page · updater",
+        "native releases \u00b7 man page \u00b7 updater",
         "MIT"
       ]
     },
@@ -78,7 +78,7 @@
       "one_liner": "Femcel / Incel self-assessment (formal product model)",
       "blurb": "Femcel / Incel self-assessment from a formal product model. Transparent factors, optional X priors, shareable score card.",
       "facts": [
-        "survey · methodology · PNG export",
+        "survey \u00b7 methodology \u00b7 PNG export",
         "web app"
       ]
     },
@@ -95,10 +95,10 @@
       "local": "trn",
       "license": "MIT",
       "one_liner": "Enhanced Tabular Recipe Notation converter (eTRN)",
-      "blurb": "Enhanced Tabular Recipe Notation — ingredient rows × chronological stages. Cooking for Engineers–style process matrices from any recipe URL or paste.",
+      "blurb": "Enhanced Tabular Recipe Notation \u2014 ingredient rows \u00d7 chronological stages. Cooking for Engineers\u2013style process matrices from any recipe URL or paste.",
       "facts": [
-        "rule-based · optional LLM",
-        "eTRN JSON · print/PDF"
+        "rule-based \u00b7 optional LLM",
+        "eTRN JSON \u00b7 print/PDF"
       ]
     },
     {
