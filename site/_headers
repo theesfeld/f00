@@ -1,0 +1,8 @@
+# BIMI clients are picky about Content-Type and redirects.
+/assets/bimi.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=86400, immutable
+  X-Content-Type-Options: nosniff
+
+/assets/*
+  Cache-Control: public, max-age=86400
