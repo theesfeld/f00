@@ -1,35 +1,5 @@
-/* f00.sh — progressive enhancement: stars + fit splash + particle field */
+/* f00.sh — progressive enhancement: fit splash + particle field */
 (() => {
-  // Product repos on the hub (add a card when a product releases → list it here too).
-  const F00_REPOS = [
-    "f00-sh/f00",
-    "f00-sh/f00tils",
-    "f00-sh/clun",
-  ];
-
-  const starsEl = document.getElementById("stars");
-  if (starsEl) {
-    Promise.all(
-      F00_REPOS.map((repo) =>
-        fetch(`https://api.github.com/repos/${repo}`, {
-          headers: { Accept: "application/vnd.github+json" },
-        }).then((r) => (r.ok ? r.json() : null))
-      )
-    )
-      .then((rows) => {
-        const total = rows.reduce(
-          (n, row) => n + (row && typeof row.stargazers_count === "number" ? row.stargazers_count : 0),
-          0
-        );
-        const label = total === 1 ? "1 star" : `${total.toLocaleString("en-US")} stars`;
-        starsEl.textContent = `★ ${label}`;
-        starsEl.title = `Across ${F00_REPOS.length} f00 repos`;
-      })
-      .catch(() => {
-        starsEl.hidden = true;
-      });
-  }
-
   // Scale "f00" to the same width as the product card row.
   // Measure natural text width (max-content) — never width:100%, that broke the previous fit.
   const splash = document.querySelector(".splash");
