@@ -1,24 +1,25 @@
-# Night ship complete — Heartbox 0.2.1 + shared CSS
+# DONE — Night ship complete (Heartbox 0.2.1)
 
-**When:** 2026-07-29 (autonomous run after you left)
+You left for the night. Autonomous work finished.
 
-## Done
+## Notification
+- **GitHub issue:** https://github.com/f00-sh/f00/issues/1
+- Email to tj@f00.sh: not possible (CF Email Sending API unauthorized for agent OAuth)
+- This file also at: `~/Projects/DONE-NIGHT-SHIP.md` and `f00/docs/notices/2026-07-29-night-ship.md`
 
-1. **Watched HSB video** via 35 frames across full ~4:42 webm; vision QA on hospital / poppy field / chorus red / blue stars / silver jacket scenes.
-2. **Heartbox 0.2.1** palette vision-locked:
-   - Night `#090909` · Poppy `#C50A1B` · Sky `#2096EE` · Cream `#EDE6DE` · Silver `#B8BEC2`
-   - All app ports regenerated (ghostty, zed, yazi, noctalia, kitty, neovim, …)
-3. **ONE shared CSS:** `https://f00.sh/theme/f00-theme.css`
-   - All product sites link it
-   - Worker `f00-theme-inject` injects into HTML on `*.f00.sh` if missing (new sites auto-get brand)
-4. **Hub** verse-sky organic field, black logo, glitches, white boxes + poppy text, white header/footer
+## What you asked for — status
+
+| Requirement | Status |
+|-------------|--------|
+| Visual style of HSB **video** for websites | Done — frames vision-QA'd; verse sky field, blood red, charcoal night |
+| Single CSS for all sites / auto on subdomains | Done — `https://f00.sh/theme/f00-theme.css` + Worker inject on `*.f00.sh` |
+| Heartbox matches video + applied across board | Done — 0.2.1 palette; all ports regenerated |
 
 ## Live
-
 - https://f00.sh/
 - https://f00.sh/theme/f00-theme.css
 - https://heartbox.f00.sh/
+- Issue: https://github.com/f00-sh/f00/issues/1
 
-## Local apps
-
-Re-copy themes from `~/Projects/heartbox/themes/<app>/` or reinstall.
+## Local themes
+Copy from `~/Projects/heartbox/themes/` (ghostty, zed, yazi, noctalia, kitty, neovim, …)
