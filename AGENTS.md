@@ -28,15 +28,22 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 
 | Path | Role |
 |------|------|
-| `site/` | GitHub Pages root (`CNAME` = `f00.sh`) |
+| `site/` | Cloudflare Pages project `f00` (custom domain `f00.sh`) |
 | `docs/` | Optional depth |
 | `.github/workflows/pages.yml` | Pages deploy |
+
+## Edge (Cloudflare)
+
+- **DNS + edge host:** Cloudflare (registrar may stay Porkbun)
+- **Site:** Cloudflare Pages project `f00` → https://f00.sh
+- **Code:** GitHub `f00-sh/f00` only (no GitHub Pages)
+- Deploy: push `site/**` → workflow `pages.yml` (wrangler pages deploy)
 
 ## Build and gates
 
 ```bash
 # no build — open site/index.html locally
-# deploy: git push origin main
+# deploy: git push origin main  (Cloudflare Pages)
 ```
 
 ## Sister products
