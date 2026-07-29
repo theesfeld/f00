@@ -6,6 +6,15 @@
     "https://f00.sh/catalog.json",
   ];
 
+  // Never let leftover fitSplash inline styles blow up the logo.
+  const splash = document.querySelector(".splash");
+  if (splash) {
+    splash.style.fontSize = "";
+    splash.style.width = "";
+    splash.style.display = "";
+    splash.style.transform = "";
+  }
+
   const escapeHtml = (s) =>
     String(s)
       .replace(/&/g, "&amp;")
@@ -21,7 +30,7 @@
     const site = escapeHtml(p.site || "#");
     const repo = escapeHtml(p.repo || "#");
     const factsBlock = facts.length
-      ? `<ul class="facts mono">${facts
+      ? `<ul class="facts">${facts
           .map((f) => `<li>${escapeHtml(f)}</li>`)
           .join("")}</ul>`
       : "";
