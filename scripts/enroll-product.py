@@ -68,6 +68,7 @@ def ensure_product(data: dict, args: argparse.Namespace) -> dict:
             "local": args.local or args.id,
             "license": args.license or "MIT",
             "one_liner": args.one_liner or args.name or args.id,
+            "docs": args.docs,
             "blurb": args.blurb,
             "facts": entry.get("facts") or [],
         }
@@ -161,6 +162,7 @@ def main() -> int:
     ap.add_argument("--packages", default=None)
     ap.add_argument("--local", default=None, help="Local folder name under $PROJECTS")
     ap.add_argument("--license", default="MIT")
+    ap.add_argument("--docs", default=None, help="Docs URL (product site #docs or methodology)")
     ap.add_argument("--repo-path", default=None, help="Local product repo to theme-link")
     ap.add_argument("--no-sync", action="store_true")
     ap.add_argument("--no-theme-link", action="store_true")
