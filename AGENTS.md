@@ -20,7 +20,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 2. **Release → card.** Every f00 product that ships a real **release** gets one product card on the landing grid (`site/index.html`). No card until there is a release. Update the card when the product ships again if copy or links change.
 3. **One set of links.** Cards are the only product navigation (site + repo). Do not duplicate with hero buttons or other chrome.
 4. **Public copy is product-only.** Never put agent process, org plans, DNS wiring, or internal preferences on the site or public README (house rule `10-user-facing-language.md`).
-5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `dist.f00.sh` R2 packages.
+5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `dist.f00.sh` R2 packages.
 6. **Aesthetic:** technically modern (OKLCH, canvas, progressive enhancement), visually low-fi (CRT, phosphor, mono).
 7. **No secrets** in repo. DNS keys stay out of git.
 
@@ -54,6 +54,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 | f00tils | `/home/glenda/Projects/f00tils` | https://coreutils.f00.sh | https://dist.f00.sh/f00tils/current/ |
 | clun | `/home/glenda/Projects/clun` | https://clun.f00.sh | https://dist.f00.sh/clun/current/ |
 | Cel Index | `/home/glenda/Projects/cel` | https://cel.f00.sh | n/a (Pages `f00-cel`) |
+| TRN | `/home/glenda/Projects/trn` | https://trn.f00.sh | n/a (Pages `f00-trn`) |
 
 ## License
 

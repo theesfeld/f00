@@ -9,6 +9,7 @@
 | **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh) | [f00-sh/f00tils](https://github.com/f00-sh/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
 | **clun** | [clun.f00.sh](https://clun.f00.sh) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |
 | **Cel Index** | [cel.f00.sh](https://cel.f00.sh) | [f00-sh/cel](https://github.com/f00-sh/cel) | Femcel / Incel self-assessment (formal product model) |
+| **TRN** | [trn.f00.sh](https://trn.f00.sh) | [f00-sh/trn](https://github.com/f00-sh/trn) | Enhanced Tabular Recipe Notation converter (eTRN) |
 
 ## Site
 
