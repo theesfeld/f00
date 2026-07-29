@@ -8,18 +8,9 @@
 
   // Heartbox palette — glitch colors for logo
   const THEME_COLORS = [
-    "#E5141A",
-    "#0888ED",
-    "#E8E4DC",
-    "#C2C8CC",
-    "#C97A86",
-    "#D4B84A",
-    "#5A8A42",
-    "#6B4A58",
-    "#EA5638",
-    "#F2EFE8",
-    "#F53A42",
-    "#47B0F6",
+    "#C50A1B", "#2096EE", "#EDE6DE", "#B8BEC2", "#C47A72",
+    "#D4A83A", "#5A8A3A", "#454B93", "#C45A20",
+    "#F5F1EA", "#E81420", "#4AADF5",
   ];
 
   const splash = document.querySelector(".splash");
