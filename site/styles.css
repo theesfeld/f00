@@ -1,17 +1,6 @@
-/* f00.sh hub — ultra-modern CSS, low-fi CRT surface */
+/* f00.sh hub layout — brand tokens from /theme/f00-theme.css */
+
 :root {
-  color-scheme: dark;
-  --bg: oklch(12% 0.01 130);
-  --bg-2: oklch(16% 0.015 130);
-  --fg: oklch(92% 0.02 130);
-  --muted: oklch(68% 0.02 130);
-  --accent: oklch(84% 0.19 140);
-  --accent-dim: oklch(70% 0.12 140);
-  --amber: oklch(82% 0.14 85);
-  --line: oklch(30% 0.02 130);
-  --danger: oklch(70% 0.18 25);
-  --font: "IBM Plex Mono", "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --max: 68rem;
   --pad: clamp(1rem, 3vw, 2rem);
 }
@@ -33,14 +22,14 @@ body {
   overflow-x: hidden;
 }
 
-/* CRT stage */
+/* CRT stage — monochrome */
 .crt {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 80% at 50% 0%, oklch(22% 0.04 140 / 0.35), transparent 55%),
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 55%),
     var(--bg);
 }
 
@@ -60,8 +49,8 @@ body {
     to bottom,
     transparent 0,
     transparent 2px,
-    oklch(0% 0 0 / 0.12) 2px,
-    oklch(0% 0 0 / 0.12) 3px
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0.12) 3px
   );
   mix-blend-mode: multiply;
   opacity: 0.55;
@@ -70,7 +59,7 @@ body {
 .vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, oklch(0% 0 0 / 0.55) 100%);
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
 }
 
 .skip {
@@ -156,9 +145,9 @@ body {
   position: relative;
   color: var(--accent);
   text-shadow:
-    0 0 12px oklch(84% 0.19 140 / 0.45),
-    2px 0 0 oklch(70% 0.18 25 / 0.35),
-    -2px 0 0 oklch(70% 0.12 230 / 0.3);
+    0 0 12px var(--f00-glow, rgba(255, 255, 255, 0.35)),
+    2px 0 0 rgba(255, 255, 255, 0.15),
+    -2px 0 0 rgba(255, 255, 255, 0.1);
   animation: flicker 6s infinite steps(2, end);
 }
 .glyph:nth-child(2) { animation-delay: 0.4s; }
@@ -208,7 +197,7 @@ body {
   padding: 0.65rem 1rem;
   border-radius: 2px;
   color: var(--fg);
-  background: oklch(18% 0.02 130 / 0.7);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(6px);
   transition: border-color 120ms ease, color 120ms ease, background 120ms ease, transform 120ms ease;
 }
@@ -218,7 +207,7 @@ body {
   transform: translateY(-1px);
 }
 .btn.primary {
-  background: oklch(84% 0.19 140 / 0.12);
+  background: rgba(255, 255, 255, 0.1);
   border-color: var(--accent-dim);
   color: var(--accent);
 }
@@ -252,10 +241,10 @@ body {
 .card {
   border: 1px solid var(--line);
   background:
-    linear-gradient(180deg, oklch(20% 0.02 130 / 0.55), oklch(14% 0.015 130 / 0.8));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
   padding: 1.25rem;
   border-radius: 2px;
-  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .card h3 {
   margin: 0.25rem 0 0.5rem;
@@ -275,7 +264,7 @@ body {
   padding: 0;
   list-style: none;
   font-size: 0.78rem;
-  color: var(--accent-dim);
+  color: var(--muted);
 }
 .facts li::before { content: "› "; color: var(--amber); }
 .card-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }

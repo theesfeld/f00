@@ -17,11 +17,11 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 ## Product laws
 
 1. **Hub only.** Splash + product cards. No hero shortcut buttons, no fake terminal/boot log, no install blocks. Install lives on product sites.
-2. **Release → card.** Every f00 product that ships a real **release** gets one product card on the landing grid (`site/index.html`). No card until there is a release. Update the card when the product ships again if copy or links change.
+2. **Release → card.** Set `status: "released"` on the product in `site/catalog.json` and run `scripts/sync-from-catalog.py`. No card until released. Update catalog blurb/facts/links when the product ships again.
 3. **One set of links.** Cards are the only product navigation (site + repo). Do not duplicate with hero buttons or other chrome.
 4. **Public copy is product-only.** Never put agent process, org plans, DNS wiring, or internal preferences on the site or public README (house rule `10-user-facing-language.md`).
-5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `heartbox.f00.sh` Heartbox · `dist.f00.sh` R2 packages.
-6. **Aesthetic:** white on black, Onyx type. Single global theme at `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme.css (all product Pages must link this; do not redefine brand colors/fonts in product CSS). Layout/chrome may stay low-fi (CRT, scanlines) but monochrome only — no phosphor green.
+5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `dist.f00.sh` R2 packages.
+6. **Aesthetic:** white on black, Onyx type. Theme: https://f00.sh/theme/f00-theme.css (path `site/theme/f00-theme.css`). All product Pages must link the theme; do not redefine brand colors/fonts in product CSS. Catalog is SSOT for products + theme pointer.
 7. **No secrets** in repo. DNS keys stay out of git.
 
 ## Layout
@@ -29,6 +29,9 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 | Path | Role |
 |------|------|
 | `site/` | Cloudflare Pages project `f00` (custom domain `f00.sh`) |
+| `site/catalog.json` | **SSOT** product list + theme pointer → https://f00.sh/catalog.json |
+| `site/theme/` | Global theme CSS + Onyx font → https://f00.sh/theme/… |
+| `scripts/sync-from-catalog.py` | Regen hub cards + README + this file from catalog |
 | `docs/` | Optional depth |
 | `.github/workflows/pages.yml` | Pages deploy (wrangler) |
 
@@ -43,19 +46,42 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 ## Build and gates
 
 ```bash
-# no build — open site/index.html locally
+# after editing site/catalog.json:
+python3 scripts/sync-from-catalog.py
+# no app build — open site/ with a local server (or deploy)
 # deploy: git push origin main  (Cloudflare Pages via Actions)
 ```
 
-## Sister products
+## Catalog (single source of truth)
 
-| Product | Path (local) | Site | Packages |
-|---------|--------------|------|----------|
-| f00tils | `/home/glenda/Projects/f00tils` | https://coreutils.f00.sh | https://dist.f00.sh/f00tils/current/ |
-| clun | `/home/glenda/Projects/clun` | https://clun.f00.sh | https://dist.f00.sh/clun/current/ |
-| Cel Index | `/home/glenda/Projects/cel` | https://cel.f00.sh | n/a (Pages `f00-cel`) |
-| TRN | `/home/glenda/Projects/trn` | https://trn.f00.sh | n/a (Pages `f00-trn`) |
-| Heartbox | `/home/glenda/Projects/heartbox` | https://heartbox.f00.sh | n/a (Pages `f00-heartbox`) |
+**Edit only** [`site/catalog.json`](site/catalog.json) (live: https://f00.sh/catalog.json).
+
+Then run:
+
+```bash
+python3 scripts/sync-from-catalog.py
+```
+
+That regenerates hub product cards, this table, and README products.
+
+| Field | URL / path |
+|-------|------------|
+| Catalog | `site/catalog.json` → https://f00.sh/catalog.json |
+| Theme CSS | `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme.css |
+| Org | github.com/f00-sh |
+
+`$PROJECTS` is the developer machines' projects root (here: `/home/glenda/Projects`).
+
+| Product | Status | Path (local) | Site | Packages |
+|---------|--------|--------------|------|----------|
+| f00tils | `released` | `$PROJECTS/f00tils` | https://coreutils.f00.sh/ | https://dist.f00.sh/f00tils/current/ |
+| clun | `released` | `$PROJECTS/clun` | https://clun.f00.sh/ | https://dist.f00.sh/clun/current/ |
+| Cel Index | `released` | `$PROJECTS/cel` | https://cel.f00.sh/ | n/a (Pages `f00-cel`) |
+| TRN | `released` | `$PROJECTS/trn` | https://trn.f00.sh/ | n/a (Pages `f00-trn`) |
+| Heartbox | `wip` | `$PROJECTS/heartbox` | — | n/a |
+
+**Card rule:** `status=released` → hub card. `wip` / other → listed here, not on f00.sh grid.
+
 
 ## License
 

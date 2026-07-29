@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>f00 — systems software</title>
-  <meta name="description" content="f00: freestanding tools that feel inevitable. f00tils, clun, Cel Index, TRN, and Heartbox." />
+  <meta name="description" content="f00: freestanding tools that feel inevitable. f00tils, clun, Cel Index, TRN." />
   <meta name="theme-color" content="#000000" />
   <link rel="canonical" href="https://f00.sh/" />
   <meta property="og:title" content="f00" />
@@ -49,13 +49,13 @@
         <h2>products</h2>
       </header>
 
-      <div class="grid">
-        <article class="card">
+      <div class="grid" id="product-grid" data-from-catalog="1">
+<!-- f00-catalog:products:begin -->
+        <article class="card" data-product="f00tils">
           <div class="card-meta mono">coreutils.f00.sh</div>
           <h3>f00tils</h3>
           <p>
-            Freestanding assembly GNU userland — coreutils, grep, findutils, diffutils.
-            One multicall binary. <code class="mono">--core</code> is byte-identical and faster.
+            Freestanding assembly GNU userland — coreutils, grep, findutils, diffutils. One multicall binary. <code class="mono">--core</code> is byte-identical and faster.
           </p>
           <ul class="facts mono">
             <li>115 tools · x86-64 + aarch64 port</li>
@@ -67,12 +67,11 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" data-product="clun">
           <div class="card-meta mono">clun.f00.sh</div>
           <h3>clun</h3>
           <p>
-            JavaScript and TypeScript toolkit. Implementation is pure Common Lisp.
-            Install, test, bundle, serve — Bun-shaped commands, different soul.
+            JavaScript and TypeScript toolkit. Implementation is pure Common Lisp. Install, test, bundle, serve — Bun-shaped commands, different soul.
           </p>
           <ul class="facts mono">
             <li>native releases · man page · updater</li>
@@ -84,12 +83,11 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" data-product="cel">
           <div class="card-meta mono">cel.f00.sh</div>
           <h3>Cel Index</h3>
           <p>
-            Femcel / Incel self-assessment from a formal product model.
-            Transparent factors, optional X priors, shareable score card.
+            Femcel / Incel self-assessment from a formal product model. Transparent factors, optional X priors, shareable score card.
           </p>
           <ul class="facts mono">
             <li>survey · methodology · PNG export</li>
@@ -101,12 +99,11 @@
           </div>
         </article>
 
-        <article class="card">
+        <article class="card" data-product="trn">
           <div class="card-meta mono">trn.f00.sh</div>
           <h3>TRN</h3>
           <p>
-            Enhanced Tabular Recipe Notation — ingredient rows × chronological stages.
-            Cooking for Engineers–style process matrices from any recipe URL or paste.
+            Enhanced Tabular Recipe Notation — ingredient rows × chronological stages. Cooking for Engineers–style process matrices from any recipe URL or paste.
           </p>
           <ul class="facts mono">
             <li>rule-based · optional LLM</li>
@@ -117,23 +114,7 @@
             <a class="btn ghost sm" href="https://github.com/f00-sh/trn">repo</a>
           </div>
         </article>
-
-        <article class="card">
-          <div class="card-meta mono">heartbox.f00.sh</div>
-          <h3>Heartbox</h3>
-          <p>
-            Hand-tinted Technicolor dark theme — poppy red, verse-sky blue, hospital gloom,
-            and cool silver metal. One palette, ports for terminals, editors, and tools.
-          </p>
-          <ul class="facts mono">
-            <li>45+ app ports · base16</li>
-            <li>MIT · silver accent</li>
-          </ul>
-          <div class="card-actions">
-            <a class="btn primary sm" href="https://heartbox.f00.sh/">site</a>
-            <a class="btn ghost sm" href="https://github.com/f00-sh/heartbox">repo</a>
-          </div>
-        </article>
+<!-- f00-catalog:products:end -->
       </div>
     </section>
   </main>

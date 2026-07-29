@@ -1,0 +1,91 @@
+/* f00 global theme — single source for brand look across f00.sh + product subdomains.
+   Hosted at https://f00.sh/theme/f00-theme.css
+   Products: <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" />
+   Hub:      <link rel="stylesheet" href="/theme/f00-theme.css" />
+   Edit tokens here only; product stylesheets keep layout, not brand colors/fonts.
+
+   Product inventory (what exists under f00) lives next door:
+     https://f00.sh/catalog.json  ← edit site/catalog.json, run scripts/sync-from-catalog.py
+*/
+
+@font-face {
+  font-family: "Onyx";
+  src: url("./fonts/Onyx.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Canonical brand tokens */
+  --f00-bg: #000000;
+  --f00-bg-elevated: #0a0a0a;
+  --f00-bg-panel: #111111;
+  --f00-bg-muted: #0a0a0a;
+  --f00-fg: #ffffff;
+  --f00-muted: #b3b3b3;
+  --f00-dim: #808080;
+  --f00-faint: #666666;
+  --f00-accent: #ffffff;
+  --f00-accent-dim: rgba(255, 255, 255, 0.14);
+  --f00-accent-hot: #ffffff;
+  --f00-accent-soft: #e5e5e5;
+  --f00-line: #2a2a2a;
+  --f00-border: rgba(255, 255, 255, 0.12);
+  --f00-border-strong: rgba(255, 255, 255, 0.22);
+  --f00-danger: #ffffff;
+  --f00-warn: #ffffff;
+  --f00-ok: #ffffff;
+  --f00-code-bg: #050505;
+  --f00-theme-color: #000000;
+  --f00-font-family: "Onyx", "Times New Roman", Times, serif;
+  --f00-font: var(--f00-font-family);
+  --f00-glow: rgba(255, 255, 255, 0.35);
+
+  /* Compatibility aliases (existing product stylesheets) */
+  --bg: var(--f00-bg);
+  --bg-2: var(--f00-bg-elevated);
+  --bg-elevated: var(--f00-bg-elevated);
+  --bg-panel: var(--f00-bg-panel);
+  --bg-muted: var(--f00-bg-muted);
+  --fg: var(--f00-fg);
+  --text: var(--f00-fg);
+  --muted: var(--f00-muted);
+  --text-muted: var(--f00-muted);
+  --text-mute: var(--f00-dim);
+  --dim: var(--f00-dim);
+  --text-dim: var(--f00-dim);
+  --faint: var(--f00-faint);
+  --accent: var(--f00-accent);
+  --accent-dim: var(--f00-accent-dim);
+  --accent-hot: var(--f00-accent-hot);
+  --accent-soft: var(--f00-accent-soft);
+  --amber: var(--f00-fg);
+  --line: var(--f00-line);
+  --border: var(--f00-border);
+  --border-strong: var(--f00-border-strong);
+  --danger: var(--f00-danger);
+  --warn: var(--f00-warn);
+  --ok: var(--f00-ok);
+  --partial: var(--f00-muted);
+  --no: var(--f00-danger);
+  --code-bg: var(--f00-code-bg);
+  --font: var(--f00-font-family);
+  --sans: var(--f00-font-family);
+  --font-sans: var(--f00-font-family);
+  --font-mono: var(--f00-font-family);
+  --mono: var(--f00-font-family);
+}
+
+/* Soft baseline so product pages that only import this still read white-on-black. */
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--f00-bg);
+  color: var(--f00-fg);
+  font-family: var(--f00-font-family);
+}

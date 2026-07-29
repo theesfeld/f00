@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "site/**"
+      - "scripts/sync-from-catalog.py"
+      - "README.md"
+      - "AGENTS.md"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -20,6 +23,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
+      - name: Catalog sync check
+        run: python3 scripts/sync-from-catalog.py --check
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:

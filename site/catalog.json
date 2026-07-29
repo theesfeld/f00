@@ -1,0 +1,143 @@
+{
+  "$schema_comment": "SINGLE SOURCE OF TRUTH for f00 (org f00-sh). Edit this file only, then run: scripts/sync-from-catalog.py. Hub cards, README, and AGENTS.md are derived from here. Theme lives at theme.urls.css.",
+  "version": 1,
+  "org": "f00-sh",
+  "hub": {
+    "name": "f00",
+    "site": "https://f00.sh",
+    "repo": "https://github.com/f00-sh/f00",
+    "pages_project": "f00"
+  },
+  "theme": {
+    "css": "https://f00.sh/theme/f00-theme.css",
+    "css_path": "site/theme/f00-theme.css",
+    "font": "Onyx",
+    "bg": "#000000",
+    "fg": "#ffffff",
+    "rule": "All product Pages must <link> theme.css. Do not redefine brand colors/fonts in product CSS."
+  },
+  "domains": {
+    "hub": "f00.sh",
+    "packages": "dist.f00.sh"
+  },
+  "laws": {
+    "release_to_card": "Only products with status=released get a hub card. Add/update the product entry here when you ship a release."
+  },
+  "products": [
+    {
+      "id": "f00tils",
+      "name": "f00tils",
+      "status": "released",
+      "domain": "coreutils.f00.sh",
+      "site": "https://coreutils.f00.sh/",
+      "repo": "https://github.com/f00-sh/f00tils",
+      "repo_slug": "f00-sh/f00tils",
+      "pages_project": "f00-coreutils",
+      "packages": "https://dist.f00.sh/f00tils/current/",
+      "local": "f00tils",
+      "license": "MIT",
+      "one_liner": "Freestanding assembly GNU userland (`f00` multicall)",
+      "blurb": "Freestanding assembly GNU userland — coreutils, grep, findutils, diffutils. One multicall binary. <code class=\"mono\">--core</code> is byte-identical and faster.",
+      "facts": [
+        "115 tools · x86-64 + aarch64 port",
+        "no libc · MIT"
+      ]
+    },
+    {
+      "id": "clun",
+      "name": "clun",
+      "status": "released",
+      "domain": "clun.f00.sh",
+      "site": "https://clun.f00.sh/",
+      "repo": "https://github.com/f00-sh/clun",
+      "repo_slug": "f00-sh/clun",
+      "pages_project": "f00-clun",
+      "packages": "https://dist.f00.sh/clun/current/",
+      "local": "clun",
+      "license": "MIT",
+      "one_liner": "JS/TS toolkit in pure Common Lisp",
+      "blurb": "JavaScript and TypeScript toolkit. Implementation is pure Common Lisp. Install, test, bundle, serve — Bun-shaped commands, different soul.",
+      "facts": [
+        "native releases · man page · updater",
+        "MIT"
+      ]
+    },
+    {
+      "id": "cel",
+      "name": "Cel Index",
+      "status": "released",
+      "domain": "cel.f00.sh",
+      "site": "https://cel.f00.sh/",
+      "repo": "https://github.com/f00-sh/cel",
+      "repo_slug": "f00-sh/cel",
+      "pages_project": "f00-cel",
+      "packages": null,
+      "local": "cel",
+      "license": "MIT",
+      "one_liner": "Femcel / Incel self-assessment (formal product model)",
+      "blurb": "Femcel / Incel self-assessment from a formal product model. Transparent factors, optional X priors, shareable score card.",
+      "facts": [
+        "survey · methodology · PNG export",
+        "web app"
+      ]
+    },
+    {
+      "id": "trn",
+      "name": "TRN",
+      "status": "released",
+      "domain": "trn.f00.sh",
+      "site": "https://trn.f00.sh/",
+      "repo": "https://github.com/f00-sh/trn",
+      "repo_slug": "f00-sh/trn",
+      "pages_project": "f00-trn",
+      "packages": null,
+      "local": "trn",
+      "license": "MIT",
+      "one_liner": "Enhanced Tabular Recipe Notation converter (eTRN)",
+      "blurb": "Enhanced Tabular Recipe Notation — ingredient rows × chronological stages. Cooking for Engineers–style process matrices from any recipe URL or paste.",
+      "facts": [
+        "rule-based · optional LLM",
+        "eTRN JSON · print/PDF"
+      ]
+    },
+    {
+      "id": "heartbox",
+      "name": "Heartbox",
+      "status": "wip",
+      "domain": null,
+      "site": null,
+      "repo": "https://github.com/f00-sh/heartbox",
+      "repo_slug": "f00-sh/heartbox",
+      "pages_project": null,
+      "packages": null,
+      "local": "heartbox",
+      "license": null,
+      "one_liner": "Hand-tinted Technicolor dark theme; one palette, many apps",
+      "blurb": null,
+      "facts": []
+    }
+  ],
+  "infra": [
+    {
+      "id": "homebrew-tap",
+      "name": "homebrew-tap",
+      "repo": "https://github.com/f00-sh/homebrew-tap",
+      "repo_slug": "f00-sh/homebrew-tap",
+      "role": "Homebrew tap for f00-sh products"
+    },
+    {
+      "id": "scoop-bucket",
+      "name": "scoop-bucket",
+      "repo": "https://github.com/f00-sh/scoop-bucket",
+      "repo_slug": "f00-sh/scoop-bucket",
+      "role": "Scoop bucket for f00-sh products"
+    },
+    {
+      "id": "github-org-profile",
+      "name": ".github",
+      "repo": "https://github.com/f00-sh/.github",
+      "repo_slug": "f00-sh/.github",
+      "role": "Organization profile and community health files"
+    }
+  ]
+}

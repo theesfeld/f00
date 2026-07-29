@@ -4,12 +4,18 @@
 
 ## Products
 
+> **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json  
+> **Theme:** [https://f00.sh/theme/f00-theme.css](https://f00.sh/theme/f00-theme.css) (Onyx, white on black). Do not fork colors in product repos.
+
 | Product | Site | Repo | One-liner |
 |---------|------|------|-----------|
-| **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh) | [f00-sh/f00tils](https://github.com/f00-sh/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
-| **clun** | [clun.f00.sh](https://clun.f00.sh) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |
-| **Cel Index** | [cel.f00.sh](https://cel.f00.sh) | [f00-sh/cel](https://github.com/f00-sh/cel) | Femcel / Incel self-assessment (formal product model) |
-| **TRN** | [trn.f00.sh](https://trn.f00.sh) | [f00-sh/trn](https://github.com/f00-sh/trn) | Enhanced Tabular Recipe Notation converter (eTRN) |
+| **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh/) | [f00-sh/f00tils](https://github.com/f00-sh/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
+| **clun** | [clun.f00.sh](https://clun.f00.sh/) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |
+| **Cel Index** | [cel.f00.sh](https://cel.f00.sh/) | [f00-sh/cel](https://github.com/f00-sh/cel) | Femcel / Incel self-assessment (formal product model) |
+| **TRN** | [trn.f00.sh](https://trn.f00.sh/) | [f00-sh/trn](https://github.com/f00-sh/trn) | Enhanced Tabular Recipe Notation converter (eTRN) |
+
+_After editing `catalog.json`, run `python3 scripts/sync-from-catalog.py`._
+
 
 ## Site
 
