@@ -122,12 +122,13 @@ h1, h2, h3,
   font-weight: 400;
 }
 
-/* STANDARD: Kurt hand accents */
+/* STANDARD: Kurt hand accents (slightly larger for legibility) */
 .f00-hand,
 .font-hand {
   font-family: var(--f00-font-hand) !important;
   letter-spacing: 0.02em;
   font-weight: 400;
+  font-size: 1.15em;
 }
 
 /* STANDARD: entire footer is handwriting (all f00 product sites) */
@@ -138,6 +139,7 @@ footer,
 .footer-inner {
   font-family: var(--f00-font-hand) !important;
   letter-spacing: 0.02em;
+  font-size: 1.15rem;
 }
 footer *,
 .foot *,

@@ -104,6 +104,7 @@ body {
 }
 .brand-sub {
   font-family: var(--font-hand);
+  font-size: 1.15rem;
   color: var(--muted);
   letter-spacing: 0.04em;
   margin-left: 0.05em;
@@ -114,7 +115,7 @@ body {
   display: flex;
   gap: 1.15rem;
   font-family: var(--font-hand);
-  font-size: 1.05rem;
+  font-size: 1.25rem;
 }
 .nav a {
   color: var(--muted);
@@ -310,7 +311,7 @@ body {
   flex-wrap: wrap;
   border-top: 1px solid var(--line);
   font-family: var(--font-hand);
-  font-size: 1rem;
+  font-size: 1.2rem;
   color: var(--muted);
 }
 .foot-stars {
@@ -326,7 +327,8 @@ body {
 }
 
 @media (max-width: 520px) {
-  .nav { gap: 0.75rem; font-size: 0.95rem; }
+  .nav { gap: 0.75rem; font-size: 1.1rem; }
+  .foot { font-size: 1.1rem; }
   .splash {
     font-size: clamp(5rem, 24vw, 10rem) !important;
   }
