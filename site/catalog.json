@@ -44,7 +44,8 @@
       "facts": [
         "115 tools \u00b7 x86-64 + aarch64 port",
         "no libc \u00b7 MIT"
-      ]
+      ],
+      "docs": "https://coreutils.f00.sh/#documents"
     },
     {
       "id": "clun",
@@ -63,7 +64,8 @@
       "facts": [
         "native releases \u00b7 man page \u00b7 updater",
         "MIT"
-      ]
+      ],
+      "docs": "https://clun.f00.sh/#documents"
     },
     {
       "id": "cel",
@@ -82,7 +84,8 @@
       "facts": [
         "survey \u00b7 methodology \u00b7 PNG export",
         "web app"
-      ]
+      ],
+      "docs": "https://cel.f00.sh/methodology"
     },
     {
       "id": "trn",
@@ -101,7 +104,8 @@
       "facts": [
         "rule-based \u00b7 optional LLM",
         "eTRN JSON \u00b7 print/PDF"
-      ]
+      ],
+      "docs": "https://trn.f00.sh/#docs"
     },
     {
       "id": "heartbox",
@@ -117,7 +121,8 @@
       "license": null,
       "one_liner": "Hand-tinted Technicolor dark theme; one palette, many apps",
       "blurb": null,
-      "facts": []
+      "facts": [],
+      "docs": null
     }
   ],
   "infra": [

@@ -29,10 +29,14 @@
     const facts = Array.isArray(p.facts) ? p.facts : [];
     const site = escapeHtml(p.site || "#");
     const repo = escapeHtml(p.repo || "#");
+    const docs = p.docs ? escapeHtml(p.docs) : "";
     const factsBlock = facts.length
       ? `<ul class="facts">${facts
           .map((f) => `<li>${escapeHtml(f)}</li>`)
           .join("")}</ul>`
+      : "";
+    const docsBtn = docs
+      ? `<a class="btn ghost sm" href="${docs}">docs</a>`
       : "";
     return `<article class="card" data-product="${escapeHtml(p.id || "")}">
       <div class="card-meta mono">${domain}</div>
@@ -42,6 +46,7 @@
       <div class="card-actions">
         <a class="btn primary sm" href="${site}">site</a>
         <a class="btn ghost sm" href="${repo}">repo</a>
+        ${docsBtn}
       </div>
     </article>`;
   };

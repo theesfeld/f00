@@ -54,6 +54,7 @@ def card_html(p: dict) -> str:
     facts = p.get("facts") or []
     site = p.get("site") or "#"
     repo = p.get("repo") or "#"
+    docs = p.get("docs")
     fact_items = "\n".join(f"            <li>{f}</li>" for f in facts)
     facts_block = (
         f"""
@@ -63,6 +64,11 @@ def card_html(p: dict) -> str:
         if facts
         else ""
     )
+    docs_btn = ""
+    if docs:
+        docs_btn = (
+            f'\n            <a class="btn ghost sm" href="{escape_attr(docs)}">docs</a>'
+        )
     return f"""        <article class="card" data-product="{escape_attr(p.get('id', ''))}">
           <div class="card-meta mono">{escape_attr(domain)}</div>
           <h3>{escape_attr(name)}</h3>
@@ -71,7 +77,7 @@ def card_html(p: dict) -> str:
           </p>{facts_block}
           <div class="card-actions">
             <a class="btn primary sm" href="{escape_attr(site)}">site</a>
-            <a class="btn ghost sm" href="{escape_attr(repo)}">repo</a>
+            <a class="btn ghost sm" href="{escape_attr(repo)}">repo</a>{docs_btn}
           </div>
         </article>"""
 
