@@ -20,7 +20,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 2. **Release → card.** Every f00 product that ships a real **release** gets one product card on the landing grid (`site/index.html`). No card until there is a release. Update the card when the product ships again if copy or links change.
 3. **One set of links.** Cards are the only product navigation (site + repo). Do not duplicate with hero buttons or other chrome.
 4. **Public copy is product-only.** Never put agent process, org plans, DNS wiring, or internal preferences on the site or public README (house rule `10-user-facing-language.md`).
-5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` → clun (with `clun.f00.sh`).
+5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `dist.f00.sh` R2 packages.
 6. **Aesthetic:** technically modern (OKLCH, canvas, progressive enhancement), visually low-fi (CRT, phosphor, mono).
 7. **No secrets** in repo. DNS keys stay out of git.
 
@@ -30,28 +30,29 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 |------|------|
 | `site/` | Cloudflare Pages project `f00` (custom domain `f00.sh`) |
 | `docs/` | Optional depth |
-| `.github/workflows/pages.yml` | Pages deploy |
+| `.github/workflows/pages.yml` | Pages deploy (wrangler) |
 
 ## Edge (Cloudflare)
 
 - **DNS + edge host:** Cloudflare (registrar may stay Porkbun)
 - **Site:** Cloudflare Pages project `f00` → https://f00.sh
-- **Code:** GitHub `f00-sh/f00` only (no GitHub Pages)
-- Deploy: push `site/**` → workflow `pages.yml` (wrangler pages deploy)
+- **Packages:** R2 bucket `f00-releases` → https://dist.f00.sh/{product}/current/
+- **Code:** GitHub `f00-sh/*` only (no GitHub Pages)
+- Deploy sites: push `site/**` → workflow `pages.yml` (wrangler pages deploy)
 
 ## Build and gates
 
 ```bash
 # no build — open site/index.html locally
-# deploy: git push origin main  (Cloudflare Pages)
+# deploy: git push origin main  (Cloudflare Pages via Actions)
 ```
 
 ## Sister products
 
-| Product | Path (local) | Site |
-|---------|--------------|------|
-| f00tils | `/home/glenda/Projects/f00tils` | https://coreutils.f00.sh |
-| clun | `/home/glenda/Projects/clun` | https://clun.f00.sh |
+| Product | Path (local) | Site | Packages |
+|---------|--------------|------|----------|
+| f00tils | `/home/glenda/Projects/f00tils` | https://coreutils.f00.sh | https://dist.f00.sh/f00tils/current/ |
+| clun | `/home/glenda/Projects/clun` | https://clun.f00.sh | https://dist.f00.sh/clun/current/ |
 
 ## License
 
