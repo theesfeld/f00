@@ -8,6 +8,7 @@
 |---------|------|------|-----------|
 | **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh) | [f00-sh/f00tils](https://github.com/f00-sh/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
 | **clun** | [clun.f00.sh](https://clun.f00.sh) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |
+| **Cel Index** | [cel.f00.sh](https://cel.f00.sh) | — | Femcel / Incel self-assessment (formal product model) |
 
 ## Site
 
@@ -19,4 +20,4 @@ Layout: splash + product cards only. Installers live on each product site.
 
 ## License
 
-MIT for this site. Product licenses are per-repo (f00tils MIT; clun GPL-3.0-or-later).
+MIT for this site. Product licenses are per-repo (f00tils MIT; clun MIT).
