@@ -1,22 +1,16 @@
-/* f00 STANDARD THEME — https://f00.sh/theme/f00-theme-14.css
-   Heart-Shaped Box video CONTRASTS (Heartbox palette)
-   + Bleach album TEXT / BOXES / LAYOUT
+/* f00 SHARED THEME — ONE CSS for the whole org
+   Live: https://f00.sh/theme/f00-theme.css
+   Domain-level stylesheet. Every product subdomain loads THIS URL first.
+   Hub deploys update all products without re-touching product HTML.
 
-   REQUIRED first on every f00 product site:
-     <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-14.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" />
 
-   CONTRAST (HSB video):
-     hospital-night black · hand-tint cream · poppy red · verse sky · silver metal
-     Not cool-navy. Not phosphor green. Not soft pastel glass.
+   Contrasts: Heart-Shaped Box video / Heartbox palette
+   Boxes: Bleach album (hard square frames, catalog mono)
+   Fonts: Onyx logo only · zine body · chip chrome
+   Product CSS = page layout only. Do not redefine --f00-* or brand radii.
 
-   LAYOUT (Bleach album):
-     Hard boxes, square corners, catalog labels, raw mono, thin silver rules.
-     No rounded pills. No soft drop shadows. Liner-note / photocopied catalog.
-
-   Fonts:
-     1. Onyx  — branding ONLY (logo / brand-mark "f00")
-     2. Zine  — body / prose / forms
-     3. Chip  — headers, footers, nav, domain chips, meta
+   Snapshots: site/theme/f00-theme-N.css (history only). Do not link N in products.
 */
 
 @font-face {

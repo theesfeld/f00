@@ -5,7 +5,7 @@
 ## Products
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
-> **Theme:** [https://f00.sh/theme/f00-theme-14.css](https://f00.sh/theme/f00-theme-14.css) (Heart-Shaped Box contrasts · Bleach boxes · Onyx brand). Do not fork colors/layout in product repos. Source: [heartbox](https://heartbox.f00.sh/).
+> **Theme (ONE shared CSS):** [https://f00.sh/theme/f00-theme.css](https://f00.sh/theme/f00-theme.css) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Product CSS = layout only.
 
 | Product | Site | Repo | One-liner |
 |---------|------|------|-----------|

@@ -9,9 +9,9 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-14.css",
+    "css": "https://f00.sh/theme/f00-theme.css",
     "css_canonical": "https://f00.sh/theme/f00-theme.css",
-    "css_path": "site/theme/f00-theme-14.css",
+    "css_path": "site/theme/f00-theme.css",
     "source": "heartbox",
     "source_name": "Heartbox",
     "source_url": "https://heartbox.f00.sh/",
@@ -26,9 +26,10 @@
     "accent": "#E02030",
     "metal": "#B8C0C8",
     "sky": "#5EC8E8",
-    "rule": "Heart-Shaped Box video contrasts (Heartbox palette) + Bleach album layout. Hospital-night bg, cream fg, poppy accent, verse sky, silver metal. Hard square boxes, catalog mono labels, no rounded glass. Onyx logo only; zine body; chip headers. Load theme CSS first.",
+    "rule": "ONE shared CSS at https://f00.sh/theme/f00-theme.css for hub + every product subdomain. Heart-Shaped Box contrasts + Bleach boxes. Product CSS is layout-only. Edit hub theme file, mirror, deploy f00 \u2014 all sites pick it up (short cache).",
     "layout": "bleach",
-    "contrast": "heart-shaped-box"
+    "contrast": "heart-shaped-box",
+    "css_snapshot": "site/theme/f00-theme-14.css"
   },
   "domains": {
     "hub": "f00.sh",

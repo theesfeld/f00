@@ -156,7 +156,7 @@ def patch_readme(catalog: dict) -> None:
     block = f"""## Products
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
-> **Theme:** [{theme}]({theme}) (Heart-Shaped Box contrasts · Bleach boxes · Onyx brand). Do not fork colors/layout in product repos. Source: [heartbox](https://heartbox.f00.sh/).
+> **Theme (ONE shared CSS):** [{theme}]({theme}) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Product CSS = layout only.
 
 {table}
 
@@ -248,7 +248,7 @@ That regenerates hub product cards, this table, and README products.
     # aesthetic line keeps theme URL from catalog (Heartbox default)
     text = re.sub(
         r"6\. \*\*Aesthetic(?: \(STANDARD THEME\))?\:\*\*.*",
-        f"6. **Aesthetic (STANDARD THEME):** Heart-Shaped Box contrasts (hospital-night, poppy, cream, verse sky, silver) + Bleach album boxes (hard square frames, catalog mono). Theme: {theme_css} (path `site/theme/f00-theme.css`; source https://heartbox.f00.sh/). Three fonts only: **Onyx** = branding/logo only · **zine mono** = all body · **chip mono** = headers/footers/nav/domain chips. No handwriting. Do not redefine type roles or invent brand hex in product CSS. Catalog is SSOT for products + theme pointer.",
+        f"6. **Aesthetic (STANDARD THEME) — ONE shared CSS.** Every f00 product loads `{theme_css}` from the hub domain first (no per-product brand CSS). Heart-Shaped Box contrasts + Bleach boxes. Path `site/theme/f00-theme.css`. Source palette: https://heartbox.f00.sh/. Three fonts: **Onyx** logo only · **zine mono** body · **chip mono** chrome. Product CSS is layout-only; never invent brand hex or soft radii.",
         text,
         count=1,
     )
