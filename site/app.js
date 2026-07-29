@@ -1,28 +1,6 @@
-/* f00.sh — progressive enhancement: particle field + boot log + copy */
+/* f00.sh — progressive enhancement: particle field + boot log */
 (() => {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // --- copy buttons ---
-  document.querySelectorAll("[data-copy]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const sel = btn.getAttribute("data-copy");
-      const el = sel && document.querySelector(sel);
-      if (!el) return;
-      const text = el.textContent.trim();
-      try {
-        await navigator.clipboard.writeText(text);
-        btn.classList.add("ok");
-        const prev = btn.textContent;
-        btn.textContent = "ok";
-        setTimeout(() => {
-          btn.textContent = prev;
-          btn.classList.remove("ok");
-        }, 1200);
-      } catch {
-        btn.textContent = "fail";
-      }
-    });
-  });
 
   // --- boot log (low-fi) ---
   const boot = document.getElementById("boot");

@@ -16,7 +16,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 
 ## Product laws
 
-1. **Hub only.** Link out to product domains; do not re-host installers here unless intentional mirror.
+1. **Hub only.** Splash + product cards. Install copy lives on product sites, not the landing page.
 2. **Domains:** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` → clun (dual with `clun.sh`).
 3. **Aesthetic:** technically modern (OKLCH, canvas, progressive enhancement), visually low-fi (CRT, phosphor, mono).
 4. **No secrets** in repo. DNS keys stay out of git.

@@ -11,24 +11,16 @@ Technically sharp tools. Low-fi chrome. MIT (product-specific licenses apply per
 | **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh) | [theesfeld/f00tils](https://github.com/theesfeld/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
 | **clun** | [clun.sh](https://clun.sh) · [clun.f00.sh](https://clun.f00.sh) | [theesfeld/clun](https://github.com/theesfeld/clun) | JS/TS toolkit in pure Common Lisp |
 
-## Install
-
-```bash
-# f00tils
-curl -fsSL https://coreutils.f00.sh/install.sh | bash
-
-# clun
-curl -fsSL https://clun.sh/install | sh
-```
-
 ## Site
 
 Static hub under [`site/`](site/) → GitHub Pages → **https://f00.sh**
 
+Install lives on product sites (`coreutils.f00.sh`, `clun.sh`) — not here.
+
 ```text
 site/index.html   splash + product cards
 site/styles.css   CRT / phosphor low-fi surface
-site/app.js       canvas field + copy helpers
+site/app.js       canvas field + boot log
 site/CNAME        f00.sh
 ```
 

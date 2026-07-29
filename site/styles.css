@@ -246,7 +246,7 @@ body {
 }
 .btn.sm { padding: 0.45rem 0.75rem; font-size: 0.8rem; }
 
-.products, .install, .about {
+.products, .about {
   max-width: var(--max);
   margin: 0 auto;
   padding: 2rem var(--pad) 3rem;
@@ -301,45 +301,6 @@ body {
 }
 .facts li::before { content: "› "; color: var(--amber); }
 .card-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-
-.install-grid { display: grid; gap: 0.75rem; }
-.install-block {
-  border: 1px solid var(--line);
-  background: oklch(10% 0.01 130 / 0.75);
-  padding: 0.85rem 1rem;
-  border-radius: 2px;
-}
-.install-label {
-  font-size: 0.72rem;
-  color: var(--amber);
-  margin-bottom: 0.4rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.install-row {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-.install-row code {
-  font-family: var(--font);
-  font-size: clamp(0.7rem, 1.8vw, 0.85rem);
-  color: var(--fg);
-  word-break: break-all;
-}
-.copy {
-  font-family: var(--font);
-  font-size: 0.75rem;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
-  padding: 0.35rem 0.6rem;
-  cursor: pointer;
-  border-radius: 2px;
-}
-.copy:hover, .copy.ok { color: var(--accent); border-color: var(--accent-dim); }
 
 .about { padding-top: 0; }
 .about p { max-width: 42rem; color: var(--muted); }
