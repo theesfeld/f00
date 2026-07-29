@@ -126,24 +126,29 @@ body {
   margin: 0 auto;
   padding: clamp(2rem, 8vh, 5rem) var(--pad) 1.5rem;
   text-align: center;
-  /* Same content width as .products .grid */
-  container-type: inline-size;
-  container-name: hero;
+}
+
+/* Same horizontal content width as .products .grid */
+.splash-frame {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow: visible;
 }
 
 .splash {
-  margin: 0 auto;
-  width: 100%;
-  max-width: 100%;
+  margin: 0;
+  display: inline-block;
+  width: max-content;
+  max-width: none;
   font-family: var(--font);
-  /* Fills the same horizontal span as the product cards (content box of hero/products). */
-  font-size: 54cqi;
+  /* Fallback before JS fit; JS sets exact px to match card row. */
+  font-size: clamp(4rem, 28vw, 18rem);
   line-height: 0.85;
   letter-spacing: -0.06em;
   font-weight: 700;
   user-select: none;
   white-space: nowrap;
-  overflow: visible;
 }
 
 .glyph {

@@ -30,32 +30,52 @@
       });
   }
 
-  // Scale "f00" so its rendered width matches the product card row.
+  // Scale "f00" to the same width as the product card row.
+  // Measure natural text width (max-content) — never width:100%, that broke the previous fit.
   const splash = document.querySelector(".splash");
+  const frame = document.querySelector(".splash-frame");
   const grid = document.querySelector(".products .grid");
-  const hero = document.querySelector(".hero");
   const fitSplash = () => {
-    if (!splash) return;
-    const targetEl = grid || hero;
-    if (!targetEl) return;
-    const target = Math.round(targetEl.getBoundingClientRect().width);
+    if (!splash || !frame) return;
+    const target = Math.floor(
+      (grid || frame).getBoundingClientRect().width
+    );
     if (target <= 0) return;
-    splash.style.fontSize = "100px";
-    const at100 = splash.scrollWidth || 1;
-    let next = Math.max(48, Math.floor((target / at100) * 100));
-    splash.style.fontSize = `${next}px`;
-    // Correct residual overflow from subpixel/glyph metrics.
-    if (splash.scrollWidth > target) {
-      next = Math.floor(next * (target / splash.scrollWidth));
-      splash.style.fontSize = `${next}px`;
+
+    splash.style.width = "max-content";
+    splash.style.display = "inline-block";
+    splash.style.transform = "none";
+
+    // Binary search font-size so glyph row width == card row width.
+    let lo = 32;
+    let hi = Math.min(900, Math.ceil(target * 1.2));
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      splash.style.fontSize = `${mid}px`;
+      const w = splash.getBoundingClientRect().width;
+      if (w <= target) lo = mid;
+      else hi = mid - 1;
+    }
+    splash.style.fontSize = `${lo}px`;
+
+    // Final nudge if still slightly under/over.
+    let w = splash.getBoundingClientRect().width;
+    if (w > 0 && Math.abs(target - w) > 1) {
+      const scaled = Math.max(32, Math.floor(lo * (target / w)));
+      splash.style.fontSize = `${scaled}px`;
+      w = splash.getBoundingClientRect().width;
+      if (w > target) {
+        splash.style.fontSize = `${Math.max(32, scaled - 1)}px`;
+      }
     }
   };
-  if (splash && (grid || hero)) {
+  if (splash && frame) {
     fitSplash();
+    requestAnimationFrame(fitSplash);
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(fitSplash);
+      ro.observe(frame);
       if (grid) ro.observe(grid);
-      if (hero) ro.observe(hero);
     } else {
       window.addEventListener("resize", fitSplash, { passive: true });
     }
