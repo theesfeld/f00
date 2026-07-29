@@ -75,21 +75,10 @@ body {
 }
 .skip:focus { left: 1rem; top: 1rem; }
 
+/* Content above CRT overlay (fixed z-index:0) */
 .top, main, .foot {
-  max-width: var(--max);
-  margin: 0 auto;
-  padding: 1.25rem var(--pad) 2.25rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  border-top: 1px solid var(--line);
-  font-family: var(--font-hand);
-  font-size: 1.05rem;
-  color: var(--muted);
-}
-.foot > * {
-  font-family: inherit;
+  position: relative;
+  z-index: 1;
 }
 
 .top {

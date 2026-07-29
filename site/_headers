@@ -83,3 +83,7 @@
 /styles-8.css
   Content-Type: text/css; charset=utf-8
   Cache-Control: public, max-age=60, must-revalidate
+
+/styles-9.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
