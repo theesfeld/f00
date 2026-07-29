@@ -1,5 +1,35 @@
-/* f00.sh — progressive enhancement: particle field */
+/* f00.sh — progressive enhancement: stars + particle field */
 (() => {
+  // Product repos on the hub (add a card when a product releases → list it here too).
+  const F00_REPOS = [
+    "theesfeld/f00",
+    "theesfeld/f00tils",
+    "theesfeld/clun",
+  ];
+
+  const starsEl = document.getElementById("stars");
+  if (starsEl) {
+    Promise.all(
+      F00_REPOS.map((repo) =>
+        fetch(`https://api.github.com/repos/${repo}`, {
+          headers: { Accept: "application/vnd.github+json" },
+        }).then((r) => (r.ok ? r.json() : null))
+      )
+    )
+      .then((rows) => {
+        const total = rows.reduce(
+          (n, row) => n + (row && typeof row.stargazers_count === "number" ? row.stargazers_count : 0),
+          0
+        );
+        const label = total === 1 ? "1 star" : `${total.toLocaleString("en-US")} stars`;
+        starsEl.textContent = `★ ${label}`;
+        starsEl.title = `Across ${F00_REPOS.length} f00 repos`;
+      })
+      .catch(() => {
+        starsEl.hidden = true;
+      });
+  }
+
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canvas = document.getElementById("field");
   if (!canvas || prefersReduced) return;

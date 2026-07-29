@@ -295,6 +295,15 @@ body {
   color: var(--muted);
 }
 
+.foot-stars {
+  text-decoration: none;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.foot-stars:hover {
+  color: var(--accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glyph, .glyph::after { animation: none; }
   html { scroll-behavior: auto; }
