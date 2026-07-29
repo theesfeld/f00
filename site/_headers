@@ -162,3 +162,7 @@
   Content-Type: image/svg+xml
   Cache-Control: public, max-age=86400, immutable
   X-Content-Type-Options: nosniff
+
+/styles-15.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate

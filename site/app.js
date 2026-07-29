@@ -1,4 +1,4 @@
-/* f00.sh — catalog-driven cards + Heartbox-tinted particle field */
+/* f00.sh — catalog cards + silver sparkles + logo color glitches */
 (() => {
   const CATALOG_URLS = [
     "/catalog.json",
@@ -6,7 +6,21 @@
     "https://f00.sh/catalog.json",
   ];
 
-  // Never let leftover fitSplash inline styles blow up the logo.
+  // Heartbox palette — glitch colors for logo
+  const THEME_COLORS = [
+    "#E02030", // poppy red
+    "#5EC8E8", // verse sky
+    "#F4EBE0", // cream
+    "#B8C0C8", // silver
+    "#E86A9A", // pink
+    "#E8D45A", // yellow
+    "#5FBF4A", // green
+    "#7A5A9E", // purple
+    "#E8924A", // orange
+    "#FFF8F0", // bright white
+    "#FF4A58", // bright red
+  ];
+
   const splash = document.querySelector(".splash");
   if (splash) {
     splash.style.fontSize = "";
@@ -52,8 +66,9 @@
   };
 
   const renderProducts = (catalog) => {
-    const grid = document.getElementById("product-grid")
-      || document.querySelector(".products .grid");
+    const grid =
+      document.getElementById("product-grid") ||
+      document.querySelector(".products .grid");
     if (!grid || !catalog || !Array.isArray(catalog.products)) return;
     const released = catalog.products.filter((p) => p.status === "released");
     if (!released.length) return;
@@ -81,8 +96,52 @@
     }
   });
 
-  // Particle field (verse-sky dust: cream, black ink, poppy, silver)
-  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // —— Logo glitches: random Heartbox theme color ——
+  const glyphs = document.querySelectorAll(".splash .glyph");
+  const prefersReduced = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  if (glyphs.length && !prefersReduced) {
+    const pickColor = () =>
+      THEME_COLORS[Math.floor(Math.random() * THEME_COLORS.length)];
+
+    const fireGlitch = () => {
+      const g = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const color = pickColor();
+      const ox = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * 3);
+      const oy = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * 2);
+      g.style.setProperty("--glitch-color", color);
+      g.style.setProperty("--glitch-x", `${ox}px`);
+      g.style.setProperty("--glitch-y", `${oy}px`);
+      g.classList.add("is-glitching");
+      // occasional second ghost flash
+      if (Math.random() < 0.35) {
+        const g2 = glyphs[Math.floor(Math.random() * glyphs.length)];
+        g2.style.setProperty("--glitch-color", pickColor());
+        g2.style.setProperty(
+          "--glitch-x",
+          `${(Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 4)}px`
+        );
+        g2.style.setProperty(
+          "--glitch-y",
+          `${(Math.random() < 0.5 ? -1 : 1) * Math.random() * 3}px`
+        );
+        g2.classList.add("is-glitching");
+        window.setTimeout(() => g2.classList.remove("is-glitching"), 60 + Math.random() * 80);
+      }
+      window.setTimeout(() => g.classList.remove("is-glitching"), 50 + Math.random() * 120);
+    };
+
+    const scheduleGlitch = () => {
+      fireGlitch();
+      const next = 400 + Math.random() * 2200;
+      window.setTimeout(scheduleGlitch, next);
+    };
+    window.setTimeout(scheduleGlitch, 600);
+  }
+
+  // —— Silver sparkles only (no background grid) ——
   const canvas = document.getElementById("field");
   if (!canvas || prefersReduced) return;
   const ctx = canvas.getContext("2d", { alpha: true });
@@ -104,66 +163,51 @@
     canvas.style.height = `${h}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const count = Math.floor((w * h) / 14000);
-    const pickKind = () => {
-      const r = Math.random();
-      if (r < 0.06) return "red";
-      if (r < 0.18) return "ink";
-      if (r < 0.32) return "metal";
-      if (r < 0.55) return "sky";
-      return "cream";
-    };
+    const count = Math.floor((w * h) / 11000);
     dots = Array.from({ length: count }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
-      v: 0.15 + Math.random() * 0.55,
-      s: Math.random() < 0.15 ? 2 : 1,
-      a: 0.15 + Math.random() * 0.55,
-      kind: pickKind(),
+      v: 0.2 + Math.random() * 0.7,
+      s: Math.random() < 0.2 ? 2 : 1,
+      a: 0.25 + Math.random() * 0.65,
+      tw: Math.random() * Math.PI * 2,
     }));
-  };
-
-  const fillFor = (d) => {
-    if (d.kind === "red") return `rgba(224, 32, 48, ${Math.min(1, d.a + 0.2)})`;
-    if (d.kind === "ink") return `rgba(26, 18, 20, ${Math.min(1, d.a * 0.9)})`;
-    if (d.kind === "sky") return `rgba(255, 248, 240, ${d.a * 0.55})`;
-    if (d.kind === "metal") return `rgba(184, 192, 200, ${d.a})`;
-    return `rgba(244, 235, 224, ${d.a * 0.75})`;
   };
 
   const tick = (t) => {
     ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = "rgba(26, 18, 20, 0.06)";
-    ctx.lineWidth = 1;
-    const step = 48;
-    const ox = (t * 0.01) % step;
-    for (let x = -step + ox; x < w + step; x += step) {
+
+    // soft paint smudges (no grid) — drifting silver haze
+    if (Math.random() < 0.08) {
+      const gx = Math.random() * w;
+      const gy = Math.random() * h * 0.7;
+      const gr = 20 + Math.random() * 80;
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      g.addColorStop(0, "rgba(184, 192, 200, 0.06)");
+      g.addColorStop(1, "rgba(184, 192, 200, 0)");
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
-      ctx.stroke();
-    }
-    for (let y = 0; y < h; y += step) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
+      ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     for (const d of dots) {
       d.y += d.v;
+      d.tw += 0.04;
       if (d.y > h + 4) {
         d.y = -4;
         d.x = Math.random() * w;
       }
-      ctx.fillStyle = fillFor(d);
+      const twinkle = 0.55 + 0.45 * Math.sin(d.tw + t * 0.002);
+      const a = Math.min(1, d.a * twinkle);
+      // silver only
+      ctx.fillStyle = `rgba(184, 192, 200, ${a})`;
       ctx.fillRect(Math.floor(d.x), Math.floor(d.y), d.s, d.s);
-    }
-
-    if (Math.random() < 0.02) {
-      const y = h * (0.18 + Math.random() * 0.2);
-      ctx.fillStyle = "rgba(26, 18, 20, 0.05)";
-      ctx.fillRect(0, y, w, 2 + Math.random() * 3);
+      // brighter silver core on larger sparks
+      if (d.s > 1) {
+        ctx.fillStyle = `rgba(244, 248, 252, ${a * 0.7})`;
+        ctx.fillRect(Math.floor(d.x), Math.floor(d.y), 1, 1);
+      }
     }
 
     raf = requestAnimationFrame(tick);

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Hub: verse-blue painted field, black logo, white header/footer, poppy product-box text, silver sparkles, random-color logo glitches (no grid).
 - Hub visual: **verse-sky field** with **hospital-black Onyx logo** (product theme tokens stay hospital-night).
 - **Default brand theme is Heartbox** (hospital-night bg `#1A1214`, poppy accent `#E02030`, cream fg, silver metal). Theme path `f00-theme-13.css`.
 - Brand assets (favicon, BIMI, icons, org avatar) recolored to Heartbox.
