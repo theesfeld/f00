@@ -5,7 +5,7 @@
 ## Products
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
-> **Theme:** [https://f00.sh/theme/f00-theme-12.css](https://f00.sh/theme/f00-theme-12.css) (Onyx, white on black). Do not fork colors in product repos.
+> **Theme:** [https://f00.sh/theme/f00-theme-13.css](https://f00.sh/theme/f00-theme-13.css) (Heartbox palette · Onyx brand type). Do not fork colors in product repos. Source: [heartbox](https://heartbox.f00.sh/).
 
 | Product | Site | Repo | One-liner |
 |---------|------|------|-----------|
@@ -13,6 +13,7 @@
 | **clun** | [clun.f00.sh](https://clun.f00.sh/) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |
 | **Cel Index** | [cel.f00.sh](https://cel.f00.sh/) | [f00-sh/cel](https://github.com/f00-sh/cel) | Femcel / Incel self-assessment (formal product model) |
 | **TRN** | [trn.f00.sh](https://trn.f00.sh/) | [f00-sh/trn](https://github.com/f00-sh/trn) | Enhanced Tabular Recipe Notation converter (eTRN) |
+| **Heartbox** | [heartbox.f00.sh](https://heartbox.f00.sh/) | [f00-sh/heartbox](https://github.com/f00-sh/heartbox) | Hand-tinted Technicolor dark theme — f00 default brand palette |
 
 _After editing `catalog.json`, run `python3 scripts/sync-from-catalog.py`._
 
@@ -27,4 +28,4 @@ Layout: splash + product cards only. Installers live on each product site.
 
 ## License
 
-MIT for this site. Product licenses are per-repo (f00tils MIT; clun MIT).
+MIT for this site. Product licenses are per-repo (f00tils, clun, heartbox MIT; others as published).

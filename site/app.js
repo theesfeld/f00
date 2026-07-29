@@ -1,4 +1,4 @@
-/* f00.sh — catalog-driven cards + monochrome particle field */
+/* f00.sh — catalog-driven cards + Heartbox-tinted particle field */
 (() => {
   const CATALOG_URLS = [
     "/catalog.json",
@@ -81,7 +81,7 @@
     }
   });
 
-  // Particle field (monochrome)
+  // Particle field (Heartbox cream / silver / red dust)
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canvas = document.getElementById("field");
   if (!canvas || prefersReduced) return;
@@ -105,18 +105,33 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const count = Math.floor((w * h) / 14000);
+    const pickKind = () => {
+      const r = Math.random();
+      if (r < 0.04) return "red";
+      if (r < 0.08) return "sky";
+      if (r < 0.22) return "metal";
+      return "cream";
+    };
     dots = Array.from({ length: count }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
       v: 0.15 + Math.random() * 0.55,
       s: Math.random() < 0.15 ? 2 : 1,
       a: 0.15 + Math.random() * 0.55,
+      kind: pickKind(),
     }));
+  };
+
+  const fillFor = (d) => {
+    if (d.kind === "red") return `rgba(224, 32, 48, ${Math.min(1, d.a + 0.15)})`;
+    if (d.kind === "sky") return `rgba(94, 200, 232, ${Math.min(1, d.a + 0.1)})`;
+    if (d.kind === "metal") return `rgba(184, 192, 200, ${d.a})`;
+    return `rgba(244, 235, 224, ${d.a * 0.85})`;
   };
 
   const tick = (t) => {
     ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+    ctx.strokeStyle = "rgba(184, 192, 200, 0.05)";
     ctx.lineWidth = 1;
     const step = 48;
     const ox = (t * 0.01) % step;
@@ -139,13 +154,13 @@
         d.y = -4;
         d.x = Math.random() * w;
       }
-      ctx.fillStyle = `rgba(255, 255, 255, ${d.a})`;
+      ctx.fillStyle = fillFor(d);
       ctx.fillRect(Math.floor(d.x), Math.floor(d.y), d.s, d.s);
     }
 
     if (Math.random() < 0.02) {
       const y = h * (0.18 + Math.random() * 0.2);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+      ctx.fillStyle = "rgba(224, 32, 48, 0.04)";
       ctx.fillRect(0, y, w, 2 + Math.random() * 3);
     }
 

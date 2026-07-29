@@ -156,7 +156,7 @@ def patch_readme(catalog: dict) -> None:
     block = f"""## Products
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
-> **Theme:** [{theme}]({theme}) (Onyx, white on black). Do not fork colors in product repos.
+> **Theme:** [{theme}]({theme}) (Heartbox palette · Onyx brand type). Do not fork colors in product repos. Source: [heartbox](https://heartbox.f00.sh/).
 
 {table}
 
@@ -245,10 +245,10 @@ That regenerates hub product cards, this table, and README products.
         count=1,
     )
 
-    # aesthetic line keeps theme URL from catalog
+    # aesthetic line keeps theme URL from catalog (Heartbox default)
     text = re.sub(
-        r"6\. \*\*Aesthetic:\*\*.*",
-        f"6. **Aesthetic:** white on black, Onyx type. Theme: {theme_css} (path `site/theme/f00-theme.css`). All product Pages must link the theme; do not redefine brand colors/fonts in product CSS. Catalog is SSOT for products + theme pointer.",
+        r"6\. \*\*Aesthetic(?: \(STANDARD THEME\))?\:\*\*.*",
+        f"6. **Aesthetic (STANDARD THEME):** Heartbox palette is the f00 default (warm hospital-night bg, poppy red accent, cream fg, silver metal). Theme: {theme_css} (path `site/theme/f00-theme.css`; source https://heartbox.f00.sh/). Three fonts only: **Onyx** = branding/logo only · **zine mono** = all body · **chip mono** = headers/footers/nav/domain chips. No handwriting. Do not redefine type roles or invent brand hex in product CSS. Catalog is SSOT for products + theme pointer.",
         text,
         count=1,
     )

@@ -4,17 +4,17 @@
   "reply_to": "OPS/F00",
   "to": "Maintainers and Release Operators",
   "from": "Project Engineering",
-  "subject": "Standard operating procedure — f00 platform as a whole (GitHub + Cloudflare only)",
+  "subject": "Standard operating procedure \u2014 f00 platform as a whole (GitHub + Cloudflare only)",
   "ref": "AGENTS.md, site/catalog.json, .github/workflows/pages.yml, sister product pages.yml",
   "date": "2026-07-29",
   "doc_id": "SOP-F00-ORG-001",
   "doc_title": "STANDARD OPERATING PROCEDURE",
-  "version": "v1.0.0 platform",
-  "opening": "f00 is not one app. It is the brand hub (https://f00.sh), a product catalog, a shared theme, and the edge/DNS map for every f00-sh product. Public hosting is Cloudflare only. Source control is GitHub only. GitHub Actions may build and push to Cloudflare; GitHub does not host the sites. This SOP defines the whole platform so operators stop confusing “Pages” (Cloudflare Pages) with “GitHub Pages.”",
+  "version": "v1.1.0 platform",
+  "opening": "f00 is not one app. It is the brand hub (https://f00.sh), a product catalog, a shared theme, and the edge/DNS map for every f00-sh product. The default brand theme is Heartbox (palette from f00-sh/heartbox; CSS at https://f00.sh/theme/f00-theme-13.css). Public hosting is Cloudflare only. Source control is GitHub only. GitHub Actions may build and push to Cloudflare; GitHub does not host the sites. This SOP defines the whole platform so operators stop confusing \u201cPages\u201d (Cloudflare Pages) with \u201cGitHub Pages.\u201d",
   "sections": [
     {
       "heading": "1. Purpose and scope",
-      "body": "This procedure covers the f00 platform end-to-end: org inventory, hub laws, catalog SSOT, shared theme, Cloudflare DNS/Pages/R2, GitHub Actions deploy paths, product enrollment, release-to-card rules, and known failure modes.\n\nIn scope: hub repo f00-sh/f00; product repos under org f00-sh; Cloudflare account that owns zone f00.sh and Pages/R2 projects.\n\nOut of scope: deep product-internal build SOPs (f00tils ASM gates, clun SBCL matrix). Those remain in each product’s own docs. This document only states how products attach to the platform.",
+      "body": "This procedure covers the f00 platform end-to-end: org inventory, hub laws, catalog SSOT, shared theme, Cloudflare DNS/Pages/R2, GitHub Actions deploy paths, product enrollment, release-to-card rules, and known failure modes.\n\nIn scope: hub repo f00-sh/f00; product repos under org f00-sh; Cloudflare account that owns zone f00.sh and Pages/R2 projects.\n\nOut of scope: deep product-internal build SOPs (f00tils ASM gates, clun SBCL matrix). Those remain in each product\u2019s own docs. This document only states how products attach to the platform.",
       "items": [
         "Hosting target: Cloudflare (Pages + R2 + DNS). Never GitHub Pages / *.github.io.",
         "Code host: GitHub org f00-sh only.",
@@ -24,20 +24,44 @@
     },
     {
       "heading": "2. One-sentence mental model",
-      "body": "GitHub holds git history and runs CI. Cloudflare serves every public URL users open. When a workflow is named “Deploy site (Cloudflare Pages),” the word Pages means Cloudflare Pages, not GitHub Pages.\n\nIf CI/CD is healthy, a git push of site assets triggers GitHub Actions, which calls wrangler pages deploy with CLOUDFLARE_API_TOKEN and uploads the static tree into a named Cloudflare Pages project. Custom domains on that project are the live product URLs.",
+      "body": "GitHub holds git history and runs CI. Cloudflare serves every public URL users open. When a workflow is named \u201cDeploy site (Cloudflare Pages),\u201d the word Pages means Cloudflare Pages, not GitHub Pages.\n\nIf CI/CD is healthy, a git push of site assets triggers GitHub Actions, which calls wrangler pages deploy with CLOUDFLARE_API_TOKEN and uploads the static tree into a named Cloudflare Pages project. Custom domains on that project are the live product URLs.",
       "table": {
-        "headers": ["Layer", "What it is", "What it is not"],
+        "headers": [
+          "Layer",
+          "What it is",
+          "What it is not"
+        ],
         "rows": [
-          ["GitHub", "Source + Actions runners + Releases", "Public site host"],
-          ["Cloudflare Pages", "Static/site + optional Functions edge", "GitHub Pages"],
-          ["Cloudflare R2", "Binary package objects at dist.f00.sh", "npm registry"],
-          ["Cloudflare DNS", "f00.sh zone + subdomains", "Porkbun nameservers (registrar only OK)"],
-          ["catalog.json", "Product inventory + theme URL SSOT", "Marketing copy only"]
+          [
+            "GitHub",
+            "Source + Actions runners + Releases",
+            "Public site host"
+          ],
+          [
+            "Cloudflare Pages",
+            "Static/site + optional Functions edge",
+            "GitHub Pages"
+          ],
+          [
+            "Cloudflare R2",
+            "Binary package objects at dist.f00.sh",
+            "npm registry"
+          ],
+          [
+            "Cloudflare DNS",
+            "f00.sh zone + subdomains",
+            "Porkbun nameservers (registrar only OK)"
+          ],
+          [
+            "catalog.json",
+            "Product inventory + theme URL SSOT",
+            "Marketing copy only"
+          ]
         ]
       },
       "figure": {
         "path": "figures/f00-platform-map.png",
-        "title": "Platform map — GitHub to Cloudflare",
+        "title": "Platform map \u2014 GitHub to Cloudflare",
         "caption": "Operator view of the f00 platform. Public traffic terminates on Cloudflare. GitHub Actions is the normal push path into Cloudflare Pages and R2.",
         "max_width": 468,
         "max_height": 320,
@@ -45,22 +69,70 @@
       }
     },
     {
-      "heading": "3. Inventory — domains, Pages projects, packages",
-      "body": "Account ID (ops reference): 2e192c2d18f485155ba294ae5c9e1177. Zone: f00.sh. Cloudflare Pages Git Provider is Off for all f00 projects; deployments are wrangler-driven (Actions or local OAuth), not Cloudflare’s native Git hook.",
+      "heading": "3. Inventory \u2014 domains, Pages projects, packages",
+      "body": "Account ID (ops reference): 2e192c2d18f485155ba294ae5c9e1177. Zone: f00.sh. Cloudflare Pages Git Provider is Off for all f00 projects; deployments are wrangler-driven (Actions or local OAuth), not Cloudflare\u2019s native Git hook.",
       "table": {
-        "headers": ["Surface", "Public URL", "CF Pages project", "Repo", "Deploy input dir"],
+        "headers": [
+          "Surface",
+          "Public URL",
+          "CF Pages project",
+          "Repo",
+          "Deploy input dir"
+        ],
         "rows": [
-          ["Hub", "https://f00.sh", "f00", "f00-sh/f00", "site/"],
-          ["f00tils", "https://coreutils.f00.sh", "f00-coreutils", "f00-sh/f00tils", "site/"],
-          ["clun", "https://clun.f00.sh", "f00-clun", "f00-sh/clun", "site/"],
-          ["Cel Index", "https://cel.f00.sh", "f00-cel", "f00-sh/cel", "dist/ (build first)"],
-          ["TRN", "https://trn.f00.sh", "f00-trn", "f00-sh/trn", "site/ (+ functions)"],
-          ["Heartbox", "https://heartbox.f00.sh", "f00-heartbox", "f00-sh/heartbox", "wip / not hub-carded"],
-          ["Packages", "https://dist.f00.sh/{product}/current/", "R2 f00-releases", "product release workflows", "wrangler r2 object put"]
+          [
+            "Hub",
+            "https://f00.sh",
+            "f00",
+            "f00-sh/f00",
+            "site/"
+          ],
+          [
+            "f00tils",
+            "https://coreutils.f00.sh",
+            "f00-coreutils",
+            "f00-sh/f00tils",
+            "site/"
+          ],
+          [
+            "clun",
+            "https://clun.f00.sh",
+            "f00-clun",
+            "f00-sh/clun",
+            "site/"
+          ],
+          [
+            "Cel Index",
+            "https://cel.f00.sh",
+            "f00-cel",
+            "f00-sh/cel",
+            "dist/ (build first)"
+          ],
+          [
+            "TRN",
+            "https://trn.f00.sh",
+            "f00-trn",
+            "f00-sh/trn",
+            "site/ (+ functions)"
+          ],
+          [
+            "Heartbox",
+            "https://heartbox.f00.sh",
+            "f00-heartbox",
+            "f00-sh/heartbox",
+            "site/"
+          ],
+          [
+            "Packages",
+            "https://dist.f00.sh/{product}/current/",
+            "R2 f00-releases",
+            "product release workflows",
+            "wrangler r2 object put"
+          ]
         ]
       },
       "items": [
-        "Also: www.f00.sh → same hub project.",
+        "Also: www.f00.sh \u2192 same hub project.",
         "Infra repos (not product cards): homebrew-tap, scoop-bucket, .github org profile.",
         "Released products get a hub card. status=wip products appear in catalog/AGENTS only."
       ]
@@ -70,10 +142,10 @@
       "body": "The hub is intentionally thin. Do not grow it into a product app.",
       "items": [
         "Hub only: splash + product cards. No hero shortcut buttons, fake terminal/boot log, or install blocks on f00.sh.",
-        "Release → card: only catalog status=released products appear on the landing grid. Update the catalog entry when a product ships again if copy or links change.",
+        "Release \u2192 card: only catalog status=released products appear on the landing grid. Update the catalog entry when a product ships again if copy or links change.",
         "One set of links: cards are the only product navigation (site, repo, optional docs).",
         "Public copy is product-only: never put agent process, org plans, DNS wiring, or internal preferences on the public site or public README.",
-        "Aesthetic (standard theme): every product site loads the catalog theme CSS first. Three fonts only — Onyx = branding/logo only; zine mono = body; chip mono = headers/footers/nav/domain chips. No handwriting fonts.",
+        "Aesthetic (standard theme = Heartbox): every product site loads the catalog theme CSS first (f00-theme-13.css). Colors from Heartbox palette (hospital-night bg, poppy red accent, cream fg, silver metal). Three fonts only \u2014 Onyx = branding/logo only; zine mono = body; chip mono = headers/footers/nav/domain chips. No handwriting fonts. Do not invent brand hex in product CSS.",
         "No secrets in git. API tokens and DNS keys stay in GitHub secrets / Cloudflare / local wrangler OAuth only."
       ]
     },
@@ -81,160 +153,465 @@
       "heading": "5. Catalog SSOT procedure",
       "body": "Edit only site/catalog.json in the hub repo. Derived surfaces: hub product cards in site/index.html, README product table, AGENTS.md sister table, live https://f00.sh/catalog.json after hub deploy.",
       "steps": [
-        {"n": "5.1", "text": "Edit site/catalog.json (product fields, theme.css pointer, status, docs URL, pages_project)."},
-        {"n": "5.2", "text": "Regenerate derived files.", "code": "python3 scripts/sync-from-catalog.py"},
-        {"n": "5.3", "text": "Or verify without write (CI does this on hub deploy).", "code": "python3 scripts/sync-from-catalog.py --check"},
-        {"n": "5.4", "text": "Commit catalog + regenerated files together. Push main to deploy hub."},
-        {"n": "5.5", "text": "If theme path version changed (for example f00-theme-12.css), update product index.html theme <link>s (enroll-product.py or manual) and redeploy each product site so live HTML points at the new path."}
+        {
+          "n": "5.1",
+          "text": "Edit site/catalog.json (product fields, theme.css pointer, status, docs URL, pages_project)."
+        },
+        {
+          "n": "5.2",
+          "text": "Regenerate derived files.",
+          "code": "python3 scripts/sync-from-catalog.py"
+        },
+        {
+          "n": "5.3",
+          "text": "Or verify without write (CI does this on hub deploy).",
+          "code": "python3 scripts/sync-from-catalog.py --check"
+        },
+        {
+          "n": "5.4",
+          "text": "Commit catalog + regenerated files together. Push main to deploy hub."
+        },
+        {
+          "n": "5.5",
+          "text": "If theme path version changed (for example f00-theme-12.css), update product index.html theme <link>s (enroll-product.py or manual) and redeploy each product site so live HTML points at the new path."
+        }
       ],
       "flowchart": {
         "title": "Catalog change flow",
         "color": true,
         "nodes": [
-          {"id": "edit", "label": "Edit catalog.json", "shape": "terminator"},
-          {"id": "sync", "label": "sync-from-catalog.py", "shape": "process"},
-          {"id": "check", "label": "--check clean?", "shape": "decision"},
-          {"id": "fix", "label": "Fix drift", "shape": "process"},
-          {"id": "push", "label": "Commit + push hub", "shape": "process"},
-          {"id": "cf", "label": "Actions → CF Pages f00", "shape": "process"},
-          {"id": "prod", "label": "Theme bump? update products", "shape": "decision"},
-          {"id": "redeploy", "label": "Push / wrangle product sites", "shape": "process"},
-          {"id": "done", "label": "Live catalog + theme", "shape": "terminator"}
+          {
+            "id": "edit",
+            "label": "Edit catalog.json",
+            "shape": "terminator"
+          },
+          {
+            "id": "sync",
+            "label": "sync-from-catalog.py",
+            "shape": "process"
+          },
+          {
+            "id": "check",
+            "label": "--check clean?",
+            "shape": "decision"
+          },
+          {
+            "id": "fix",
+            "label": "Fix drift",
+            "shape": "process"
+          },
+          {
+            "id": "push",
+            "label": "Commit + push hub",
+            "shape": "process"
+          },
+          {
+            "id": "cf",
+            "label": "Actions \u2192 CF Pages f00",
+            "shape": "process"
+          },
+          {
+            "id": "prod",
+            "label": "Theme bump? update products",
+            "shape": "decision"
+          },
+          {
+            "id": "redeploy",
+            "label": "Push / wrangle product sites",
+            "shape": "process"
+          },
+          {
+            "id": "done",
+            "label": "Live catalog + theme",
+            "shape": "terminator"
+          }
         ],
         "edges": [
-          {"from": "edit", "to": "sync"},
-          {"from": "sync", "to": "check"},
-          {"from": "check", "to": "push", "label": "yes"},
-          {"from": "check", "to": "fix", "label": "no"},
-          {"from": "fix", "to": "sync"},
-          {"from": "push", "to": "cf"},
-          {"from": "cf", "to": "prod"},
-          {"from": "prod", "to": "redeploy", "label": "yes"},
-          {"from": "prod", "to": "done", "label": "no"},
-          {"from": "redeploy", "to": "done"}
+          {
+            "from": "edit",
+            "to": "sync"
+          },
+          {
+            "from": "sync",
+            "to": "check"
+          },
+          {
+            "from": "check",
+            "to": "push",
+            "label": "yes"
+          },
+          {
+            "from": "check",
+            "to": "fix",
+            "label": "no"
+          },
+          {
+            "from": "fix",
+            "to": "sync"
+          },
+          {
+            "from": "push",
+            "to": "cf"
+          },
+          {
+            "from": "cf",
+            "to": "prod"
+          },
+          {
+            "from": "prod",
+            "to": "redeploy",
+            "label": "yes"
+          },
+          {
+            "from": "prod",
+            "to": "done",
+            "label": "no"
+          },
+          {
+            "from": "redeploy",
+            "to": "done"
+          }
         ]
       }
     },
     {
       "heading": "6. Shared theme procedure",
-      "body": "Theme CSS and Onyx live under hub site/theme/ and site/assets/fonts/. Product sites load the versioned URL from the catalog (path version, not query string). Cloudflare edge often ignores query-string cache busts and can SPA-fallback missing paths to HTML; always ship a new filename (f00-theme-N.css) when rules change.\n\nType roles (do not redefine in product CSS):",
+      "body": "Default theme is Heartbox. Color SSOT: github.com/f00-sh/heartbox palette/heartbox.json. Theme CSS and Onyx live under hub site/theme/ and site/assets/fonts/. Product sites load the versioned URL from the catalog (path version, not query string). Cloudflare edge often ignores query-string cache busts and can SPA-fallback missing paths to HTML; always ship a new filename (f00-theme-N.css) when rules change.\n\nType roles (do not redefine in product CSS):",
       "items": [
         "Onyx: .splash, .brand-mark, .f00-brand only. Header brand-mark uses open tracking and larger size; splash logo may stay tight.",
         "Zine mono: body, paragraphs, forms, tables of prose.",
-        "Chip mono: h1–h3, nav, footer, domain chips, meta accents.",
+        "Chip mono: h1\u2013h3, nav, footer, domain chips, meta accents.",
         "Mirror unversioned site/theme/f00-theme.css to the current versioned file when bumping.",
         "Update site/_headers for CORS/cache on new theme/styles paths.",
-        "After first request of a not-yet-deployed path, custom-domain cache can poison HTML for minutes–hours. Prefer new path versions; purge zone cache if bare path stuck on text/html."
+        "After first request of a not-yet-deployed path, custom-domain cache can poison HTML for minutes\u2013hours. Prefer new path versions; purge zone cache if bare path stuck on text/html.",
+        "Brand assets under site/assets/ (favicon, BIMI, org-avatar, icons) must use Heartbox colors. GitHub org avatar / profile avatar should match site/assets/org-avatar.png."
       ],
       "steps": [
-        {"n": "6.1", "text": "Copy current theme to a new path version and edit rules.", "code": "cp site/theme/f00-theme-12.css site/theme/f00-theme-13.css"},
-        {"n": "6.2", "text": "Mirror to f00-theme.css; set catalog theme.css + css_path; run sync-from-catalog.py."},
-        {"n": "6.3", "text": "Point hub index.html + product index HTML at the new URL. enroll-product.py THEME_HREF must match."},
-        {"n": "6.4", "text": "Push hub first (theme must exist as text/css on f00.sh before products depend on it)."},
-        {"n": "6.5", "text": "Verify Content-Type is text/css.", "code": "curl -sI https://f00.sh/theme/f00-theme-13.css | grep -i content-type"},
-        {"n": "6.6", "text": "Push or wrangle each product site."}
+        {
+          "n": "6.1",
+          "text": "Copy current theme to a new path version and edit rules.",
+          "code": "cp site/theme/f00-theme-13.css site/theme/f00-theme-14.css"
+        },
+        {
+          "n": "6.2",
+          "text": "Mirror to f00-theme.css; set catalog theme.css + css_path; run sync-from-catalog.py."
+        },
+        {
+          "n": "6.3",
+          "text": "Point hub index.html + product index HTML at the new URL. enroll-product.py THEME_HREF must match."
+        },
+        {
+          "n": "6.4",
+          "text": "Push hub first (theme must exist as text/css on f00.sh before products depend on it)."
+        },
+        {
+          "n": "6.5",
+          "text": "Verify Content-Type is text/css.",
+          "code": "curl -sI https://f00.sh/theme/f00-theme-13.css | grep -i content-type"
+        },
+        {
+          "n": "6.6",
+          "text": "Push or wrangle each product site."
+        }
       ]
     },
     {
-      "heading": "7. Site deploy — GitHub Actions to Cloudflare Pages",
+      "heading": "7. Site deploy \u2014 GitHub Actions to Cloudflare Pages",
       "body": "Yes: CI/CD on GitHub push deploys sites to Cloudflare when secrets are present. No: that is not GitHub Pages hosting.\n\nEach product (and the hub) has .github/workflows/pages.yml (name: Deploy site (Cloudflare Pages)). Trigger is push to main/master on site paths (and related files), or workflow_dispatch. Job uses cloudflare/wrangler-action@v3 with secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, command pages deploy <dir> --project-name=<Pages project> --branch=<default branch>.\n\nHub additionally runs python3 scripts/sync-from-catalog.py --check before deploy so drifted cards/README/AGENTS fail the deploy.",
       "table": {
-        "headers": ["Repo", "Workflow", "Secrets required", "CI deploy status (as of 2026-07-29)"],
+        "headers": [
+          "Repo",
+          "Workflow",
+          "Secrets required",
+          "CI deploy status (as of 2026-07-29)"
+        ],
         "rows": [
-          ["f00-sh/f00", "pages.yml → project f00", "TOKEN + ACCOUNT_ID", "Working"],
-          ["f00-sh/f00tils", "pages.yml → f00-coreutils", "TOKEN + ACCOUNT_ID", "Working (site path)"],
-          ["f00-sh/clun", "pages.yml → f00-clun", "TOKEN + ACCOUNT_ID", "Working (site path)"],
-          ["f00-sh/cel", "pages.yml → f00-cel (dist)", "TOKEN + ACCOUNT_ID", "Working"],
-          ["f00-sh/trn", "pages.yml → f00-trn", "TOKEN + ACCOUNT_ID", "FAILING — token not injected; use local wrangler until fixed"]
+          [
+            "f00-sh/f00",
+            "pages.yml \u2192 project f00",
+            "TOKEN + ACCOUNT_ID",
+            "Working"
+          ],
+          [
+            "f00-sh/f00tils",
+            "pages.yml \u2192 f00-coreutils",
+            "TOKEN + ACCOUNT_ID",
+            "Working (site path)"
+          ],
+          [
+            "f00-sh/clun",
+            "pages.yml \u2192 f00-clun",
+            "TOKEN + ACCOUNT_ID",
+            "Working (site path)"
+          ],
+          [
+            "f00-sh/cel",
+            "pages.yml \u2192 f00-cel (dist)",
+            "TOKEN + ACCOUNT_ID",
+            "Working"
+          ],
+          [
+            "f00-sh/trn",
+            "pages.yml \u2192 f00-trn",
+            "TOKEN + ACCOUNT_ID",
+            "FAILING \u2014 token not injected; use local wrangler until fixed"
+          ],
+          [
+            "f00-sh/heartbox",
+            "pages.yml \u2192 f00-heartbox",
+            "TOKEN + ACCOUNT_ID",
+            "Working (site path)"
+          ]
         ]
       },
       "flowchart": {
         "title": "Happy-path site deploy",
         "color": true,
         "nodes": [
-          {"id": "edit", "label": "Edit site files", "shape": "terminator"},
-          {"id": "push", "label": "git push main/master", "shape": "process"},
-          {"id": "gh", "label": "GitHub Actions pages.yml", "shape": "process"},
-          {"id": "sec", "label": "Secrets present?", "shape": "decision"},
-          {"id": "wran", "label": "wrangler pages deploy", "shape": "process"},
-          {"id": "cf", "label": "CF Pages project live", "shape": "process"},
-          {"id": "dns", "label": "Custom domain serves", "shape": "terminator"},
-          {"id": "manual", "label": "Local wrangler OAuth deploy", "shape": "process"},
-          {"id": "fix", "label": "Add repo secrets", "shape": "process"}
+          {
+            "id": "edit",
+            "label": "Edit site files",
+            "shape": "terminator"
+          },
+          {
+            "id": "push",
+            "label": "git push main/master",
+            "shape": "process"
+          },
+          {
+            "id": "gh",
+            "label": "GitHub Actions pages.yml",
+            "shape": "process"
+          },
+          {
+            "id": "sec",
+            "label": "Secrets present?",
+            "shape": "decision"
+          },
+          {
+            "id": "wran",
+            "label": "wrangler pages deploy",
+            "shape": "process"
+          },
+          {
+            "id": "cf",
+            "label": "CF Pages project live",
+            "shape": "process"
+          },
+          {
+            "id": "dns",
+            "label": "Custom domain serves",
+            "shape": "terminator"
+          },
+          {
+            "id": "manual",
+            "label": "Local wrangler OAuth deploy",
+            "shape": "process"
+          },
+          {
+            "id": "fix",
+            "label": "Add repo secrets",
+            "shape": "process"
+          }
         ],
         "edges": [
-          {"from": "edit", "to": "push"},
-          {"from": "push", "to": "gh"},
-          {"from": "gh", "to": "sec"},
-          {"from": "sec", "to": "wran", "label": "yes"},
-          {"from": "sec", "to": "manual", "label": "no"},
-          {"from": "manual", "to": "cf"},
-          {"from": "manual", "to": "fix"},
-          {"from": "fix", "to": "gh"},
-          {"from": "wran", "to": "cf"},
-          {"from": "cf", "to": "dns"}
+          {
+            "from": "edit",
+            "to": "push"
+          },
+          {
+            "from": "push",
+            "to": "gh"
+          },
+          {
+            "from": "gh",
+            "to": "sec"
+          },
+          {
+            "from": "sec",
+            "to": "wran",
+            "label": "yes"
+          },
+          {
+            "from": "sec",
+            "to": "manual",
+            "label": "no"
+          },
+          {
+            "from": "manual",
+            "to": "cf"
+          },
+          {
+            "from": "manual",
+            "to": "fix"
+          },
+          {
+            "from": "fix",
+            "to": "gh"
+          },
+          {
+            "from": "wran",
+            "to": "cf"
+          },
+          {
+            "from": "cf",
+            "to": "dns"
+          }
         ]
       },
       "steps": [
-        {"n": "7.1", "text": "Confirm change is under the workflow path filters (usually site/**)."},
-        {"n": "7.2", "text": "Push to the default branch (hub/f00tils/cel/trn: main; clun: master)."},
-        {"n": "7.3", "text": "Watch Actions for “Deploy site (Cloudflare Pages)”.", "code": "gh run list --repo f00-sh/<repo> --limit 5"},
-        {"n": "7.4", "text": "If deploy fails with missing CLOUDFLARE_API_TOKEN, either add the secret to the repo or deploy manually:", "code": "npx wrangler pages deploy site --project-name=f00-trn --branch=main --commit-dirty=true"},
-        {"n": "7.5", "text": "Verify custom domain HTML references expected theme and Content-Type of theme CSS is text/css."},
-        {"n": "7.6", "text": "Do not enable GitHub Pages settings on any f00-sh repo. Do not publish to username.github.io."}
+        {
+          "n": "7.1",
+          "text": "Confirm change is under the workflow path filters (usually site/**)."
+        },
+        {
+          "n": "7.2",
+          "text": "Push to the default branch (hub/f00tils/cel/trn: main; clun: master)."
+        },
+        {
+          "n": "7.3",
+          "text": "Watch Actions for \u201cDeploy site (Cloudflare Pages)\u201d.",
+          "code": "gh run list --repo f00-sh/<repo> --limit 5"
+        },
+        {
+          "n": "7.4",
+          "text": "If deploy fails with missing CLOUDFLARE_API_TOKEN, either add the secret to the repo or deploy manually:",
+          "code": "npx wrangler pages deploy site --project-name=f00-trn --branch=main --commit-dirty=true"
+        },
+        {
+          "n": "7.5",
+          "text": "Verify custom domain HTML references expected theme and Content-Type of theme CSS is text/css."
+        },
+        {
+          "n": "7.6",
+          "text": "Do not enable GitHub Pages settings on any f00-sh repo. Do not publish to username.github.io."
+        }
       ]
     },
     {
       "heading": "8. Package publish path (R2 / dist.f00.sh)",
-      "body": "Binary products (f00tils, clun) publish installable artifacts to Cloudflare R2 bucket f00-releases. Release workflows build on tag, create a GitHub Release for humans/checksums, then wrangler r2 object put into f00-releases/{product}/current/ and versioned prefixes. Public base: https://dist.f00.sh/{product}/current/.\n\nWeb-only products (cel, trn, hub) do not use R2 packages. Their “ship” is the Pages deploy.",
+      "body": "Binary products (f00tils, clun) publish installable artifacts to Cloudflare R2 bucket f00-releases. Release workflows build on tag, create a GitHub Release for humans/checksums, then wrangler r2 object put into f00-releases/{product}/current/ and versioned prefixes. Public base: https://dist.f00.sh/{product}/current/.\n\nWeb-only products (cel, trn, hub) do not use R2 packages. Their \u201cship\u201d is the Pages deploy.",
       "steps": [
-        {"n": "8.1", "text": "Follow the product release workflow (tag + release.yml)."},
-        {"n": "8.2", "text": "Confirm R2 objects exist under dist.f00.sh after the release job."},
-        {"n": "8.3", "text": "If the product is newly released for the first time, set catalog status=released, sync hub, push hub so the card appears."}
+        {
+          "n": "8.1",
+          "text": "Follow the product release workflow (tag + release.yml)."
+        },
+        {
+          "n": "8.2",
+          "text": "Confirm R2 objects exist under dist.f00.sh after the release job."
+        },
+        {
+          "n": "8.3",
+          "text": "If the product is newly released for the first time, set catalog status=released, sync hub, push hub so the card appears."
+        }
       ]
     },
     {
       "heading": "9. Enroll a new f00 product",
       "body": "New products under the brand must enroll in the catalog and load the shared theme. Prefer house new-project workflow with f00:true.",
       "steps": [
-        {"n": "9.1", "text": "Create repo under org f00-sh (not a personal account)."},
-        {"n": "9.2", "text": "Create Cloudflare Pages project; attach custom subdomain under f00.sh."},
-        {"n": "9.3", "text": "Add repo secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (same account as hub)."},
-        {"n": "9.4", "text": "Add pages.yml that wrangler-deploys the site directory to the Pages project name."},
-        {"n": "9.5", "text": "Inject theme link and catalog entry.", "code": "python3 scripts/enroll-product.py --help"},
-        {"n": "9.6", "text": "Keep status=wip until a real release; then set released and sync hub cards."},
-        {"n": "9.7", "text": "Product CSS is layout-only. Load catalog theme CSS first. Do not recolor or reassign type roles."}
+        {
+          "n": "9.1",
+          "text": "Create repo under org f00-sh (not a personal account)."
+        },
+        {
+          "n": "9.2",
+          "text": "Create Cloudflare Pages project; attach custom subdomain under f00.sh."
+        },
+        {
+          "n": "9.3",
+          "text": "Add repo secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (same account as hub)."
+        },
+        {
+          "n": "9.4",
+          "text": "Add pages.yml that wrangler-deploys the site directory to the Pages project name."
+        },
+        {
+          "n": "9.5",
+          "text": "Inject theme link and catalog entry.",
+          "code": "python3 scripts/enroll-product.py --help"
+        },
+        {
+          "n": "9.6",
+          "text": "Keep status=wip until a real release; then set released and sync hub cards."
+        },
+        {
+          "n": "9.7",
+          "text": "Product CSS is layout-only. Load catalog theme CSS first. Do not recolor or reassign type roles."
+        }
       ]
     },
     {
       "heading": "10. Operator troubleshooting",
       "body": "Common confusion and fixes.",
       "table": {
-        "headers": ["Symptom", "Likely cause", "Action"],
+        "headers": [
+          "Symptom",
+          "Likely cause",
+          "Action"
+        ],
         "rows": [
-          ["Thought sites were on GitHub Pages", "Workflow name contains “Pages”", "Read wrangler command: Cloudflare Pages project"],
-          ["Push did not update site", "Path filters skipped OR Actions failed", "gh run list; check secrets; manual wrangler"],
-          ["TRN Actions always red", "CLOUDFLARE_API_TOKEN missing/empty in f00-sh/trn", "Add secret or local wrangler pages deploy"],
-          ["Theme URL returns HTML", "SPA fallback / poison cache of missing path", "Ship new versioned CSS path; purge CF cache; curl -sI Content-Type"],
-          ["Header f00 illegible", "Onyx with splash-tight tracking at small size", "Use brand-mark size/tracking vars in current theme"],
-          ["Hub card missing after ship", "catalog status not released / sync not run", "Edit catalog, sync-from-catalog.py, push hub"],
-          ["Product body wrong font", "Product CSS sets body to Onyx/display", "Theme !important body mono; remove product override"]
+          [
+            "Thought sites were on GitHub Pages",
+            "Workflow name contains \u201cPages\u201d",
+            "Read wrangler command: Cloudflare Pages project"
+          ],
+          [
+            "Push did not update site",
+            "Path filters skipped OR Actions failed",
+            "gh run list; check secrets; manual wrangler"
+          ],
+          [
+            "TRN Actions always red",
+            "CLOUDFLARE_API_TOKEN missing/empty in f00-sh/trn",
+            "Add secret or local wrangler pages deploy"
+          ],
+          [
+            "Theme URL returns HTML",
+            "SPA fallback / poison cache of missing path",
+            "Ship new versioned CSS path; purge CF cache; curl -sI Content-Type"
+          ],
+          [
+            "Header f00 illegible",
+            "Onyx with splash-tight tracking at small size",
+            "Use brand-mark size/tracking vars in current theme"
+          ],
+          [
+            "Hub card missing after ship",
+            "catalog status not released / sync not run",
+            "Edit catalog, sync-from-catalog.py, push hub"
+          ],
+          [
+            "Product body wrong font",
+            "Product CSS sets body to Onyx/display",
+            "Theme !important body mono; remove product override"
+          ]
         ]
       },
       "steps": [
-        {"n": "10.1", "text": "List live Pages projects.", "code": "npx wrangler pages project list"},
-        {"n": "10.2", "text": "Confirm who serves a host (CF headers, not github.io)."},
-        {"n": "10.3", "text": "For stuck custom-domain assets, compare *.pages.dev URL vs custom domain; if only custom is wrong, purge cache or wait out max-age."}
+        {
+          "n": "10.1",
+          "text": "List live Pages projects.",
+          "code": "npx wrangler pages project list"
+        },
+        {
+          "n": "10.2",
+          "text": "Confirm who serves a host (CF headers, not github.io)."
+        },
+        {
+          "n": "10.3",
+          "text": "For stuck custom-domain assets, compare *.pages.dev URL vs custom domain; if only custom is wrong, purge cache or wait out max-age."
+        }
       ]
     },
     {
       "heading": "11. Required GitHub secrets (platform)",
       "body": "Place these on every repo that deploys to Cloudflare (hub + each product + release publishers). Prefer org-level secrets with repo allowlists if available.",
       "items": [
-        "CLOUDFLARE_API_TOKEN — Account permissions: Cloudflare Pages Edit; R2 Edit if the repo publishes packages; Zone read as needed.",
-        "CLOUDFLARE_ACCOUNT_ID — 2e192c2d18f485155ba294ae5c9e1177 for this org account.",
+        "CLOUDFLARE_API_TOKEN \u2014 Account permissions: Cloudflare Pages Edit; R2 Edit if the repo publishes packages; Zone read as needed.",
+        "CLOUDFLARE_ACCOUNT_ID \u2014 2e192c2d18f485155ba294ae5c9e1177 for this org account.",
         "Never commit tokens. Rotate if exposed.",
-        "Local operator fallback: wrangler OAuth login (pages write) when Actions secrets are broken — treat as temporary."
+        "Local operator fallback: wrangler OAuth login (pages write) when Actions secrets are broken \u2014 treat as temporary."
       ]
     },
     {
@@ -242,8 +619,8 @@
       "body": "Do not reintroduce the following.",
       "items": [
         "GitHub Pages source branch or gh-pages branch hosting for f00-sh products.",
-        "Cloudflare Pages Git integration as a second deploy path without removing Actions (double deploy chaos) — current standard is wrangler-from-Actions only.",
-        "Forked per-product brand colors or green phosphor as the org standard (standard is black/white three-font theme from hub).",
+        "Cloudflare Pages Git integration as a second deploy path without removing Actions (double deploy chaos) \u2014 current standard is wrangler-from-Actions only.",
+        "Forked per-product brand colors or green phosphor as the org standard (standard is Heartbox palette + three-font theme from hub).",
         "Hub install instructions or product binaries hosted on the hub site.",
         "Secrets in site/ or docs/ committed to git."
       ]

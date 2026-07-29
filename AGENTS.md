@@ -20,8 +20,8 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 2. **Release → card.** Set `status: "released"` on the product in `site/catalog.json` and run `scripts/sync-from-catalog.py`. No card until released. Update catalog blurb/facts/links when the product ships again.
 3. **One set of links.** Cards are the only product navigation (site + repo). Do not duplicate with hero buttons or other chrome.
 4. **Public copy is product-only.** Never put agent process, org plans, DNS wiring, or internal preferences on the site or public README (house rule `10-user-facing-language.md`).
-5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `dist.f00.sh` R2 packages.
-6. **Aesthetic (STANDARD THEME):** every product site loads catalog theme CSS first (`https://f00.sh/theme/f00-theme-12.css`). Three fonts only: **Onyx** = branding/logo only · **zine mono** = all body · **chip mono** = headers/footers/nav/domain chips. No handwriting. Do not redefine type roles in product CSS.
+5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `heartbox.f00.sh` Heartbox · `dist.f00.sh` R2 packages.
+6. **Aesthetic (STANDARD THEME):** Heartbox palette is the f00 default (warm hospital-night bg, poppy red accent, cream fg, silver metal). Theme: https://f00.sh/theme/f00-theme-13.css (path `site/theme/f00-theme.css`; source https://heartbox.f00.sh/). Three fonts only: **Onyx** = branding/logo only · **zine mono** = all body · **chip mono** = headers/footers/nav/domain chips. No handwriting. Do not redefine type roles or invent brand hex in product CSS. Catalog is SSOT for products + theme pointer.
 7. **No secrets** in repo. DNS keys stay out of git.
 
 ## Layout
@@ -68,7 +68,7 @@ That regenerates hub product cards, this table, and README products.
 | Field | URL / path |
 |-------|------------|
 | Catalog | `site/catalog.json` → https://f00.sh/catalog.json |
-| Theme CSS | `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme-12.css |
+| Theme CSS | `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme-13.css |
 | Org | github.com/f00-sh |
 
 `$PROJECTS` is the developer machines' projects root (here: `/home/glenda/Projects`).
@@ -79,7 +79,7 @@ That regenerates hub product cards, this table, and README products.
 | clun | `released` | `$PROJECTS/clun` | https://clun.f00.sh/ | https://dist.f00.sh/clun/current/ |
 | Cel Index | `released` | `$PROJECTS/cel` | https://cel.f00.sh/ | n/a (Pages `f00-cel`) |
 | TRN | `released` | `$PROJECTS/trn` | https://trn.f00.sh/ | n/a (Pages `f00-trn`) |
-| Heartbox | `wip` | `$PROJECTS/heartbox` | — | n/a |
+| Heartbox | `released` | `$PROJECTS/heartbox` | https://heartbox.f00.sh/ | n/a (Pages `f00-heartbox`) |
 
 **Card rule:** `status=released` → hub card. `wip` / other → listed here, not on f00.sh grid.
 

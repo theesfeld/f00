@@ -9,16 +9,24 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-12.css",
+    "css": "https://f00.sh/theme/f00-theme-13.css",
     "css_canonical": "https://f00.sh/theme/f00-theme.css",
-    "css_path": "site/theme/f00-theme-12.css",
+    "css_path": "site/theme/f00-theme-13.css",
+    "source": "heartbox",
+    "source_name": "Heartbox",
+    "source_url": "https://heartbox.f00.sh/",
+    "source_repo": "https://github.com/f00-sh/heartbox",
+    "palette": "https://github.com/f00-sh/heartbox/blob/main/palette/heartbox.json",
     "font_brand": "Onyx (logo / brand-mark only)",
     "font_body": "zine mono (all body/prose/forms)",
     "font_accent": "chip/subdomain mono (headers, footers, nav, domain chips)",
     "font_hand": null,
-    "bg": "#000000",
-    "fg": "#f2f2f2",
-    "rule": "Three fonts: Onyx branding only; zine mono body; chip mono headers/footers/accents. No handwriting."
+    "bg": "#1A1214",
+    "fg": "#F4EBE0",
+    "accent": "#E02030",
+    "metal": "#B8C0C8",
+    "sky": "#5EC8E8",
+    "rule": "Heartbox is the f00 default brand theme (colors). Three fonts: Onyx branding only; zine mono body; chip mono headers/footers/accents. Silver metal required for chrome. Load catalog theme CSS first; do not invent one-off brand hex in product CSS."
   },
   "domains": {
     "hub": "f00.sh",
@@ -111,19 +119,22 @@
     {
       "id": "heartbox",
       "name": "Heartbox",
-      "status": "wip",
-      "domain": null,
-      "site": null,
+      "status": "released",
+      "domain": "heartbox.f00.sh",
+      "site": "https://heartbox.f00.sh/",
       "repo": "https://github.com/f00-sh/heartbox",
       "repo_slug": "f00-sh/heartbox",
-      "pages_project": null,
+      "pages_project": "f00-heartbox",
       "packages": null,
       "local": "heartbox",
-      "license": null,
-      "one_liner": "Hand-tinted Technicolor dark theme; one palette, many apps",
-      "blurb": null,
-      "facts": [],
-      "docs": null
+      "license": "MIT",
+      "one_liner": "Hand-tinted Technicolor dark theme \u2014 f00 default brand palette",
+      "blurb": "Hand-tinted Technicolor dark theme: poppy red, verse-sky blue, hospital gloom, cream light, and cool silver metal. One palette, ports for terminals, editors, and tools. <strong>Default f00 brand theme</strong> for the hub and every product site.",
+      "facts": [
+        "canonical palette \u00b7 50+ app ports",
+        "f00 default theme \u00b7 MIT"
+      ],
+      "docs": "https://heartbox.f00.sh/#install"
     }
   ],
   "infra": [

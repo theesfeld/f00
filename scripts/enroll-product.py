@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "site" / "catalog.json"
-THEME_HREF = "https://f00.sh/theme/f00-theme-12.css"
+THEME_HREF = "https://f00.sh/theme/f00-theme-13.css"
 ORG = "f00-sh"
 
 
@@ -139,7 +139,7 @@ def patch_agents_note(repo: Path) -> None:
         "\n## f00 membership\n\n"
         "- Org: `f00-sh`\n"
         "- Catalog SSOT: https://f00.sh/catalog.json (`f00` repo `site/catalog.json`)\n"
-        f"- Theme: {THEME_HREF} (do not redefine brand colors/fonts)\n"
+        f"- Theme: {THEME_HREF} (Heartbox palette — do not redefine brand colors/fonts)\n"
         "- Card on hub only when catalog `status=released` after a real release\n"
     )
     if "## f00 membership" not in text:

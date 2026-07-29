@@ -1,97 +1,57 @@
 # f00
 
-f00 — brand hub for f00.sh products (f00tils, clun, …)
+Brand hub for [f00.sh](https://f00.sh) products under org [f00-sh](https://github.com/f00-sh).
 
-This page is optional depth for the hub. Keep it in sync with
-[README.md](../README.md) and the man page(s) under [man/](../man/).
+Keep this page aligned with [README.md](../README.md), [man/f00.1.md](../man/f00.1.md),
+and the live catalog at https://f00.sh/catalog.json.
 
 ## Why this project exists
 
-Lead with purpose. State who it helps and what problem it solves.
-Use clear public narrative (NASA Stylebook + AP Style habits).
-Keep sentences short.
+f00 is the public front door and shared brand layer for freestanding tools and
+related products. The hub is intentionally thin: splash + product cards.
+Install UX lives on product sites.
 
-## Requirements
+## Default theme (Heartbox)
 
-- other (document the supported toolchain and version)
+| Token | Hex | Role |
+|-------|-----|------|
+| Background | `#1A1214` | Hospital-night underpaint |
+| Foreground | `#F4EBE0` | Cream light |
+| Accent | `#E02030` | Poppy red |
+| Metal | `#B8C0C8` | Silver chrome |
+| Sky | `#5EC8E8` | Secondary / links |
 
-## Install
+- Theme CSS: https://f00.sh/theme/f00-theme-13.css
+- Canonical palette: [f00-sh/heartbox](https://github.com/f00-sh/heartbox) `palette/heartbox.json`
+- Product showcase: https://heartbox.f00.sh
 
-Write install steps as procedures (Simplified Technical English).
-Every install method installs man page(s).
+Fonts (unchanged roles): **Onyx** logo only · **zine mono** body · **chip mono** chrome.
 
-### Curl (releases)
+## Products
 
-```text
-curl -fsSL https://github.com/f00-sh/f00/releases/latest/download/install.sh | sh
-```
+See the README products table (generated from `site/catalog.json`).
 
-### Package managers
-
-List only channels this project offers (Arch/AUR, Homebrew, RPM, deb as chosen).
-Do not list packages that do not exist.
-
-### From source
-
-```text
-# Add from-source steps when useful for developers.
-```
-
-## Usage
-
-```text
-# Show the common commands a new user needs first.
-```
-
-See also the man page for full option reference.
-
-## Configuration
-
-Document flags, environment variables, and config files.
-Provide a `.env.example` when environment variables are required.
-Never commit real secrets.
-
-## Documentation set
+## Operator docs
 
 | Surface | Location |
 |---|---|
 | README | [README.md](../README.md) |
-| Man page(s) | [man/](../man/) |
-| Product hub | `site/` (Cloudflare Pages → f00.sh) |
-| Changelog | [CHANGELOG.md](../CHANGELOG.md) |
+| Man page | [man/f00.1.md](../man/f00.1.md) |
+| Platform SOP (PDF) | [sop-f00-org-ops.pdf](sop-f00-org-ops.pdf) |
+| Platform SOP (JSON) | [sop-f00-org-ops.json](sop-f00-org-ops.json) |
+| Catalog | [site/catalog.json](../site/catalog.json) |
 | Scene card | [file_id.diz](../file_id.diz) |
-| Security | [SECURITY.md](../SECURITY.md) |
 
-## Scene card
+## Site
 
-Each SemVer release ships a crafted `file_id.diz` scene card (ACiD / 16colo.rs-style
-block ASCII). Keep this preview identical to the repository root file and to the
-GitHub Release asset named `file_id.diz`.
+Static Pages source: `site/` → Cloudflare Pages project `f00` → https://f00.sh
+
+After catalog edits:
 
 ```text
-╔══════════════════════════════════════════════════╗
-║▓▓▓▓░░░░  f00  ░░░░▓▓▓▓              ║
-║████████████████████████████████████████████████  ║
-║  ▄█▀  SCENE CARD  ▀█▄   release identity         ║
-║████████████████████████████████████████████████  ║
-║  v0.0.0  ·  MIT  ·  2026                     ║
-║  f00 — brand hub for f00.sh products (f00tils, clun, …)                         ║
-║  github:f00-sh/f00          ║
-╚══════════════════════════════════════════════════╝
+python3 scripts/sync-from-catalog.py
 ```
-
-See [file_id.diz](../file_id.diz) and [CHANGELOG.md](../CHANGELOG.md).
-
-## Development
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md).
-
-## Versioning
-
-This project uses [Semantic Versioning](https://semver.org/).
-See [CHANGELOG.md](../CHANGELOG.md).
-Every published version refreshes `file_id.diz` and attaches it to the GitHub Release.
 
 ## License
 
-[MIT](../LICENSE) © William Theesfeld
+[MIT](../LICENSE)
