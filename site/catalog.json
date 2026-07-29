@@ -9,9 +9,9 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-13.css",
+    "css": "https://f00.sh/theme/f00-theme-14.css",
     "css_canonical": "https://f00.sh/theme/f00-theme.css",
-    "css_path": "site/theme/f00-theme-13.css",
+    "css_path": "site/theme/f00-theme-14.css",
     "source": "heartbox",
     "source_name": "Heartbox",
     "source_url": "https://heartbox.f00.sh/",
@@ -26,7 +26,9 @@
     "accent": "#E02030",
     "metal": "#B8C0C8",
     "sky": "#5EC8E8",
-    "rule": "Heartbox is the f00 default brand theme (colors). Three fonts: Onyx branding only; zine mono body; chip mono headers/footers/accents. Silver metal required for chrome. Load catalog theme CSS first; do not invent one-off brand hex in product CSS."
+    "rule": "Heart-Shaped Box video contrasts (Heartbox palette) + Bleach album layout. Hospital-night bg, cream fg, poppy accent, verse sky, silver metal. Hard square boxes, catalog mono labels, no rounded glass. Onyx logo only; zine body; chip headers. Load theme CSS first.",
+    "layout": "bleach",
+    "contrast": "heart-shaped-box"
   },
   "domains": {
     "hub": "f00.sh",
