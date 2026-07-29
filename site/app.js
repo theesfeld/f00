@@ -30,26 +30,32 @@
       });
   }
 
-  // Scale "f00" so its rendered width matches the product card row (hero content width).
+  // Scale "f00" so its rendered width matches the product card row.
   const splash = document.querySelector(".splash");
+  const grid = document.querySelector(".products .grid");
   const hero = document.querySelector(".hero");
   const fitSplash = () => {
-    if (!splash || !hero) return;
-    const target = hero.clientWidth;
+    if (!splash) return;
+    const targetEl = grid || hero;
+    if (!targetEl) return;
+    const target = Math.round(targetEl.getBoundingClientRect().width);
     if (target <= 0) return;
     splash.style.fontSize = "100px";
     const at100 = splash.scrollWidth || 1;
-    const next = Math.max(48, Math.floor((target / at100) * 100));
+    let next = Math.max(48, Math.floor((target / at100) * 100));
     splash.style.fontSize = `${next}px`;
     // Correct residual overflow from subpixel/glyph metrics.
     if (splash.scrollWidth > target) {
-      splash.style.fontSize = `${Math.floor(next * (target / splash.scrollWidth))}px`;
+      next = Math.floor(next * (target / splash.scrollWidth));
+      splash.style.fontSize = `${next}px`;
     }
   };
-  if (splash && hero) {
+  if (splash && (grid || hero)) {
     fitSplash();
     if (typeof ResizeObserver !== "undefined") {
-      new ResizeObserver(fitSplash).observe(hero);
+      const ro = new ResizeObserver(fitSplash);
+      if (grid) ro.observe(grid);
+      if (hero) ro.observe(hero);
     } else {
       window.addEventListener("resize", fitSplash, { passive: true });
     }
