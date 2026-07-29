@@ -1,0 +1,368 @@
+/* f00.sh hub — ultra-modern CSS, low-fi CRT surface */
+:root {
+  color-scheme: dark;
+  --bg: oklch(12% 0.01 130);
+  --bg-2: oklch(16% 0.015 130);
+  --fg: oklch(92% 0.02 130);
+  --muted: oklch(68% 0.02 130);
+  --accent: oklch(84% 0.19 140);
+  --accent-dim: oklch(70% 0.12 140);
+  --amber: oklch(82% 0.14 85);
+  --line: oklch(30% 0.02 130);
+  --danger: oklch(70% 0.18 25);
+  --font: "IBM Plex Mono", "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --max: 68rem;
+  --pad: clamp(1rem, 3vw, 2rem);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* CRT stage */
+.crt {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% 0%, oklch(22% 0.04 140 / 0.35), transparent 55%),
+    var(--bg);
+}
+
+#field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+  image-rendering: pixelated;
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    oklch(0% 0 0 / 0.12) 2px,
+    oklch(0% 0 0 / 0.12) 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, oklch(0% 0 0 / 0.55) 100%);
+}
+
+.skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--accent);
+  color: #000;
+  padding: 0.5rem 1rem;
+  z-index: 100;
+}
+.skip:focus { left: 1rem; top: 1rem; }
+
+.top, main, .foot {
+  position: relative;
+  z-index: 1;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 1.25rem var(--pad);
+}
+
+.brand {
+  font-family: var(--font);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 1.1rem;
+}
+.brand-mark { color: var(--accent); }
+.brand-sub { color: var(--muted); }
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  font-family: var(--font);
+  font-size: 0.85rem;
+}
+.nav a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.nav a:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+.hero {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: clamp(2rem, 8vh, 5rem) var(--pad) 3rem;
+  text-align: center;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 1rem;
+}
+
+.splash {
+  margin: 0;
+  font-family: var(--font);
+  font-size: clamp(5rem, 22vw, 12rem);
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  font-weight: 700;
+  user-select: none;
+}
+
+.glyph {
+  display: inline-block;
+  position: relative;
+  color: var(--accent);
+  text-shadow:
+    0 0 12px oklch(84% 0.19 140 / 0.45),
+    2px 0 0 oklch(70% 0.18 25 / 0.35),
+    -2px 0 0 oklch(70% 0.12 230 / 0.3);
+  animation: flicker 6s infinite steps(2, end);
+}
+.glyph:nth-child(2) { animation-delay: 0.4s; }
+.glyph:nth-child(3) { animation-delay: 1.1s; }
+
+.glyph::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  color: var(--amber);
+  opacity: 0;
+  mix-blend-mode: screen;
+  transform: translate(2px, -1px);
+  animation: ghost 7s infinite steps(3, end);
+}
+
+@keyframes flicker {
+  0%, 96%, 100% { opacity: 1; filter: none; }
+  97% { opacity: 0.85; filter: contrast(1.2) brightness(1.1); }
+  98% { opacity: 0.95; }
+  99% { opacity: 0.7; }
+}
+
+@keyframes ghost {
+  0%, 90%, 100% { opacity: 0; }
+  92% { opacity: 0.35; }
+  94% { opacity: 0; }
+  96% { opacity: 0.2; }
+}
+
+.tagline {
+  margin: 1.5rem auto 0;
+  max-width: 34rem;
+  color: var(--muted);
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.75rem;
+}
+
+.boot {
+  margin: 2rem auto 0;
+  max-width: 36rem;
+  text-align: left;
+  color: var(--accent-dim);
+  font-size: 0.75rem;
+  min-height: 4.5rem;
+  opacity: 0.85;
+  border-left: 2px solid var(--line);
+  padding-left: 0.85rem;
+}
+
+.mono { font-family: var(--font); }
+.small { font-size: 0.85rem; }
+.muted { color: var(--muted); }
+.accent { color: var(--accent); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  padding: 0.65rem 1rem;
+  border-radius: 2px;
+  color: var(--fg);
+  background: oklch(18% 0.02 130 / 0.7);
+  backdrop-filter: blur(6px);
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+.btn:hover {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.btn.primary {
+  background: oklch(84% 0.19 140 / 0.12);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+.btn.sm { padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+
+.products, .install, .about {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 2rem var(--pad) 3rem;
+}
+
+.section-head {
+  margin-bottom: 1.25rem;
+}
+.section-head h2 {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.section-head p { margin: 0.35rem 0 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+}
+
+.card {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, oklch(20% 0.02 130 / 0.55), oklch(14% 0.015 130 / 0.8));
+  padding: 1.25rem;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.04);
+}
+.card h3 {
+  margin: 0.25rem 0 0.5rem;
+  font-family: var(--font);
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+.card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+.card-meta {
+  font-size: 0.72rem;
+  color: var(--amber);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.facts {
+  margin: 0.9rem 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--accent-dim);
+}
+.facts li::before { content: "› "; color: var(--amber); }
+.card-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.install-grid { display: grid; gap: 0.75rem; }
+.install-block {
+  border: 1px solid var(--line);
+  background: oklch(10% 0.01 130 / 0.75);
+  padding: 0.85rem 1rem;
+  border-radius: 2px;
+}
+.install-label {
+  font-size: 0.72rem;
+  color: var(--amber);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.install-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.install-row code {
+  font-family: var(--font);
+  font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+  color: var(--fg);
+  word-break: break-all;
+}
+.copy {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.copy:hover, .copy.ok { color: var(--accent); border-color: var(--accent-dim); }
+
+.about { padding-top: 0; }
+.about p { max-width: 42rem; color: var(--muted); }
+
+.foot {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 1.5rem var(--pad) 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph, .glyph::after { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+@media (max-width: 520px) {
+  .nav { gap: 0.65rem; font-size: 0.75rem; }
+  .splash { letter-spacing: -0.04em; }
+}

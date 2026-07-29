@@ -1,20 +1,9 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+## Unreleased
 
 ### Added
 
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
+- Brand hub site for https://f00.sh (CRT/phosphor splash, product cards)
+- Pages deploy workflow; CNAME `f00.sh`
+- Product map: f00tils → coreutils.f00.sh, clun → clun.sh / clun.f00.sh

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>f00 — systems software</title>
+  <meta name="description" content="f00: freestanding tools that feel inevitable. f00tils (GNU userland in assembly) and clun (JS/TS toolkit in Common Lisp)." />
+  <meta name="theme-color" content="#0a0b09" />
+  <link rel="canonical" href="https://f00.sh/" />
+  <meta property="og:title" content="f00" />
+  <meta property="og:description" content="Low-level software. High standards. coreutils · clun · more." />
+  <meta property="og:url" content="https://f00.sh/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0b09'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-size='14' fill='%2396f06a'%3Ef00%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="crt" aria-hidden="true">
+    <canvas id="field"></canvas>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <header class="top">
+    <div class="brand" aria-label="f00">
+      <span class="brand-mark">f00</span>
+      <span class="brand-sub">.sh</span>
+    </div>
+    <nav class="nav" aria-label="Primary">
+      <a href="#products">products</a>
+      <a href="#install">install</a>
+      <a href="https://github.com/theesfeld" rel="noopener">github</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <p class="eyebrow mono">systems · freestanding · open source</p>
+      <h1 class="splash" aria-label="f00">
+        <span class="glyph" data-text="f">f</span><span class="glyph" data-text="0">0</span><span class="glyph" data-text="0">0</span>
+      </h1>
+      <p class="tagline">
+        Technically sharp. Visually humble.<br />
+        Tools that replace the boring middle of your stack.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="https://coreutils.f00.sh/">f00tils →</a>
+        <a class="btn ghost" href="https://clun.sh/">clun →</a>
+      </div>
+      <pre class="boot mono" id="boot" aria-hidden="true"></pre>
+    </section>
+
+    <section class="products" id="products">
+      <header class="section-head">
+        <h2>products</h2>
+        <p class="muted">One brand. Separate repos. Subdomains under <span class="mono">f00.sh</span>.</p>
+      </header>
+
+      <div class="grid">
+        <article class="card">
+          <div class="card-meta mono">coreutils.f00.sh</div>
+          <h3>f00tils</h3>
+          <p>
+            Freestanding assembly GNU userland — coreutils, grep, findutils, diffutils.
+            One multicall binary. <code class="mono">--core</code> is byte-identical and faster.
+          </p>
+          <ul class="facts mono">
+            <li>115 tools · x86-64 + aarch64 port</li>
+            <li>no libc · MIT</li>
+          </ul>
+          <div class="card-actions">
+            <a class="btn primary sm" href="https://coreutils.f00.sh/">site</a>
+            <a class="btn ghost sm" href="https://github.com/theesfeld/f00tils">repo</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-meta mono">clun.f00.sh · clun.sh</div>
+          <h3>clun</h3>
+          <p>
+            JavaScript and TypeScript toolkit. Implementation is pure Common Lisp.
+            Install, test, bundle, serve — Bun-shaped commands, different soul.
+          </p>
+          <ul class="facts mono">
+            <li>native releases · man page · updater</li>
+            <li>dual domain: clun.sh + clun.f00.sh</li>
+          </ul>
+          <div class="card-actions">
+            <a class="btn primary sm" href="https://clun.sh/">site</a>
+            <a class="btn ghost sm" href="https://github.com/theesfeld/clun">repo</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="install" id="install">
+      <header class="section-head">
+        <h2>install</h2>
+        <p class="muted">Copy. Paste. Ship.</p>
+      </header>
+      <div class="install-grid">
+        <div class="install-block">
+          <div class="install-label mono">f00tils</div>
+          <div class="install-row">
+            <code id="i-f00tils">curl -fsSL https://coreutils.f00.sh/install.sh | bash</code>
+            <button type="button" class="copy" data-copy="#i-f00tils">copy</button>
+          </div>
+        </div>
+        <div class="install-block">
+          <div class="install-label mono">clun</div>
+          <div class="install-row">
+            <code id="i-clun">curl -fsSL https://clun.sh/install | sh</code>
+            <button type="button" class="copy" data-copy="#i-clun">copy</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about" id="about">
+      <p class="mono small">
+        f00 is a product umbrella. Personal projects stay under individual accounts;
+        product surface lives under the <span class="accent">f00</span> brand and
+        <span class="accent">*.f00.sh</span> DNS.
+      </p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span class="mono">© f00 · MIT products</span>
+    <span class="mono muted">low-fi chrome · high-fi bits</span>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

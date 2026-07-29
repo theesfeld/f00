@@ -1,108 +1,54 @@
 # f00
 
-f00 — brand hub for f00.sh products (f00tils, clun, …)
+Brand hub for **[f00.sh](https://f00.sh)** products.
 
-Keep this README in sync with the man page(s) under [man/](man/) and the
-GitHub Pages site under [docs/](docs/).
+Technically sharp tools. Low-fi chrome. MIT (product-specific licenses apply per repo).
 
-## Requirements
+## Products
 
-- other (version: document the supported toolchain)
+| Product | Site | Repo | One-liner |
+|---------|------|------|-----------|
+| **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh) | [theesfeld/f00tils](https://github.com/theesfeld/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
+| **clun** | [clun.sh](https://clun.sh) · [clun.f00.sh](https://clun.f00.sh) | [theesfeld/clun](https://github.com/theesfeld/clun) | JS/TS toolkit in pure Common Lisp |
 
 ## Install
 
-Every install method installs man page(s). Prefer the curl path from releases.
+```bash
+# f00tils
+curl -fsSL https://coreutils.f00.sh/install.sh | bash
 
-### Curl (releases)
-
-```text
-curl -fsSL https://github.com/theesfeld/f00/releases/latest/download/install.sh | sh
+# clun
+curl -fsSL https://clun.sh/install | sh
 ```
 
-### Package managers
+## Site
 
-Document only channels this project maintains (creator chooses among Arch/AUR, Homebrew, RPM, deb). Remove unused sections.
-
-```text
-# Arch / AUR (if offered):
-# yay -S f00
-
-# Homebrew (if offered):
-# brew install theesfeld/tap/f00
-
-# RPM (if offered):
-# sudo rpm -Uvh f00-VERSION.rpm
-
-# deb (if offered):
-# sudo dpkg -i f00_VERSION_amd64.deb
-```
-
-### From source
+Static hub under [`site/`](site/) → GitHub Pages → **https://f00.sh**
 
 ```text
-# Language-native or make install when useful for developers.
-# cargo install --path .
-# go install ./cmd/f00@latest
+site/index.html   splash + product cards
+site/styles.css   CRT / phosphor low-fi surface
+site/app.js       canvas field + copy helpers
+site/CNAME        f00.sh
 ```
 
-## Usage
+Deploy: push to `main` (workflow `.github/workflows/pages.yml`).
 
-```text
-# Show the common commands a new user needs first.
-```
+## DNS map
 
-Full option reference: see [man/f00.1.md](man/f00.1.md).
+| Host | Role |
+|------|------|
+| `f00.sh` | This hub |
+| `coreutils.f00.sh` | f00tils product site + installer |
+| `clun.f00.sh` | URL forward → `clun.sh` (dual domain) |
+| `clun.sh` | clun product site (primary) |
 
-## Configuration
+Ops detail: product repos own their Pages `CNAME` files. Apex A/AAAA stay on GitHub Pages IPs.
 
-Document flags, environment variables, and config files.
-Provide a `.env.example` when environment variables are required. Never commit real secrets.
+## Org target
 
-## Documentation
-
-| Surface | Location |
-|---|---|
-| This README | [README.md](README.md) |
-| Man page(s) | [man/](man/) |
-| GitHub Pages | [docs/](docs/) |
-| Changelog | [CHANGELOG.md](CHANGELOG.md) |
-| Scene card | [file_id.diz](file_id.diz) |
-
-## Scene card
-
-Each SemVer release ships a crafted `file_id.diz` (ACiD / 16colo.rs-style block ASCII
-archive card) next to the changelog notes. Keep this preview identical to root
-[file_id.diz](file_id.diz). GitHub Releases attach the same file as an asset.
-
-```text
-╔══════════════════════════════════════════════════╗
-║▓▓▓▓░░░░  f00  ░░░░▓▓▓▓              ║
-║████████████████████████████████████████████████  ║
-║  ▄█▀  SCENE CARD  ▀█▄   release identity         ║
-║████████████████████████████████████████████████  ║
-║  v0.0.0  ·  MIT  ·  2026                     ║
-║  f00 — brand hub for f00.sh products (f00tils, clun, …)                         ║
-║  github:theesfeld/f00          ║
-╚══════════════════════════════════════════════════╝
-```
-
-## Development
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-```text
-# Format, test, and build commands for this language
-```
-
-## Versioning
-
-This project uses [Semantic Versioning](https://semver.org/). See [CHANGELOG.md](CHANGELOG.md).
-Every published version also refreshes [file_id.diz](file_id.diz) and attaches it to the GitHub Release.
-
-## Security
-
-See [SECURITY.md](SECURITY.md).
+Product repos will move to GitHub org **`f00-sh`** (username `f00` is taken). Until transfer completes, remotes remain under `theesfeld/*`.
 
 ## License
 
-[MIT](LICENSE) © William Theesfeld
+MIT for this hub site. Product licenses are per-repo (f00tils MIT; clun GPL-3.0-or-later).
