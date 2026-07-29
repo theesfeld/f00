@@ -1,29 +1,6 @@
-/* f00.sh — progressive enhancement: particle field + boot log */
+/* f00.sh — progressive enhancement: particle field */
 (() => {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // --- boot log (low-fi) ---
-  const boot = document.getElementById("boot");
-  if (boot && !prefersReduced) {
-    const lines = [
-      "f00 bios  ·  64-bit freestanding",
-      "probe dns  ·  f00.sh / coreutils / clun",
-      "mount products  ·  f00tils, clun",
-      "ready.",
-    ];
-    let i = 0;
-    const tick = () => {
-      if (i >= lines.length) return;
-      boot.textContent += (i ? "\n" : "") + lines[i];
-      i += 1;
-      setTimeout(tick, 280 + Math.random() * 220);
-    };
-    setTimeout(tick, 350);
-  } else if (boot) {
-    boot.textContent = "f00 ready.";
-  }
-
-  // --- pixel field (technically modern, looks like old phosphor noise) ---
   const canvas = document.getElementById("field");
   if (!canvas || prefersReduced) return;
   const ctx = canvas.getContext("2d", { alpha: true });
@@ -57,7 +34,6 @@
 
   const frame = (t) => {
     ctx.clearRect(0, 0, w, h);
-    // faint grid
     ctx.strokeStyle = "rgba(150, 240, 106, 0.04)";
     ctx.lineWidth = 1;
     const step = 48;
@@ -85,7 +61,6 @@
       ctx.fillRect(Math.floor(d.x), Math.floor(d.y), d.s, d.s);
     }
 
-    // occasional phosphor smear near logo zone
     if (Math.random() < 0.02) {
       const y = h * (0.18 + Math.random() * 0.2);
       ctx.fillStyle = "rgba(150, 240, 106, 0.03)";

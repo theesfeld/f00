@@ -5,6 +5,8 @@
 ### Changed
 
 - Hub is splash + product cards only; install commands stay on product sites
+- Drop hero shortcut buttons and fake boot log; cards are the only product links
+- Rule: released f00 products get a landing card
 
 ### Added
 

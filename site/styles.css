@@ -193,26 +193,6 @@ body {
   font-size: clamp(1rem, 2.4vw, 1.2rem);
 }
 
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  margin-top: 1.75rem;
-}
-
-.boot {
-  margin: 2rem auto 0;
-  max-width: 36rem;
-  text-align: left;
-  color: var(--accent-dim);
-  font-size: 0.75rem;
-  min-height: 4.5rem;
-  opacity: 0.85;
-  border-left: 2px solid var(--line);
-  padding-left: 0.85rem;
-}
-
 .mono { font-family: var(--font); }
 .small { font-size: 0.85rem; }
 .muted { color: var(--muted); }

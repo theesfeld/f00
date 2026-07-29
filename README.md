@@ -13,7 +13,9 @@
 
 Static Pages source: [`site/`](site/) → **https://f00.sh**
 
-Installers live on each product site, not on the hub.
+Layout: splash + product cards only. Installers live on each product site.
+
+**Release rule:** a f00 product gets a landing card when it has a real release.
 
 ## License
 
