@@ -9,9 +9,9 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-11.css",
+    "css": "https://f00.sh/theme/f00-theme-12.css",
     "css_canonical": "https://f00.sh/theme/f00-theme.css",
-    "css_path": "site/theme/f00-theme-11.css",
+    "css_path": "site/theme/f00-theme-12.css",
     "font_brand": "Onyx (logo / brand-mark only)",
     "font_body": "zine mono (all body/prose/forms)",
     "font_accent": "chip/subdomain mono (headers, footers, nav, domain chips)",

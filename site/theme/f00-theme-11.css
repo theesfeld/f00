@@ -58,6 +58,8 @@
   --f00-font-hand: var(--f00-font-chip); /* legacy alias — no Kurt */
 
   --f00-tracking-brand: -0.06em;
+  --f00-tracking-brand-mark: 0.06em;
+  --f00-size-brand-mark: 1.15rem;
   --f00-tracking-chip: 0.1em;
   --f00-tracking-body: 0.01em;
   --f00-size-body: 1.05rem;
@@ -205,23 +207,35 @@ footer *, .foot *, .site-footer *, .footer-bottom *, .footer-inner * {
 }
 
 /* —— 1. ONYX branding ONLY (logo / brand-mark) —— */
+/* Logo splash: tight Onyx */
 .splash,
-.splash .glyph,
-.brand-mark,
-.f00-brand,
-.font-brand {
+.splash .glyph {
   font-family: var(--f00-font-brand) !important;
   font-weight: 400 !important;
   letter-spacing: var(--f00-tracking-brand);
 }
 
+/* Header brand-mark: Onyx but legible at small size */
+.brand-mark,
+.f00-brand,
+.font-brand {
+  font-family: var(--f00-font-brand) !important;
+  font-weight: 400 !important;
+  font-size: var(--f00-size-brand-mark, 1.2rem) !important;
+  letter-spacing: var(--f00-tracking-brand-mark, 0.08em) !important;
+  line-height: 1 !important;
+}
+
 .brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
   text-decoration: none;
   color: var(--f00-fg);
 }
 .brand-sub {
   font-family: var(--f00-font-chip) !important;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--f00-muted);
   font-size: 0.95rem;
 }

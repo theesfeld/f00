@@ -89,13 +89,18 @@ body {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
   font-size: 1.05rem;
   line-height: 1;
 }
 .brand-mark {
   font-family: var(--font-brand);
   font-weight: 400;
-  letter-spacing: -0.04em;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
   color: var(--fg);
 }
 .brand-sub {

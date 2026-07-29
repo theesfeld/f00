@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "site" / "catalog.json"
-THEME_HREF = "https://f00.sh/theme/f00-theme-11.css"
+THEME_HREF = "https://f00.sh/theme/f00-theme-12.css"
 ORG = "f00-sh"
 
 
