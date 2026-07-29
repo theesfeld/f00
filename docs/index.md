@@ -23,7 +23,7 @@ Every install method installs man page(s).
 ### Curl (releases)
 
 ```text
-curl -fsSL https://github.com/theesfeld/f00/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/f00-sh/f00/releases/latest/download/install.sh | sh
 ```
 
 ### Package managers
@@ -76,7 +76,7 @@ GitHub Release asset named `file_id.diz`.
 ║████████████████████████████████████████████████  ║
 ║  v0.0.0  ·  MIT  ·  2026                     ║
 ║  f00 — brand hub for f00.sh products (f00tils, clun, …)                         ║
-║  github:theesfeld/f00          ║
+║  github:f00-sh/f00          ║
 ╚══════════════════════════════════════════════════╝
 ```
 

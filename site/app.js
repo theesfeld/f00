@@ -2,9 +2,9 @@
 (() => {
   // Product repos on the hub (add a card when a product releases → list it here too).
   const F00_REPOS = [
-    "theesfeld/f00",
-    "theesfeld/f00tils",
-    "theesfeld/clun",
+    "f00-sh/f00",
+    "f00-sh/f00tils",
+    "f00-sh/clun",
   ];
 
   const starsEl = document.getElementById("stars");

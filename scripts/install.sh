@@ -4,7 +4,7 @@
 set -euo pipefail
 
 PROJECT="f00"
-REPO="theesfeld/f00"
+REPO="f00-sh/f00"
 # Override for testing: INSTALL_BASE=/tmp/foo ./install.sh
 INSTALL_BIN_DIR="${INSTALL_BIN_DIR:-${HOME}/.local/bin}"
 INSTALL_MAN_DIR="${INSTALL_MAN_DIR:-${HOME}/.local/share/man/man1}"

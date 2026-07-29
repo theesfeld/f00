@@ -5,7 +5,7 @@
 **f00** — brand landing for https://f00.sh
 
 - Site: https://f00.sh
-- Repo: theesfeld/f00 (org target: **f00-sh/f00**)
+- Repo: f00-sh/f00 (org: **f00-sh/f00**)
 - Not a product binary. Static hub only.
 
 ## Declared language

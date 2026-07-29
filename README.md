@@ -6,8 +6,8 @@
 
 | Product | Site | Repo | One-liner |
 |---------|------|------|-----------|
-| **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh) | [theesfeld/f00tils](https://github.com/theesfeld/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
-| **clun** | [clun.sh](https://clun.sh) | [theesfeld/clun](https://github.com/theesfeld/clun) | JS/TS toolkit in pure Common Lisp |
+| **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh) | [f00-sh/f00tils](https://github.com/f00-sh/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
+| **clun** | [clun.sh](https://clun.sh) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |
 
 ## Site
 
