@@ -246,7 +246,7 @@ body {
 }
 .btn.sm { padding: 0.45rem 0.75rem; font-size: 0.8rem; }
 
-.products, .about {
+.products {
   max-width: var(--max);
   margin: 0 auto;
   padding: 2rem var(--pad) 3rem;
@@ -301,9 +301,6 @@ body {
 }
 .facts li::before { content: "› "; color: var(--amber); }
 .card-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-
-.about { padding-top: 0; }
-.about p { max-width: 42rem; color: var(--muted); }
 
 .foot {
   max-width: var(--max);
