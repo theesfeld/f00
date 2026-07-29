@@ -81,7 +81,7 @@
     }
   });
 
-  // Particle field (Heartbox cream / silver / red dust)
+  // Particle field (verse-sky dust: cream, black ink, poppy, silver)
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canvas = document.getElementById("field");
   if (!canvas || prefersReduced) return;
@@ -107,9 +107,10 @@
     const count = Math.floor((w * h) / 14000);
     const pickKind = () => {
       const r = Math.random();
-      if (r < 0.04) return "red";
-      if (r < 0.08) return "sky";
-      if (r < 0.22) return "metal";
+      if (r < 0.06) return "red";
+      if (r < 0.18) return "ink";
+      if (r < 0.32) return "metal";
+      if (r < 0.55) return "sky";
       return "cream";
     };
     dots = Array.from({ length: count }, () => ({
@@ -123,15 +124,16 @@
   };
 
   const fillFor = (d) => {
-    if (d.kind === "red") return `rgba(224, 32, 48, ${Math.min(1, d.a + 0.15)})`;
-    if (d.kind === "sky") return `rgba(94, 200, 232, ${Math.min(1, d.a + 0.1)})`;
+    if (d.kind === "red") return `rgba(224, 32, 48, ${Math.min(1, d.a + 0.2)})`;
+    if (d.kind === "ink") return `rgba(26, 18, 20, ${Math.min(1, d.a * 0.9)})`;
+    if (d.kind === "sky") return `rgba(255, 248, 240, ${d.a * 0.55})`;
     if (d.kind === "metal") return `rgba(184, 192, 200, ${d.a})`;
-    return `rgba(244, 235, 224, ${d.a * 0.85})`;
+    return `rgba(244, 235, 224, ${d.a * 0.75})`;
   };
 
   const tick = (t) => {
     ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = "rgba(184, 192, 200, 0.05)";
+    ctx.strokeStyle = "rgba(26, 18, 20, 0.06)";
     ctx.lineWidth = 1;
     const step = 48;
     const ox = (t * 0.01) % step;
@@ -160,7 +162,7 @@
 
     if (Math.random() < 0.02) {
       const y = h * (0.18 + Math.random() * 0.2);
-      ctx.fillStyle = "rgba(224, 32, 48, 0.04)";
+      ctx.fillStyle = "rgba(26, 18, 20, 0.05)";
       ctx.fillRect(0, y, w, 2 + Math.random() * 3);
     }
 

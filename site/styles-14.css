@@ -268,7 +268,7 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   font-weight: 500;
-  color: var(--hub-ink);
+  color: var(--hub-ink) !important;
   text-shadow: 0 1px 0 rgba(244, 235, 224, 0.25);
 }
 
