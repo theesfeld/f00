@@ -128,14 +128,6 @@ body {
   text-align: center;
 }
 
-.eyebrow {
-  color: var(--muted);
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin: 0 0 1rem;
-}
-
 .splash {
   margin: 0;
   font-family: var(--font);
@@ -184,13 +176,6 @@ body {
   92% { opacity: 0.35; }
   94% { opacity: 0; }
   96% { opacity: 0.2; }
-}
-
-.tagline {
-  margin: 1.5rem auto 0;
-  max-width: 34rem;
-  color: var(--muted);
-  font-size: clamp(1rem, 2.4vw, 1.2rem);
 }
 
 .mono { font-family: var(--font); }
