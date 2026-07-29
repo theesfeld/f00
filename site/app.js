@@ -1,4 +1,4 @@
-/* f00.sh — progressive enhancement: stars + particle field */
+/* f00.sh — progressive enhancement: stars + fit splash + particle field */
 (() => {
   // Product repos on the hub (add a card when a product releases → list it here too).
   const F00_REPOS = [
@@ -28,6 +28,34 @@
       .catch(() => {
         starsEl.hidden = true;
       });
+  }
+
+  // Scale "f00" so its rendered width matches the product card row (hero content width).
+  const splash = document.querySelector(".splash");
+  const hero = document.querySelector(".hero");
+  const fitSplash = () => {
+    if (!splash || !hero) return;
+    const target = hero.clientWidth;
+    if (target <= 0) return;
+    splash.style.fontSize = "100px";
+    const at100 = splash.scrollWidth || 1;
+    const next = Math.max(48, Math.floor((target / at100) * 100));
+    splash.style.fontSize = `${next}px`;
+    // Correct residual overflow from subpixel/glyph metrics.
+    if (splash.scrollWidth > target) {
+      splash.style.fontSize = `${Math.floor(next * (target / splash.scrollWidth))}px`;
+    }
+  };
+  if (splash && hero) {
+    fitSplash();
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(fitSplash).observe(hero);
+    } else {
+      window.addEventListener("resize", fitSplash, { passive: true });
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(fitSplash).catch(() => {});
+    }
   }
 
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
