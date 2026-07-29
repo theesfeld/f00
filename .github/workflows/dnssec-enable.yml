@@ -1,0 +1,52 @@
+# One-shot / re-runnable: enable Cloudflare DNSSEC and print DS for Porkbun.
+# Requires CLOUDFLARE_API_TOKEN with Zone DNS Settings Write (or Zone Edit).
+name: Enable DNSSEC
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  enable:
+    name: Enable zone DNSSEC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable DNSSEC and emit DS record
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ZONE_ID: 534b4bb36c9c76bd3216ab60fd878a3f
+          ZONE_NAME: f00.sh
+        run: |
+          set -euo pipefail
+          echo "PATCH /zones/${ZONE_ID}/dnssec status=active"
+          resp=$(curl -sS -X PATCH \
+            "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dnssec" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"status":"active"}')
+          echo "$resp" | tee /tmp/dnssec.json
+          ok=$(python3 -c 'import json,sys; print(json.load(open("/tmp/dnssec.json")).get("success"))')
+          if [ "$ok" != "True" ]; then
+            echo "::error::DNSSEC enable failed — token may lack Zone DNS Settings Write"
+            exit 1
+          fi
+          python3 <<'PY'
+          import json
+          r = json.load(open("/tmp/dnssec.json"))["result"]
+          print("status:", r.get("status"))
+          print("algorithm:", r.get("algorithm"))
+          print("digest_type:", r.get("digest_type"), r.get("digest_algorithm"))
+          print("key_tag:", r.get("key_tag"))
+          print("digest:", r.get("digest"))
+          print("ds:", r.get("ds"))
+          print("public_key:", r.get("public_key"))
+          print()
+          print("=== Porkbun DS fields ===")
+          print("Key Tag:", r.get("key_tag"))
+          print("Algorithm:", r.get("algorithm"), "(13 = ECDSA P-256 SHA-256)")
+          print("Digest Type:", r.get("digest_type"), "(2 = SHA-256)")
+          print("Digest:", r.get("digest"))
+          print("Do NOT fill keyData on Porkbun.")
+          PY
