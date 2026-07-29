@@ -9,13 +9,14 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-6.css",
-    "css_path": "site/theme/f00-theme-6.css",
+    "css": "https://f00.sh/theme/f00-theme-7.css",
+    "css_path": "site/theme/f00-theme-7.css",
     "font_display": "Onyx",
-    "font_body": "Kurt",
+    "font_body": "ui-monospace (domain-chip stack)",
     "bg": "#000000",
     "fg": "#ffffff",
-    "rule": "All product Pages must <link> theme.css. Onyx=logo/headers, Kurt=body. Do not redefine brand colors/fonts in product CSS."
+    "rule": "Bleach stack: Onyx titles/logo, mono body+domain chips, Kurt accents (nav/footer) only. Readable first.",
+    "font_hand": "Kurt (accents only)"
   },
   "domains": {
     "hub": "f00.sh",
