@@ -2,7 +2,7 @@
 
 f00 — brand hub for f00.sh products (f00tils, clun, …)
 
-This page is the GitHub Pages entry for the project. Keep it in sync with
+This page is optional depth for the hub. Keep it in sync with
 [README.md](../README.md) and the man page(s) under [man/](../man/).
 
 ## Why this project exists
@@ -57,7 +57,7 @@ Never commit real secrets.
 |---|---|
 | README | [README.md](../README.md) |
 | Man page(s) | [man/](../man/) |
-| This site | `docs/` (GitHub Pages) |
+| Product hub | `site/` (Cloudflare Pages → f00.sh) |
 | Changelog | [CHANGELOG.md](../CHANGELOG.md) |
 | Scene card | [file_id.diz](../file_id.diz) |
 | Security | [SECURITY.md](../SECURITY.md) |
