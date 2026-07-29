@@ -11,10 +11,11 @@
   "theme": {
     "css": "https://f00.sh/theme/f00-theme.css",
     "css_path": "site/theme/f00-theme.css",
-    "font": "Onyx",
+    "font_display": "Onyx",
+    "font_body": "Kurt",
     "bg": "#000000",
     "fg": "#ffffff",
-    "rule": "All product Pages must <link> theme.css. Do not redefine brand colors/fonts in product CSS."
+    "rule": "All product Pages must <link> theme.css. Onyx=logo/headers, Kurt=body. Do not redefine brand colors/fonts in product CSS."
   },
   "domains": {
     "hub": "f00.sh",

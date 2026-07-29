@@ -32,6 +32,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 | `site/catalog.json` | **SSOT** product list + theme pointer → https://f00.sh/catalog.json |
 | `site/theme/` | Global theme CSS + Onyx font → https://f00.sh/theme/… |
 | `scripts/sync-from-catalog.py` | Regen hub cards + README + this file from catalog |
+| `scripts/enroll-product.py` | Add/update a product in catalog + inject theme link into a product repo |
 | `docs/` | Optional depth |
 | `.github/workflows/pages.yml` | Pages deploy (wrangler) |
 

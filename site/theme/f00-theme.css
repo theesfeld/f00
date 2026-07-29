@@ -2,16 +2,28 @@
    Hosted at https://f00.sh/theme/f00-theme.css
    Products: <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" />
    Hub:      <link rel="stylesheet" href="/theme/f00-theme.css" />
-   Edit tokens here only; product stylesheets keep layout, not brand colors/fonts.
 
-   Product inventory (what exists under f00) lives next door:
-     https://f00.sh/catalog.json  ← edit site/catalog.json, run scripts/sync-from-catalog.py
+   Type:
+     Onyx  → logo, display, card/section headers (--f00-font-display / --font)
+     Kurt  → body copy (--f00-font-body / --sans)
+     mono  → system monospace for code only
+
+   Product inventory:
+     https://f00.sh/catalog.json  ← site/catalog.json + scripts/sync-from-catalog.py
 */
 
 @font-face {
   font-family: "Onyx";
   src: url("./fonts/Onyx.ttf") format("truetype");
   font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Kurt";
+  src: url("./fonts/Kurt-Regular.otf") format("opentype");
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
@@ -40,11 +52,15 @@
   --f00-ok: #ffffff;
   --f00-code-bg: #050505;
   --f00-theme-color: #000000;
-  --f00-font-family: "Onyx", "Times New Roman", Times, serif;
-  --f00-font: var(--f00-font-family);
   --f00-glow: rgba(255, 255, 255, 0.35);
 
-  /* Compatibility aliases (existing product stylesheets) */
+  /* Type stack */
+  --f00-font-display: "Onyx", "Times New Roman", Times, serif;
+  --f00-font-body: "Kurt", "Segoe Print", "Comic Sans MS", cursive;
+  --f00-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --f00-font-family: var(--f00-font-body);
+
+  /* Compatibility aliases (product stylesheets) */
   --bg: var(--f00-bg);
   --bg-2: var(--f00-bg-elevated);
   --bg-elevated: var(--f00-bg-elevated);
@@ -72,14 +88,19 @@
   --partial: var(--f00-muted);
   --no: var(--f00-danger);
   --code-bg: var(--f00-code-bg);
-  --font: var(--f00-font-family);
-  --sans: var(--f00-font-family);
-  --font-sans: var(--f00-font-family);
-  --font-mono: var(--f00-font-family);
-  --mono: var(--f00-font-family);
+
+  /* --font = display (Onyx): brand, titles, card headers */
+  --font: var(--f00-font-display);
+  --font-display: var(--f00-font-display);
+  /* --sans = body (Kurt) */
+  --sans: var(--f00-font-body);
+  --font-sans: var(--f00-font-body);
+  --font-body: var(--f00-font-body);
+  /* code stays mono */
+  --font-mono: var(--f00-font-mono);
+  --mono: var(--f00-font-mono);
 }
 
-/* Soft baseline so product pages that only import this still read white-on-black. */
 html {
   color-scheme: dark;
 }
@@ -87,5 +108,15 @@ html {
 body {
   background: var(--f00-bg);
   color: var(--f00-fg);
-  font-family: var(--f00-font-family);
+  font-family: var(--f00-font-body);
+}
+
+/* Display utility for product sites */
+.f00-display,
+h1, h2, h3 {
+  font-family: var(--f00-font-display);
+}
+
+code, kbd, pre, .mono, .math-mono {
+  font-family: var(--f00-font-mono);
 }

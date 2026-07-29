@@ -1,4 +1,4 @@
-/* f00.sh — catalog-driven cards + splash fit + particle field */
+/* f00.sh — catalog-driven cards + monochrome particle field */
 (() => {
   const CATALOG_URLS = [
     "/catalog.json",
@@ -60,72 +60,12 @@
     return null;
   };
 
-  // Splash fit — re-run after catalog paint and on resize.
-  const splash = document.querySelector(".splash");
-  const frame = document.querySelector(".splash-frame");
-  let grid = document.querySelector(".products .grid");
-
-  const fitSplash = () => {
-    grid = document.getElementById("product-grid")
-      || document.querySelector(".products .grid");
-    if (!splash || !frame) return;
-    const target = Math.floor((grid || frame).getBoundingClientRect().width);
-    if (target <= 0) return;
-
-    splash.style.width = "max-content";
-    splash.style.display = "inline-block";
-    splash.style.transform = "none";
-
-    let lo = 32;
-    let hi = Math.min(900, Math.ceil(target * 1.2));
-    while (lo < hi) {
-      const mid = Math.ceil((lo + hi) / 2);
-      splash.style.fontSize = `${mid}px`;
-      const w = splash.getBoundingClientRect().width;
-      if (w <= target) lo = mid;
-      else hi = mid - 1;
+  loadCatalog().then((catalog) => {
+    if (catalog) {
+      renderProducts(catalog);
+      window.F00_CATALOG = catalog;
     }
-    splash.style.fontSize = `${lo}px`;
-
-    let w = splash.getBoundingClientRect().width;
-    if (w > 0 && Math.abs(target - w) > 1) {
-      const scaled = Math.max(32, Math.floor(lo * (target / w)));
-      splash.style.fontSize = `${scaled}px`;
-      w = splash.getBoundingClientRect().width;
-      if (w > target) {
-        splash.style.fontSize = `${Math.max(32, scaled - 1)}px`;
-      }
-    }
-  };
-
-  const bindSplash = () => {
-    if (!splash || !frame) return;
-    fitSplash();
-    requestAnimationFrame(fitSplash);
-    if (typeof ResizeObserver !== "undefined") {
-      const ro = new ResizeObserver(fitSplash);
-      ro.observe(frame);
-      grid = document.getElementById("product-grid")
-        || document.querySelector(".products .grid");
-      if (grid) ro.observe(grid);
-    } else {
-      window.addEventListener("resize", fitSplash, { passive: true });
-    }
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(fitSplash).catch(() => {});
-    }
-  };
-
-  // Catalog first (source of truth), then splash.
-  loadCatalog()
-    .then((catalog) => {
-      if (catalog) {
-        renderProducts(catalog);
-        // Expose for debugging / other scripts
-        window.F00_CATALOG = catalog;
-      }
-    })
-    .finally(bindSplash);
+  });
 
   // Particle field (monochrome)
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
