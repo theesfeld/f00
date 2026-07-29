@@ -9,15 +9,16 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-10.css",
+    "css": "https://f00.sh/theme/f00-theme-11.css",
     "css_canonical": "https://f00.sh/theme/f00-theme.css",
-    "css_path": "site/theme/f00-theme-10.css",
-    "font_display": "Onyx",
-    "font_body": "ui-monospace (domain-chip stack)",
-    "font_hand": "Kurt (nav, full footer, brand .sh)",
+    "css_path": "site/theme/f00-theme-11.css",
+    "font_brand": "Onyx (logo / brand-mark only)",
+    "font_body": "zine mono (all body/prose/forms)",
+    "font_accent": "chip/subdomain mono (headers, footers, nav, domain chips)",
+    "font_hand": null,
     "bg": "#000000",
-    "fg": "#ffffff",
-    "rule": "Bleach: mono body (readable), Onyx titles/logo, Kurt accents (nav/footer/.sh) only."
+    "fg": "#f2f2f2",
+    "rule": "Three fonts: Onyx branding only; zine mono body; chip mono headers/footers/accents. No handwriting."
   },
   "domains": {
     "hub": "f00.sh",
