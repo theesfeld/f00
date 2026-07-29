@@ -21,7 +21,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 3. **One set of links.** Cards are the only product navigation (site + repo). Do not duplicate with hero buttons or other chrome.
 4. **Public copy is product-only.** Never put agent process, org plans, DNS wiring, or internal preferences on the site or public README (house rule `10-user-facing-language.md`).
 5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `dist.f00.sh` R2 packages.
-6. **Aesthetic (STANDARD THEME):** every product Pages site loads the catalog theme URL first (`https://f00.sh/theme/f00-theme-8.css`, mirrored at `/theme/f00-theme.css`). Roles: **Onyx** logo/titles · **mono** body + domain chips · **Kurt** nav + **entire footer**. Do not redefine brand colors/fonts in product CSS.
+6. **Aesthetic (STANDARD THEME):** every product site loads catalog theme CSS first (`https://f00.sh/theme/f00-theme-11.css`). Three fonts only: **Onyx** = branding/logo only · **zine mono** = all body · **chip mono** = headers/footers/nav/domain chips. No handwriting. Do not redefine type roles in product CSS.
 7. **No secrets** in repo. DNS keys stay out of git.
 
 ## Layout
