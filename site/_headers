@@ -65,3 +65,21 @@
 /styles-7.css
   Content-Type: text/css; charset=utf-8
   Cache-Control: public, max-age=60, must-revalidate
+
+/theme/f00-theme.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  CDN-Cache-Control: max-age=60
+
+/theme/f00-theme-8.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  CDN-Cache-Control: max-age=60
+
+/styles-8.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate

@@ -9,14 +9,15 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-7.css",
-    "css_path": "site/theme/f00-theme-7.css",
+    "css": "https://f00.sh/theme/f00-theme-8.css",
+    "css_canonical": "https://f00.sh/theme/f00-theme.css",
+    "css_path": "site/theme/f00-theme-8.css",
     "font_display": "Onyx",
     "font_body": "ui-monospace (domain-chip stack)",
+    "font_hand": "Kurt (nav, full footer, brand .sh)",
     "bg": "#000000",
     "fg": "#ffffff",
-    "rule": "Bleach stack: Onyx titles/logo, mono body+domain chips, Kurt accents (nav/footer) only. Readable first.",
-    "font_hand": "Kurt (accents only)"
+    "rule": "STANDARD: every f00 product Pages site loads theme css first. Onyx titles/logo, mono body+chips, Kurt accents (nav + entire footer). Do not redefine type roles."
   },
   "domains": {
     "hub": "f00.sh",

@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "site" / "catalog.json"
-THEME_HREF = "https://f00.sh/theme/f00-theme-7.css"
+THEME_HREF = "https://f00.sh/theme/f00-theme-8.css"
 ORG = "f00-sh"
 
 
@@ -90,7 +90,19 @@ def inject_theme_link(repo: Path) -> list[str]:
         if not html_path.is_file():
             continue
         text = html_path.read_text(encoding="utf-8")
-        if "f00-theme.css" in text:
+        # normalize any prior theme URL to current standard
+        import re as _re
+        text2 = _re.sub(
+            r"https://f00\.sh/theme/f00-theme[^\"']*",
+            THEME_HREF,
+            text,
+        )
+        if text2 != text:
+            text = text2
+            html_path.write_text(text, encoding="utf-8")
+            changed.append(str(html_path))
+            print(f"normalized theme URL in {html_path}")
+        if "f00-theme" in text and THEME_HREF in text:
             print(f"theme already linked: {html_path}")
             continue
         # Prefer insert before first local stylesheet or before </head>
