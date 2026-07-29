@@ -53,7 +53,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 |---------|--------------|------|----------|
 | f00tils | `/home/glenda/Projects/f00tils` | https://coreutils.f00.sh | https://dist.f00.sh/f00tils/current/ |
 | clun | `/home/glenda/Projects/clun` | https://clun.f00.sh | https://dist.f00.sh/clun/current/ |
-| Cel Index | (external / Vercel) | https://cel.f00.sh | n/a |
+| Cel Index | `/home/glenda/Projects/cel` | https://cel.f00.sh | n/a (Pages `f00-cel`) |
 
 ## License
 
