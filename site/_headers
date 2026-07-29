@@ -138,3 +138,13 @@
 /styles-13.css
   Content-Type: text/css; charset=utf-8
   Cache-Control: public, max-age=60, must-revalidate
+
+/assets/favicon-hb.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=86400, immutable
+  X-Content-Type-Options: nosniff
+
+/assets/bimi-hb.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=86400, immutable
+  X-Content-Type-Options: nosniff
