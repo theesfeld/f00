@@ -21,15 +21,16 @@
     "font_body": "zine mono (all body/prose/forms)",
     "font_accent": "chip/subdomain mono (headers, footers, nav, domain chips)",
     "font_hand": null,
-    "bg": "#1A1214",
-    "fg": "#F4EBE0",
-    "accent": "#E02030",
-    "metal": "#B8C0C8",
-    "sky": "#5EC8E8",
+    "bg": "#191413",
+    "fg": "#E8E4DC",
+    "accent": "#E5141A",
+    "metal": "#C2C8CC",
+    "sky": "#0888ED",
     "rule": "ONE shared CSS at https://f00.sh/theme/f00-theme.css for hub + every product subdomain. Heart-Shaped Box contrasts + Bleach boxes. Product CSS is layout-only. Edit hub theme file, mirror, deploy f00 \u2014 all sites pick it up (short cache).",
     "layout": "bleach",
     "contrast": "heart-shaped-box",
-    "css_snapshot": "site/theme/f00-theme-14.css"
+    "css_snapshot": "site/theme/f00-theme-15.css",
+    "palette_version": "0.2.0"
   },
   "domains": {
     "hub": "f00.sh",
