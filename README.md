@@ -4,7 +4,7 @@
 
 ## Products
 
-> **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json  
+> **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
 > **Theme:** [https://f00.sh/theme/f00-theme.css](https://f00.sh/theme/f00-theme.css) (Onyx, white on black). Do not fork colors in product repos.
 
 | Product | Site | Repo | One-liner |
