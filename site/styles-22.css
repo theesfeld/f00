@@ -1,0 +1,342 @@
+/* f00.sh hub — scroll-shrink film hero + layout (shell/cards from shared theme) */
+:root {
+  --max: 68rem;
+  --pad: clamp(1rem, 3vw, 2rem);
+  /* end size after shrink (card grid era) */
+  --splash-end: clamp(5.5rem, 16vw, 11.5rem);
+  --splash-tracking: -0.055em;
+  /* start scale relative to end size — near full-field presence */
+  --splash-scale-max: 2.85;
+  --p: 0; /* 0 = full hero, 1 = shrunk / content free */
+  --film-poppy: #d44a18;
+  --film-sky: #1e78c8;
+  --film-cream: #ede6de;
+  --film-edge: #8b9ad0;
+  --film-metal: #b8bec2;
+  --film-ink: #090909;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* old crt field stays off — film grain lives on the hero stage */
+.crt, #field { display: none !important; }
+
+.skip {
+  position: absolute; left: -999px; top: 0; z-index: 100;
+  background: #090909; color: #d0d5db; padding: 0.5rem 1rem;
+  border: 1px solid #d0d5db;
+}
+.skip:focus { left: 1rem; top: 1rem; }
+
+/* ── header: fades in as logo shrinks ── */
+.top {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 1.1rem var(--pad) 0.85rem;
+  opacity: calc(0.15 + 0.85 * var(--p, 0));
+  pointer-events: auto;
+  transition: opacity 0.05s linear;
+}
+.brand { display: inline-flex; align-items: baseline; gap: 0.25rem; text-decoration: none; cursor: pointer; }
+.brand-mark { font-size: 1.45rem; letter-spacing: 0.14em; }
+.brand-sub { letter-spacing: 0.14em; font-size: 0.8rem; }
+.nav { display: flex; gap: 1.15rem; font-size: 0.82rem; letter-spacing: 0.14em; }
+.nav a { text-decoration: none; border-bottom: 1px solid transparent; text-transform: uppercase; }
+
+/* ── SCROLL PIN: runway then sticky full-viewport stage ── */
+.hero-pin {
+  position: relative;
+  /* longer runway = smoother shrink + dissolve before content */
+  height: 185vh;
+  z-index: 2;
+}
+.hero-stage {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* film stack under/around the wordmark */
+.film-bloom,
+.film-grain,
+.film-gate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+/* soft technicolor bloom — stronger when logo is large */
+.film-bloom {
+  background:
+    radial-gradient(ellipse 55% 40% at 50% 48%,
+      rgba(237, 230, 222, calc(0.22 * (1 - var(--p, 0) * 0.85))) 0%,
+      transparent 70%),
+    radial-gradient(ellipse 40% 30% at 42% 50%,
+      rgba(212, 74, 24, calc(0.14 * (1 - var(--p, 0)))) 0%,
+      transparent 65%),
+    radial-gradient(ellipse 40% 30% at 58% 50%,
+      rgba(30, 120, 200, calc(0.14 * (1 - var(--p, 0)))) 0%,
+      transparent 65%);
+  mix-blend-mode: screen;
+  opacity: calc(0.55 + 0.45 * (1 - var(--p, 0)));
+  filter: blur(calc(2px + 18px * (1 - var(--p, 0))));
+  animation: film-breathe 5.5s ease-in-out infinite;
+}
+/* medical emulsion grain */
+.film-grain {
+  opacity: calc(0.18 + 0.28 * (1 - var(--p, 0)));
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: grain-drift 0.45s steps(2) infinite;
+}
+/* projector gate weave / slight vignette pulse */
+.film-gate {
+  box-shadow:
+    inset 0 0 calc(40px + 80px * (1 - var(--p, 0))) rgba(9, 9, 9, calc(0.25 + 0.2 * (1 - var(--p, 0)))),
+    inset 0 0 0 1px rgba(208, 213, 219, calc(0.06 * (1 - var(--p, 0))));
+  animation: gate-weave 3.2s ease-in-out infinite;
+  opacity: calc(0.35 + 0.65 * (1 - var(--p, 0)));
+}
+
+.splash-frame {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0 var(--pad);
+  /* scale whole mark: full-screen presence → catalog size */
+  transform: scale(calc(var(--splash-scale-max) - (var(--splash-scale-max) - 1) * var(--p, 0)));
+  transform-origin: center center;
+  will-change: transform, opacity;
+  /*
+   * medical transparency while large; solid mid-scroll;
+   * dissolve in the last ~15% so the sticky pin can release cleanly
+   * (header .brand-mark + project grid take over)
+   */
+  opacity: calc(
+    (0.80 + 0.20 * var(--p, 0))
+    * (1 - max(0, (var(--p, 0) - 0.84) / 0.16))
+  );
+  filter:
+    contrast(calc(1.05 + 0.08 * (1 - var(--p, 0))))
+    brightness(calc(1.02 + 0.04 * (1 - var(--p, 0))));
+}
+
+.splash {
+  margin: 0;
+  display: inline-block;
+  position: relative;
+  font-size: var(--splash-end) !important;
+  line-height: 0.86 !important;
+  letter-spacing: var(--splash-tracking) !important;
+  font-weight: 400 !important;
+  user-select: none;
+  white-space: nowrap;
+  width: max-content;
+  /* ink medical-film letterforms */
+  color: var(--film-ink) !important;
+}
+.splash, .splash .glyph, h1.splash, .brand-mark {
+  text-transform: none !important;
+}
+
+/* each glyph: RGB dye misregistration ghosts + bloom */
+.splash .glyph {
+  display: inline-block;
+  position: relative;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  color: var(--film-ink) !important;
+  /* soft film bloom on the solid ink */
+  text-shadow:
+    0 0 calc(2px + 14px * (1 - var(--p, 0))) rgba(237, 230, 222, calc(0.35 * (1 - var(--p, 0)))),
+    0 0 calc(6px + 28px * (1 - var(--p, 0))) rgba(30, 120, 200, calc(0.22 * (1 - var(--p, 0)))),
+    0 1px 0 rgba(237, 230, 222, 0.18);
+  animation: emulsion-flicker 6.5s infinite steps(1, end);
+}
+.splash .glyph:nth-child(2) { animation-delay: 0.55s; }
+.splash .glyph:nth-child(3) { animation-delay: 1.25s; }
+
+/* cyan plate (sky) — technicolor layer */
+.splash .glyph::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 0; top: 0;
+  color: var(--film-sky);
+  opacity: 0;
+  mix-blend-mode: screen;
+  transform: translate(var(--rgb-cx, -2px), var(--rgb-cy, 1px));
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(calc(0.2px + 0.6px * (1 - var(--p, 0))));
+}
+/* magenta/poppy plate */
+.splash .glyph::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0; top: 0;
+  color: var(--glitch-color, var(--film-poppy));
+  opacity: 0;
+  mix-blend-mode: multiply;
+  transform: translate(var(--glitch-x, 2px), var(--glitch-y, -1px));
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(calc(0.15px + 0.5px * (1 - var(--p, 0))));
+}
+.splash .glyph.is-glitching::before {
+  opacity: calc(0.55 + 0.35 * (1 - var(--p, 0)));
+}
+.splash .glyph.is-glitching::after {
+  opacity: calc(0.65 + 0.3 * (1 - var(--p, 0)));
+}
+/* idle soft separation when large (always a little misregistered) */
+.splash .glyph {
+  --rgb-cx: calc(-1.5px - 2.5px * (1 - var(--p, 0)));
+  --rgb-cy: calc(0.5px + 1px * (1 - var(--p, 0)));
+}
+.hero-stage.is-live .splash .glyph::before {
+  opacity: calc(0.12 + 0.2 * (1 - var(--p, 0)));
+}
+.hero-stage.is-live .splash .glyph::after {
+  opacity: calc(0.08 + 0.12 * (1 - var(--p, 0)));
+}
+
+@keyframes emulsion-flicker {
+  0%, 94%, 100% { opacity: 1; filter: none; }
+  95% { opacity: 0.92; }
+  96% { opacity: 1; }
+  97.5% { opacity: 0.86; }
+  98% { opacity: 0.98; }
+}
+@keyframes film-breathe {
+  0%, 100% { transform: scale(1); opacity: inherit; }
+  50% { transform: scale(1.04); }
+}
+@keyframes grain-drift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-1.5%, 1%); }
+  50% { transform: translate(1%, -1.5%); }
+  75% { transform: translate(-0.5%, -1%); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes gate-weave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(0.35px); }
+}
+
+/* scroll cue — fades out as user engages */
+.hero-cue {
+  position: absolute;
+  bottom: clamp(1.25rem, 4vh, 2.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  font-family: var(--f00-font-chip, ui-monospace, monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(208, 213, 219, 0.85);
+  opacity: calc(0.9 * (1 - var(--p, 0) * 1.4));
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(9, 9, 9, 0.45);
+}
+
+/* content after pin */
+main { position: relative; z-index: 1; }
+.projects, .products {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0.25rem var(--pad) 3rem;
+  /* content solidifies as logo dissolves */
+  opacity: calc(0.2 + 0.8 * min(1, var(--p, 0) * 1.05));
+  transform: translateY(calc((1 - var(--p, 0)) * 1.25rem));
+  transition: none;
+}
+.section-head {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(208, 213, 219, 0.72);
+  padding-bottom: 0.45rem;
+}
+.section-head h2 {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 1.1rem;
+  border: 0;
+}
+.card-actions {
+  display: flex; flex-wrap: wrap; margin-top: 0.75rem; padding-top: 0.65rem;
+  border-top: 1px solid rgba(9, 9, 9, 0.25);
+}
+.card-actions .btn { margin: 0 0.4rem 0.35rem 0; }
+.facts { margin: 0.75rem 0; padding: 0; list-style: none; font-size: 0.85rem; }
+.facts li { margin: 0.15rem 0; padding: 0.15rem 0; }
+
+.foot {
+  max-width: var(--max); margin: 0 auto; padding: 1.1rem var(--pad) 2rem;
+  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  font-size: 0.78rem; letter-spacing: 0.14em; text-transform: none;
+  position: relative; z-index: 1;
+}
+.foot-stars {
+  text-decoration: none;
+  font-family: var(--font-chip, ui-monospace, monospace);
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(208, 213, 219, 0.92) !important;
+}
+.foot-stars:hover { color: #e4e8ed !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-pin { height: auto; }
+  .hero-stage { position: relative; height: auto; min-height: 55vh; padding: 2rem 0; }
+  .splash-frame {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+  .splash { font-size: clamp(5rem, 20vw, 12rem) !important; }
+  .film-bloom, .film-grain, .film-gate { animation: none; opacity: 0.25; }
+  .splash .glyph { animation: none; }
+  .hero-cue { display: none; }
+  .top { opacity: 1; }
+  .projects { opacity: 1; }
+  html { scroll-behavior: auto; }
+}
+
+@media (max-width: 520px) {
+  .nav { gap: 0.7rem; font-size: 0.72rem; }
+  :root { --splash-scale-max: 2.35; --splash-end: clamp(4.25rem, 22vw, 8rem); }
+  .hero-pin { height: 155vh; }
+  .card h3 { font-size: 0.88rem; }
+  .grid { gap: 1.1rem; }
+}
+
+/* when shrink complete, allow pointer through stage chrome */
+.hero-stage.is-done .hero-cue { visibility: hidden; }

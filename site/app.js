@@ -1,4 +1,4 @@
-/* f00.sh — catalog project cards + silver sparkles + logo color glitches */
+/* f00.sh — catalog cards + scroll-shrink film hero + technicolor glitches */
 (() => {
   const CATALOG_URLS = [
     "/catalog.json",
@@ -6,18 +6,61 @@
     "https://f00.sh/catalog.json",
   ];
 
+  /* photo-locked Heartbox — no pure white / LED primaries */
   const THEME_COLORS = [
-    "#C50A1B", "#2096EE", "#EDE6DE", "#B8BEC2", "#C47A72",
-    "#D4A83A", "#5A8A3A", "#454B93", "#C45A20",
-    "#F5F1EA", "#E81420", "#4AADF5",
+    "#D44A18", "#1E78C8", "#EDE6DE", "#B8BEC2", "#C47A72",
+    "#C49A3C", "#3D8A48", "#454B93", "#C45A20",
+    "#8B9AD0", "#E86022", "#3A94D8", "#E8E2D8",
   ];
 
+  const root = document.documentElement;
+  const pin = document.querySelector(".hero-pin");
+  const stage = document.querySelector(".hero-stage");
   const splash = document.querySelector(".splash");
   if (splash) {
     splash.style.fontSize = "";
     splash.style.width = "";
     splash.style.display = "";
     splash.style.transform = "";
+  }
+
+  /* —— Scroll progress: full-screen film logo → catalog size —— */
+  const prefersReduced = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  const setProgress = (p) => {
+    const v = Math.max(0, Math.min(1, p));
+    root.style.setProperty("--p", v.toFixed(4));
+    if (stage) {
+      stage.classList.toggle("is-done", v > 0.92);
+      stage.classList.add("is-live");
+    }
+  };
+
+  const updateHeroScroll = () => {
+    if (!pin || prefersReduced) {
+      setProgress(prefersReduced ? 1 : 0);
+      return;
+    }
+    const total = Math.max(1, pin.offsetHeight - window.innerHeight);
+    const scrolled = Math.min(total, Math.max(0, -pin.getBoundingClientRect().top));
+    setProgress(scrolled / total);
+  };
+
+  if (pin) {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        updateHeroScroll();
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    updateHeroScroll();
   }
 
   const escapeHtml = (s) =>
@@ -160,129 +203,79 @@
     paintStaticCards();
   });
 
-// —— Logo glitches: random Heartbox theme color ——
+// —— Film glitches: technicolor plate misregistration + emulsion flash ——
   const glyphs = document.querySelectorAll(".splash .glyph");
-  const prefersReduced = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
 
   if (glyphs.length && !prefersReduced) {
     const pickColor = () =>
       THEME_COLORS[Math.floor(Math.random() * THEME_COLORS.length)];
 
+    const pNow = () => parseFloat(getComputedStyle(root).getPropertyValue("--p")) || 0;
+
     const fireGlitch = () => {
+      const p = pNow();
+      /* stronger / wider when logo is large (full hero) */
+      const amp = 1.2 + (1 - p) * 4.5;
       const g = glyphs[Math.floor(Math.random() * glyphs.length)];
       const color = pickColor();
-      const ox = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * 3);
-      const oy = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * 2);
+      const ox = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * amp);
+      const oy = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * amp * 0.55);
       g.style.setProperty("--glitch-color", color);
-      g.style.setProperty("--glitch-x", `${ox}px`);
-      g.style.setProperty("--glitch-y", `${oy}px`);
+      g.style.setProperty("--glitch-x", `${ox.toFixed(2)}px`);
+      g.style.setProperty("--glitch-y", `${oy.toFixed(2)}px`);
+      g.style.setProperty(
+        "--rgb-cx",
+        `${((Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * amp * 0.7)).toFixed(2)}px`
+      );
+      g.style.setProperty(
+        "--rgb-cy",
+        `${((Math.random() < 0.5 ? -1 : 1) * Math.random() * amp * 0.4).toFixed(2)}px`
+      );
       g.classList.add("is-glitching");
-      // occasional second ghost flash
-      if (Math.random() < 0.35) {
+
+      /* occasional multi-plate flash (dye transfer tear) */
+      if (Math.random() < 0.4 + (1 - p) * 0.25) {
         const g2 = glyphs[Math.floor(Math.random() * glyphs.length)];
         g2.style.setProperty("--glitch-color", pickColor());
         g2.style.setProperty(
           "--glitch-x",
-          `${(Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 4)}px`
+          `${((Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * amp)).toFixed(2)}px`
         );
         g2.style.setProperty(
           "--glitch-y",
-          `${(Math.random() < 0.5 ? -1 : 1) * Math.random() * 3}px`
+          `${((Math.random() < 0.5 ? -1 : 1) * Math.random() * amp * 0.5).toFixed(2)}px`
         );
         g2.classList.add("is-glitching");
-        window.setTimeout(() => g2.classList.remove("is-glitching"), 60 + Math.random() * 80);
+        window.setTimeout(
+          () => g2.classList.remove("is-glitching"),
+          70 + Math.random() * 140
+        );
       }
-      window.setTimeout(() => g.classList.remove("is-glitching"), 50 + Math.random() * 120);
+
+      /* rare full-word flash */
+      if (Math.random() < 0.12 * (1.2 - p)) {
+        glyphs.forEach((el) => {
+          el.style.setProperty("--glitch-color", pickColor());
+          el.classList.add("is-glitching");
+        });
+        window.setTimeout(() => {
+          glyphs.forEach((el) => el.classList.remove("is-glitching"));
+        }, 40 + Math.random() * 60);
+      }
+
+      window.setTimeout(
+        () => g.classList.remove("is-glitching"),
+        55 + Math.random() * (90 + (1 - p) * 80)
+      );
     };
 
     const scheduleGlitch = () => {
       fireGlitch();
-      const next = 400 + Math.random() * 2200;
+      const p = pNow();
+      /* denser glitches while full-screen */
+      const next = 220 + Math.random() * (900 + p * 1600);
       window.setTimeout(scheduleGlitch, next);
     };
-    window.setTimeout(scheduleGlitch, 600);
+    window.setTimeout(scheduleGlitch, 400);
   }
-
-  // —— Silver sparkles only (no background grid) ——
-  const canvas = document.getElementById("field");
-  if (!canvas || prefersReduced) return;
-  const ctx = canvas.getContext("2d", { alpha: true });
-  if (!ctx) return;
-
-  let w = 0;
-  let h = 0;
-  let dpr = 1;
-  let dots = [];
-  let raf = 0;
-
-  const resize = () => {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    w = window.innerWidth;
-    h = window.innerHeight;
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    canvas.style.width = `${w}px`;
-    canvas.style.height = `${h}px`;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const count = Math.floor((w * h) / 11000);
-    dots = Array.from({ length: count }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      v: 0.2 + Math.random() * 0.7,
-      s: Math.random() < 0.2 ? 2 : 1,
-      a: 0.25 + Math.random() * 0.65,
-      tw: Math.random() * Math.PI * 2,
-    }));
-  };
-
-  const tick = (t) => {
-    ctx.clearRect(0, 0, w, h);
-
-    // soft paint smudges (no grid) — drifting silver haze
-    if (Math.random() < 0.08) {
-      const gx = Math.random() * w;
-      const gy = Math.random() * h * 0.7;
-      const gr = 20 + Math.random() * 80;
-      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
-      g.addColorStop(0, "rgba(184, 192, 200, 0.06)");
-      g.addColorStop(1, "rgba(184, 192, 200, 0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(gx, gy, gr, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    for (const d of dots) {
-      d.y += d.v;
-      d.tw += 0.04;
-      if (d.y > h + 4) {
-        d.y = -4;
-        d.x = Math.random() * w;
-      }
-      const twinkle = 0.55 + 0.45 * Math.sin(d.tw + t * 0.002);
-      const a = Math.min(1, d.a * twinkle);
-      // silver only
-      ctx.fillStyle = `rgba(184, 192, 200, ${a})`;
-      ctx.fillRect(Math.floor(d.x), Math.floor(d.y), d.s, d.s);
-      // brighter silver core on larger sparks
-      if (d.s > 1) {
-        ctx.fillStyle = `rgba(244, 248, 252, ${a * 0.7})`;
-        ctx.fillRect(Math.floor(d.x), Math.floor(d.y), 1, 1);
-      }
-    }
-
-    raf = requestAnimationFrame(tick);
-  };
-
-  window.addEventListener("resize", resize, { passive: true });
-  resize();
-  raf = requestAnimationFrame(tick);
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) cancelAnimationFrame(raf);
-    else raf = requestAnimationFrame(tick);
-  });
 })();
