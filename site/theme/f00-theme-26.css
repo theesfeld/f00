@@ -640,5 +640,3 @@ code:not(pre code), kbd {
 .crt, #field, .grain, .vignette, .tint, .scanlines, .field {
   display: none !important;
 }
-
-/* pin-target-main-nogrids */

@@ -1,7 +1,8 @@
+/* no-grid-photo-only-v3 */
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
-   Live: https://f00.sh/theme/f00-theme-23.css
+   Live: https://f00.sh/theme/f00-theme-26.css
 
-   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-23.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-26.css" />
 
    Heartbox v0.2.1 (Heart-Shaped Box video)
    Website shell: fixed unscaled technicolor poppy photo + light silver chrome
@@ -9,7 +10,7 @@
    Project CSS = layout/structure only.
 
    Textures: https://f00.sh/theme/textures/
-   build-s10-critical full-cover + header scroll + code black
+   build-s11 no-grid-photo-only full cover
 
    build-s8
 
@@ -155,57 +156,23 @@ html, body {
   letter-spacing: var(--f00-tracking-body);
   color: #D0D5DB !important;
   background-color: #2096ee !important;
-  /* FULL-VIEWPORT fixed hero — cover the screen */
-  background-image:
-    linear-gradient(180deg, rgba(10, 92, 173, 0.12) 0%, transparent 42%, rgba(6, 58, 110, 0.28) 100%),
-    var(--tex-paper),
-    var(--tex-hero),
-    linear-gradient(168deg, #4aadf5 0%, #2096ee 40%, #0a5cad 78%, #063a6e 100%) !important;
-  background-size:
-    auto,
-    220px 220px,
-    cover,
-    auto !important;
-  background-position:
-    center,
-    0 0,
-    center center,
-    center !important;
-  background-repeat: no-repeat, repeat, no-repeat, no-repeat !important;
-  background-attachment: fixed, fixed, fixed, fixed !important;
-  background-blend-mode: normal, soft-light, normal, normal !important;
+  /* ONLY the poppy photo — full viewport cover, fixed. No paper grid. */
+  background-image: var(--tex-hero) !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-blend-mode: normal !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 
 
-/* light paper tooth over hero photo */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.22;
-  mix-blend-mode: soft-light;
-  background-image: var(--tex-paper);
-  background-size: 200px 200px;
-  background-repeat: repeat;
-}
-
-/* subtle technicolor vignette — keep photo readable under chrome */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.2;
-  mix-blend-mode: multiply;
-  background:
-    radial-gradient(ellipse 90% 70% at 50% 40%, transparent 35%, rgba(6, 58, 110, 0.45) 100%),
-    radial-gradient(circle at 20% 80%, rgba(197, 10, 27, 0.12), transparent 40%);
+/* no page overlays — photo only */
+body::before, body::after {
+  content: none !important;
+  display: none !important;
 }
 
 body > * { position: relative; z-index: 1; }
@@ -647,7 +614,7 @@ code:not(pre code), kbd {
   color: #E4E8ED !important;
 }
 /* local dark overlays fight the shared sky */
-.field, .crt, .scanlines {
+.field, .crt, .scanlines, #field, .grain {
   display: none !important;
 }
 .vignette, .tint {
@@ -667,3 +634,11 @@ code:not(pre code), kbd {
   color: #EDE6DE !important;
   text-shadow: 0 1px 0 rgba(9,9,9,0.5), 0 2px 6px rgba(9,9,9,0.3) !important;
 }
+
+
+/* hide hub canvas / grain overlays — bg is the photo alone */
+.crt, #field, .grain, .vignette, .tint, .scanlines, .field {
+  display: none !important;
+}
+
+/* pin-target-25-nogrids */

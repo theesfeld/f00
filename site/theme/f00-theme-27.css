@@ -1,8 +1,8 @@
-/* no-grid-photo-only-v3 */
+/* no-grid-photo-only-v3-nogrids */
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
-   Live: https://f00.sh/theme/f00-theme-26.css
+   Live: https://f00.sh/theme/f00-theme-27.css
 
-   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-26.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-27.css" />
 
    Heartbox v0.2.1 (Heart-Shaped Box video)
    Website shell: fixed unscaled technicolor poppy photo + light silver chrome
@@ -640,5 +640,3 @@ code:not(pre code), kbd {
 .crt, #field, .grain, .vignette, .tint, .scanlines, .field {
   display: none !important;
 }
-
-/* pin-target-main-nogrids */
