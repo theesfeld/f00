@@ -18,7 +18,7 @@
   <link rel="preload" href="/assets/fonts/Onyx.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/assets/fonts/Onyx.otf" as="font" type="font/otf" crossorigin />
   <link rel="stylesheet" href="/theme/f00-theme-33.css" />
-  <link rel="stylesheet" href="styles-25.css?v=25f" />
+  <link rel="stylesheet" href="styles-25.css?v=25g" />
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -45,10 +45,8 @@
     <section class="hero is-live" id="top">
       <div class="splash-frame">
         <div class="splash-wrap">
-          <!-- film sized to the mark box only (soft radial — no viewport slab) -->
-          <div class="film-bloom" aria-hidden="true"></div>
-          <div class="film-grain" aria-hidden="true"></div>
-          <div class="film-gate" aria-hidden="true"></div>
+          <!-- WebGL Technicolor plate (film-logo.js); DOM mark keeps layout + a11y -->
+          <canvas class="splash-film" aria-hidden="true"></canvas>
           <h1 class="splash" aria-label="f00">
             <span class="glyph" data-text="f">f</span><span class="glyph" data-text="0">0</span><span class="glyph" data-text="0">0</span>
           </h1>
@@ -158,7 +156,8 @@
     <a class="foot-stars" href="https://github.com/f00-sh" rel="noopener" data-f00-stars-total>★ …</a>
   </footer>
 
-  <script src="app.js?v=25f" defer></script>
+  <script src="film-logo.js?v=2" defer></script>
+  <script src="app.js?v=26b" defer></script>
   <script data-f00-stars-script>
 /* f00 GitHub stars — hub + project footers (also SPA-safe) */
 (() => {

@@ -44,6 +44,8 @@
   let splashRestH = 0;
   let logoGapPx = 28;
   let shrinkRange = 1;
+  let dockOp = 1;
+  let filmHandle = null;
 
   const measureHeader = () => {
     const el = headerInner || header;
@@ -130,8 +132,9 @@
   };
 
   const setDock = (yPx, op) => {
+    dockOp = Math.max(0, Math.min(1, op));
     root.style.setProperty("--dock-y", `${yPx.toFixed(1)}px`);
-    root.style.setProperty("--dock-op", Math.max(0, Math.min(1, op)).toFixed(3));
+    root.style.setProperty("--dock-op", dockOp.toFixed(3));
   };
 
   const updateHeroScroll = () => {
@@ -172,6 +175,7 @@
       measureHeader();
       measureSplashSizes();
       updateHeroScroll();
+      if (filmHandle && filmHandle.resize) filmHandle.resize();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
@@ -327,86 +331,36 @@
   });
 
   /*
-   * Dye-transfer / Technicolor plate misregistration on the MARK only.
-   * No full-viewport FX here — edge flash was the rectangular film stack.
-   * Hold longer, fire rarer; sky/poppy/cream plates (Oz · HSB · medical cel).
+   * Technicolor film plate — real WebGL shaders (film-logo.js).
+   * Warp / dye-transfer CA / bloom / grain / gate — not CSS font overlays.
+   * Falls back to static ink mark if WebGL missing or reduced motion.
    */
-  const glyphs = document.querySelectorAll(".splash .glyph");
-
-  if (glyphs.length && !prefersReduced) {
-    /* photo-locked dye plates only — not the whole palette strobe */
-    const PLATES = ["#1E78C8", "#D44A18", "#E86022", "#EDE6DE", "#C47A72"];
-    const pickPlate = () => PLATES[Math.floor(Math.random() * PLATES.length)];
-    const pNow = () =>
-      parseFloat(getComputedStyle(root).getPropertyValue("--p")) || 0;
-    const sign = () => (Math.random() < 0.5 ? -1 : 1);
-
-    const fireGlitch = () => {
-      const p = pNow();
-      /* amp in px on the glyph — never screen-edge scale */
-      const amp = 0.8 + (1 - p) * 3.2;
-      const g = glyphs[Math.floor(Math.random() * glyphs.length)];
-      g.style.setProperty("--glitch-color", pickPlate());
-      g.style.setProperty("--glitch-x", `${(sign() * (0.6 + Math.random() * amp)).toFixed(2)}px`);
-      g.style.setProperty("--glitch-y", `${(sign() * Math.random() * amp * 0.45).toFixed(2)}px`);
-      g.style.setProperty(
-        "--rgb-cx",
-        `${(sign() * (0.5 + Math.random() * amp * 0.65)).toFixed(2)}px`
-      );
-      g.style.setProperty(
-        "--rgb-cy",
-        `${(sign() * Math.random() * amp * 0.35).toFixed(2)}px`
-      );
-      g.classList.add("is-glitching");
-
-      /* occasional second plate (dye tear on another glyph) */
-      if (Math.random() < 0.35 + (1 - p) * 0.2) {
-        const g2 = glyphs[Math.floor(Math.random() * glyphs.length)];
-        g2.style.setProperty("--glitch-color", pickPlate());
-        g2.style.setProperty(
-          "--glitch-x",
-          `${(sign() * (1 + Math.random() * amp)).toFixed(2)}px`
-        );
-        g2.style.setProperty(
-          "--glitch-y",
-          `${(sign() * Math.random() * amp * 0.4).toFixed(2)}px`
-        );
-        g2.classList.add("is-glitching");
-        window.setTimeout(
-          () => g2.classList.remove("is-glitching"),
-          90 + Math.random() * 160
-        );
-      }
-
-      /* rare full-word registration slip (whole mark) */
-      if (Math.random() < 0.08 * (1.15 - p)) {
-        const plate = pickPlate();
-        glyphs.forEach((el) => {
-          el.style.setProperty("--glitch-color", plate);
-          el.style.setProperty(
-            "--glitch-x",
-            `${(sign() * (1 + Math.random() * amp * 0.8)).toFixed(2)}px`
-          );
-          el.classList.add("is-glitching");
-        });
-        window.setTimeout(() => {
-          glyphs.forEach((el) => el.classList.remove("is-glitching"));
-        }, 70 + Math.random() * 90);
-      }
-
-      window.setTimeout(
-        () => g.classList.remove("is-glitching"),
-        80 + Math.random() * (120 + (1 - p) * 100)
-      );
-    };
-
-    const scheduleGlitch = () => {
-      fireGlitch();
-      const p = pNow();
-      /* rarer holds — film hitch, not club strobe */
-      const next = 700 + Math.random() * (1400 + p * 2200);
-      window.setTimeout(scheduleGlitch, next);
-    };
-    window.setTimeout(scheduleGlitch, 600);
+  const splashWrap = document.querySelector(".splash-wrap");
+  const filmCanvas = document.querySelector("canvas.splash-film");
+  if (
+    filmCanvas &&
+    splashWrap &&
+    splash &&
+    !prefersReduced &&
+    window.F00FilmLogo &&
+    typeof window.F00FilmLogo.mount === "function"
+  ) {
+    filmHandle = window.F00FilmLogo.mount({
+      canvas: filmCanvas,
+      splashEl: splash,
+      text: "f00",
+      ink: "#090909",
+      fontFamily: '"Onyx", "Times New Roman", Times, serif',
+      getFontPx: () => {
+        const fs = parseFloat(getComputedStyle(splash).fontSize);
+        return Number.isFinite(fs) ? fs : splashMaxPx || 120;
+      },
+      getP: () =>
+        parseFloat(getComputedStyle(root).getPropertyValue("--p")) || 0,
+      getOpacity: () => dockOp,
+    });
+    if (filmHandle) {
+      splashWrap.classList.add("is-film");
+    }
   }
 })();
