@@ -82,11 +82,18 @@ export function mountThrowPlate(opts) {
     if (Number.isFinite(sh) && sh > 32) shrinkRange = sh;
     else shrinkRange = Math.max(64, (maxPx - restPx) * 0.86);
 
-    /* vertical travel: full-viewport center → header mid (no chrome at rest) */
+    /* vertical travel: optical center → header mid (no chrome at rest) */
     const viewH = window.innerHeight || 800;
-    const bandMid = viewH * 0.5;
+    /*
+     * Onyx "f" flourish loads the top of the box — true bbox center reads high.
+     * Nudge rest pose slightly down so the mass feels centered.
+     */
+    const opticalNudge = Math.min(36, Math.max(12, viewH * 0.028));
+    const bandMid = viewH * 0.5 + opticalNudge;
     const headMid = headerH * 0.5;
     travelY = headMid - bandMid;
+    /* rest offset (p=0): keep the nudge; docks to 0 via travel lerp */
+    canvas.dataset.opticalNudge = String(opticalNudge);
   };
 
   const readTargetP = () => {
@@ -108,13 +115,15 @@ export function mountThrowPlate(opts) {
     dispScale += (targetScale - dispScale) * f;
 
     /*
-     * Compositor-only: center of band + rise into header + scale.
-     * Frame layout does not change with p (iOS-safe).
-     * When hard-docked, travel is 0 (frame is already the header bar).
+     * Compositor-only: optical center + rise into header + scale.
+     * travelY already includes rest optical nudge → header mid.
+     * When hard-docked, frame is the header bar → y = 0.
      */
     const docked =
       pp > 0.88 || document.documentElement.classList.contains("logo-docked");
-    const y = docked ? 0 : travelY * pp;
+    const nudge = parseFloat(canvas.dataset.opticalNudge || "0") || 0;
+    /* p=0: +nudge (down); p→1: travel toward header (travelY already from nudged mid) */
+    const y = docked ? 0 : nudge + travelY * pp;
 
     canvas.style.left = "50%";
     canvas.style.top = "50%";

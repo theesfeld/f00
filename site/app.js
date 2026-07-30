@@ -84,23 +84,24 @@
       parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
     logoGapPx = readLogoGap();
     /*
-     * First screen: full viewport, no header chrome. Logo centered on the
-     * open field. Header only appears when the mark docks into it.
-     * Cards live on the next screen (below the fold).
+     * First screen: full viewport, no header chrome. Mark floats with real
+     * air — not a near-edge fill. Onyx flourishes read top-heavy, so we
+     * size conservatively and let throw-plate bias a hair downward.
      */
     const viewH = window.innerHeight;
     const bandH = Math.max(200, viewH);
-    /* air above/below the ink so the mark floats, not fills the band */
-    const air = Math.max(36, Math.min(96, bandH * 0.11));
+    /* ~18% air each side → ink occupies ~half the field, not the whole thing */
+    const air = Math.max(56, Math.min(160, bandH * 0.18));
     const availH = Math.max(160, bandH - air * 2);
-    const availW = window.innerWidth * 0.84;
+    const availW = window.innerWidth * 0.78;
+    /* hard ceiling: glyph box ≤ ~50% of viewport height */
+    const maxInkH = viewH * 0.5;
     /* rest: compact brand in the header bar */
     splashRestPx = Math.min(56, Math.max(40, window.innerWidth * 0.038));
     /*
      * Onyx "f00": glyph box ≈ 0.84×font tall, ≈ 1.28×font wide.
-     * Fit the full viewport with air at the edges.
      */
-    const byH = availH / 0.84;
+    const byH = Math.min(availH, maxInkH) / 0.84;
     const byW = availW / 1.28;
     splashMaxPx = Math.min(byH, byW);
     splashMaxPx = Math.max(splashRestPx * 2.2, splashMaxPx);
@@ -115,8 +116,9 @@
     splashRestH = measureAtFont(splashRestPx) || splashRestPx * 0.84;
     root.style.setProperty("--p", pWas || "0");
 
-    if (splashMaxH > availH * 1.02) {
-      splashMaxPx *= availH / splashMaxH;
+    const fitH = Math.min(availH, maxInkH);
+    if (splashMaxH > fitH * 1.01) {
+      splashMaxPx *= fitH / splashMaxH;
       root.style.setProperty("--splash-max", `${splashMaxPx.toFixed(1)}px`);
       root.style.setProperty("--p", "0");
       splashMaxH = measureAtFont(splashMaxPx) || splashMaxPx * 0.84;
