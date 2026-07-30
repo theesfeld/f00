@@ -14,6 +14,7 @@
 | **Cel Index** | [cel.f00.sh](https://cel.f00.sh/) | [f00-sh/cel](https://github.com/f00-sh/cel) | Femcel / Incel self-assessment (formal project model) |
 | **TRN** | [trn.f00.sh](https://trn.f00.sh/) | [f00-sh/trn](https://github.com/f00-sh/trn) | Enhanced Tabular Recipe Notation converter (eTRN) |
 | **Heartbox** | [heartbox.f00.sh](https://heartbox.f00.sh/) | [f00-sh/heartbox](https://github.com/f00-sh/heartbox) | Hand-tinted Technicolor dark theme — f00 default brand palette |
+| **joule** | [joule.f00.sh](https://joule.f00.sh/) | [f00-sh/joule](https://github.com/f00-sh/joule) | Distributed GPU cluster — idle cards into open-weight AI inference |
 
 _After editing `catalog.json`, run `python3 scripts/sync-from-catalog.py`._
 

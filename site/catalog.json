@@ -190,19 +190,22 @@
     {
       "id": "joule",
       "name": "joule",
-      "status": "wip",
+      "status": "released",
       "domain": "joule.f00.sh",
       "site": "https://joule.f00.sh/",
       "repo": "https://github.com/f00-sh/joule",
       "repo_slug": "f00-sh/joule",
-      "pages_project": null,
+      "pages_project": "f00-joule",
       "packages": null,
       "local": "joule",
       "license": "MIT",
-      "one_liner": "Distributed internet-wide supercomputer cluster: pool idle GPUs into open-weight AI inference (Kimi-class)",
-      "docs": null,
-      "blurb": "Donate idle GPU cycles to a global volunteer cluster. Earn millijoules. Live dashboard of pool capacity. Open-weight models (Kimi-class). Access only if you contribute.",
-      "facts": []
+      "one_liner": "Distributed GPU cluster — idle cards into open-weight AI inference",
+      "docs": "https://joule.f00.sh/",
+      "blurb": "Pool idle GPUs into a volunteer supercomputer for open-weight inference (Kimi-class). Donate compute, earn millijoules, burn them for API access. Live capacity dashboard. Public pool is free — pay in cycles, not cash.",
+      "facts": [
+        "native agent \u00b7 millijoule economy",
+        "OpenAI-compatible gateway \u00b7 MIT"
+      ]
     }
   ]
 }
