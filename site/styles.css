@@ -100,3 +100,13 @@ body { margin: 0; min-height: 100dvh; overflow-x: hidden; }
   .card h3 { font-size: 0.88rem; }
   .grid { gap: 1.1rem; }
 }
+
+.foot-stars {
+  text-decoration: none;
+  font-family: var(--font-chip, ui-monospace, monospace);
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.92) !important;
+}
+.foot-stars:hover { color: #fff !important; }
+.brand { cursor: pointer; text-decoration: none; }

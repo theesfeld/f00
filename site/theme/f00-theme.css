@@ -473,3 +473,17 @@ a { color: #ffffff; }
 a:hover { color: #f5f1ea; }
 hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.45); }
 * { --radius: 0; }
+
+/* GitHub star count in footers */
+.foot-stars, a[data-f00-stars], a[data-f00-stars-total] {
+  text-decoration: none !important;
+  font-family: var(--f00-font-chip) !important;
+  letter-spacing: 0.12em !important;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.92) !important;
+  white-space: nowrap;
+}
+.foot-stars:hover, a[data-f00-stars]:hover, a[data-f00-stars-total]:hover {
+  color: #ffffff !important;
+}
+a.brand { text-decoration: none !important; }
