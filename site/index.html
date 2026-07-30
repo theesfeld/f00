@@ -18,9 +18,9 @@
   <link rel="preload" href="/assets/fonts/Onyx.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/assets/fonts/Onyx.otf" as="font" type="font/otf" crossorigin />
   <link rel="stylesheet" href="/theme/f00-theme-34.css" />
-  <link rel="stylesheet" href="styles-25.css?v=25u" />
+  <link rel="stylesheet" href="styles-25.css?v=25v" />
   <script src="/theme/f00-entropy.js?v=21" data-f00-entropy-script defer></script>
-  <script type="module" src="throw-plate.js?v=13"></script>
+  <script type="module" src="throw-plate.js?v=15"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -43,23 +43,21 @@
     </div>
   </header>
 
+  <!-- film frame is a direct body child so position:fixed can't be trapped -->
+  <div class="splash-frame" id="splash-frame">
+    <div class="splash-wrap">
+      <canvas class="splash-film" aria-hidden="true"></canvas>
+      <h1 class="splash" aria-label="f00">
+        <span class="glyph" data-text="f">f</span><span class="glyph" data-text="0">0</span><span class="glyph" data-text="0">0</span>
+      </h1>
+    </div>
+  </div>
+
   <main id="main">
-    <section class="hero is-live" id="top">
-      <div class="splash-frame">
-        <div class="splash-wrap">
-          <!-- WebGL film PROJECTOR plate — geometry from lamp/lens/gate, not font FX -->
-          <canvas class="splash-film" aria-hidden="true"></canvas>
-          <h1 class="splash" aria-label="f00">
-            <span class="glyph" data-text="f">f</span><span class="glyph" data-text="0">0</span><span class="glyph" data-text="0">0</span>
-          </h1>
-        </div>
-      </div>
-    </section>
+    <section class="hero is-live" id="top" aria-hidden="true"></section>
 
     <section class="projects" id="projects">
-      <header class="section-head">
-        <h2>projects</h2>
-      </header>
+      <!-- projects label lives in nav; no section rule under docked mark -->
 
       <div class="grid" id="project-grid" data-from-catalog="1">
 <!-- f00-catalog:projects:begin -->
@@ -161,7 +159,7 @@
     <a class="foot-stars" href="https://github.com/f00-sh" rel="noopener" data-f00-stars-total>★ …</a>
   </footer>
 
-  <script src="app.js?v=37" defer></script>
+  <script src="app.js?v=38" defer></script>
   <script data-f00-stars-script>
 /* f00 GitHub stars — hub + project footers (also SPA-safe) */
 (() => {

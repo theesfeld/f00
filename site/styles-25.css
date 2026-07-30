@@ -138,24 +138,22 @@ main {
 }
 
 /*
- * Film logo frame:
+ * Film logo frame — always position:fixed on body (never inside transformed trees).
  *  p=0 → below header, hero air, large mark
- *  p=1 → rises into header center as compact brand (above chrome text)
+ *  p=1 / .is-header-dock → pinned into header center as compact brand
  */
 .splash-frame {
-  position: fixed;
-  left: 0;
-  right: 0;
-  /* ride from under-header up into the bar */
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
   top: calc(var(--header-h) * (1 - var(--p, 0)));
-  z-index: 55; /* above .top so the docked mark is the center brand */
+  z-index: 60 !important;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   margin: 0;
-  /* hero: padded under header · dock: fill header height, center the mark */
-  min-height: calc(var(--p, 0) * var(--header-h));
+  min-height: 0;
   padding:
     calc(
       (1 - var(--p, 0)) *
@@ -164,15 +162,30 @@ main {
     var(--pad)
     0;
   height: auto;
-  max-height: none;
-  pointer-events: none;
-  transform: translateY(var(--dock-y, 0px));
+  pointer-events: none !important;
+  transform: none !important; /* never create a containing-block trap */
   opacity: var(--dock-op, 1);
-  will-change: top, padding, min-height, opacity;
   overflow: visible;
+  will-change: auto;
+}
+/* hard dock into the header chrome */
+.splash-frame.is-header-dock,
+html.logo-docked .splash-frame {
+  top: 0 !important;
+  height: var(--header-h) !important;
+  min-height: var(--header-h) !important;
+  max-height: var(--header-h) !important;
+  padding: 0 var(--pad) !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 .splash-wrap.is-film {
   max-width: min(100%, 92vw);
+}
+html.logo-docked .splash-wrap.is-film,
+.splash-frame.is-header-dock .splash-wrap.is-film {
+  /* rest-sized stick only — no hero max box in the header */
+  line-height: 0;
 }
 .splash-frame::before { content: none !important; display: none !important; }
 
@@ -290,17 +303,8 @@ main {
 }
 .section-head {
   margin-bottom: 1rem;
-  border-bottom: 0 !important; /* SVG emulsion rule via f00-entropy */
+  border-bottom: 0 !important;
   padding-bottom: 0.45rem;
-  /* dissolve projects rule/label as logo parks in the header */
-  opacity: calc(1 - var(--p, 0));
-  max-height: calc((1 - var(--p, 0)) * 3.5rem);
-  margin-top: 0;
-  margin-bottom: calc((1 - var(--p, 0)) * 1rem);
-  padding-bottom: calc((1 - var(--p, 0)) * 0.45rem);
-  overflow: hidden;
-  pointer-events: none;
-  transition: none;
 }
 .section-head h2 {
   margin: 0;
@@ -309,11 +313,7 @@ main {
   text-transform: uppercase;
   font-weight: 700;
 }
-/* fully docked: no projects line — nav already has projects */
-.hero.is-done ~ .projects .section-head,
-html:has(.hero.is-done) .projects .section-head {
-  display: none;
-}
+/* projects line removed from hub — film mark + nav own chrome */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));

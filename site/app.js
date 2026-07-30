@@ -152,11 +152,22 @@
     notifyThrow();
   };
 
+  const splashFrame = document.getElementById("splash-frame")
+    || document.querySelector(".splash-frame");
+
+  /* keep frame on body so fixed isn't trapped by main/hero ancestors */
+  if (splashFrame && splashFrame.parentElement !== document.body) {
+    document.body.appendChild(splashFrame);
+  }
+
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
     root.style.setProperty("--p", v.toFixed(5));
-    const docked = v > 0.92;
+    const docked = v > 0.88;
     root.classList.toggle("logo-docked", docked);
+    if (splashFrame) {
+      splashFrame.classList.toggle("is-header-dock", docked);
+    }
     if (hero) {
       hero.classList.toggle("is-done", docked);
       hero.classList.add("is-live");
@@ -165,7 +176,7 @@
 
   const setDock = (yPx, op) => {
     dockOp = Math.max(0, Math.min(1, op));
-    root.style.setProperty("--dock-y", `${yPx.toFixed(2)}px`);
+    root.style.setProperty("--dock-y", "0px");
     root.style.setProperty("--dock-op", dockOp.toFixed(4));
   };
 
@@ -177,10 +188,9 @@
     }
     const y = window.scrollY;
     if (y <= shrinkRange) {
-      /* shrink UP under header; body gap constant */
       setProgress(y / Math.max(shrinkRange, 1));
     } else {
-      /* docked at rest size — stay visible, do not fade out */
+      /* compact mark pinned in header center — no fade */
       setProgress(1);
     }
     setDock(0, 1);
