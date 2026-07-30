@@ -51,19 +51,29 @@
   });
 
   const seedFor = (el, role) => {
-    const id =
+    const project =
       el.getAttribute?.("data-project") ||
+      el.closest?.("[data-project]")?.getAttribute("data-project") ||
+      "";
+    const id =
       el.id ||
       (typeof el.className === "string" ? el.className : el.tagName) ||
       "node";
+    const idx = el.parentElement
+      ? Array.prototype.indexOf.call(el.parentElement.children, el)
+      : 0;
     const path =
       role +
       "|" +
+      project +
+      "|" +
       id +
+      "|" +
+      idx +
       "|" +
       (el.getAttribute?.("href") || "") +
       "|" +
-      (el.textContent || "").slice(0, 64);
+      (el.textContent || "").slice(0, 48);
     return hashStr(path);
   };
 
@@ -247,21 +257,21 @@
     applyProjectionCSS(p);
   };
 
-  /* ── emulsion RULE: never a CAD hairline ── */
+  /* ── emulsion RULE: universal — never a CAD hairline ── */
   const rulePath = (R) => {
-    /* continuous organic path — enough Y wander to never read as CAD */
-    const n = 16 + Math.floor(R.rnd() * 12);
+    /* pretty-straight emulsion path — same language as header/footer */
+    const n = 10 + Math.floor(R.rnd() * 8);
     const mid = 4;
-    let y = mid + R.signed(1.4);
+    const amp = 0.45 + R.range(0, 0.55); /* visible, not wild */
+    let y = mid + R.signed(amp * 0.6);
     let d = `M 0 ${y.toFixed(3)}`;
     for (let i = 1; i <= n; i++) {
       const x = (i / n) * 100;
-      /* correlated wander — line, not white noise scribble */
-      y += R.signed(1.15);
-      y = mid + (y - mid) * 0.68 + R.signed(0.5);
-      y = Math.max(0.5, Math.min(7.5, y));
-      const cx = x - 50 / n + R.signed(0.65);
-      const cy = y + R.signed(0.85);
+      y += R.signed(amp * 0.55);
+      y = mid + (y - mid) * 0.72 + R.signed(amp * 0.25);
+      y = Math.max(1.2, Math.min(6.8, y));
+      const cx = x - 50 / n + R.signed(0.35);
+      const cy = y + R.signed(amp * 0.35);
       d += ` Q ${cx.toFixed(3)} ${cy.toFixed(3)} ${x.toFixed(3)} ${y.toFixed(3)}`;
     }
     return d;
@@ -347,16 +357,37 @@
       "e-rule-host",
       side === "top" ? "e-rule-top" : "e-rule-bottom"
     );
-    if (side === "bottom") el.style.borderBottom = "0";
-    else el.style.borderTop = "0";
+    /* beat theme !important CAD borders */
+    if (side === "bottom") {
+      el.style.setProperty("border-bottom", "0", "important");
+      el.style.setProperty("border-bottom-width", "0", "important");
+      el.style.setProperty("border-bottom-color", "transparent", "important");
+    } else {
+      el.style.setProperty("border-top", "0", "important");
+      el.style.setProperty("border-top-width", "0", "important");
+      el.style.setProperty("border-top-color", "transparent", "important");
+    }
 
     const seed = seedFor(el, "rule:" + side);
     const R = makeBag(mulberry(seed));
-    const r = Math.round(R.range(188, 218));
-    const g = Math.round(R.range(196, 222));
-    const b = Math.round(R.range(204, 228));
-    const a = R.range(0.48, 0.82);
-    const sw = R.range(1.05, 1.85);
+    const inCard = !!el.closest?.(
+      ".card, article.card, .panel, .box, .f00-box, .feature-card"
+    );
+    /* chrome rules = cool silver; in-card rules = warm poppy metal */
+    let r, g, b, a, sw;
+    if (inCard) {
+      r = Math.round(R.range(180, 212));
+      g = Math.round(R.range(70, 110));
+      b = Math.round(R.range(40, 70));
+      a = R.range(0.38, 0.62);
+      sw = R.range(0.95, 1.45);
+    } else {
+      r = Math.round(R.range(188, 218));
+      g = Math.round(R.range(196, 222));
+      b = Math.round(R.range(204, 228));
+      a = R.range(0.48, 0.82);
+      sw = R.range(1.05, 1.85);
+    }
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-rule");
     svg.setAttribute("aria-hidden", "true");
@@ -364,7 +395,7 @@
     svg.setAttribute("viewBox", "0 0 100 8");
     svg.innerHTML = `<path d="${rulePath(R)}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
     el.appendChild(svg);
-    register(el, "rule", { pose: 0.3, blur: 0.4, persp: 0.2 });
+    register(el, "rule", { pose: 0.25, blur: 0.3, persp: 0.15 });
   };
 
   const attachFrame = (el) => {
@@ -394,22 +425,26 @@
      *  base cream (specimen-shifted) + soft wash ellipses + fiber tooth
      *  all clipped to the same organic path — nothing outside the frame.
      */
-    const cr = Math.round(228 + R.range(0, 10)); /* ~E8 ± */
-    const cg = Math.round(218 + R.range(0, 10)); /* ~DF ± */
-    const cb = Math.round(206 + R.range(0, 10)); /* ~D4 ± */
-    const cr2 = Math.round(cr + R.signed(8));
-    const cg2 = Math.round(cg + R.signed(7));
-    const cb2 = Math.round(cb + R.signed(6));
+    /* wider specimen cream — clearly not one shared hex */
+    const cr = Math.round(220 + R.range(0, 22));
+    const cg = Math.round(210 + R.range(0, 20));
+    const cb = Math.round(198 + R.range(0, 18));
+    const cr2 = Math.round(Math.min(255, Math.max(190, cr + R.signed(14))));
+    const cg2 = Math.round(Math.min(255, Math.max(185, cg + R.signed(12))));
+    const cb2 = Math.round(Math.min(255, Math.max(175, cb + R.signed(12))));
 
-    const wx = R.range(18, 42);
-    const wy = R.range(16, 40);
-    const wx2 = R.range(58, 86);
-    const wy2 = R.range(52, 88);
-    const wx3 = R.range(30, 70);
-    const wy3 = R.range(25, 75);
-    const toothF = 1.1 + R.range(0, 0.9); /* fine paper grain */
-    const toothOp = 0.1 + R.range(0, 0.1);
-    const fiberOp = 0.14 + R.range(0, 0.12);
+    const wx = R.range(12, 48);
+    const wy = R.range(10, 46);
+    const wx2 = R.range(52, 90);
+    const wy2 = R.range(48, 92);
+    const wx3 = R.range(22, 78);
+    const wy3 = R.range(18, 82);
+    const toothF = 0.55 + R.range(0, 0.85); /* visible paper tooth */
+    const toothOp = 0.16 + R.range(0, 0.14);
+    const fiberOp = 0.28 + R.range(0, 0.22);
+    const washA = 0.45 + R.range(0, 0.3);
+    const washB = 0.18 + R.range(0, 0.2);
+    const washC = 0.28 + R.range(0, 0.25);
     const papers = [
       "/theme/textures/hb-wc-a7.webp",
       "/theme/textures/hb-wc-b7.webp",
@@ -417,11 +452,17 @@
       "/theme/textures/hb-wc-d7.webp",
       "/theme/textures/hb-wc-e7.webp",
       "/theme/textures/hb-fiber-q9.webp",
+      "/theme/textures/hb-wash-a-q9.webp",
+      "/theme/textures/hb-wash-b-q9.webp",
     ];
     const paper = papers[Math.floor(R.rnd() * papers.length)];
-    const pox = R.range(0, 40);
-    const poy = R.range(0, 40);
-    const psz = 55 + R.range(0, 45);
+    const paper2 = papers[Math.floor(R.rnd() * papers.length)];
+    const pox = R.range(0, 50);
+    const poy = R.range(0, 50);
+    const psz = 40 + R.range(0, 70);
+    const psz2 = 70 + R.range(0, 80);
+    const pox2 = R.range(0, 60);
+    const poy2 = R.range(0, 60);
 
     /* also seed CSS wash vars so ::before/::after reinforce if present */
     el.style.setProperty("--wc-x", `${wx.toFixed(1)}%`);
@@ -430,21 +471,23 @@
     el.style.setProperty("--wc-y2", `${wy2.toFixed(1)}%`);
     el.style.setProperty("--wc-pos", `${pox.toFixed(0)}% ${poy.toFixed(0)}%`);
     el.style.setProperty("--wc-size", `${(140 + R.range(0, 60)).toFixed(0)}% ${(140 + R.range(0, 60)).toFixed(0)}%`);
-    el.style.setProperty("--wc-wash-op", (0.42 + R.range(0, 0.22)).toFixed(2));
-    el.style.setProperty("--wc-fiber-op", (0.22 + R.range(0, 0.18)).toFixed(2));
+    el.style.setProperty("--wc-wash-op", (0.55 + R.range(0, 0.28)).toFixed(2));
+    el.style.setProperty("--wc-fiber-op", (0.32 + R.range(0, 0.22)).toFixed(2));
     el.style.setProperty(
       "--wc-a",
-      `rgba(${Math.min(255, cr + 12)},${Math.min(255, cg + 10)},${Math.min(255, cb + 8)},${(0.28 + R.range(0, 0.2)).toFixed(2)})`
+      `rgba(${Math.min(255, cr + 18)},${Math.min(255, cg + 14)},${Math.min(255, cb + 12)},${(0.4 + R.range(0, 0.25)).toFixed(2)})`
     );
     el.style.setProperty(
       "--wc-b",
-      `rgba(${40 + Math.floor(R.rnd() * 50)},${10 + Math.floor(R.rnd() * 20)},${6 + Math.floor(R.rnd() * 14)},${(0.06 + R.range(0, 0.08)).toFixed(2)})`
+      `rgba(${50 + Math.floor(R.rnd() * 60)},${12 + Math.floor(R.rnd() * 24)},${8 + Math.floor(R.rnd() * 16)},${(0.1 + R.range(0, 0.12)).toFixed(2)})`
     );
     el.style.setProperty(
       "--wc-c",
-      `rgba(${180 + Math.floor(R.rnd() * 40)},${50 + Math.floor(R.rnd() * 40)},${20 + Math.floor(R.rnd() * 30)},${(0.05 + R.range(0, 0.08)).toFixed(2)})`
+      `rgba(${170 + Math.floor(R.rnd() * 50)},${40 + Math.floor(R.rnd() * 50)},${18 + Math.floor(R.rnd() * 35)},${(0.08 + R.range(0, 0.12)).toFixed(2)})`
     );
+    el.style.setProperty("--wc-paper", `url("${paper}")`);
 
+    const pat2Id = `e-paper2-${id}`;
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-frame");
     svg.setAttribute("aria-hidden", "true");
@@ -458,28 +501,32 @@
         <clipPath id="${clipUserId}" clipPathUnits="userSpaceOnUse">
           <path d="${d}"/>
         </clipPath>
-        <radialGradient id="${g1}" cx="${wx.toFixed(1)}%" cy="${wy.toFixed(1)}%" r="${(42 + R.range(0, 22)).toFixed(1)}%">
-          <stop offset="0%" stop-color="rgb(${Math.min(255, cr + 14)},${Math.min(255, cg + 12)},${Math.min(255, cb + 10)})" stop-opacity="0.55"/>
+        <radialGradient id="${g1}" cx="${wx.toFixed(1)}%" cy="${wy.toFixed(1)}%" r="${(48 + R.range(0, 28)).toFixed(1)}%">
+          <stop offset="0%" stop-color="rgb(${Math.min(255, cr + 20)},${Math.min(255, cg + 16)},${Math.min(255, cb + 14)})" stop-opacity="${washA.toFixed(2)}"/>
           <stop offset="100%" stop-color="rgb(${cr},${cg},${cb})" stop-opacity="0"/>
         </radialGradient>
-        <radialGradient id="${g2}" cx="${wx2.toFixed(1)}%" cy="${wy2.toFixed(1)}%" r="${(38 + R.range(0, 24)).toFixed(1)}%">
-          <stop offset="0%" stop-color="rgb(${Math.max(0, cr - 18)},${Math.max(0, cg - 16)},${Math.max(0, cb - 14)})" stop-opacity="0.22"/>
+        <radialGradient id="${g2}" cx="${wx2.toFixed(1)}%" cy="${wy2.toFixed(1)}%" r="${(44 + R.range(0, 28)).toFixed(1)}%">
+          <stop offset="0%" stop-color="rgb(${Math.max(0, cr - 28)},${Math.max(0, cg - 24)},${Math.max(0, cb - 20)})" stop-opacity="${washB.toFixed(2)}"/>
           <stop offset="100%" stop-color="rgb(${cr},${cg},${cb})" stop-opacity="0"/>
         </radialGradient>
-        <radialGradient id="${g3}" cx="${wx3.toFixed(1)}%" cy="${wy3.toFixed(1)}%" r="${(28 + R.range(0, 20)).toFixed(1)}%">
-          <stop offset="0%" stop-color="rgb(${cr2},${cg2},${cb2})" stop-opacity="0.35"/>
+        <radialGradient id="${g3}" cx="${wx3.toFixed(1)}%" cy="${wy3.toFixed(1)}%" r="${(34 + R.range(0, 26)).toFixed(1)}%">
+          <stop offset="0%" stop-color="rgb(${cr2},${cg2},${cb2})" stop-opacity="${washC.toFixed(2)}"/>
           <stop offset="100%" stop-color="rgb(${cr},${cg},${cb})" stop-opacity="0"/>
         </radialGradient>
         <pattern id="${patId}" patternUnits="userSpaceOnUse" width="${psz.toFixed(1)}" height="${psz.toFixed(1)}"
-          patternTransform="translate(${(-pox).toFixed(1)} ${(-poy).toFixed(1)}) rotate(${(R.signed(12)).toFixed(1)})">
-          <image href="${paper}" width="${psz.toFixed(1)}" height="${psz.toFixed(1)}" preserveAspectRatio="xMidYMid slice" opacity="1"/>
+          patternTransform="translate(${(-pox).toFixed(1)} ${(-poy).toFixed(1)}) rotate(${(R.signed(18)).toFixed(1)})">
+          <image href="${paper}" width="${psz.toFixed(1)}" height="${psz.toFixed(1)}" preserveAspectRatio="xMidYMid slice"/>
+        </pattern>
+        <pattern id="${pat2Id}" patternUnits="userSpaceOnUse" width="${psz2.toFixed(1)}" height="${psz2.toFixed(1)}"
+          patternTransform="translate(${(-pox2).toFixed(1)} ${(-poy2).toFixed(1)}) rotate(${(R.signed(25)).toFixed(1)})">
+          <image href="${paper2}" width="${psz2.toFixed(1)}" height="${psz2.toFixed(1)}" preserveAspectRatio="xMidYMid slice"/>
         </pattern>
         <filter id="${toothId}" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="${toothF.toFixed(3)}" numOctaves="3" seed="${seed & 0xffff}" result="n"/>
+          <feTurbulence type="fractalNoise" baseFrequency="${toothF.toFixed(3)} ${(toothF * 1.3).toFixed(3)}" numOctaves="4" seed="${seed & 0xffff}" result="n"/>
           <feColorMatrix in="n" type="matrix" values="
-            0 0 0 0 0.90
-            0 0 0 0 0.86
-            0 0 0 0 0.80
+            0 0 0 0 ${(cr / 255).toFixed(3)}
+            0 0 0 0 ${(cg / 255).toFixed(3)}
+            0 0 0 0 ${(cb / 255).toFixed(3)}
             0 0 0 ${toothOp.toFixed(3)} 0" result="grain"/>
           <feBlend in="SourceGraphic" in2="grain" mode="multiply"/>
         </filter>
@@ -490,7 +537,8 @@
         <rect x="0" y="0" width="100" height="100" fill="url(#${g2})"/>
         <rect x="0" y="0" width="100" height="100" fill="url(#${g3})"/>
         <rect x="0" y="0" width="100" height="100" fill="url(#${patId})" opacity="${fiberOp.toFixed(3)}" style="mix-blend-mode:multiply"/>
-        <rect x="0" y="0" width="100" height="100" fill="rgb(${cr},${cg},${cb})" filter="url(#${toothId})" opacity="0.55"/>
+        <rect x="0" y="0" width="100" height="100" fill="url(#${pat2Id})" opacity="${(fiberOp * 0.55).toFixed(3)}" style="mix-blend-mode:soft-light"/>
+        <rect x="0" y="0" width="100" height="100" fill="rgb(${cr},${cg},${cb})" filter="url(#${toothId})" opacity="0.72"/>
       </g>
       <path class="e-frame-stroke" d="${d}" fill="none"
         stroke="rgba(${er},${eg},${eb},${ea.toFixed(3)})"
@@ -588,19 +636,34 @@
     );
   };
 
+  /**
+   * Universal emulsion rules — same language on hub chrome, cards, lists.
+   * side is which CAD border we replace.
+   */
   const ruleHosts = () => {
-    document
-      .querySelectorAll(".top-inner")
-      .forEach((el) => attachRule(el, "bottom"));
-    document
-      .querySelectorAll(".foot, footer, .site-footer")
-      .forEach((el) => attachRule(el, "top"));
-    document
-      .querySelectorAll(".section-head")
-      .forEach((el) => attachRule(el, "bottom"));
-    document
-      .querySelectorAll(".card h3, .card .card-actions, .panel h3")
-      .forEach((el) => attachRule(el, "bottom"));
+    const bottoms = [
+      ".top-inner",
+      ".section-head",
+      ".card h3",
+      "article.card h3",
+      ".panel h3",
+      ".box h3",
+      ".feature-card h3",
+      ".card .facts li",
+      "article.card .facts li",
+      ".panel .facts li",
+      "hr",
+    ].join(",");
+    const tops = [
+      ".foot",
+      "footer",
+      ".site-footer",
+      ".card .card-actions",
+      "article.card .card-actions",
+      ".panel .card-actions",
+    ].join(",");
+    document.querySelectorAll(bottoms).forEach((el) => attachRule(el, "bottom"));
+    document.querySelectorAll(tops).forEach((el) => attachRule(el, "top"));
   };
 
   {

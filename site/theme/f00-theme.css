@@ -420,10 +420,12 @@ article.card h3 {
   text-transform: uppercase !important;
   text-shadow:
     0 1px 0 rgba(232, 223, 212, 0.55) !important;
-  border-bottom: 1px solid rgba(212, 74, 24, 0.35) !important;
-  padding-bottom: 0.45rem;
+  /* emulsion SVG rule replaces CAD hairline (f00-entropy attachRule) */
+  border-bottom: 0 !important;
+  padding-bottom: 0.55rem;
   margin-top: 0.15rem;
   margin-bottom: 0.55rem;
+  position: relative;
 }
 .card-meta {
   opacity: 0.95;
@@ -435,7 +437,22 @@ article.card h3 {
   text-shadow: 0 1px 0 rgba(232, 223, 212, 0.35);
 }
 .facts li {
-  border-bottom: 1px dotted rgba(212, 74, 24, 0.28) !important;
+  /* emulsion SVG rule replaces dotted CAD hairline */
+  border-bottom: 0 !important;
+  position: relative;
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
+}
+/* universal rule host — works on cream cards + chrome */
+.card .e-rule-host > .e-rule,
+article.card .e-rule-host > .e-rule,
+.panel .e-rule-host > .e-rule {
+  height: 6px;
+}
+.card h3.e-rule-host,
+article.card h3.e-rule-host,
+.facts li.e-rule-host {
+  position: relative !important;
 }
 .facts li::before {
   content: "· ";
@@ -924,13 +941,15 @@ article.card.e-frame-host > *:not(.e-frame),
 /* slightly stronger wash on framed cards so cream never reads as one hex */
 .card.e-frame-host::before,
 article.card.e-frame-host::before {
-  opacity: calc(var(--wc-wash-op, 0.55) * 0.85) !important;
+  opacity: var(--wc-wash-op, 0.62) !important;
   mix-blend-mode: soft-light !important;
+  z-index: 0 !important;
 }
 .card.e-frame-host::after,
 article.card.e-frame-host::after {
-  opacity: calc(var(--wc-fiber-op, 0.3) * 0.75) !important;
+  opacity: var(--wc-fiber-op, 0.38) !important;
   mix-blend-mode: multiply !important;
+  z-index: 0 !important;
 }
 
 /*
