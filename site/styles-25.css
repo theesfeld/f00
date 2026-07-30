@@ -447,7 +447,10 @@ html.logo-docked .splash-wrap.is-film .splash,
   align-items: baseline;
 }
 
-/* ── visual mantra page ── */
+/* ── visual mantra page ──
+ * Theme paints body silver (#D0D5DB) for field chrome. Verses sit on
+ * hospital-cream plates (entropy frames) — they need card ink, not silver.
+ */
 .page-mantra main.mantra {
   position: relative;
   z-index: 1;
@@ -455,66 +458,103 @@ html.logo-docked .splash-wrap.is-film .splash,
   margin: 0 auto;
   padding: calc(var(--header-h) + 2.25rem) var(--pad) 3.5rem;
 }
-.mantra-head {
+.page-mantra .mantra-head {
   margin-bottom: 2.25rem;
   padding-bottom: 1.1rem;
 }
-.mantra-kicker {
+/* hero copy on the poppy field — cream, not silver wash */
+.page-mantra .mantra-kicker,
+.page-mantra .mantra-kicker.e-text,
+.page-mantra .mantra-kicker .e-word,
+.page-mantra .mantra-kicker .e-glyph {
   margin: 0 0 0.65rem;
   font-size: 0.72rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(208, 213, 219, 0.72);
+  color: rgba(237, 230, 222, 0.88) !important;
+  text-shadow: 0 1px 2px rgba(9, 9, 9, 0.35);
 }
-.mantra-head h1 {
+.page-mantra .mantra-head h1,
+.page-mantra .mantra-head h1.e-text,
+.page-mantra .mantra-head h1 .e-word,
+.page-mantra .mantra-head h1 .e-glyph {
   margin: 0 0 0.85rem;
   font-family: var(--font-brand, "Onyx", "Times New Roman", Times, serif);
   font-weight: 400;
   font-size: clamp(2rem, 6vw, 3.1rem);
   line-height: 1.05;
   letter-spacing: 0.02em;
-  color: #EDE6DE;
+  color: #EDE6DE !important;
   text-transform: none;
+  text-shadow:
+    0 1px 0 rgba(9, 9, 9, 0.28),
+    0 0 28px rgba(9, 9, 9, 0.22);
 }
-.mantra-lede {
+.page-mantra .mantra-lede,
+.page-mantra .mantra-lede.e-text,
+.page-mantra .mantra-lede .e-word,
+.page-mantra .mantra-lede .e-glyph {
   margin: 0;
   font-size: 1.05rem;
   line-height: 1.55;
-  color: rgba(232, 223, 212, 0.88);
+  color: #EDE6DE !important;
   max-width: 36rem;
+  text-shadow: 0 1px 2px rgba(9, 9, 9, 0.32);
 }
-.mantra-body {
+.page-mantra .mantra-body {
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
 }
-.mantra-verse {
+.page-mantra .mantra-verse {
   margin: 0;
   padding: 1.15rem 1.2rem 1.25rem;
-  /* cream plate via entropy frame when present; fallback: */
-  background: transparent;
+  /* fallback cream if entropy frame is late / reduced-motion */
+  background: #E8DFD4;
+  color: #D44A18 !important;
 }
-.mantra-verse h2 {
+.page-mantra .mantra-verse.e-frame-host {
+  background: transparent !important;
+}
+/* card-grade ink on cream — beat theme silver !important + letterpress spans */
+.page-mantra .mantra-verse,
+.page-mantra .mantra-verse.e-text,
+.page-mantra .mantra-verse .e-word,
+.page-mantra .mantra-verse .e-glyph {
+  color: #D44A18 !important;
+}
+.page-mantra .mantra-verse h2,
+.page-mantra .mantra-verse h2.e-text,
+.page-mantra .mantra-verse h2 .e-word,
+.page-mantra .mantra-verse h2 .e-glyph {
   margin: 0 0 0.55rem;
   font-family: var(--font-brand, "Onyx", "Times New Roman", Times, serif);
   font-weight: 400;
   font-size: clamp(1.25rem, 2.4vw, 1.55rem);
   letter-spacing: 0.03em;
   line-height: 1.1;
-  color: #8A2810;
+  color: #8A2810 !important;
   text-transform: none;
   border: 0 !important;
   padding: 0;
+  text-shadow: none;
 }
-.mantra-verse p {
+.page-mantra .mantra-verse p,
+.page-mantra .mantra-verse p.e-text,
+.page-mantra .mantra-verse p .e-word,
+.page-mantra .mantra-verse p .e-glyph {
   margin: 0 0 0.75rem;
   font-size: 0.95rem;
   line-height: 1.58;
-  color: #D44A18;
+  color: #C43A12 !important;
   font-weight: 600;
+  text-shadow: none;
 }
-.mantra-verse p:last-child { margin-bottom: 0; }
-.mantra-seal {
+.page-mantra .mantra-verse p:last-child { margin-bottom: 0; }
+.page-mantra .mantra-seal,
+.page-mantra .mantra-seal.e-text,
+.page-mantra .mantra-seal .e-word,
+.page-mantra .mantra-seal .e-glyph {
   margin-top: 1rem !important;
   padding-top: 0.85rem;
   font-family: var(--font-chip, ui-monospace, monospace);
@@ -523,9 +563,21 @@ html.logo-docked .splash-wrap.is-film .splash,
   line-height: 1.55 !important;
   color: #8A2810 !important;
   font-weight: 700 !important;
+  text-shadow: none;
 }
-.mantra-close {
+.page-mantra .mantra-close {
   margin-top: 0.5rem;
+}
+/* mantra header always shows brand (no film splash on this page) */
+.page-mantra header.top,
+.page-mantra .top {
+  opacity: 1 !important;
+  visibility: visible;
+  transform: none;
+  pointer-events: none;
+}
+.page-mantra .top-inner {
+  pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
