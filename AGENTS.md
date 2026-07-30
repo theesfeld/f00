@@ -23,6 +23,13 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `heartbox.f00.sh` Heartbox · `dist.f00.sh` R2 packages.
 6. **Aesthetic (STANDARD THEME) — ONE shared CSS.** Every f00 project loads `https://f00.sh/theme/f00-theme.css` from the hub domain first (no per-project brand CSS). Heart-Shaped Box contrasts + Bleach boxes. Path `site/theme/f00-theme.css`. Source palette: https://heartbox.f00.sh/. Three fonts: **Onyx** logo only · **zine mono** body · **chip mono** chrome. Project CSS is layout-only; never invent brand hex or soft radii.
 7. **No secrets** in repo. DNS keys stay out of git.
+8. **Projection ideology (org-wide — hub + every project site + every scene).** f00 is not “web pages that load.” Surfaces are **projected onto the display**: light through imperfect organic material onto a screen. Scope is **everything** — hub, f00tils, clun, cel, trn, heartbox, docs scenes, cards, chrome — not only the splash mark.
+   - **Vocabulary:** say *projected onto the display* / *this throw* / *this specimen* — not “page load,” “onLoad,” “reset to default,” or “same every refresh.”
+   - **No manufactured perfection:** no rest pose that is pure identity; no exact-duplicate throws; no razor CAD edges as the aesthetic goal; no timer choreography that feels like a metronome. Nature = pattern + chaos + entropy.
+   - **What stays fixed:** brand tokens (theme, palette, type roles), structure, copy intent, product identity — so it still reads as f00.
+   - **What lives:** optics and material presence — soft edges, continuous organic motion where motion exists, specimen uniqueness when a surface is first projected, hospital-flower light not UI chrome polish.
+   - **Art law:** digital is the frame; the picture is imperfect organic reality (medical models, poppies, foil, dye, innards). Do not ship static boilerplate text-on-flat as the emotional register of a scene.
+   - **Hub plate now:** splash WebGL projector is one cel under this law. **All future work** on any f00-sh site inherits the same law, not a different aesthetic.
 
 ## Layout
 
