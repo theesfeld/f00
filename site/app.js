@@ -27,6 +27,49 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
 
+  /* stable per-project watercolor seed so cards don't all match */
+  const hashStr = (s) => {
+    let h = 2166136261;
+    const str = String(s || "");
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  };
+  const wcStyle = (id) => {
+    const h = hashStr(id);
+    const x = 10 + (h % 80);
+    const y = 10 + ((h >>> 7) % 80);
+    const x2 = 10 + ((h >>> 14) % 80);
+    const y2 = 10 + ((h >>> 21) % 80);
+    const px = (h >>> 3) % 90;
+    const py = (h >>> 11) % 90;
+    const sx = 130 + (h % 60);
+    const sy = 130 + ((h >>> 8) % 60);
+    const paper = h & 1 ? "var(--tex-wc-b)" : "var(--tex-wc-a)";
+    const wash = (0.44 + ((h >>> 5) % 16) / 100).toFixed(2);
+    const fiber = (0.28 + ((h >>> 9) % 14) / 100).toFixed(2);
+    const aR = 245 + (h % 10);
+    const aG = 190 + ((h >>> 4) % 45);
+    const aB = 170 + ((h >>> 10) % 50);
+    const aA = (0.22 + ((h >>> 2) % 14) / 100).toFixed(2);
+    return [
+      `--wc-x:${x}%`,
+      `--wc-y:${y}%`,
+      `--wc-x2:${x2}%`,
+      `--wc-y2:${y2}%`,
+      `--wc-pos:${px}% ${py}%`,
+      `--wc-size:${sx}% ${sy}%`,
+      `--wc-paper:${paper}`,
+      `--wc-wash-op:${wash}`,
+      `--wc-fiber-op:${fiber}`,
+      `--wc-a:rgba(${aR},${aG},${aB},${aA})`,
+      `--wc-b:rgba(${40 + (h % 70)},${2 + (h % 8)},${8 + (h % 14)},${(0.22 + ((h >>> 6) % 12) / 100).toFixed(2)})`,
+      `--wc-c:rgba(${190 + (h % 40)},${10 + (h % 50)},${25 + (h % 40)},${(0.14 + ((h >>> 12) % 12) / 100).toFixed(2)})`,
+    ].join(";");
+  };
+
   const cardHtml = (p) => {
     const domain = escapeHtml(p.domain || "");
     const name = escapeHtml(p.name || p.id || "");
@@ -43,7 +86,9 @@
     const docsBtn = docs
       ? `<a class="btn ghost sm" href="${docs}">docs</a>`
       : "";
-    return `<article class="card" data-project="${escapeHtml(p.id || "")}">
+    const pid = p.id || name || domain;
+    const style = wcStyle(pid);
+    return `<article class="card" data-project="${escapeHtml(p.id || "")}" style="${style}">
       <div class="card-meta mono">${domain}</div>
       <h3>${name}</h3>
       <p>${blurb}</p>
@@ -54,6 +99,14 @@
         ${docsBtn}
       </div>
     </article>`;
+  };
+
+  const paintStaticCards = () => {
+    document.querySelectorAll("article.card[data-project]").forEach((el) => {
+      if (el.getAttribute("style") && el.getAttribute("style").includes("--wc-x")) return;
+      const id = el.getAttribute("data-project") || el.querySelector("h3")?.textContent || "";
+      el.style.cssText = (el.style.cssText ? el.style.cssText + ";" : "") + wcStyle(id);
+    });
   };
 
   const projectsList = (catalog) => {
@@ -89,11 +142,13 @@
     return null;
   };
 
+  paintStaticCards();
   loadCatalog().then((catalog) => {
     if (catalog) {
       renderProjects(catalog);
       window.F00_CATALOG = catalog;
     }
+    paintStaticCards();
   });
 
 // —— Logo glitches: random Heartbox theme color ——
