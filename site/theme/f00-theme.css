@@ -905,17 +905,32 @@ article.card.e-frame-host,
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-/* watercolor wash also clipped by host clip-path */
+/* plate texture lives in SVG (.e-frame-plate); keep CSS wash as soft reinforce */
 .e-frame-host::before,
 .e-frame-host::after {
-  /* host clip-path already clips descendants/pseudos in modern engines */
   border-radius: 0 !important;
+  /* clipped by host clip-path — never outside the organic frame */
+  z-index: 0 !important;
+}
+.e-frame-host > .e-frame {
+  z-index: 0 !important;
 }
 .card.e-frame-host > *:not(.e-frame),
 article.card.e-frame-host > *:not(.e-frame),
 .panel.e-frame-host > *:not(.e-frame) {
   position: relative;
   z-index: 1;
+}
+/* slightly stronger wash on framed cards so cream never reads as one hex */
+.card.e-frame-host::before,
+article.card.e-frame-host::before {
+  opacity: calc(var(--wc-wash-op, 0.55) * 0.85) !important;
+  mix-blend-mode: soft-light !important;
+}
+.card.e-frame-host::after,
+article.card.e-frame-host::after {
+  opacity: calc(var(--wc-fiber-op, 0.3) * 0.75) !important;
+  mix-blend-mode: multiply !important;
 }
 
 /*

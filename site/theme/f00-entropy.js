@@ -373,23 +373,78 @@
     el.classList.add("e-frame-host");
     const seed = seedFor(el, "frame");
     const R = makeBag(mulberry(seed));
-    const r = Math.round(R.range(160, 192));
-    const g = Math.round(R.range(166, 198));
-    const b = Math.round(R.range(174, 204));
-    const a = R.range(0.7, 0.92);
-    /* stroke in viewBox units — thin metal edge */
+    /* metal edge */
+    const er = Math.round(R.range(160, 192));
+    const eg = Math.round(R.range(166, 198));
+    const eb = Math.round(R.range(174, 204));
+    const ea = R.range(0.7, 0.92);
     const sw = 0.38 + R.range(0, 0.18);
     const { d, d01 } = framePath(R);
-    const clipId = `e-clip-${seed.toString(16)}`;
+    const id = seed.toString(16);
+    const clipId = `e-clip-${id}`;
+    const clipUserId = `e-clipu-${id}`;
+    const toothId = `e-tooth-${id}`;
+    const patId = `e-paper-${id}`;
+    const g1 = `e-w1-${id}`;
+    const g2 = `e-w2-${id}`;
+    const g3 = `e-w3-${id}`;
 
     /*
-     * Architecture:
-     *  - Card CSS bg/border OFF (transparent)
-     *  - SVG path FILL is the cream plate (cannot exist outside the path)
-     *  - Stroke is the metal edge on that same path
-     *  - clip-path on the host clips content + ::before watercolor to the path
-     * No card-level SVG filter — filters paint outside and break the frame.
+     * Cream plate is never a flat hex:
+     *  base cream (specimen-shifted) + soft wash ellipses + fiber tooth
+     *  all clipped to the same organic path — nothing outside the frame.
      */
+    const cr = Math.round(228 + R.range(0, 10)); /* ~E8 ± */
+    const cg = Math.round(218 + R.range(0, 10)); /* ~DF ± */
+    const cb = Math.round(206 + R.range(0, 10)); /* ~D4 ± */
+    const cr2 = Math.round(cr + R.signed(8));
+    const cg2 = Math.round(cg + R.signed(7));
+    const cb2 = Math.round(cb + R.signed(6));
+
+    const wx = R.range(18, 42);
+    const wy = R.range(16, 40);
+    const wx2 = R.range(58, 86);
+    const wy2 = R.range(52, 88);
+    const wx3 = R.range(30, 70);
+    const wy3 = R.range(25, 75);
+    const toothF = 1.1 + R.range(0, 0.9); /* fine paper grain */
+    const toothOp = 0.1 + R.range(0, 0.1);
+    const fiberOp = 0.14 + R.range(0, 0.12);
+    const papers = [
+      "/theme/textures/hb-wc-a7.webp",
+      "/theme/textures/hb-wc-b7.webp",
+      "/theme/textures/hb-wc-c7.webp",
+      "/theme/textures/hb-wc-d7.webp",
+      "/theme/textures/hb-wc-e7.webp",
+      "/theme/textures/hb-fiber-q9.webp",
+    ];
+    const paper = papers[Math.floor(R.rnd() * papers.length)];
+    const pox = R.range(0, 40);
+    const poy = R.range(0, 40);
+    const psz = 55 + R.range(0, 45);
+
+    /* also seed CSS wash vars so ::before/::after reinforce if present */
+    el.style.setProperty("--wc-x", `${wx.toFixed(1)}%`);
+    el.style.setProperty("--wc-y", `${wy.toFixed(1)}%`);
+    el.style.setProperty("--wc-x2", `${wx2.toFixed(1)}%`);
+    el.style.setProperty("--wc-y2", `${wy2.toFixed(1)}%`);
+    el.style.setProperty("--wc-pos", `${pox.toFixed(0)}% ${poy.toFixed(0)}%`);
+    el.style.setProperty("--wc-size", `${(140 + R.range(0, 60)).toFixed(0)}% ${(140 + R.range(0, 60)).toFixed(0)}%`);
+    el.style.setProperty("--wc-wash-op", (0.42 + R.range(0, 0.22)).toFixed(2));
+    el.style.setProperty("--wc-fiber-op", (0.22 + R.range(0, 0.18)).toFixed(2));
+    el.style.setProperty(
+      "--wc-a",
+      `rgba(${Math.min(255, cr + 12)},${Math.min(255, cg + 10)},${Math.min(255, cb + 8)},${(0.28 + R.range(0, 0.2)).toFixed(2)})`
+    );
+    el.style.setProperty(
+      "--wc-b",
+      `rgba(${40 + Math.floor(R.rnd() * 50)},${10 + Math.floor(R.rnd() * 20)},${6 + Math.floor(R.rnd() * 14)},${(0.06 + R.range(0, 0.08)).toFixed(2)})`
+    );
+    el.style.setProperty(
+      "--wc-c",
+      `rgba(${180 + Math.floor(R.rnd() * 40)},${50 + Math.floor(R.rnd() * 40)},${20 + Math.floor(R.rnd() * 30)},${(0.05 + R.range(0, 0.08)).toFixed(2)})`
+    );
+
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-frame");
     svg.setAttribute("aria-hidden", "true");
@@ -400,14 +455,48 @@
         <clipPath id="${clipId}" clipPathUnits="objectBoundingBox">
           <path d="${d01}"/>
         </clipPath>
+        <clipPath id="${clipUserId}" clipPathUnits="userSpaceOnUse">
+          <path d="${d}"/>
+        </clipPath>
+        <radialGradient id="${g1}" cx="${wx.toFixed(1)}%" cy="${wy.toFixed(1)}%" r="${(42 + R.range(0, 22)).toFixed(1)}%">
+          <stop offset="0%" stop-color="rgb(${Math.min(255, cr + 14)},${Math.min(255, cg + 12)},${Math.min(255, cb + 10)})" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="rgb(${cr},${cg},${cb})" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="${g2}" cx="${wx2.toFixed(1)}%" cy="${wy2.toFixed(1)}%" r="${(38 + R.range(0, 24)).toFixed(1)}%">
+          <stop offset="0%" stop-color="rgb(${Math.max(0, cr - 18)},${Math.max(0, cg - 16)},${Math.max(0, cb - 14)})" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="rgb(${cr},${cg},${cb})" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="${g3}" cx="${wx3.toFixed(1)}%" cy="${wy3.toFixed(1)}%" r="${(28 + R.range(0, 20)).toFixed(1)}%">
+          <stop offset="0%" stop-color="rgb(${cr2},${cg2},${cb2})" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="rgb(${cr},${cg},${cb})" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="${patId}" patternUnits="userSpaceOnUse" width="${psz.toFixed(1)}" height="${psz.toFixed(1)}"
+          patternTransform="translate(${(-pox).toFixed(1)} ${(-poy).toFixed(1)}) rotate(${(R.signed(12)).toFixed(1)})">
+          <image href="${paper}" width="${psz.toFixed(1)}" height="${psz.toFixed(1)}" preserveAspectRatio="xMidYMid slice" opacity="1"/>
+        </pattern>
+        <filter id="${toothId}" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="${toothF.toFixed(3)}" numOctaves="3" seed="${seed & 0xffff}" result="n"/>
+          <feColorMatrix in="n" type="matrix" values="
+            0 0 0 0 0.90
+            0 0 0 0 0.86
+            0 0 0 0 0.80
+            0 0 0 ${toothOp.toFixed(3)} 0" result="grain"/>
+          <feBlend in="SourceGraphic" in2="grain" mode="multiply"/>
+        </filter>
       </defs>
-      <path class="e-frame-fill" d="${d}" fill="#E8DFD4"/>
+      <g class="e-frame-plate" clip-path="url(#${clipUserId})">
+        <rect class="e-frame-fill" x="0" y="0" width="100" height="100" fill="rgb(${cr},${cg},${cb})"/>
+        <rect x="0" y="0" width="100" height="100" fill="url(#${g1})"/>
+        <rect x="0" y="0" width="100" height="100" fill="url(#${g2})"/>
+        <rect x="0" y="0" width="100" height="100" fill="url(#${g3})"/>
+        <rect x="0" y="0" width="100" height="100" fill="url(#${patId})" opacity="${fiberOp.toFixed(3)}" style="mix-blend-mode:multiply"/>
+        <rect x="0" y="0" width="100" height="100" fill="rgb(${cr},${cg},${cb})" filter="url(#${toothId})" opacity="0.55"/>
+      </g>
       <path class="e-frame-stroke" d="${d}" fill="none"
-        stroke="rgba(${r},${g},${b},${a.toFixed(3)})"
+        stroke="rgba(${er},${eg},${eb},${ea.toFixed(3)})"
         stroke-width="${sw.toFixed(3)}"
         stroke-linejoin="round" stroke-linecap="round"/>
     `.trim();
-    /* paint plate behind content */
     el.insertBefore(svg, el.firstChild);
 
     el.style.setProperty("background", "transparent", "important");
@@ -416,7 +505,6 @@
     el.style.setProperty("border-width", "0", "important");
     el.style.setProperty("box-shadow", "none", "important");
     el.style.filter = "none";
-    /* content + watercolor ::before stay inside the plate */
     el.style.clipPath = `url(#${clipId})`;
     el.style.webkitClipPath = `url(#${clipId})`;
   };
