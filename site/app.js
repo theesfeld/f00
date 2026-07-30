@@ -76,11 +76,20 @@
     if (!splash) return;
     const headerH =
       parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
-    const availH = Math.max(160, window.innerHeight - headerH - 56);
+    logoGapPx = readLogoGap();
+    /*
+     * Symmetric air: header line → logo top  ==  logo bottom → projects.
+     * Max mark fits between those two equal gaps (plus a little projects peek).
+     */
+    const peek = 72; /* projects section head visible under the mark */
+    const availH = Math.max(
+      160,
+      window.innerHeight - headerH - logoGapPx * 2 - peek
+    );
     const availW = window.innerWidth * 0.9;
     /* rest: catalog-scale mark under header */
     splashRestPx = Math.min(112, Math.max(52, window.innerWidth * 0.085));
-    /* max: fill device under header (Onyx ~0.55em wide × 3 ≈ 1.5em) */
+    /* max: fill band under header with equal air (Onyx ~0.55em × 3 ≈ 1.5em) */
     const byH = availH / 0.92;
     const byW = availW / 1.55;
     splashMaxPx = Math.min(byH, byW);
@@ -97,20 +106,16 @@
     splashRestH = measureAtFont(splashRestPx) || splashRestPx * 0.86;
     root.style.setProperty("--p", pWas || "0");
 
-    logoGapPx = readLogoGap();
-    /*
-     * Slot = max logo height + gap. splash-frame also has 0.35rem top pad —
-     * include so projects sit --logo-gap under the painted mark, not the frame.
-     */
-    const framePad = 0.35 * (parseFloat(getComputedStyle(document.body).fontSize) || 16);
-    const slotH = Math.ceil(framePad + splashMaxH + logoGapPx);
+    /* slot = air + maxH + air → projects line sits logo-gap under mark */
+    const slotH = Math.ceil(logoGapPx + splashMaxH + logoGapPx);
     root.style.setProperty("--splash-slot-h", `${slotH}px`);
 
     /*
-     * Scroll distance for p 0→1 must equal height delta so:
-     *   projects_vp ≈ header + framePad + maxH + gap − scrollY
-     *   logo_bottom ≈ header + framePad + (maxH − scrollY)  [while p<1]
-     *   gap_visual  ≈ logoGap  (constant)
+     * p 0→1 over height delta so bottom air stays constant while mark shrinks:
+     *   logo_top    = header + gap
+     *   logo_bottom = header + gap + splashH(p)
+     *   projects    = header + gap + maxH + gap − scrollY
+     *   with splashH ≈ maxH − scrollY → bottom gap stays `gap`
      */
     shrinkRange = Math.max(64, splashMaxH - splashRestH);
   };
@@ -143,10 +148,8 @@
       return;
     }
     /*
-     * phase 2: dock at rest under header, then dissolve in place.
-     * Do NOT translate up through the header rule (that re-creates the
-     * “line through the logo”). Header frost is the scroll cutoff —
-     * body continues under it once the mark has faded.
+     * phase 2: dock at rest under header (still with equal air), then
+     * dissolve in place. Do NOT translate through the header rule.
      */
     setProgress(1);
     const over = y - shrinkRange;

@@ -6,6 +6,7 @@
   --splash-max: clamp(8rem, 28vw, 18rem);
   --splash-rest: clamp(4.25rem, 12vw, 7rem);
   --splash-slot-h: 40vh;
+  /* same air: header line → logo top  AND  logo bottom → projects line */
   --logo-gap: 1.75rem;
   --p: 0;
   --dock-y: 0px;
@@ -123,7 +124,7 @@ main {
   pointer-events: none;
 }
 
-/* fixed under header — shrinks UP; dissolves after rest */
+/* fixed under header — equal air above mark (= --logo-gap under header line) */
 .splash-frame {
   position: fixed;
   top: var(--header-h);
@@ -135,7 +136,8 @@ main {
   align-items: flex-start;
   width: 100%;
   margin: 0;
-  padding: 0.35rem var(--pad) 0;
+  /* top padding = logo-gap so header line ↔ logo top matches logo bottom ↔ projects */
+  padding: var(--logo-gap) var(--pad) 0;
   pointer-events: none;
   transform: translateY(var(--dock-y, 0px));
   opacity: var(--dock-op, 1);
