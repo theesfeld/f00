@@ -9,8 +9,8 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-33.css",
-    "css_canonical": "https://f00.sh/theme/f00-theme-33.css",
+    "css": "https://f00.sh/theme/f00-theme-34.css",
+    "css_canonical": "https://f00.sh/theme/f00-theme-34.css",
     "css_path": "site/theme/f00-theme.css",
     "source": "heartbox",
     "source_name": "Heartbox",
@@ -26,10 +26,10 @@
     "accent": "#D44A18",
     "metal": "#B8BEC2",
     "sky": "#1E78C8",
-    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme-33.css for hub + every *.f00.sh project site. Organic poppy-xray field, cool silver chrome, hospital cream boxes with poppy type. Project CSS is layout-only.",
+    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme-34.css for hub + every *.f00.sh project site. Organic poppy-xray field, cool silver chrome, hospital cream boxes with poppy type. Project CSS is layout-only.",
     "layout": "bleach",
     "contrast": "heart-shaped-box",
-    "css_snapshot": "site/theme/f00-theme-33.css",
+    "css_snapshot": "site/theme/f00-theme-34.css",
     "palette_version": "0.3.1"
   },
   "domains": {
