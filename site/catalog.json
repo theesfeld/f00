@@ -9,8 +9,8 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme.css",
-    "css_canonical": "https://f00.sh/theme/f00-theme.css",
+    "css": "https://f00.sh/theme/f00-theme-16.css",
+    "css_canonical": "https://f00.sh/theme/f00-theme-16.css",
     "css_path": "site/theme/f00-theme.css",
     "source": "heartbox",
     "source_name": "Heartbox",
@@ -26,10 +26,10 @@
     "accent": "#C50A1B",
     "metal": "#B8BEC2",
     "sky": "#2096EE",
-    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme.css for hub + every *.f00.sh project site. Heartbox video shell (sky / white boxes / poppy text). Project CSS is layout-only.",
+    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme-16.css for hub + every *.f00.sh project site. Heartbox video shell (sky / white boxes / poppy text). Project CSS is layout-only.",
     "layout": "bleach",
     "contrast": "heart-shaped-box",
-    "css_snapshot": "site/theme/f00-theme-15.css",
+    "css_snapshot": "site/theme/f00-theme-16.css",
     "palette_version": "0.2.1"
   },
   "domains": {
