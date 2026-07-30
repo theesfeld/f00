@@ -485,3 +485,9 @@
   Content-Type: image/png
   Cache-Control: public, max-age=86400, immutable
   Access-Control-Allow-Origin: *
+
+/favicon.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=3600, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
