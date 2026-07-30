@@ -84,12 +84,12 @@
       parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
     logoGapPx = readLogoGap();
     /*
-     * First screen: open field under the fixed header. Logo is centered
-     * in that band (not the full viewport — that reads too high). Cards
-     * live on the next screen (below the fold).
+     * First screen: full viewport, no header chrome. Logo centered on the
+     * open field. Header only appears when the mark docks into it.
+     * Cards live on the next screen (below the fold).
      */
     const viewH = window.innerHeight;
-    const bandH = Math.max(200, viewH - headerH);
+    const bandH = Math.max(200, viewH);
     /* air above/below the ink so the mark floats, not fills the band */
     const air = Math.max(36, Math.min(96, bandH * 0.11));
     const availH = Math.max(160, bandH - air * 2);
@@ -98,7 +98,7 @@
     splashRestPx = Math.min(56, Math.max(40, window.innerWidth * 0.038));
     /*
      * Onyx "f00": glyph box ≈ 0.84×font tall, ≈ 1.28×font wide.
-     * Fit the open band with room under the header rule and above the fold.
+     * Fit the full viewport with air at the edges.
      */
     const byH = availH / 0.84;
     const byW = availW / 1.28;
@@ -167,6 +167,13 @@
       }
       if (hero) {
         hero.classList.toggle("is-done", docked);
+      }
+      /* a11y: chrome only exists once the mark parks in the header */
+      const top = header || document.querySelector("header.top");
+      if (top) {
+        top.setAttribute("aria-hidden", docked ? "false" : "true");
+        if (docked) top.removeAttribute("inert");
+        else top.setAttribute("inert", "");
       }
     }
     if (hero) hero.classList.add("is-live");

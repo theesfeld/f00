@@ -53,6 +53,7 @@ header.top,
   max-width: none !important;
   width: 100% !important;
   opacity: 1 !important;
+  visibility: visible;
   pointer-events: none;
   border: 0 !important;
   border-top: 0 !important;
@@ -64,6 +65,50 @@ header.top,
   background: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease,
+    visibility 0s linear 0s;
+}
+/*
+ * Hub film hero only: no chrome on the full-screen mark.
+ * Header pops when the logo docks into it (html.logo-docked).
+ */
+html:not(.logo-docked):has(.splash-frame) header.top,
+html:not(.logo-docked):has(.splash-frame) .top {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none !important;
+  transform: translate3d(0, -0.45rem, 0);
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease,
+    visibility 0s linear 0.28s;
+}
+html.logo-docked:has(.splash-frame) header.top,
+html.logo-docked:has(.splash-frame) .top {
+  opacity: 1 !important;
+  visibility: visible;
+  transform: translate3d(0, 0, 0);
+  pointer-events: none !important;
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease,
+    visibility 0s linear 0s;
+}
+html.logo-docked:has(.splash-frame) .top-inner {
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not(.logo-docked):has(.splash-frame) header.top,
+  html:not(.logo-docked):has(.splash-frame) .top,
+  html.logo-docked:has(.splash-frame) header.top,
+  html.logo-docked:has(.splash-frame) .top {
+    transition: none;
+    transform: none;
+    opacity: 1 !important;
+    visibility: visible;
+  }
 }
 /* no frost / shadow plate — header sits straight on the field */
 header.top::before,
@@ -127,34 +172,33 @@ html.logo-docked .brand-sub {
 main {
   position: relative;
   z-index: 1;
-  padding-top: var(--header-h);
+  /* no reserved header strip — first screen is pure mark; chrome overlays when docked */
+  padding-top: 0;
 }
 
 /*
- * First screen = logo only. Slot fills the viewport under the header so
- * project cards start below the fold on any device.
+ * First screen = full-viewport mark only. Cards start below the fold.
  */
 .hero {
   position: relative;
   z-index: 5;
   width: 100%;
-  height: var(--splash-slot-h, calc(100dvh - var(--header-h)));
-  min-height: calc(100svh - var(--header-h));
+  height: var(--splash-slot-h, 100dvh);
+  min-height: 100svh;
   margin: 0;
   padding: 0;
   pointer-events: none;
 }
 
 /*
- * Film logo frame — fixed band under header (layout STABLE while scrolling).
- * Shrink / rise is canvas transform only (compositor). Hard-dock class pins
- * into the header once — never animate height/top via --p (iOS layout thrash).
+ * Film logo frame — full viewport while free (no header chrome).
+ * Shrink / rise is canvas transform only. Hard-dock pins into the header.
  */
 .splash-frame {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
-  top: var(--header-h) !important;
+  top: 0 !important;
   z-index: 60 !important;
   display: flex;
   justify-content: center;
@@ -162,8 +206,8 @@ main {
   width: 100%;
   margin: 0;
   padding: 0 var(--pad);
-  height: calc(100dvh - var(--header-h));
-  min-height: calc(100svh - var(--header-h));
+  height: 100dvh;
+  min-height: 100svh;
   pointer-events: none !important;
   transform: none !important;
   opacity: 1;

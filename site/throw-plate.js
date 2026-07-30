@@ -82,10 +82,9 @@ export function mountThrowPlate(opts) {
     if (Number.isFinite(sh) && sh > 32) shrinkRange = sh;
     else shrinkRange = Math.max(64, (maxPx - restPx) * 0.86);
 
-    /* vertical travel: band mid → header mid (frame stays layout-stable) */
+    /* vertical travel: full-viewport center → header mid (no chrome at rest) */
     const viewH = window.innerHeight || 800;
-    const bandH = Math.max(120, viewH - headerH);
-    const bandMid = headerH + bandH * 0.5;
+    const bandMid = viewH * 0.5;
     const headMid = headerH * 0.5;
     travelY = headMid - bandMid;
   };
