@@ -1,12 +1,15 @@
-/* f00 hub splash — throw once at max, butter-smooth CSS scale on scroll
+/* f00 hub splash — throw DEVELOP once (CPU), PROJECT every frame (WebGL)
  *
- * Layout size stays locked at max (no font-size reflow).
- * Scroll drives a lerped p → pure GPU transform. Never re-raster mid-scroll.
+ * Living optical chain on the GPU. CSS scale for scroll shrink.
+ * Never a frozen bitmap that only scales.
  */
 import {
-  throwTextPlate,
-  displayToCanvas,
+  develop,
+  rasterizeTextMask,
+  sampleOptics,
 } from "./throw/engine/throw.js";
+import { createGlProjector } from "./throw/engine/gl-project.js";
+import { mulberry32 } from "./throw/engine/math.js";
 
 export function mountThrowPlate(opts) {
   const canvas = opts.canvas;
@@ -20,26 +23,33 @@ export function mountThrowPlate(opts) {
       : window.F00Projection?.seedFor?.(canvas, "plate:splash") ??
         Math.random() * 0xffffffff) >>> 0;
 
+  const rnd = mulberry32(seed);
+  const R = {
+    rnd,
+    range: (a, b) => a + (b - a) * rnd(),
+    signed: (m) => -m + 2 * m * rnd(),
+  };
+  const optics = sampleOptics(seed ^ 0xc0ffee, R);
+
   let running = true;
   let raf = 0;
-  let cache = null;
   let busy = false;
   let lastFull = 0;
-  let lastIdleRep = 0;
   let scrollIdleAt = 0;
   let thrownMaxPx = 0;
   let pendingThrow = 0;
+  let projector = null;
 
-  /* cached metrics — no getComputedStyle in the hot path */
   let maxPx = 120;
   let restPx = 56;
   let shrinkRange = 400;
 
-  /* smoothed progress — kills discrete scroll-tick jumps */
   let smoothP = 0;
   let smoothOp = 1;
   let targetP = 0;
   let targetOp = 1;
+  let dispScale = 1;
+  let lastTs = 0;
 
   const fontFamily =
     opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
@@ -61,7 +71,6 @@ export function mountThrowPlate(opts) {
       const v = opts.getP();
       if (Number.isFinite(v)) return Math.max(0, Math.min(1, v));
     }
-    /* direct from scroll — no CSS lag */
     const y = window.scrollY || 0;
     return Math.max(0, Math.min(1, y / Math.max(shrinkRange, 1)));
   };
@@ -78,17 +87,7 @@ export function mountThrowPlate(opts) {
     return Math.max(0, 1 - (y - shrinkRange) / fadeDist);
   };
 
-  /* lerped organic offsets — continuous flow, never sample-and-hold */
-  let dispOx = 0;
-  let dispOy = 0;
-  let dispRot = 0;
-  let dispScale = 1;
-
-  /**
-   * GPU-only pose. Scale = scroll story; breath = slow multi-rate drift.
-   * Everything is lerped so settle/idle never stutters.
-   */
-  const applyLivePose = (p, op, time, follow) => {
+  const applyCssScale = (p, op, follow) => {
     const pp = Math.max(0, Math.min(1, p));
     const targetScale =
       maxPx > 0
@@ -97,46 +96,30 @@ export function mountThrowPlate(opts) {
             Math.min(1.05, (restPx + (maxPx - restPx) * (1 - pp)) / maxPx)
           )
         : Math.max(0.12, 1 - pp * 0.55);
-
-    /* incommensurate slow rates → liquid idle, not a single LFO */
-    const breath = 0.2 + 0.65 * (1 - pp);
-    const t = time || 0;
-    const ph = t * 0.14;
-    const targetOx =
-      (Math.sin(ph) * 0.55 + Math.sin(ph * 0.41 + 1.2) * 0.35) * breath;
-    const targetOy =
-      (Math.cos(ph * 0.87) * 0.45 + Math.sin(ph * 0.29) * 0.25) * breath;
-    const targetRot =
-      (Math.sin(ph * 0.33 + seed * 1e-9) * 0.55 +
-        Math.sin(ph * 0.17) * 0.35) *
-      0.14 *
-      breath;
-
     const f = follow ?? 1;
     dispScale += (targetScale - dispScale) * f;
-    dispOx += (targetOx - dispOx) * f;
-    dispOy += (targetOy - dispOy) * f;
-    dispRot += (targetRot - dispRot) * f;
-
-    canvas.style.transform = [
-      "translate3d(-50%, 0, 0)",
-      `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
-      `translate3d(${dispOx.toFixed(3)}px, ${dispOy.toFixed(3)}px, 0)`,
-      `rotate(${dispRot.toFixed(4)}deg)`,
-    ].join(" ");
+    canvas.style.transformOrigin = "50% 0%";
+    canvas.style.transform = `translate3d(-50%, 0, 0) scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`;
     canvas.style.opacity = String(op);
     canvas.dataset.throwScale = String(dispScale);
     canvas.dataset.throwP = String(pp.toFixed(4));
   };
 
-  const fullThrow = async (time) => {
+  const ensureGl = () => {
+    if (projector) return projector;
+    projector = createGlProjector(canvas);
+    return projector;
+  };
+
+  /** CPU develop once at measured max — emulsion specimen. */
+  const fullDevelop = async () => {
     if (busy) return;
     busy = true;
     try {
       refreshMetrics();
       if (!(maxPx > 24)) return;
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const layoutW = maxPx * 1.4;
       const layoutH = maxPx * 0.9;
       const padX = Math.max(18, layoutW * 0.08);
@@ -144,7 +127,7 @@ export function mountThrowPlate(opts) {
       const cssW = Math.ceil(layoutW + padX * 2);
       const cssH = Math.ceil(layoutH + padY * 2);
 
-      const maxEdge = 1000;
+      const maxEdge = 1100;
       let w = Math.floor(cssW * dpr);
       let h = Math.floor(cssH * dpr);
       const sc = Math.min(1, maxEdge / Math.max(w, h, 1));
@@ -164,39 +147,35 @@ export function mountThrowPlate(opts) {
         } catch (_) {}
       }
 
-      const result = throwTextPlate({
-        text: opts.text || "f00",
-        width: w,
-        height: h,
-        fontPx: Math.round(maxPx * dpr * sc),
-        fontFamily,
-        seed,
-        time: time || 0,
+      const fontPx = Math.round(maxPx * dpr * sc);
+      const mask = rasterizeTextMask(w, h, opts.text || "f00", fontPx, fontFamily);
+      const density = develop(mask, w, h, {
+        seed: seed ^ 0x0deb,
+        temperature: 0.45 + R.range(0, 0.45),
+        time: 0.5 + R.range(0, 0.5),
+        agitation: R.range(0.25, 0.85),
       });
-      cache = {
-        density: result.density,
-        optics: result.optics,
-        w,
-        h,
-        cssW,
-        cssH,
-        maxPx,
-      };
+
+      const glp = ensureGl();
+      if (!glp) {
+        console.warn("[throw-plate] WebGL unavailable — no living projector");
+        return;
+      }
+      glp.uploadDensity(density, w, h);
+
       thrownMaxPx = maxPx;
-      displayToCanvas(canvas, result);
       canvas.style.width = `${cssW}px`;
       canvas.style.height = `${cssH}px`;
       canvas.style.left = "50%";
       canvas.style.top = "0";
-      canvas.style.transformOrigin = "50% 0%";
       canvas.style.willChange = "transform, opacity";
-      applyLivePose(smoothP, smoothOp, time || 0);
+      applyCssScale(smoothP, smoothOp, 1);
     } finally {
       busy = false;
     }
   };
 
-  const scheduleThrow = (why) => {
+  const scheduleDevelop = (why) => {
     clearTimeout(pendingThrow);
     pendingThrow = setTimeout(() => {
       if (!running) return;
@@ -209,11 +188,10 @@ export function mountThrowPlate(opts) {
         return;
       }
       lastFull = performance.now();
-      fullThrow(performance.now() / 1000);
+      fullDevelop();
     }, why === "boot" ? 0 : 50);
   };
 
-  let lastTs = 0;
   const loop = (ts) => {
     if (!running) return;
     raf = requestAnimationFrame(loop);
@@ -223,17 +201,24 @@ export function mountThrowPlate(opts) {
 
     targetP = readTargetP();
     targetOp = readTargetOp();
-
-    /*
-     * Silk follow: snappy enough to track scroll, soft enough that settle
-     * eases instead of hard-stopping. Never reproject (bitmap swaps = jerk).
-     */
     const k = 1 - Math.exp(-dt * 11);
     const prevP = smoothP;
     smoothP += (targetP - smoothP) * k;
     smoothOp += (targetOp - smoothOp) * k;
 
-    applyLivePose(smoothP, smoothOp, ts / 1000, k);
+    applyCssScale(smoothP, smoothOp, k);
+
+    /* GPU project every frame — living light on device */
+    if (projector && !reduced) {
+      const liveAmp = 0.28 + 0.72 * (1 - smoothP);
+      projector.draw({
+        time: ts / 1000,
+        p: smoothP,
+        liveAmp,
+        optics,
+        seed,
+      });
+    }
 
     const moving =
       Math.abs(smoothP - prevP) > 0.00015 ||
@@ -247,7 +232,6 @@ export function mountThrowPlate(opts) {
       }
     }
 
-    /* re-throw only if measured max jumped (resize / late measure) */
     if (
       !moving &&
       maxPx > 40 &&
@@ -256,7 +240,7 @@ export function mountThrowPlate(opts) {
       performance.now() - lastFull > 280
     ) {
       refreshMetrics();
-      scheduleThrow("max-changed");
+      scheduleDevelop("max-changed");
     }
   };
 
@@ -265,7 +249,7 @@ export function mountThrowPlate(opts) {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       refreshMetrics();
-      scheduleThrow("resize");
+      scheduleDevelop("resize");
     }, 140);
   };
   window.addEventListener("resize", onResize, { passive: true });
@@ -285,11 +269,21 @@ export function mountThrowPlate(opts) {
     smoothP = targetP;
     targetOp = readTargetOp();
     smoothOp = targetOp;
-    await fullThrow(0);
+    await fullDevelop();
     lastFull = performance.now();
     scrollIdleAt = performance.now();
-    if (!reduced) raf = requestAnimationFrame(loop);
-    else applyLivePose(smoothP, smoothOp, 0);
+    if (!reduced) {
+      raf = requestAnimationFrame(loop);
+    } else if (projector) {
+      projector.draw({
+        time: 0,
+        p: smoothP,
+        liveAmp: 0.3,
+        optics,
+        seed,
+      });
+      applyCssScale(smoothP, smoothOp, 1);
+    }
   };
   start();
 
@@ -300,14 +294,16 @@ export function mountThrowPlate(opts) {
       clearTimeout(pendingThrow);
       clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
+      projector?.destroy();
+      projector = null;
     },
     resize() {
       refreshMetrics();
-      scheduleThrow("resize");
+      scheduleDevelop("resize");
     },
     rethrow() {
       thrownMaxPx = 0;
-      scheduleThrow("force");
+      scheduleDevelop("force");
     },
   };
 }
@@ -327,11 +323,6 @@ const boot = () => {
     splashEl: splash,
     text: "f00",
     staticOnly: reduced,
-    getFontPx: () => {
-      const fs = parseFloat(getComputedStyle(splash).fontSize);
-      return Number.isFinite(fs) ? fs : 120;
-    },
-    /* live scroll math inside plate — no CSS-var lag */
     getP: null,
     getOpacity: null,
   });

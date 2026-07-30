@@ -863,7 +863,7 @@ footer, .site-footer, .foot {
   border-top: 0 !important;
 }
 
-/* imperfect card FRAME — SVG path border, not CAD 1px rect */
+/* imperfect card FRAME — SVG path border; fill clipped to same path */
 .e-frame-host {
   position: relative !important;
 }
@@ -885,12 +885,15 @@ article.card.e-frame-host,
 .f00-box.e-frame-host {
   border: 0 !important;
   box-shadow: none !important;
-}
-/* keep watercolor clip but leave 1px air so emulsion stroke isn't sheared */
-.card.e-frame-host,
-article.card.e-frame-host,
-.panel.e-frame-host {
+  /* clip-path set by entropy.js to the organic frame — cream never leaks */
   overflow: hidden !important;
+  /* allow SVG filter crisp/soft islands; never a uniform CSS blur */
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.e-frame-host > .e-frame .e-frame-stroke {
+  /* stroke sits on the clip edge */
+  vector-effect: non-scaling-stroke;
 }
 
 /*

@@ -236,74 +236,71 @@
     return d;
   };
 
-  /** imperfect closed frame — inset so overflow:hidden cards still show it */
+  /**
+   * Imperfect closed frame — subtle wander (not wild).
+   * Returns { d, inset } in viewBox 0 0 100 100.
+   */
   const framePath = (R) => {
     const j = (m) => R.signed(m);
-    /* viewBox 0 0 100 100; inset keeps stroke inside clipped boxes */
-    const inset = 1.4 + R.range(0, 0.6);
-    const w = (edge) => 0.55 + R.range(0, 1.1); /* per-edge wander amp */
+    /* small inset + mild edge wander — organic, readable card */
+    const inset = 1.1 + R.range(0, 0.35);
+    const w = () => 0.18 + R.range(0, 0.32); /* much calmer than before */
     const pts = [];
-    const pushEdge = (n, at) => {
-      for (let i = 0; i <= n; i++) {
-        const t = i / n;
-        pts.push(at(t, i === 0 || i === n));
-      }
-    };
-    const wt = w("t");
-    const wr = w("r");
-    const wb = w("b");
-    const wl = w("l");
+    const wt = w();
+    const wr = w();
+    const wb = w();
+    const wl = w();
+    const nTB = 4 + Math.floor(R.rnd() * 2);
+    const nLR = 3 + Math.floor(R.rnd() * 2);
     /* top L→R */
-    pushEdge(6 + Math.floor(R.rnd() * 4), (t, end) => [
-      inset + t * (100 - 2 * inset) + j(end ? 0.15 : 0.45),
-      inset + j(end ? 0.2 : wt) + (end ? 0 : R.signed(wt * 0.7)),
-    ]);
-    /* right T→B (skip first = top-right already) */
-    {
-      const n = 5 + Math.floor(R.rnd() * 3);
-      for (let i = 1; i <= n; i++) {
-        const t = i / n;
-        pts.push([
-          100 - inset + j(t === 1 ? 0.2 : wr) + (t === 1 ? 0 : R.signed(wr * 0.65)),
-          inset + t * (100 - 2 * inset) + j(0.35),
-        ]);
-      }
+    for (let i = 0; i <= nTB; i++) {
+      const t = i / nTB;
+      const end = i === 0 || i === nTB;
+      pts.push([
+        inset + t * (100 - 2 * inset) + j(end ? 0.08 : 0.18),
+        inset + j(end ? 0.1 : wt) + (end ? 0 : R.signed(wt * 0.45)),
+      ]);
+    }
+    /* right T→B */
+    for (let i = 1; i <= nLR; i++) {
+      const t = i / nLR;
+      pts.push([
+        100 - inset + j(t === 1 ? 0.1 : wr) + (t === 1 ? 0 : R.signed(wr * 0.4)),
+        inset + t * (100 - 2 * inset) + j(0.14),
+      ]);
     }
     /* bottom R→L */
-    {
-      const n = 6 + Math.floor(R.rnd() * 4);
-      for (let i = 1; i <= n; i++) {
-        const t = i / n;
-        pts.push([
-          100 - inset - t * (100 - 2 * inset) + j(0.35),
-          100 - inset + j(t === 1 ? 0.2 : wb) + (t === 1 ? 0 : R.signed(wb * 0.65)),
-        ]);
-      }
+    for (let i = 1; i <= nTB; i++) {
+      const t = i / nTB;
+      pts.push([
+        100 - inset - t * (100 - 2 * inset) + j(0.14),
+        100 - inset + j(t === 1 ? 0.1 : wb) + (t === 1 ? 0 : R.signed(wb * 0.4)),
+      ]);
     }
-    /* left B→T (skip last = close to start) */
-    {
-      const n = 5 + Math.floor(R.rnd() * 3);
-      for (let i = 1; i < n; i++) {
-        const t = i / n;
-        pts.push([
-          inset + j(wl) + R.signed(wl * 0.65),
-          100 - inset - t * (100 - 2 * inset) + j(0.35),
-        ]);
-      }
+    /* left B→T */
+    for (let i = 1; i < nLR; i++) {
+      const t = i / nLR;
+      pts.push([
+        inset + j(wl) + R.signed(wl * 0.4),
+        100 - inset - t * (100 - 2 * inset) + j(0.14),
+      ]);
     }
     if (!pts.length) {
-      return `M ${inset} ${inset} L ${100 - inset} ${inset} L ${100 - inset} ${100 - inset} L ${inset} ${100 - inset} Z`;
+      return {
+        d: `M ${inset} ${inset} L ${100 - inset} ${inset} L ${100 - inset} ${100 - inset} L ${inset} ${100 - inset} Z`,
+        inset,
+      };
     }
     let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
     for (let i = 1; i < pts.length; i++) {
       const prev = pts[i - 1];
       const cur = pts[i];
-      const mx = (prev[0] + cur[0]) / 2 + j(0.55);
-      const my = (prev[1] + cur[1]) / 2 + j(0.55);
+      const mx = (prev[0] + cur[0]) / 2 + j(0.18);
+      const my = (prev[1] + cur[1]) / 2 + j(0.18);
       d += ` Q ${mx.toFixed(2)} ${my.toFixed(2)} ${cur[0].toFixed(2)} ${cur[1].toFixed(2)}`;
     }
     d += " Z";
-    return d;
+    return { d, inset };
   };
 
   const attachRule = (el, side) => {
@@ -342,19 +339,47 @@
     const r = Math.round(R.range(155, 190));
     const g = Math.round(R.range(162, 196));
     const b = Math.round(R.range(170, 202));
-    const a = R.range(0.62, 0.92);
-    const sw = R.range(1.55, 2.65);
+    const a = R.range(0.62, 0.88);
+    const sw = (1.35 + R.range(0, 0.55)) * 0.32; /* stroke in viewBox units */
+    const { d } = framePath(R);
+    const clipId = `e-clip-${seed.toString(16)}`;
+    const filtId = `e-emul-${seed.toString(16)}`;
+    /* spatial crisp/soft: turbulence modulates a light blur — not uniform */
+    const baseF = 0.035 + R.range(0, 0.025);
+    const blurAmt = 0.35 + R.range(0, 0.55);
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-frame");
     svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("preserveAspectRatio", "none");
     svg.setAttribute("viewBox", "0 0 100 100");
-    /* no non-scaling-stroke — stroke scales with box so edge reads as emulsion */
-    svg.innerHTML = `<path d="${framePath(R)}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${(sw * 0.35).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    svg.innerHTML = `
+      <defs>
+        <clipPath id="${clipId}" clipPathUnits="objectBoundingBox">
+          <path d="${d}" transform="scale(0.01,0.01)"/>
+        </clipPath>
+        <filter id="${filtId}" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="${baseF.toFixed(4)}" numOctaves="2" seed="${seed & 0xffff}" result="n"/>
+          <feComponentTransfer in="n" result="m">
+            <feFuncA type="discrete" tableValues="0 0 0 1 1 0 1 0 1 1"/>
+          </feComponentTransfer>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="${blurAmt.toFixed(2)}" result="soft"/>
+          <feComposite in="soft" in2="m" operator="in" result="softMask"/>
+          <feComposite in="SourceGraphic" in2="softMask" operator="over"/>
+        </filter>
+      </defs>
+      <path class="e-frame-stroke" d="${d}" fill="none"
+        stroke="rgba(${r},${g},${b},${a.toFixed(3)})"
+        stroke-width="${sw.toFixed(3)}"
+        stroke-linejoin="round" stroke-linecap="round"/>
+    `.trim();
     el.appendChild(svg);
-    /* hide CAD border — frame is the projection edge */
+    /* fill (cream + watercolor) never escapes the organic frame */
+    el.style.clipPath = `url(#${clipId})`;
+    el.style.webkitClipPath = `url(#${clipId})`;
     el.style.borderColor = "transparent";
     el.style.borderWidth = "0px";
+    /* spatial emulsion on whole card surface — islands of soft vs crisp */
+    el.style.filter = `url(#${filtId})`;
   };
 
   const solidSel = [
