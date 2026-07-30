@@ -85,11 +85,8 @@ export function mountThrowPlate(opts) {
       const v = opts.getOpacity();
       if (Number.isFinite(v)) return Math.max(0, Math.min(1, v));
     }
-    const y = window.scrollY || 0;
-    if (y <= shrinkRange) return 1;
-    const restH = restPx * 0.84;
-    const fadeDist = Math.max(72, restH * 0.95);
-    return Math.max(0, 1 - (y - shrinkRange) / fadeDist);
+    /* docked mark stays fully opaque — no dissolve */
+    return 1;
   };
 
   const applyCssScale = (p, op, follow) => {

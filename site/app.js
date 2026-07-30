@@ -170,25 +170,18 @@
   const updateHeroScroll = () => {
     if (!splash || prefersReduced) {
       setProgress(prefersReduced ? 1 : 0);
-      setDock(0, prefersReduced ? 0 : 1);
+      setDock(0, 1);
       return;
     }
     const y = window.scrollY;
     if (y <= shrinkRange) {
-      /* phase 1: shrink UP under header; body gap constant */
+      /* shrink UP under header; body gap constant */
       setProgress(y / Math.max(shrinkRange, 1));
-      setDock(0, 1);
-      return;
+    } else {
+      /* docked at rest size — stay visible, do not fade out */
+      setProgress(1);
     }
-    /*
-     * phase 2: dock at rest under header (still with equal air), then
-     * dissolve in place. Do NOT translate through the header rule.
-     */
-    setProgress(1);
-    const over = y - shrinkRange;
-    const fadeDist = Math.max(72, splashRestH * 0.95);
-    const op = Math.max(0, 1 - over / fadeDist);
-    setDock(0, op);
+    setDock(0, 1);
   };
 
   if (splash) {
