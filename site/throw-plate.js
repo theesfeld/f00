@@ -98,33 +98,17 @@ export function mountThrowPlate(opts) {
     );
     const f = follow ?? 1;
     dispScale += (targetScale - dispScale) * f;
-    const docked =
-      pp > 0.88 || document.documentElement.classList.contains("logo-docked");
-    const padCancel = pp * pp;
-    const yShift = -inkTopFrac * (baseCssH || 0) * dispScale * padCancel;
-
-    if (docked) {
-      /*
-       * Pin mark in header: center the plate box in the wrap, then scale
-       * about its center. (Never mix top-origin + % translate on max-size box.)
-       */
-      canvas.style.left = "50%";
-      canvas.style.top = "50%";
-      canvas.style.transformOrigin = "50% 50%";
-      canvas.style.transform = [
-        "translate3d(-50%, -50%, 0)",
-        `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
-      ].join(" ");
-    } else {
-      /* hero: scale from top-center under the header rule */
-      canvas.style.left = "50%";
-      canvas.style.top = "0";
-      canvas.style.transformOrigin = "50% 0%";
-      canvas.style.transform = [
-        `translate3d(-50%, ${yShift.toFixed(2)}px, 0)`,
-        `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
-      ].join(" ");
-    }
+    /*
+     * Always center the plate in its frame (hero band or header bar).
+     * Frame flex + translate(-50%,-50%) scale about center — any device.
+     */
+    canvas.style.left = "50%";
+    canvas.style.top = "50%";
+    canvas.style.transformOrigin = "50% 50%";
+    canvas.style.transform = [
+      "translate3d(-50%, -50%, 0)",
+      `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
+    ].join(" ");
     canvas.style.opacity = String(op);
     canvas.dataset.throwScale = String(dispScale);
     canvas.dataset.throwP = String(pp.toFixed(4));

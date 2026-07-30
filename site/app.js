@@ -85,31 +85,21 @@
       parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
     logoGapPx = readLogoGap();
     /*
-     * Symmetric air when docked: header line → logo top  ==  logo bottom → projects.
-     * At full hero size we also reserve --logo-hero-top so the mark isn't hard
-     * against the header rule.
+     * First screen: full viewport under header. Logo is centered in that
+     * band; project cards live in the next screen (below the fold).
      */
-    const heroTopExtra = (() => {
-      const raw = getComputedStyle(root).getPropertyValue("--logo-hero-top").trim();
-      const n = parseFloat(raw);
-      if (!Number.isFinite(n)) return 18;
-      if (raw.endsWith("rem")) {
-        const fs = parseFloat(getComputedStyle(document.body).fontSize) || 16;
-        return n * fs;
-      }
-      return n;
-    })();
-    const peek = 36; /* thin projects peek under the mark */
-    const availH = Math.max(
-      200,
-      window.innerHeight - headerH - logoGapPx * 2 - heroTopExtra - peek
-    );
-    const availW = window.innerWidth * 0.94;
-    /* rest: compact brand mark under header (stays visible, not card-scale) */
+    const viewH = window.innerHeight;
+    /* first screen under fixed header — cards start at the fold */
+    const bandH = Math.max(200, viewH - headerH);
+    /* size mark for the full viewport center (slightly inside edges) */
+    const margin = Math.max(24, Math.min(72, viewH * 0.07));
+    const availH = Math.max(160, viewH - margin * 2 - headerH * 0.35);
+    const availW = window.innerWidth * 0.88;
+    /* rest: compact brand in the header bar */
     splashRestPx = Math.min(56, Math.max(40, window.innerWidth * 0.038));
     /*
      * Onyx "f00": glyph box ≈ 0.84×font tall, ≈ 1.28×font wide.
-     * Size by the tighter axis so the plate eats the hero band.
+     * Fill the centered band without kissing the header or fold.
      */
     const byH = availH / 0.84;
     const byW = availW / 1.28;
@@ -119,7 +109,6 @@
     root.style.setProperty("--splash-max", `${splashMaxPx.toFixed(1)}px`);
     root.style.setProperty("--splash-rest", `${splashRestPx.toFixed(1)}px`);
 
-    /* measure real painted heights at max/rest (Onyx metrics ≠ CSS math) */
     const pWas = root.style.getPropertyValue("--p");
     root.style.setProperty("--p", "0");
     splashMaxH = measureAtFont(splashMaxPx) || splashMaxPx * 0.84;
@@ -127,7 +116,6 @@
     splashRestH = measureAtFont(splashRestPx) || splashRestPx * 0.84;
     root.style.setProperty("--p", pWas || "0");
 
-    /* if measured box overshoots avail, scale font down to fit */
     if (splashMaxH > availH * 1.02) {
       splashMaxPx *= availH / splashMaxH;
       root.style.setProperty("--splash-max", `${splashMaxPx.toFixed(1)}px`);
@@ -136,18 +124,15 @@
       root.style.setProperty("--p", pWas || "0");
     }
 
-    /* slot = air + maxH + air → projects line sits logo-gap under mark */
-    const slotH = Math.ceil(logoGapPx + splashMaxH + logoGapPx);
+    /* entire first viewport is the hero slot — cards start off-screen */
+    const slotH = Math.ceil(bandH);
     root.style.setProperty("--splash-slot-h", `${slotH}px`);
 
     /*
-     * p 0→1 over height delta so bottom air stays constant while mark shrinks:
-     *   logo_top    = header + gap
-     *   logo_bottom = header + gap + splashH(p)
-     *   projects    = header + gap + maxH + gap − scrollY
-     *   with splashH ≈ maxH − scrollY → bottom gap stays `gap`
+     * p 0→1 over the first screen: logo shrinks into the header while
+     * the user scrolls the cards up from below the fold.
      */
-    shrinkRange = Math.max(64, splashMaxH - splashRestH);
+    shrinkRange = Math.max(96, slotH * 0.92);
     root.style.setProperty("--shrink-range", `${shrinkRange.toFixed(1)}px`);
     notifyThrow();
   };
