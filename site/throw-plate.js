@@ -93,7 +93,7 @@ export function mountThrowPlate(opts) {
     const pp = Math.max(0, Math.min(1, p));
     /* s=1 at hero; s=restScale when docked — restScale from real ink metrics */
     const targetScale = Math.max(
-      0.12,
+      0.05,
       Math.min(1.05, 1 - pp * (1 - restScale))
     );
     const f = follow ?? 1;
@@ -198,15 +198,15 @@ export function mountThrowPlate(opts) {
       }
       baseCssH = cssH;
       /*
-       * restScale so visual ink height ≈ measured rest glyph band (restPx*0.86).
-       * That keeps logo-gap under header ≈ logo-gap above projects when p=1.
+       * restScale → compact docked mark (~brand height under header).
+       * Was targeting ~restPx (too large) so the dock sat on top of cards.
        */
-      const targetInkH = Math.max(36, restPx * 0.86);
+      const targetInkH = Math.max(34, Math.min(48, restPx * 0.9));
       const fullInkH = inkHeightFrac * cssH;
       restScale =
         fullInkH > 1
-          ? Math.max(0.12, Math.min(0.55, targetInkH / fullInkH))
-          : restPx / Math.max(maxPx, 1);
+          ? Math.max(0.06, Math.min(0.22, targetInkH / fullInkH))
+          : Math.min(0.2, restPx / Math.max(maxPx, 1));
 
       thrownMaxPx = maxPx;
       canvas.style.width = `${cssW}px`;

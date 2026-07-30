@@ -105,8 +105,8 @@
       window.innerHeight - headerH - logoGapPx * 2 - heroTopExtra - peek
     );
     const availW = window.innerWidth * 0.94;
-    /* rest: catalog-scale mark under header */
-    splashRestPx = Math.min(112, Math.max(52, window.innerWidth * 0.085));
+    /* rest: compact brand mark under header (stays visible, not card-scale) */
+    splashRestPx = Math.min(56, Math.max(40, window.innerWidth * 0.038));
     /*
      * Onyx "f00": glyph box ≈ 0.84×font tall, ≈ 1.28×font wide.
      * Size by the tighter axis so the plate eats the hero band.
