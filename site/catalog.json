@@ -41,7 +41,9 @@
     "packages": "dist.f00.sh"
   },
   "laws": {
-    "release_to_card": "Only projects with status=released get a hub card. Add/update the project entry here when you ship a release."
+    "release_to_card": "Only projects with status=released get a hub card. Add/update the project entry here when you ship a release.",
+    "license": "Every f00 project is MIT, open source, free to the world — no paywalls, no ownership cosplay. Stewards only.",
+    "donate": "https://f00.sh/donate — one collective pool, even split; never per-project. No begging."
   },
   "infra": [
     {

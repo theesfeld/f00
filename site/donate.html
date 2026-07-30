@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>donate — f00</title>
+  <meta name="description" content="Optional support for the f00 collective. One pool, split evenly. No paywalls. No begging." />
+  <meta name="theme-color" content="#1E78C8" />
+  <link rel="canonical" href="https://f00.sh/donate" />
+  <meta property="og:title" content="donate — f00" />
+  <meta property="og:description" content="One collective pool. Split evenly. For love, not rent." />
+  <meta property="og:url" content="https://f00.sh/donate" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/theme/brand/favicon-v32.svg?v=field" type="image/svg+xml" />
+  <link rel="icon" href="/theme/brand/icon-32-v32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/theme/brand/apple-touch-v32.png" sizes="180x180" />
+  <link rel="preload" href="/assets/fonts/Onyx.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/Onyx.otf" as="font" type="font/otf" crossorigin />
+  <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" data-f00-theme="1" />
+  <link rel="stylesheet" href="styles-25.css?v=26f" />
+  <script src="/theme/f00-entropy.js?v=25" data-f00-entropy-script defer></script>
+</head>
+<body class="page-mantra page-donate">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="https://f00.sh/" aria-label="f00 home">
+        <span class="brand-mark">f00</span>
+        <span class="brand-sub">.sh</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="https://f00.sh/#projects">projects</a>
+        <a href="/who">who</a>
+        <a href="https://github.com/f00-sh" rel="noopener">github</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="mantra">
+    <header class="mantra-head section-head">
+      <p class="mantra-kicker mono">f00 · give</p>
+      <h1>If you give, give quiet.</h1>
+      <p class="mantra-lede">
+        The work is free. There is no paywall and no product to buy.
+        Support is optional — one collective pool, never per project.
+        Split evenly among stewards. No cup on the sidewalk.
+      </p>
+    </header>
+
+    <div class="mantra-body">
+      <article class="card" data-donate="pool">
+        <h3>One pool</h3>
+        <p>
+          Every donate link on every f00 site points here. There is no
+          tip jar for a single logo. If something arrives, it is shared
+          evenly across the collective — like bread, not like equity.
+        </p>
+      </article>
+
+      <article class="card" data-donate="how">
+        <h3>How (local / diy)</h3>
+        <p>
+          We stay out of the big payment conglomerates when we can.
+          Prefer paths that stay small, local, and hard to own.
+        </p>
+        <ul class="facts mono">
+          <li>Monero (XMR) — address on request via tj@f00.sh</li>
+          <li>Cash in person or by post — details on request</li>
+          <li>Other diy channels when they stay free of the mall</li>
+        </ul>
+        <p class="card-meta mono mantra-seal">
+          Ask:
+          <a href="mailto:tj@f00.sh?subject=f00%20give">tj@f00.sh</a>
+          ·
+          <a href="https://x.com/lameserver" rel="noopener">@lameserver</a>
+        </p>
+        <p>
+          Addresses rotate. We do not keep a permanent public wallet
+          burned into every screenshot. Write first; we answer with
+          the current way.
+        </p>
+      </article>
+
+      <article class="card" data-donate="not">
+        <h3>What this is not</h3>
+        <p>
+          Not a subscription. Not a crowdfunding campaign. Not
+          sponsorship tiers. Not a tax on using the work. The projects
+          stay open whether you give or not. If you never send a
+          thing, you are still welcome to use everything we ship.
+        </p>
+      </article>
+
+      <article class="card mantra-close" data-donate="seal">
+        <h3>For love</h3>
+        <p>
+          The default is zero. Giving is a choice, not a duty. We do
+          not beg. We do not panhandle. We make the thing, put it
+          down, keep walking.
+        </p>
+        <p class="card-meta mono mantra-seal">
+          free to use · free to leave · optional to give
+        </p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span class="foot-left"><a href="https://f00.sh/">← f00</a> · give</span>
+    <a class="foot-center" href="/who">who</a>
+    <a class="foot-stars" href="https://github.com/f00-sh" rel="noopener" data-f00-stars-total>★ …</a>
+  </footer>
+
+  <script data-f00-stars-script>
+/* f00 GitHub stars — hub + project footers (also SPA-safe) */
+(() => {
+  const fmt = (n) =>
+    typeof n === "number" && Number.isFinite(n) ? n.toLocaleString("en-US") : "—";
+  const cache = new Map();
+  const fetchRepo = async (repo) => {
+    if (cache.has(repo)) return cache.get(repo);
+    const p = fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Accept: "application/vnd.github+json" },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) =>
+        j && typeof j.stargazers_count === "number" ? j.stargazers_count : 0
+      )
+      .catch(() => 0);
+    cache.set(repo, p);
+    return p;
+  };
+  const projectsFromCatalog = async () => {
+    for (const url of [
+      "https://f00.sh/catalog.json",
+      "/catalog.json",
+      "catalog.json",
+    ]) {
+      try {
+        const r = await fetch(url, { credentials: "omit" });
+        if (!r.ok) continue;
+        const j = await r.json();
+        const list = j.projects || j.products || [];
+        const repos = list
+          .filter((p) => p && p.status === "released" && p.repo_slug)
+          .map((p) => p.repo_slug);
+        if (repos.length) return repos;
+      } catch {
+        /* next */
+      }
+    }
+    return [
+      "f00-sh/f00tils",
+      "f00-sh/clun",
+      "f00-sh/cel",
+      "f00-sh/trn",
+      "f00-sh/heartbox",
+      "f00-sh/joule",
+    ];
+  };
+  const paint = (el, n) => {
+    if (el.dataset.f00StarsPainted === String(n)) return;
+    el.textContent = `★ ${fmt(n)}`;
+    el.setAttribute("aria-label", `${fmt(n)} GitHub stars`);
+    el.dataset.f00StarsPainted = String(n);
+  };
+  const run = async () => {
+    const totals = document.querySelectorAll("[data-f00-stars-total]");
+    if (!totals.length) return;
+    const repos = await projectsFromCatalog();
+    let sum = 0;
+    for (const repo of repos) sum += await fetchRepo(repo);
+    totals.forEach((el) => paint(el, sum));
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+})();
+  </script>
+</body>
+</html>

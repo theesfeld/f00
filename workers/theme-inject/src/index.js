@@ -97,6 +97,57 @@ function pinStars(html) {
   return html;
 }
 
+/** One collective donate link on every *.f00.sh site (never per-project). */
+const DONATE_HREF = "https://f00.sh/donate";
+const DONATE_JS =
+  "/* f00 collective donate — one pool, all sites */\n(() => {\n" +
+  "  if (document.querySelector(\"[data-f00-donate]\")) return;\n" +
+  "  const foot = document.querySelector(\"footer.foot, footer, .foot, .site-footer\");\n" +
+  "  if (!foot) return;\n" +
+  "  const a = document.createElement(\"a\");\n" +
+  "  a.href = " +
+  JSON.stringify(DONATE_HREF) +
+  ";\n" +
+  "  a.className = \"foot-donate\";\n" +
+  "  a.dataset.f00Donate = \"1\";\n" +
+  "  a.textContent = \"donate\";\n" +
+  "  a.rel = \"noopener\";\n" +
+  "  const stars = foot.querySelector(\"[data-f00-stars-total], .foot-stars, a[data-f00-stars]\");\n" +
+  "  if (stars && stars.parentNode === foot) foot.insertBefore(a, stars);\n" +
+  "  else if (stars && stars.parentElement) stars.parentElement.insertBefore(a, stars);\n" +
+  "  else foot.appendChild(a);\n" +
+  "})();";
+const DONATE_SCRIPT =
+  "<script data-f00-donate-script>" + DONATE_JS + "</script>";
+
+function pinDonate(html) {
+  /* rewrite any old donate URLs to the collective pool */
+  html = html.replace(
+    /href=["'][^"']*donate[^"']*["']/gi,
+    (m) => {
+      if (/f00\.sh\/donate/.test(m)) return `href="${DONATE_HREF}"`;
+      return m;
+    }
+  );
+  if (!html.includes("data-f00-donate-script") && !html.includes("data-f00-donate")) {
+    if (/<\/body>/i.test(html)) {
+      html = html.replace(/<\/body>/i, `${DONATE_SCRIPT}\n</body>`);
+    } else {
+      html += DONATE_SCRIPT;
+    }
+  } else if (
+    html.includes("data-f00-donate") &&
+    !html.includes(DONATE_HREF) &&
+    /data-f00-donate/.test(html)
+  ) {
+    html = html.replace(
+      /(<a[^>]*data-f00-donate[^>]*href=["'])[^"']*(["'])/gi,
+      `$1${DONATE_HREF}$2`
+    );
+  }
+  return html;
+}
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
@@ -114,6 +165,7 @@ export default {
     html = pinTheme(html);
     html = pinEntropy(html);
     html = pinStars(html);
+    html = pinDonate(html);
 
     return new Response(html, {
       status: response.status,
