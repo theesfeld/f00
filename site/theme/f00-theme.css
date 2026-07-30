@@ -13,7 +13,9 @@
 
 @font-face {
   font-family: "Onyx";
-  src: url("https://f00.sh/assets/fonts/Onyx.ttf") format("truetype");
+  src:
+    url("https://f00.sh/assets/fonts/Onyx.woff2") format("woff2"),
+    url("https://f00.sh/assets/fonts/Onyx.otf") format("opentype");
   font-weight: 400 700;
   font-style: normal;
   font-display: swap;
@@ -64,7 +66,7 @@
   --f00-font-body: var(--f00-font-zine);
   --f00-font-chip: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --f00-font-accent: var(--f00-font-chip);
-  --f00-font-display: var(--f00-font-chip);
+  --f00-font-display: var(--f00-font-brand);
   --f00-font-mono: var(--f00-font-chip);
   --f00-font-family: var(--f00-font-body);
   --f00-font-hand: var(--f00-font-chip);
@@ -105,7 +107,7 @@
   --sky: var(--f00-sky);
   --radius: 0;
   --font-brand: var(--f00-font-brand);
-  --font-display: var(--f00-font-chip);
+  --font-display: var(--f00-font-brand);
   --font: var(--f00-font-chip);
   --sans: var(--f00-font-zine);
   --font-sans: var(--f00-font-zine);
@@ -228,9 +230,9 @@ p, .lede, .howto, .lead, .hero-copy p, .blurb {
 p strong, .lede strong, li strong { color: #fff !important; font-weight: 700; }
 
 h1, h2, h3, h4 {
-  font-family: var(--f00-font-chip) !important;
-  letter-spacing: 0.12em;
-  font-weight: 700 !important;
+  font-family: var(--f00-font-brand) !important;
+  letter-spacing: 0.06em;
+  font-weight: 400 !important;
   color: #ffffff !important;
   text-transform: uppercase;
 }

@@ -295,3 +295,47 @@
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
   CDN-Cache-Control: max-age=60
+
+
+/theme/f00-theme-18.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  CDN-Cache-Control: max-age=60
+
+/assets/fonts/Onyx.otf
+  Content-Type: font/otf
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/assets/fonts/Onyx.woff2
+  Content-Type: font/woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/theme/fonts/Onyx.otf
+  Content-Type: font/otf
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/theme/fonts/Onyx.woff2
+  Content-Type: font/woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+
+/theme/brand/*
+  Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/theme/brand/*.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
+
+/theme/brand/*.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
