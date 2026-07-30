@@ -109,12 +109,48 @@ for revenue-shared labor, wrong for “tax-deductible art fund.” Can exist
 - [ ] Grant policy: who can apply, open deliverables, no private inurement
 - [ ] Public donate page still one pool → f00.sh/donate
 
+## What the pool is for (program spend)
+
+Gifts and any physical-sales surplus go back into **more released work**,
+not private income:
+
+| Kind | Examples |
+|------|----------|
+| Sound | Recording, masters, pressing, free digital release |
+| Print | Art books, magazines, zines, paper, ink, postage |
+| Image / object | Prints, small editions (mission-related) |
+| Tech | Servers, bandwidth, domains, open-source infra |
+| Materials | Artist supplies when they become the next project |
+
+### Free digital · physical for cost recovery
+
+- **Digital:** free forever (code MIT; art/music files free to take where
+  practical). No paywall on the cultural object.
+- **Physical:** may be **sold at cost or modest surplus** only if surplus
+  returns to the **same collective pool** to fund the next release.
+- **No profit distributions** to stewards, founders, or “owners.”
+- **No one gets rich**; the table gets larger.
+
+This is the “cycle”: give / cost-sale → pool → next album, next zine,
+next server, next open tool.
+
+### Tax note (US 501c3, talk to counsel)
+
+- Mission-related sales (e.g. zines that *are* the educational/artistic
+  program) are often fine; pure merch for logo cash can trip
+  **unrelated business income (UBIT)**.
+- Keep books: gifts vs program revenue; document that surplus funds
+  further exempt purpose work.
+- Grants to projects: open deliverables, public report, no private
+  inurement.
+
 ## Granting to projects (once funded)
 
-- Written application (fits hub + mantra).
+- Written application (fits hub + mantra + open license).
 - Collective vote if required by bylaws.
-- **Open MIT (or freer) deliverables** required.
-- Report: what shipped, where public.
+- **Open MIT (or freer) for code; free digital for media** required.
+- Budget: production costs, not lifestyle.
+- Report: what shipped, where public, how free digital is obtained.
 - Money is **support for work**, not purchase of ownership.
 
 ## Anti-patterns
