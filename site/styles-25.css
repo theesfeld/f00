@@ -316,22 +316,7 @@ main {
   opacity: calc(0.55 + 0.35 * (1 - var(--p, 0)));
 }
 
-.hero-cue {
-  position: fixed;
-  left: 50%;
-  top: calc(var(--header-h) + min(62vh, calc(var(--splash-max) * 0.95)));
-  transform: translateX(-50%);
-  z-index: 6;
-  font-family: var(--f00-font-chip, ui-monospace, monospace);
-  font-size: 0.65rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(208, 213, 219, 0.75);
-  opacity: calc(0.85 * (1 - var(--p, 0) * 1.5));
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(9, 9, 9, 0.45);
-}
-.hero.is-done .hero-cue { visibility: hidden; }
+.hero-cue { display: none !important; }
 
 @keyframes emulsion-hitch {
   0%, 94%, 100% { opacity: 1; }
