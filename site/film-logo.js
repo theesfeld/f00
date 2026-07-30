@@ -1,6 +1,12 @@
-/* f00 — WebGL splash: flat black ink on a bending film cel
- * Organic continuous warp (paint on acetate) + soft bloom.
- * No grain, no RGB fringe — analog twist / stretch / bend only.
+/* f00 — WebGL film PROJECTOR for the splash plate
+ *
+ * Dream: this is not a font. It is a 70mm frame — dye on film — thrown by a
+ * lamp through a lens onto a screen. Geometry changes because the PLATE moves
+ * relative to lamp/lens (weave, buckle, tilt, throw), not because glyphs skew.
+ *
+ * MUST: gate weave · plate tilt (homography) · buckle Z→scale · always-on wave
+ * SHOULD: focus breathing (blur+scale) · soft lamp falloff on alpha
+ * NEVER: RGB fringe · grain · per-glyph morph · snap stretch
  */
 (() => {
   const VERT = `
@@ -19,12 +25,12 @@
     uniform vec2 u_res;
     uniform float u_time;
     uniform float u_p;
-    /* swell envelope 0..1 (smooth in host); organic bend event */
-    uniform float u_swell;
-    uniform vec2 u_pivot;
-    uniform float u_twist;   /* radians-ish at peak */
-    uniform vec2 u_pull;     /* stretch direction bias */
-    uniform float u_wave;    /* secondary fold strength */
+    /* register event — same physical channels, amplified (0..1 sine envelope) */
+    uniform float u_event;
+    uniform vec2 u_evWeave;   /* extra gate slip direction */
+    uniform vec2 u_evTilt;    /* extra pitch/yaw */
+    uniform vec2 u_evPivot;   /* buckle / slip focus in UV */
+    uniform float u_evBuckle;
 
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -39,32 +45,32 @@
       vec2 u = f * f * (3.0 - 2.0 * f);
       return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
     }
-    /* smooth multi-octave field — wet-cel / heat shimmer continuity */
-    float fbm(vec2 p) {
-      float v = 0.0;
-      float a = 0.5;
-      for (int i = 0; i < 4; i++) {
-        v += a * noise(p);
-        p = p * 2.03 + vec2(1.7, 9.2);
-        a *= 0.5;
-      }
-      return v;
+    /* low-frequency only — optical scale, not texture grain */
+    float fbm2(vec2 p) {
+      return 0.66 * noise(p) + 0.34 * noise(p * 1.97 + 3.1);
+    }
+    vec2 n2(float t, float s) {
+      return vec2(
+        fbm2(vec2(t * 0.17 + s, t * 0.13 + s * 2.1)) * 2.0 - 1.0,
+        fbm2(vec2(t * 0.11 + s * 3.3, t * 0.19 + 1.7)) * 2.0 - 1.0
+      );
     }
 
     vec4 sampleInk(vec2 uv) {
-      if (uv.x < -0.08 || uv.x > 1.08 || uv.y < -0.08 || uv.y > 1.08) {
+      if (uv.x < -0.06 || uv.x > 1.06 || uv.y < -0.06 || uv.y > 1.06) {
         return vec4(0.0);
       }
       return texture2D(u_tex, clamp(uv, 0.0, 1.0));
     }
 
-    float bloomA(vec2 uv, float spread) {
-      vec2 px = spread / u_res;
+    /* soft alpha bloom = focus softness of the thrown silhouette */
+    float bloomA(vec2 uv, float spreadPx) {
+      vec2 px = spreadPx / u_res;
       float acc = 0.0;
       float wsum = 0.0;
       for (int y = -2; y <= 2; y++) {
         for (int x = -2; x <= 2; x++) {
-          float w = exp(-0.4 * float(x * x + y * y));
+          float w = exp(-0.45 * float(x * x + y * y));
           acc += sampleInk(uv + vec2(float(x), float(y)) * px).a * w;
           wsum += w;
         }
@@ -73,87 +79,79 @@
     }
 
     /*
-     * Cel warp: paint stuck to acetate.
-     * Continuous low-frequency bend + a slow swell that twists/pulls
-     * around a moving pivot (not a uniform scale snap).
+     * Inverse optical path: screen UV → film UV.
+     * Whole-frame geometry only. Flat black plate.
      */
-    vec2 celWarp(vec2 uv, float t) {
+    vec2 projectUV(vec2 uv, float t, out float defocus) {
       float hero = 1.0 - clamp(u_p, 0.0, 1.0);
-      float live = 0.5 + 0.5 * hero;
+      float live = 0.55 + 0.45 * hero;
+      float e = u_event;
+      e = e * e * (3.0 - 2.0 * e);
 
-      /* continuous organic field — always breathing */
-      vec2 flow = vec2(t * 0.11, t * 0.09);
-      float n1 = fbm(uv * 2.4 + flow);
-      float n2 = fbm(uv * 3.1 - flow.yx * 1.3 + 4.0);
-      float n3 = fbm(uv * 1.2 + flow * 0.4 + 11.0);
+      vec2 p = uv - 0.5;
 
-      vec2 drift = vec2(
-        (n1 - 0.5) * 0.014 + (n3 - 0.5) * 0.006,
-        (n2 - 0.5) * 0.012 + (n3 - 0.5) * 0.005
-      ) * live;
+      /* 1) Gate weave — rigid plate slide in the aperture (always) */
+      vec2 weave = n2(t * 0.85, 1.0) * (0.0016 * live);
+      weave += u_evWeave * e * 0.0045;
+      p -= weave;
 
-      /* slow S-curve bend along the word (acetate curl) */
-      float curl = sin(uv.x * 3.14159 + t * 0.35) * cos(uv.y * 2.2 - t * 0.22);
-      drift.y += curl * 0.006 * live;
-      drift.x += sin(uv.y * 2.8 + t * 0.28) * 0.004 * live;
-
-      /* domain-warped second pass — more fluid, less “sine wave” */
-      vec2 warped = uv + drift;
-      float m1 = fbm(warped * 2.8 + flow * 1.4);
-      float m2 = fbm(warped * 2.2 - flow * 1.1 + 2.5);
-      drift += vec2(m1 - 0.5, m2 - 0.5) * 0.008 * live;
-
-      vec2 p = uv + drift;
-
-      /* swell event: twist + radial pull around pivot (eased envelope) */
-      float s = u_swell;
-      /* smoothstep-ish already from host; reinforce ease */
-      s = s * s * (3.0 - 2.0 * s);
-      if (s > 0.001) {
-        vec2 piv = u_pivot;
-        vec2 d = p - piv;
-        float r = length(d);
-        float fall = exp(-r * r * 3.2); /* soft localized bend */
-
-        /* twist: rotate around pivot, stronger near center, fades out */
-        float ang = u_twist * s * fall;
-        float ca = cos(ang);
-        float sa = sin(ang);
-        d = vec2(ca * d.x - sa * d.y, sa * d.x + ca * d.y);
-
-        /* stretch along pull axis — fluid, not a box scale */
-        vec2 axis = normalize(u_pull + vec2(0.0001));
-        vec2 ortho = vec2(-axis.y, axis.x);
-        float along = dot(d, axis);
-        float across = dot(d, ortho);
-        along *= 1.0 + 0.2 * s * fall;
-        across *= 1.0 - 0.12 * s * fall;
-        d = axis * along + ortho * across;
-
-        /* secondary fold wave through the cel */
-        float fold = sin(along * 9.0 + t * 1.4 + u_wave * 3.0) * 0.012 * s * fall * u_wave;
-        d += ortho * fold;
-
-        /* gentle whole-plate shear */
-        d.x += d.y * 0.08 * s * u_twist;
-
-        p = piv + d;
+      /* 2) Film buckle Z — bow toward lamp: center magnifies (throw change) */
+      float zIdle = (fbm2(uv * 1.1 + vec2(t * 0.07, t * 0.05)) - 0.5) * 0.012 * live;
+      /* continuous micro-wave on the plate (always slight) */
+      zIdle += sin(uv.x * 4.2 + t * 0.55) * cos(uv.y * 3.3 - t * 0.42) * 0.0035 * live;
+      float r2p = dot(p, p);
+      float zEv = 0.0;
+      if (e > 0.001) {
+        vec2 d = uv - u_evPivot;
+        zEv = u_evBuckle * e * exp(-dot(d, d) * 2.8);
       }
+      float Z = zIdle + zEv;
+      /* perspective-ish local scale from plate distance */
+      float mag = 1.0 / max(1.0 - 2.4 * Z, 0.82);
+      p *= mag;
 
-      return p;
+      /* 3) Plate tilt → soft keystone (whole projected frame) */
+      vec2 tilt = n2(t * 0.22, 2.0) * (0.012 * live);
+      tilt += u_evTilt * e * 0.035;
+      float denom = 1.0 + tilt.y * p.y + tilt.x * p.x;
+      p /= max(denom, 0.78);
+
+      /* 4) Throw / focus breathing — global scale of the throw */
+      float breath = 1.0 + 0.006 * live * sin(t * 0.75 + fbm2(vec2(t * 0.2, 4.0)) * 2.0);
+      breath += e * 0.012 * sin(e * 3.14159);
+      p /= breath;
+
+      /* 5) Screen / air undulation AFTER projection (soft, always-on wave) */
+      vec2 air = vec2(
+        sin(p.y * 5.5 + t * 0.38) * 0.0018,
+        cos(p.x * 4.8 - t * 0.33) * 0.0015
+      ) * live;
+      air += n2(t * 0.12 + p.x + p.y, 4.0) * (0.0011 * live);
+      air += e * 0.003 * n2(t + 9.0, 5.0);
+      p += air;
+
+      /* defocus amount for bloom (optics, not grain) */
+      defocus = abs(Z) * 40.0 + length(tilt) * 8.0 + abs(breath - 1.0) * 25.0 + e * 0.8;
+
+      return p + 0.5;
     }
 
     void main() {
-      vec2 uv = celWarp(v_uv, u_time);
+      float defocus = 0.0;
+      vec2 uv = projectUV(v_uv, u_time, defocus);
 
-      vec4 ink = sampleInk(uv);
-      float a = ink.a;
+      float a = sampleInk(uv).a;
 
-      float hero = 1.0 - clamp(u_p, 0.0, 1.0);
-      float ba = bloomA(uv, 1.5 + 2.0 * hero);
-      a = max(a, ba * (0.1 + 0.08 * hero));
+      /* focus breathing — soft silhouette, still black */
+      float spread = 0.35 + defocus * 1.1;
+      float ba = bloomA(uv, spread);
+      a = max(a, ba * (0.08 + 0.1 * clamp(defocus, 0.0, 1.5)));
 
-      /* flat black only */
+      /* soft lamp falloff on the thrown plate (alpha only) */
+      vec2 q = v_uv - 0.5;
+      float fall = 1.0 - 0.05 * dot(q, q) * 4.0;
+      a *= clamp(fall, 0.9, 1.0);
+
       vec3 col = vec3(0.04);
       a = clamp(a, 0.0, 1.0);
       gl_FragColor = vec4(col * a, a);
@@ -184,11 +182,8 @@
     return p;
   }
 
-  /** Smooth 0→1→0 envelope over duration (organic swell, not snap). */
   function swellEnvelope(phase) {
-    /* phase 0..1 through the event */
     if (phase <= 0 || phase >= 1) return 0;
-    /* ease in-out sine */
     return Math.sin(phase * Math.PI);
   }
 
@@ -229,11 +224,11 @@
       res: gl.getUniformLocation(prog, "u_res"),
       time: gl.getUniformLocation(prog, "u_time"),
       p: gl.getUniformLocation(prog, "u_p"),
-      swell: gl.getUniformLocation(prog, "u_swell"),
-      pivot: gl.getUniformLocation(prog, "u_pivot"),
-      twist: gl.getUniformLocation(prog, "u_twist"),
-      pull: gl.getUniformLocation(prog, "u_pull"),
-      wave: gl.getUniformLocation(prog, "u_wave"),
+      event: gl.getUniformLocation(prog, "u_event"),
+      evWeave: gl.getUniformLocation(prog, "u_evWeave"),
+      evTilt: gl.getUniformLocation(prog, "u_evTilt"),
+      evPivot: gl.getUniformLocation(prog, "u_evPivot"),
+      evBuckle: gl.getUniformLocation(prog, "u_evBuckle"),
     };
 
     const tex = gl.createTexture();
@@ -251,9 +246,8 @@
     let raf = 0;
     const t0 = performance.now();
 
-    /* active swell event (fluid envelope) */
     let ev = null;
-    let nextEv = 1.2 + Math.random() * 1.5;
+    let nextEv = 1.4 + Math.random() * 1.8;
 
     const fontFamily =
       opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
@@ -266,9 +260,9 @@
       const sb = el
         ? el.getBoundingClientRect()
         : { width: fontPx * 1.55, height: fontPx * 0.86 };
-      /* extra pad so bent/twisted ink stays inside the canvas */
-      const padX = Math.max(16, sb.width * 0.18);
-      const padY = Math.max(16, sb.height * 0.24);
+      /* pad for keystone / weave so plate edges don't clip the throw */
+      const padX = Math.max(20, sb.width * 0.2);
+      const padY = Math.max(20, sb.height * 0.26);
       const w = Math.ceil(sb.width + padX * 2);
       const h = Math.ceil(sb.height + padY * 2);
       off.width = Math.max(2, Math.floor(w * dpr));
@@ -279,8 +273,8 @@
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
       ctx.fillStyle = ink;
-      ctx.shadowColor = "rgba(9,9,9,0.2)";
-      ctx.shadowBlur = Math.max(1, fontPx * 0.008);
+      ctx.shadowColor = "rgba(9,9,9,0.18)";
+      ctx.shadowBlur = Math.max(1, fontPx * 0.006);
       ctx.fillText(text, w / 2, h / 2 + fontPx * 0.02);
 
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -297,19 +291,19 @@
       lastDpr = dpr;
     };
 
-    const startSwell = (now) => {
+    const startEvent = (now) => {
       const ang = Math.random() * Math.PI * 2;
       ev = {
         t0: now,
-        /* longer, slower — acetate twisting in the hand / heat */
-        dur: 0.85 + Math.random() * 1.15,
-        pivot: [
-          0.35 + Math.random() * 0.3,
-          0.35 + Math.random() * 0.3,
+        /* long organic register slip — not a snap */
+        dur: 1.1 + Math.random() * 1.3,
+        weave: [Math.cos(ang) * (0.6 + Math.random() * 0.8), Math.sin(ang) * (0.4 + Math.random() * 0.6)],
+        tilt: [
+          (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.9),
+          (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.9),
         ],
-        twist: (Math.random() < 0.5 ? -1 : 1) * (0.12 + Math.random() * 0.28),
-        pull: [Math.cos(ang), Math.sin(ang)],
-        wave: 0.4 + Math.random() * 1.1,
+        pivot: [0.32 + Math.random() * 0.36, 0.32 + Math.random() * 0.36],
+        buckle: (Math.random() < 0.5 ? -1 : 1) * (0.012 + Math.random() * 0.02),
       };
     };
 
@@ -326,26 +320,24 @@
       const now = (performance.now() - t0) / 1000;
       const p = opts.getP ? opts.getP() : 0;
 
-      if (!ev && now >= nextEv) {
-        startSwell(now);
-      }
+      if (!ev && now >= nextEv) startEvent(now);
 
-      let swell = 0;
-      let pivot = [0.5, 0.5];
-      let twist = 0;
-      let pull = [1, 0];
-      let wave = 0;
+      let eventAmt = 0;
+      let evWeave = [0, 0];
+      let evTilt = [0, 0];
+      let evPivot = [0.5, 0.5];
+      let evBuckle = 0;
       if (ev) {
         const phase = (now - ev.t0) / ev.dur;
         if (phase >= 1) {
           ev = null;
-          nextEv = now + 1.1 + Math.random() * (1.8 + p * 2.5);
+          nextEv = now + 1.6 + Math.random() * (2.4 + p * 2.8);
         } else {
-          swell = swellEnvelope(phase);
-          pivot = ev.pivot;
-          twist = ev.twist;
-          pull = ev.pull;
-          wave = ev.wave;
+          eventAmt = swellEnvelope(phase);
+          evWeave = ev.weave;
+          evTilt = ev.tilt;
+          evPivot = ev.pivot;
+          evBuckle = ev.buckle;
         }
       }
 
@@ -362,11 +354,11 @@
       gl.uniform2f(u.res, canvas.width, canvas.height);
       gl.uniform1f(u.time, now);
       gl.uniform1f(u.p, p);
-      gl.uniform1f(u.swell, swell);
-      gl.uniform2f(u.pivot, pivot[0], pivot[1]);
-      gl.uniform1f(u.twist, twist);
-      gl.uniform2f(u.pull, pull[0], pull[1]);
-      gl.uniform1f(u.wave, wave);
+      gl.uniform1f(u.event, eventAmt);
+      gl.uniform2f(u.evWeave, evWeave[0], evWeave[1]);
+      gl.uniform2f(u.evTilt, evTilt[0], evTilt[1]);
+      gl.uniform2f(u.evPivot, evPivot[0], evPivot[1]);
+      gl.uniform1f(u.evBuckle, evBuckle);
 
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
