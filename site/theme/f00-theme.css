@@ -1,11 +1,11 @@
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
-   Live: https://f00.sh/theme/f00-theme-20.css
+   Live: https://f00.sh/theme/f00-theme-23.css
 
-   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-20.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-23.css" />
 
    Heartbox v0.2.1 (Heart-Shaped Box video)
-   Website shell: technicolor poppy photo on verse-sky + paper tooth
-   Project cards: poppy · painted WC paper · per-card wash variance · black type · 2px silver
+   Website shell: fixed unscaled technicolor poppy photo + light silver chrome
+   Project cards: organic WC paper variance · cream Onyx titles · 2px silver
    Project CSS = layout/structure only.
 
    Textures: https://f00.sh/theme/textures/
@@ -28,7 +28,11 @@
   --f00-bg-panel: #1c1617;
   --f00-bg-muted: #090909;
   --f00-fg: #ede6de;
-  --f00-white: #ffffff;
+  --f00-white: #D0D5DB;
+  --f00-chrome: #D0D5DB;
+  --f00-chrome-bright: #E4E8ED;
+  --f00-chrome-soft: rgba(208, 213, 219, 0.88);
+  --f00-chrome-line: rgba(208, 213, 219, 0.65);
   --f00-muted: #8a7874;
   --f00-dim: #8a7874;
   --f00-faint: #3a3232;
@@ -86,19 +90,19 @@
   --bg-elevated: transparent;
   --bg-panel: transparent;
   --bg-muted: transparent;
-  --fg: #ffffff;
-  --text: #ffffff;
-  --muted: rgba(255, 255, 255, 0.85);
-  --dim: rgba(255, 255, 255, 0.72);
-  --faint: rgba(255, 255, 255, 0.55);
+  --fg: #D0D5DB;
+  --text: #D0D5DB;
+  --muted: rgba(208, 213, 219, 0.88);
+  --dim: rgba(208, 213, 219, 0.72);
+  --faint: rgba(208, 213, 219, 0.45);
   --accent: var(--f00-accent);
   --accent-dim: var(--f00-accent-dim);
   --accent-hot: var(--f00-accent-hot);
   --accent-soft: var(--f00-accent-soft);
   --amber: var(--f00-warn);
-  --line: rgba(255, 255, 255, 0.45);
-  --border: rgba(255, 255, 255, 0.55);
-  --border-strong: #ffffff;
+  --line: rgba(208, 213, 219, 0.45);
+  --border: rgba(208, 213, 219, 0.65);
+  --border-strong: #E4E8ED;
   --danger: var(--f00-danger);
   --warn: var(--f00-warn);
   --ok: var(--f00-ok);
@@ -128,7 +132,12 @@
   --tex-wc-a: url("https://f00.sh/theme/textures/hb-wash-a-q9.webp");
   --tex-wc-b: url("https://f00.sh/theme/textures/hb-wash-b-q9.webp");
   --tex-petals: url("https://f00.sh/theme/textures/petals-photo-v1.webp");
-  --tex-hero: url("https://f00.sh/theme/textures/hb-hero-poppies-q3.webp");
+  --tex-hero: url("https://f00.sh/theme/textures/hb-hero-sat-r6.webp");
+  --tex-wc-1: url("https://f00.sh/theme/textures/hb-wc-card-q1.webp");
+  --tex-wc-2: url("https://f00.sh/theme/textures/hb-wc-card-q2.webp");
+  --tex-wc-3: url("https://f00.sh/theme/textures/hb-wc-card-q3.webp");
+  --tex-wc-4: url("https://f00.sh/theme/textures/hb-wc-card-q4.webp");
+  --tex-wc-5: url("https://f00.sh/theme/textures/hb-wc-card-r5.webp");
   --tex-petals-dense: url("https://f00.sh/theme/textures/hb-petals-dense-q3.webp");
 }
 
@@ -142,38 +151,32 @@ body {
   font-size: var(--f00-size-body) !important;
   line-height: 1.55 !important;
   letter-spacing: var(--f00-tracking-body);
-  color: #ffffff !important;
+  color: #D0D5DB !important;
   background-color: #2096ee !important;
-  /* Heartbox technicolor poppies on verse-sky (photo grade) */
+  /* Fixed technicolor poppy photo — natural pixels, no scale-to-fit */
   background-image:
-    linear-gradient(180deg, rgba(10, 92, 173, 0.18) 0%, rgba(32, 150, 238, 0.08) 40%, rgba(6, 58, 110, 0.35) 100%),
+    linear-gradient(180deg, rgba(10, 92, 173, 0.1) 0%, transparent 45%, rgba(6, 58, 110, 0.25) 100%),
     var(--tex-paper),
     var(--tex-hero),
     linear-gradient(168deg, #4aadf5 0%, #2096ee 40%, #0a5cad 78%, #063a6e 100%) !important;
   background-size:
     auto,
     220px 220px,
-    cover,
+    auto,
     auto !important;
   background-position:
     center,
     0 0,
-    center 40%,
+    center center,
     center !important;
-  background-repeat:
-    no-repeat,
-    repeat,
-    no-repeat,
-    no-repeat !important;
-  background-blend-mode:
-    normal,
-    soft-light,
-    normal,
-    normal !important;
-  background-attachment: fixed !important;
+  background-repeat: no-repeat, repeat, no-repeat, no-repeat !important;
+  background-attachment: fixed, fixed, fixed, fixed !important;
+  background-blend-mode: normal, soft-light, normal, normal !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+
 
 /* light paper tooth over hero photo */
 body::before {
@@ -205,7 +208,7 @@ body::after {
 
 body > * { position: relative; z-index: 1; }
 
-::selection { background: var(--f00-accent); color: #fff; }
+::selection { background: var(--f00-accent); color: #EDE6DE; }
 
 p, li, label, legend, th, td,
 input, textarea, select, button,
@@ -214,15 +217,15 @@ input, textarea, select, button,
   font-family: var(--f00-font-zine) !important;
 }
 p, .lede, .howto, .lead, .hero-copy p, .blurb {
-  color: rgba(255, 255, 255, 0.92) !important;
+  color: rgba(208, 213, 219, 0.88) !important;
 }
-p strong, .lede strong, li strong { color: #fff !important; font-weight: 700; }
+p strong, .lede strong, li strong { color: #E4E8ED !important; font-weight: 700; }
 
 h1, h2, h3, h4 {
   font-family: var(--f00-font-brand) !important;
   letter-spacing: 0.06em;
   font-weight: 400 !important;
-  color: #ffffff !important;
+  color: #D0D5DB !important;
   text-transform: uppercase;
 }
 /* brand logo is always lowercase f00 — never uppercase the mark (logo lowercase lock) */
@@ -234,23 +237,23 @@ h1.splash, .splash, .splash .glyph,
 /* Header / nav — white */
 header, .site-header, .top, .nav-shell, .header-inner {
   background: transparent !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.7) !important;
+  color: #D0D5DB !important;
+  border-color: rgba(208, 213, 219, 0.65) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
 }
 .site-header, .top {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-bottom: 1px solid rgba(208, 213, 219, 0.65) !important;
 }
 .nav, .nav a, .site-nav, .site-nav a, header a, .site-header a, .top a {
-  color: rgba(255, 255, 255, 0.94) !important;
+  color: rgba(208, 213, 219, 0.88) !important;
   font-family: var(--f00-font-chip) !important;
 }
 .nav a:hover, .site-nav a:hover, header a:hover {
-  color: #ffffff !important;
-  border-color: #ffffff !important;
+  color: #D0D5DB !important;
+  border-color: #D0D5DB !important;
 }
-.brand, .logo, .logo-text, .brand-mark, .brand-sub { color: #ffffff !important; }
+.brand, .logo, .logo-text, .brand-mark, .brand-sub { color: #D0D5DB !important; }
 .brand-mark, .f00-brand, .font-brand {
   font-family: var(--f00-font-brand) !important;
   font-weight: 400 !important;
@@ -264,8 +267,8 @@ header, .site-header, .top, .nav-shell, .header-inner {
 /* Footer — white; brand name stays lowercase f00 */
 footer, .foot, .site-footer, .footer-bottom, .footer-inner {
   background: transparent !important;
-  color: #ffffff !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.7) !important;
+  color: #D0D5DB !important;
+  border-top: 1px solid rgba(208, 213, 219, 0.65) !important;
   font-family: var(--f00-font-chip) !important;
   letter-spacing: 0.1em;
   text-transform: none !important;
@@ -274,29 +277,28 @@ footer span, .foot span, .site-footer span,
 footer, .foot, .site-footer {
   text-transform: none !important;
 }
-footer a, .foot a, .site-footer a { color: rgba(255, 255, 255, 0.92) !important; }
-footer a:hover, .foot a:hover { color: #fff !important; }
+footer a, .foot a, .site-footer a { color: rgba(208, 213, 219, 0.88) !important; }
+footer a:hover, .foot a:hover { color: #E4E8ED !important; }
 
-/* ── PROJECT CARDS: poppy + painted WC paper + per-card variance + 2px silver ── */
+/* ── PROJECT CARDS: poppy + organic WC paper (per-card) + 2px silver ── */
 .card, .panel, .box, .f00-box,
 article.card, .feature-card, .doc-card, .install-card,
 .score-card, .result-card, .howto, .docs-list,
 .announcement, .status, .field-group,
 .shell > .panel, section.panel,
 .benchmark-card, .tool-card, .release-card {
-  /* per-card watercolor seed (overridden by nth-child / inline style) */
   --wc-x: 28%;
   --wc-y: 24%;
   --wc-x2: 74%;
   --wc-y2: 70%;
   --wc-pos: 20% 30%;
-  --wc-size: 160% 160%;
-  --wc-a: rgba(255, 230, 210, 0.32);
-  --wc-b: rgba(70, 4, 12, 0.28);
-  --wc-c: rgba(232, 50, 60, 0.2);
-  --wc-paper: var(--tex-wc-a);
-  --wc-fiber-op: 0.34;
-  --wc-wash-op: 0.52;
+  --wc-size: 180% 180%;
+  --wc-a: rgba(237, 230, 222, 0.28);
+  --wc-b: rgba(70, 4, 12, 0.32);
+  --wc-c: rgba(232, 50, 60, 0.22);
+  --wc-paper: var(--tex-wc-1);
+  --wc-fiber-op: 0.38;
+  --wc-wash-op: 0.62;
 
   position: relative !important;
   isolation: isolate;
@@ -304,16 +306,16 @@ article.card, .feature-card, .doc-card, .install-card,
   background-color: #c50a1b !important;
   background-image: none !important;
   color: #090909 !important;
-  border: 2px solid #b8bec2 !important;
+  border: 2px solid #B8BEC2 !important;
   border-radius: 0 !important;
   padding: 1.05rem 1.15rem 1.2rem !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   font-weight: 600 !important;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 1px rgba(255, 255, 255, 0.16);
+  text-shadow: none;
 }
 
-/* painted watercolor paper + pigment blooms (technicolor, subtle) */
+/* painted watercolor paper — unique via vars / nth / JS seeds */
 .card::before, .panel::before, .box::before, .f00-box::before,
 article.card::before, .feature-card::before, .doc-card::before,
 .install-card::before, .benchmark-card::before, .tool-card::before,
@@ -324,7 +326,6 @@ article.card::before, .feature-card::before, .doc-card::before,
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  border-radius: 0;
   opacity: var(--wc-wash-op);
   mix-blend-mode: soft-light;
   background-image:
@@ -337,7 +338,7 @@ article.card::before, .feature-card::before, .doc-card::before,
   background-repeat: no-repeat;
 }
 
-/* real paper fiber tooth over the wash */
+/* paper fiber tooth */
 .card::after, .panel::after, .box::after, .f00-box::after,
 article.card::after, .feature-card::after, .doc-card::after,
 .install-card::after, .benchmark-card::after, .tool-card::after,
@@ -350,10 +351,9 @@ article.card::after, .feature-card::after, .doc-card::after,
   pointer-events: none;
   opacity: var(--wc-fiber-op);
   mix-blend-mode: multiply;
-  background: var(--tex-paper) center / 180px 180px repeat;
+  background: var(--tex-paper) var(--wc-pos) / 160px 160px repeat;
 }
 
-/* content above textures */
 .card > *, .panel > *, .box > *, .f00-box > *,
 article.card > *, .feature-card > *, .doc-card > *,
 .install-card > *, .benchmark-card > *, .tool-card > *,
@@ -362,97 +362,44 @@ article.card > *, .feature-card > *, .doc-card > *,
   z-index: 1;
 }
 
-/* ── unique-ish per-card watercolor (nth) so boxes don't match ── */
-.grid > .card:nth-child(7n+1),
-.projects .card:nth-child(7n+1),
-.card:nth-of-type(7n+1) {
+/* organic nth variance — different paper + wash per card */
+.grid > .card:nth-child(5n+1), .card:nth-of-type(5n+1) {
+  --wc-paper: var(--tex-wc-1); --wc-pos: 8% 12%; --wc-size: 190% 160%;
   --wc-x: 18%; --wc-y: 22%; --wc-x2: 78%; --wc-y2: 68%;
-  --wc-pos: 8% 12%; --wc-size: 170% 150%;
-  --wc-a: rgba(255, 236, 220, 0.34);
-  --wc-b: rgba(60, 3, 10, 0.3);
-  --wc-c: rgba(200, 20, 35, 0.18);
-  --wc-paper: var(--tex-wc-a);
-  --wc-wash-op: 0.5; --wc-fiber-op: 0.32;
+  --wc-wash-op: 0.58; --wc-fiber-op: 0.36;
 }
-.grid > .card:nth-child(7n+2),
-.projects .card:nth-child(7n+2),
-.card:nth-of-type(7n+2) {
-  --wc-x: 70%; --wc-y: 18%; --wc-x2: 22%; --wc-y2: 76%;
-  --wc-pos: 62% 40%; --wc-size: 150% 170%;
-  --wc-a: rgba(255, 200, 180, 0.28);
-  --wc-b: rgba(100, 8, 18, 0.26);
-  --wc-c: rgba(240, 90, 70, 0.16);
-  --wc-paper: var(--tex-wc-b);
-  --wc-wash-op: 0.56; --wc-fiber-op: 0.38;
+.grid > .card:nth-child(5n+2), .card:nth-of-type(5n+2) {
+  --wc-paper: var(--tex-wc-2); --wc-pos: 70% 40%; --wc-size: 160% 190%;
+  --wc-x: 72%; --wc-y: 16%; --wc-x2: 20%; --wc-y2: 78%;
+  --wc-wash-op: 0.66; --wc-fiber-op: 0.42;
+  --wc-a: rgba(255, 210, 190, 0.3); --wc-b: rgba(50, 2, 8, 0.34);
 }
-.grid > .card:nth-child(7n+3),
-.projects .card:nth-child(7n+3),
-.card:nth-of-type(7n+3) {
-  --wc-x: 42%; --wc-y: 70%; --wc-x2: 88%; --wc-y2: 28%;
-  --wc-pos: 35% 70%; --wc-size: 180% 140%;
-  --wc-a: rgba(245, 241, 234, 0.26);
-  --wc-b: rgba(130, 12, 24, 0.32);
-  --wc-c: rgba(180, 30, 40, 0.22);
-  --wc-paper: var(--tex-wc-a);
-  --wc-wash-op: 0.48; --wc-fiber-op: 0.3;
+.grid > .card:nth-child(5n+3), .card:nth-of-type(5n+3) {
+  --wc-paper: var(--tex-wc-3); --wc-pos: 40% 75%; --wc-size: 200% 150%;
+  --wc-x: 40%; --wc-y: 70%; --wc-x2: 88%; --wc-y2: 24%;
+  --wc-wash-op: 0.55; --wc-fiber-op: 0.34;
+  --wc-a: rgba(237, 230, 222, 0.32); --wc-c: rgba(180, 20, 30, 0.24);
 }
-.grid > .card:nth-child(7n+4),
-.projects .card:nth-child(7n+4),
-.card:nth-of-type(7n+4) {
+.grid > .card:nth-child(5n+4), .card:nth-of-type(5n+4) {
+  --wc-paper: var(--tex-wc-4); --wc-pos: 85% 20%; --wc-size: 155% 175%;
   --wc-x: 12%; --wc-y: 55%; --wc-x2: 60%; --wc-y2: 18%;
-  --wc-pos: 80% 20%; --wc-size: 145% 165%;
-  --wc-a: rgba(255, 210, 190, 0.3);
-  --wc-b: rgba(50, 2, 8, 0.28);
-  --wc-c: rgba(220, 40, 55, 0.2);
-  --wc-paper: var(--tex-wc-b);
-  --wc-wash-op: 0.54; --wc-fiber-op: 0.36;
+  --wc-wash-op: 0.64; --wc-fiber-op: 0.4;
 }
-.grid > .card:nth-child(7n+5),
-.projects .card:nth-child(7n+5),
-.card:nth-of-type(7n+5) {
-  --wc-x: 55%; --wc-y: 40%; --wc-x2: 15%; --wc-y2: 82%;
-  --wc-pos: 48% 55%; --wc-size: 165% 155%;
-  --wc-a: rgba(255, 245, 230, 0.3);
-  --wc-b: rgba(90, 6, 14, 0.3);
-  --wc-c: rgba(160, 18, 30, 0.18);
-  --wc-paper: var(--tex-wc-a);
-  --wc-wash-op: 0.5; --wc-fiber-op: 0.4;
-}
-.grid > .card:nth-child(7n+6),
-.projects .card:nth-child(7n+6),
-.card:nth-of-type(7n+6) {
-  --wc-x: 82%; --wc-y: 62%; --wc-x2: 30%; --wc-y2: 20%;
-  --wc-pos: 10% 85%; --wc-size: 155% 175%;
-  --wc-a: rgba(255, 190, 170, 0.26);
-  --wc-b: rgba(75, 5, 12, 0.34);
-  --wc-c: rgba(230, 70, 55, 0.18);
-  --wc-paper: var(--tex-wc-b);
-  --wc-wash-op: 0.58; --wc-fiber-op: 0.33;
-}
-.grid > .card:nth-child(7n),
-.projects .card:nth-child(7n),
-.card:nth-of-type(7n) {
-  --wc-x: 35%; --wc-y: 15%; --wc-x2: 70%; --wc-y2: 85%;
-  --wc-pos: 70% 10%; --wc-size: 175% 160%;
-  --wc-a: rgba(237, 230, 222, 0.28);
-  --wc-b: rgba(110, 10, 20, 0.28);
-  --wc-c: rgba(197, 10, 27, 0.22);
-  --wc-paper: var(--tex-wc-a);
-  --wc-wash-op: 0.46; --wc-fiber-op: 0.35;
+.grid > .card:nth-child(5n), .card:nth-of-type(5n) {
+  --wc-paper: var(--tex-wc-5); --wc-pos: 30% 50%; --wc-size: 175% 185%;
+  --wc-x: 55%; --wc-y: 35%; --wc-x2: 15%; --wc-y2: 82%;
+  --wc-wash-op: 0.6; --wc-fiber-op: 0.38;
+  --wc-b: rgba(100, 8, 18, 0.36);
 }
 
-/* panels that aren't grid cards still vary by type order */
-.panel:nth-of-type(3n+1) { --wc-paper: var(--tex-wc-a); --wc-pos: 15% 25%; }
-.panel:nth-of-type(3n+2) { --wc-paper: var(--tex-wc-b); --wc-pos: 70% 60%; --wc-x: 65%; }
-.panel:nth-of-type(3n)   { --wc-paper: var(--tex-wc-a); --wc-pos: 40% 80%; --wc-y: 70%; }
+.panel:nth-of-type(5n+1) { --wc-paper: var(--tex-wc-1); }
+.panel:nth-of-type(5n+2) { --wc-paper: var(--tex-wc-2); --wc-pos: 60% 40%; }
+.panel:nth-of-type(5n+3) { --wc-paper: var(--tex-wc-3); }
+.panel:nth-of-type(5n+4) { --wc-paper: var(--tex-wc-4); }
+.panel:nth-of-type(5n) { --wc-paper: var(--tex-wc-5); }
 
-/* black type on poppy watercolor */
-.card, .panel, .box, .f00-box, article.card {
-  color: #090909 !important;
-}
-.card h1, .card h2, .card h3, .card h4,
-.panel h1, .panel h2, .panel h3, .panel h4,
-.box h1, .box h2, .box h3,
+/* body type on cards — dark ink */
+.card, .panel, .box, .f00-box, article.card { color: #090909 !important; }
 .card p, .panel p, .box p,
 .card li, .panel li,
 .card .mono, .panel .mono,
@@ -461,30 +408,45 @@ article.card > *, .feature-card > *, .doc-card > *,
 .card strong, .panel strong,
 .card span, .panel span {
   color: #090909 !important;
-  font-weight: 650;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 1px rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+  text-shadow: 0 1px 0 rgba(237, 230, 222, 0.18);
 }
 .card a:not(.btn), .panel a:not(.btn) {
   color: #090909 !important;
   text-decoration: underline;
   text-underline-offset: 2px;
-  text-decoration-thickness: 1.5px;
   font-weight: 700;
 }
-.card h3, .panel h2, .panel h3 {
-  border-bottom: 1px solid rgba(9, 9, 9, 0.35) !important;
-  padding-bottom: 0.4rem;
-  margin-top: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 800 !important;
+
+/* project titles — Onyx, cream on poppy for legibility */
+.card h1, .card h2, .card h3, .card h4,
+.panel h1, .panel h2, .panel h3, .panel h4,
+.box h1, .box h2, .box h3,
+article.card h3 {
+  font-family: var(--f00-font-brand) !important;
+  font-weight: 400 !important;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem) !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.05 !important;
+  color: #EDE6DE !important;
+  text-transform: uppercase !important;
+  text-shadow:
+    0 1px 0 rgba(9, 9, 9, 0.55),
+    0 2px 8px rgba(9, 9, 9, 0.35),
+    0 0 1px rgba(9, 9, 9, 0.8) !important;
+  border-bottom: 1px solid rgba(237, 230, 222, 0.45) !important;
+  padding-bottom: 0.45rem;
+  margin-top: 0.15rem;
+  margin-bottom: 0.55rem;
 }
 .card-meta {
-  opacity: 0.9;
+  opacity: 0.95;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.68rem !important;
   font-weight: 700 !important;
+  color: rgba(9, 9, 9, 0.82) !important;
+  text-shadow: 0 1px 0 rgba(237, 230, 222, 0.25);
 }
 .facts li {
   border-bottom: 1px dotted rgba(9, 9, 9, 0.28) !important;
@@ -520,20 +482,20 @@ article.card > *, .feature-card > *, .doc-card > *,
   text-transform: uppercase !important;
   text-decoration: none !important;
   border-radius: 0 !important;
-  border: 1px solid #ffffff !important;
+  border: 1px solid #D0D5DB !important;
   padding: 0.45rem 0.75rem !important;
-  color: #ffffff !important;
+  color: #D0D5DB !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 .btn:hover, a.btn:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
-  color: #fff !important;
+  background: rgba(208, 213, 219, 0.14) !important;
+  color: #E4E8ED !important;
 }
 .btn.primary, .btn-primary, a.btn.primary {
   background: #090909 !important;
   border-color: #090909 !important;
-  color: #ffffff !important;
+  color: #D0D5DB !important;
   font-weight: 700 !important;
 }
 .btn.primary:hover {
@@ -549,7 +511,7 @@ article.card > *, .feature-card > *, .doc-card > *,
 }
 .card .btn.primary, .panel .btn.primary, .card .btn-primary, article.card .btn.primary {
   background: #090909 !important;
-  color: #ffffff !important;
+  color: #D0D5DB !important;
   border-color: #090909 !important;
 }
 .card .btn:hover, .panel .btn:hover {
@@ -557,32 +519,32 @@ article.card > *, .feature-card > *, .doc-card > *,
 }
 .card .btn.primary:hover {
   background: #1a1214 !important;
-  color: #fff !important;
+  color: #E4E8ED !important;
 }
 .btn.sm, .btn-sm { padding: 0.35rem 0.6rem !important; font-size: 0.64rem !important; }
 
 input, textarea, select {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: #E4E8ED !important;
   color: #090909 !important;
-  border: 2px solid rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(208, 213, 219, 0.65) !important;
   border-radius: 0 !important;
   padding: 0.55rem 0.65rem;
 }
 input::placeholder, textarea::placeholder { color: rgba(9, 9, 9, 0.4) !important; }
 input:focus, textarea:focus, select:focus {
-  outline: 2px solid #ffffff !important;
-  border-color: #ffffff !important;
+  outline: 2px solid #D0D5DB !important;
+  border-color: #D0D5DB !important;
 }
 
 pre, pre code {
   background: var(--f00-code-bg) !important;
   color: var(--f00-fg) !important;
-  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  border: 2px solid rgba(208, 213, 219, 0.65) !important;
   border-radius: 0 !important;
 }
 code, kbd {
   background: rgba(9, 9, 9, 0.35) !important;
-  color: #fff !important;
+  color: #E4E8ED !important;
   border-radius: 0 !important;
 }
 .card code, .panel code {
@@ -592,9 +554,9 @@ code, kbd {
 
 table { border-collapse: collapse; width: 100%; }
 th, td {
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(208, 213, 219, 0.45);
   padding: 0.45rem 0.6rem;
-  color: #fff !important;
+  color: #E4E8ED !important;
 }
 .card th, .card td, .panel th, .panel td {
   border-color: rgba(9, 9, 9, 0.22) !important;
@@ -618,10 +580,10 @@ hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.45); }
   font-family: var(--f00-font-chip) !important;
   letter-spacing: 0.12em !important;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.92) !important;
+  color: rgba(208, 213, 219, 0.88) !important;
   white-space: nowrap;
 }
 .foot-stars:hover, a[data-f00-stars]:hover, a[data-f00-stars-total]:hover {
-  color: #ffffff !important;
+  color: #D0D5DB !important;
 }
 a.brand { text-decoration: none !important; }

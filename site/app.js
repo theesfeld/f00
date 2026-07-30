@@ -39,21 +39,30 @@
   };
   const wcStyle = (id) => {
     const h = hashStr(id);
-    const x = 10 + (h % 80);
-    const y = 10 + ((h >>> 7) % 80);
-    const x2 = 10 + ((h >>> 14) % 80);
-    const y2 = 10 + ((h >>> 21) % 80);
-    const px = (h >>> 3) % 90;
-    const py = (h >>> 11) % 90;
-    const sx = 130 + (h % 60);
-    const sy = 130 + ((h >>> 8) % 60);
-    const paper = h & 1 ? "var(--tex-wc-b)" : "var(--tex-wc-a)";
-    const wash = (0.44 + ((h >>> 5) % 16) / 100).toFixed(2);
-    const fiber = (0.28 + ((h >>> 9) % 14) / 100).toFixed(2);
-    const aR = 245 + (h % 10);
-    const aG = 190 + ((h >>> 4) % 45);
-    const aB = 170 + ((h >>> 10) % 50);
-    const aA = (0.22 + ((h >>> 2) % 14) / 100).toFixed(2);
+    const x = 8 + (h % 84);
+    const y = 8 + ((h >>> 7) % 84);
+    const x2 = 8 + ((h >>> 14) % 84);
+    const y2 = 8 + ((h >>> 21) % 84);
+    const px = (h >>> 3) % 92;
+    const py = (h >>> 11) % 92;
+    const sx = 140 + (h % 80);
+    const sy = 140 + ((h >>> 8) % 80);
+    const papers = [
+      "var(--tex-wc-1)",
+      "var(--tex-wc-2)",
+      "var(--tex-wc-3)",
+      "var(--tex-wc-4)",
+      "var(--tex-wc-5)",
+      "var(--tex-wc-a)",
+      "var(--tex-wc-b)",
+    ];
+    const paper = papers[h % papers.length];
+    const wash = (0.5 + ((h >>> 5) % 22) / 100).toFixed(2);
+    const fiber = (0.3 + ((h >>> 9) % 18) / 100).toFixed(2);
+    const aR = 220 + (h % 35);
+    const aG = 180 + ((h >>> 4) % 55);
+    const aB = 160 + ((h >>> 10) % 60);
+    const aA = (0.2 + ((h >>> 2) % 16) / 100).toFixed(2);
     return [
       `--wc-x:${x}%`,
       `--wc-y:${y}%`,
@@ -65,8 +74,8 @@
       `--wc-wash-op:${wash}`,
       `--wc-fiber-op:${fiber}`,
       `--wc-a:rgba(${aR},${aG},${aB},${aA})`,
-      `--wc-b:rgba(${40 + (h % 70)},${2 + (h % 8)},${8 + (h % 14)},${(0.22 + ((h >>> 6) % 12) / 100).toFixed(2)})`,
-      `--wc-c:rgba(${190 + (h % 40)},${10 + (h % 50)},${25 + (h % 40)},${(0.14 + ((h >>> 12) % 12) / 100).toFixed(2)})`,
+      `--wc-b:rgba(${30 + (h % 80)},${2 + (h % 10)},${6 + (h % 16)},${(0.24 + ((h >>> 6) % 14) / 100).toFixed(2)})`,
+      `--wc-c:rgba(${180 + (h % 50)},${8 + (h % 55)},${20 + (h % 45)},${(0.14 + ((h >>> 12) % 14) / 100).toFixed(2)})`,
     ].join(";");
   };
 

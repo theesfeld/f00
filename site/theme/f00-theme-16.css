@@ -1,7 +1,7 @@
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
-   Live: https://f00.sh/theme/f00-theme-20.css
+   Live: https://f00.sh/theme/f00-theme-21.css
 
-   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-20.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-21.css" />
 
    Heartbox v0.2.1 (Heart-Shaped Box video)
    Website shell: technicolor poppy photo on verse-sky + paper tooth
@@ -128,7 +128,7 @@
   --tex-wc-a: url("https://f00.sh/theme/textures/hb-wash-a-q9.webp");
   --tex-wc-b: url("https://f00.sh/theme/textures/hb-wash-b-q9.webp");
   --tex-petals: url("https://f00.sh/theme/textures/petals-photo-v1.webp");
-  --tex-hero: url("https://f00.sh/theme/textures/hb-hero-poppies-q3.webp");
+  --tex-hero: url("https://f00.sh/theme/textures/hb-hero-poppies-q4.webp");
   --tex-petals-dense: url("https://f00.sh/theme/textures/hb-petals-dense-q3.webp");
 }
 
@@ -144,33 +144,38 @@ body {
   letter-spacing: var(--f00-tracking-body);
   color: #ffffff !important;
   background-color: #2096ee !important;
-  /* Heartbox technicolor poppies on verse-sky (photo grade) */
+  /* Fixed technicolor poppy photo — natural pixels, no scale-to-fit.
+     Small viewports crop a window; larger viewports show more. */
   background-image:
-    linear-gradient(180deg, rgba(10, 92, 173, 0.18) 0%, rgba(32, 150, 238, 0.08) 40%, rgba(6, 58, 110, 0.35) 100%),
+    linear-gradient(180deg, rgba(10, 92, 173, 0.12) 0%, transparent 45%, rgba(6, 58, 110, 0.28) 100%),
     var(--tex-paper),
     var(--tex-hero),
     linear-gradient(168deg, #4aadf5 0%, #2096ee 40%, #0a5cad 78%, #063a6e 100%) !important;
   background-size:
     auto,
     220px 220px,
-    cover,
+    auto, /* natural image size — do not cover/contain resize */
     auto !important;
   background-position:
     center,
     0 0,
-    center 40%,
+    center center,
     center !important;
   background-repeat:
     no-repeat,
     repeat,
     no-repeat,
     no-repeat !important;
+  background-attachment:
+    fixed,
+    fixed,
+    fixed,
+    fixed !important;
   background-blend-mode:
     normal,
     soft-light,
     normal,
     normal !important;
-  background-attachment: fixed !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
