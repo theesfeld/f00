@@ -41,7 +41,9 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 | `site/` | Cloudflare Pages project `f00` (custom domain `f00.sh`) |
 | `site/catalog.json` | **SSOT** project list + theme pointer → https://f00.sh/catalog.json |
 | `site/theme/` | Global theme CSS + Onyx font → https://f00.sh/theme/… |
+| `site/CODE_OF_CONDUCT.md` | **SSOT** org Code of Conduct → https://f00.sh/CODE_OF_CONDUCT.md |
 | `scripts/sync-from-catalog.py` | Regen hub cards + README + this file from catalog |
+| `scripts/pull-code-of-conduct.sh` | Copy org CoC into project roots (prefer local site file, else curl) |
 | `scripts/enroll-project.py` | Add/update a project in catalog + inject theme link into a project repo |
 | `docs/` | Optional depth |
 | `.github/workflows/pages.yml` | Pages deploy (wrangler) |

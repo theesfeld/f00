@@ -6,7 +6,8 @@
     "name": "f00",
     "site": "https://f00.sh",
     "repo": "https://github.com/f00-sh/f00",
-    "pages_project": "f00"
+    "pages_project": "f00",
+    "code_of_conduct": "https://f00.sh/CODE_OF_CONDUCT.md"
   },
   "theme": {
     "css": "https://f00.sh/theme/f00-theme-34.css",

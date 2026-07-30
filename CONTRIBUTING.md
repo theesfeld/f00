@@ -16,7 +16,7 @@
 4. Run the test suite and fix failures before you open a pull request.
 5. Keep changes focused. Do not mix unrelated refactors.
 
-See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) if you expected a corporate CoC — there is not one. Short version: do not be a dick for no reason; ship good code.
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — org-wide at https://f00.sh/CODE_OF_CONDUCT.md. Short version: expect to be punched in the mouth for being an asshole; writing a longer CoC violates this one.
 
 ## Pull requests
 
