@@ -1,0 +1,5 @@
+# single “who” page absorbs mantra + join
+/mantra /who 301
+/mantra/ /who 301
+/join /who 301
+/join/ /who 301
