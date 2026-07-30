@@ -474,3 +474,14 @@
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
   CDN-Cache-Control: max-age=60
+
+/theme/brand/favicon-v31.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/theme/brand/apple-touch-v31.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
