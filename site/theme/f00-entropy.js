@@ -1,9 +1,9 @@
 /* f00 — projection entropy (org-wide)
  *
- * When a surface is projected onto the display, seed a unique specimen:
- * field, boxes, rules, type tracking — always slightly different, never CAD.
- * Zen band: readable, usable, clickable. No metronome timers for “effects.”
- * Continuous micro-drift of the field only (optical air), not UI chaos.
+ * When a surface is projected onto the display, seed a unique specimen.
+ * ORDER IN DISORDER: variance is never uniform (not one global blur, not
+ * identical box offsets). Snowflakes / zebra / drip — same species, never
+ * clones. Zen band: readable, usable. No metronome. No CAD perfection.
  */
 (() => {
   if (typeof document === "undefined") return;
@@ -45,12 +45,18 @@
   set("--e-bg-x", `${bgX.toFixed(3)}%`);
   set("--e-bg-y", `${bgY.toFixed(3)}%`);
   set("--e-bg-scale", bgS.toFixed(4));
+  /* type tracking: independent X-ish feel via tracking only (still readable) */
   set("--e-track", `${signed(0.012).toFixed(4)}em`);
-  set("--e-line", `${range(0.85, 1.2).toFixed(3)}px`);
+  /* chrome rule: imperfect, not one global line weight for all edges */
+  set("--e-line-t", `${range(0.8, 1.25).toFixed(3)}px`);
+  set("--e-line-b", `${range(0.8, 1.25).toFixed(3)}px`);
   set("--e-chrome-op", range(0.48, 0.72).toFixed(3));
-  set("--e-paper", range(0.96, 1.0).toFixed(4)); /* cream box opacity floor */
+  set("--e-chrome-op-b", range(0.45, 0.7).toFixed(3));
+  set("--e-paper", range(0.96, 1.0).toFixed(4));
+  /* legacy single-line fallbacks */
+  set("--e-line", `var(--e-line-b)`);
 
-  /* —— each box is its own slight throw (still grid-readable) —— */
+  /* —— each box is its own organ under the skin (still grid-usable) —— */
   const boxSel = [
     ".card",
     ".panel",
@@ -70,11 +76,15 @@
     rootEl.querySelectorAll(boxSel).forEach((el) => {
       if (el.dataset.f00EntropyBox === "1") return;
       el.dataset.f00EntropyBox = "1";
-      /* sub-degree rotation, sub-3px shift — usable, not slapstick */
+      /* non-uniform: each edge of each box is its own slight throw */
       el.style.setProperty("--e-rot", `${signed(0.28).toFixed(3)}deg`);
       el.style.setProperty("--e-x", `${signed(1.8).toFixed(2)}px`);
       el.style.setProperty("--e-y", `${signed(1.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw", `${range(1.55, 2.45).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-t", `${range(1.45, 2.55).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-r", `${range(1.45, 2.55).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-b", `${range(1.45, 2.55).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-l", `${range(1.45, 2.55).toFixed(2)}px`);
+      el.style.setProperty("--e-bw", `var(--e-bw-t)`); /* fallback */
       el.style.setProperty("--e-op", range(0.97, 1).toFixed(4));
     });
   };

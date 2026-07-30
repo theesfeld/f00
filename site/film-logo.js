@@ -53,19 +53,32 @@
     }
 
     /*
-     * Soft projected edge: multi-tap alpha ALWAYS blurred.
-     * Floor prevents CAD-perfect silhouettes. Anisotropic = horizontal gate.
-     * u_edgeFloor is unique per projection (specimen bleed).
+     * Soft projected edge — NON-UNIFORM entropy (order in disorder).
+     * No flat “CSS blur.” Emulsion thickness, gate smear, and local focus
+     * vary along the silhouette: denser here, freer there — never the same
+     * twice, never a perfect Gaussian matte.
      */
     float sampleInkSoft(vec2 uv, float defocusPx) {
-      float floorPx = u_edgeFloor; /* never razor; varies per throw */
-      float spread = floorPx + defocusPx;
-      vec2 px = vec2(1.2, 0.88) * spread / u_res;
+      float floorPx = u_edgeFloor;
+      /* local emulsion density — spatial, not a flat radius */
+      float emul = 0.55 + 0.9 * fbm2(uv * 14.0 + vec2(u_wave * 0.2, u_energy));
+      float emul2 = 0.55 + 0.9 * fbm2(uv * 27.0 - vec2(u_energy, u_wave * 0.15));
+      float spread = (floorPx + defocusPx) * mix(0.65, 1.45, emul);
+      /* anisotropic smear: gate + lens, different X/Y, different per specimen point */
+      vec2 aniso = vec2(
+        1.05 + 0.55 * (emul - 0.5),
+        0.82 + 0.5 * (emul2 - 0.5)
+      );
+      vec2 px = aniso * spread / u_res;
       float acc = 0.0;
       float wsum = 0.0;
       for (int y = -3; y <= 3; y++) {
         for (int x = -3; x <= 3; x++) {
-          float w = exp(-0.32 * float(x * x + y * y));
+          /* kernel weight warped by local noise — not a perfect isotropic Gaussian */
+          float dist = float(x * x) * (0.85 + 0.4 * emul)
+                     + float(y * y) * (0.95 + 0.35 * emul2);
+          float w = exp(-0.28 * dist);
+          w *= 0.75 + 0.5 * noise(uv * 40.0 + vec2(float(x), float(y)));
           vec2 suv = uv + vec2(float(x), float(y)) * px;
           float a = 0.0;
           if (suv.x > -0.05 && suv.x < 1.05 && suv.y > -0.05 && suv.y < 1.05) {
@@ -75,13 +88,14 @@
           wsum += w;
         }
       }
-      float soft = acc / wsum;
+      float soft = acc / max(wsum, 0.001);
       float core = 0.0;
       if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) {
         core = texture2D(u_tex, uv).a;
       }
-      /* dye bleed: soft under + around edge, never binary mask */
-      return max(soft * 0.92, core * 0.55 + soft * 0.45);
+      /* uneven dye bleed mix — more soft in thin emulsion zones */
+      float mixS = mix(0.38, 0.62, emul2);
+      return max(soft * mix(0.88, 0.98, emul), core * (1.0 - mixS) + soft * mixS);
     }
 
     /*

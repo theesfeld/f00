@@ -815,25 +815,29 @@ html, body {
   background-size: cover !important;
 }
 
-/* chrome rules — imperfect line weight / opacity */
+/* chrome rules — imperfect, NON-UNIFORM (header ≠ footer weight/opacity) */
 header, .site-header, .top, .nav-shell, .header-inner,
 .site-header, .top {
-  border-bottom-width: var(--e-line) !important;
+  border-bottom-width: var(--e-line-t, var(--e-line, 1px)) !important;
   border-bottom-color: rgba(208, 213, 219, var(--e-chrome-op)) !important;
 }
 footer, .site-footer, .foot {
-  border-top-width: var(--e-line) !important;
-  border-top-color: rgba(208, 213, 219, var(--e-chrome-op)) !important;
+  border-top-width: var(--e-line-b, var(--e-line, 1px)) !important;
+  border-top-color: rgba(208, 213, 219, var(--e-chrome-op-b, var(--e-chrome-op))) !important;
 }
 .section-head, hr {
-  border-bottom-width: var(--e-line) !important;
+  border-bottom-width: var(--e-line-b, var(--e-line, 1px)) !important;
 }
 
-/* hospital boxes — each specimen slightly off-axis, still grid-usable */
+/* hospital boxes — each edge its own organ; still grid-usable */
 .card, .panel, .box, .f00-box,
 article.card, .feature-card, .doc-card, .install-card,
 .benchmark-card, .tool-card, .release-card, .announcement {
-  border-width: var(--e-bw, 2px) !important;
+  border-width:
+    var(--e-bw-t, var(--e-bw, 2px))
+    var(--e-bw-r, var(--e-bw, 2px))
+    var(--e-bw-b, var(--e-bw, 2px))
+    var(--e-bw-l, var(--e-bw, 2px)) !important;
   opacity: var(--e-op, 1);
   transform: rotate(var(--e-rot, 0deg)) translate3d(var(--e-x, 0px), var(--e-y, 0px), 0);
   transform-origin: 50% 50%;
