@@ -1,6 +1,5 @@
-/* f00 — WebGL Technicolor film plate for the splash mark
- * Real fragment shading: weave warp, dye-transfer CA, bloom, grain, gate.
- * Falls back silently if WebGL unavailable / reduced motion.
+/* f00 — WebGL splash: flat black ink + warp hits + soft bloom
+ * No grain, no RGB fringe, no “3D” plates — just the letterforms warping.
  */
 (() => {
   const VERT = `
@@ -12,7 +11,6 @@
     }
   `;
 
-  /* Technicolor 3-strip / dye-transfer · gate weave · bloom · grain */
   const FRAG = `
     precision highp float;
     varying vec2 v_uv;
@@ -20,120 +18,71 @@
     uniform vec2 u_res;
     uniform float u_time;
     uniform float u_p;
-    uniform float u_intensity;
-    uniform float u_flash;
-    uniform float u_tear;
-    uniform vec2 u_tearDir;
+    uniform float u_hit;      /* 0..1 quick warp event */
+    uniform vec2 u_hitAxis;   /* stretch axes for the hit */
+    uniform float u_hitSkew;
 
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
     }
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      float a = hash(i);
-      float b = hash(i + vec2(1.0, 0.0));
-      float c = hash(i + vec2(0.0, 1.0));
-      float d = hash(i + vec2(1.0, 1.0));
-      vec2 u = f * f * (3.0 - 2.0 * f);
-      return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-    }
 
-    /* continuous film transport weave + rare gate bump — warps the plate */
-    vec2 filmWarp(vec2 uv, float t, float amp) {
-      float weaveX = sin(t * 1.7 + uv.y * 14.0) * 0.00115
-                   + sin(t * 4.2 + uv.y * 3.0) * 0.00055;
-      float weaveY = sin(t * 1.35 + uv.x * 10.0) * 0.00085
-                   + sin(t * 0.55) * 0.0004;
-      /* intermittent projector gate hit */
-      float gateHit = step(0.992, noise(vec2(floor(t * 10.0), 7.7)));
-      weaveY += gateHit * sin(t * 40.0) * 0.0035;
-      /* soft vertical stretch — film stretch through gate */
-      float stretch = sin(t * 0.28) * 0.004 * (uv.y - 0.5);
-      vec2 c = uv - 0.5;
-      float r2 = dot(c, c);
-      vec2 barrel = c * r2 * 0.008;
-      return uv + (vec2(weaveX, weaveY + stretch) + barrel) * amp;
-    }
-
-    vec4 samplePlate(vec2 uv) {
-      if (uv.x < -0.02 || uv.x > 1.02 || uv.y < -0.02 || uv.y > 1.02) {
+    vec4 sampleInk(vec2 uv) {
+      if (uv.x < -0.05 || uv.x > 1.05 || uv.y < -0.05 || uv.y > 1.05) {
         return vec4(0.0);
       }
       return texture2D(u_tex, clamp(uv, 0.0, 1.0));
     }
 
-    /* bloom on alpha-weighted ink so the field stays clean */
-    vec4 bloomTap(vec2 uv, float spread) {
+    /* soft alpha bloom only — keeps ink flat black, no color fringe */
+    float bloomA(vec2 uv, float spread) {
       vec2 px = spread / u_res;
-      vec4 acc = vec4(0.0);
+      float acc = 0.0;
       float wsum = 0.0;
       for (int y = -2; y <= 2; y++) {
         for (int x = -2; x <= 2; x++) {
-          float w = exp(-0.35 * float(x * x + y * y));
-          vec4 s = samplePlate(uv + vec2(float(x), float(y)) * px);
-          acc += s * w;
+          float w = exp(-0.4 * float(x * x + y * y));
+          acc += sampleInk(uv + vec2(float(x), float(y)) * px).a * w;
           wsum += w;
         }
       }
       return acc / wsum;
     }
 
+    vec2 warpUV(vec2 uv, float t, float hit, vec2 axis, float skew) {
+      vec2 c = uv - 0.5;
+
+      /* tiny always-on idle (barely there — film resting in the gate) */
+      float idle = 0.55 + 0.45 * (1.0 - clamp(u_p, 0.0, 1.0));
+      c.x += sin(t * 1.1 + uv.y * 5.5) * 0.0009 * idle;
+      c.y += sin(t * 0.85 + uv.x * 4.5) * 0.0007 * idle;
+
+      /* BIG quick hit: stretch / squash / skew — decays via u_hit */
+      float h = hit * hit; /* ease-out shape from host decay */
+      c.x *= 1.0 + axis.x * h * 0.22;
+      c.y *= 1.0 + axis.y * h * 0.28;
+      c.x += c.y * skew * h * 0.18;
+      c.y += c.x * skew * h * 0.06;
+      /* short vertical yank */
+      c.y += sin(h * 3.14159) * axis.y * 0.012;
+
+      return c + 0.5;
+    }
+
     void main() {
-      float hero = 1.0 - clamp(u_p, 0.0, 1.0);
-      float amp = u_intensity * (0.85 + 0.65 * hero);
       float t = u_time;
+      vec2 uv = warpUV(v_uv, t, u_hit, u_hitAxis, u_hitSkew);
 
-      vec2 uv = filmWarp(v_uv, t, amp * 1.35);
+      vec4 s = sampleInk(uv);
+      float a = s.a;
 
-      /* 3-strip dye-transfer misregistration */
-      float tear = u_tear * amp;
-      float caPx = (1.0 + 2.2 * hero + tear * 4.0) * amp;
-      vec2 px = vec2(caPx, caPx * 0.4) / u_res;
-      vec2 rOff = px * vec2(1.15, 0.25) + u_tearDir * tear * 0.006;
-      vec2 bOff = px * vec2(-1.05, 0.2) - u_tearDir * tear * 0.005;
-      vec2 gOff = px * vec2(0.12, -0.7);
+      /* soft bloom of the ink (still black — no colored glow) */
+      float hero = 1.0 - clamp(u_p, 0.0, 1.0);
+      float ba = bloomA(uv, 1.4 + 2.2 * hero);
+      a = max(a, ba * (0.12 + 0.1 * hero));
 
-      vec4 sR = samplePlate(uv + rOff);
-      vec4 sG = samplePlate(uv + gOff);
-      vec4 sB = samplePlate(uv + bOff);
-      vec4 s0 = samplePlate(uv);
-
-      float a = max(s0.a, max(sR.a, max(sG.a, sB.a)));
-      /* luminance from each plate + dye fringing at edges */
-      vec3 col = vec3(sR.r, sG.g, sB.b);
-      float edge = abs(sR.a - sB.a) + abs(sR.a - sG.a);
-      /* poppy / sky plate fringe (Technicolor dye, not LED RGB) */
-      col += vec3(0.55, 0.12, 0.04) * sR.a * edge * 0.35 * hero * amp;
-      col += vec3(0.05, 0.18, 0.55) * sB.a * edge * 0.3 * hero * amp;
-
-      /* bloom — projection light through celluloid */
-      vec4 blo = bloomTap(uv, 2.0 + 5.0 * hero * amp);
-      float blum = blo.a;
-      col += blo.rgb * blum * (0.28 + 0.55 * hero) * amp;
-      col += vec3(0.12, 0.06, 0.02) * blum * (0.2 + 0.5 * hero) * amp;
-      a = max(a, blum * (0.18 + 0.3 * hero) * amp);
-
-      /* Technicolor grade on the ink */
-      col.r = pow(max(col.r, 0.0), 0.93);
-      col.g = pow(max(col.g, 0.0), 0.99);
-      col.b = pow(max(col.b, 0.0), 1.05);
-      col *= mix(vec3(1.0), vec3(1.08, 0.98, 0.9), 0.4 * hero);
-
-      /* emulsion grain in the plate */
-      float gn = noise(v_uv * u_res * 0.45 + vec2(t * 26.0, t * 19.0));
-      col += (gn - 0.5) * (0.045 + 0.07 * hero) * amp * a;
-
-      /* exposure hitch / flash frame */
-      col += vec3(0.28, 0.16, 0.08) * u_flash * a;
-      a = max(a, u_flash * 0.15 * s0.a);
-
-      /* sparse gate dust */
-      float dirt = step(0.9982, noise(vec2(v_uv.y * 90.0, floor(t * 9.0))));
-      col *= 1.0 - dirt * 0.45 * a * amp;
-
+      /* flat near-black ink — no grade, no grain, no RGB split */
+      vec3 col = vec3(0.04, 0.04, 0.04);
       a = clamp(a, 0.0, 1.0);
-      /* MUST premultiply — otherwise transparent pixels paint a black slab */
       gl_FragColor = vec4(col * a, a);
     }
   `;
@@ -162,17 +111,6 @@
     return p;
   }
 
-  /**
-   * @param {object} opts
-   * @param {HTMLCanvasElement} opts.canvas
-   * @param {HTMLElement} opts.splashEl  DOM mark used for layout size
-   * @param {() => number} opts.getFontPx
-   * @param {() => number} opts.getP
-   * @param {() => number} opts.getOpacity  dock opacity
-   * @param {string} [opts.fontFamily]
-   * @param {string} [opts.text]
-   * @param {string} [opts.ink]
-   */
   function mountFilmLogo(opts) {
     const canvas = opts.canvas;
     if (!canvas) return null;
@@ -210,10 +148,9 @@
       res: gl.getUniformLocation(prog, "u_res"),
       time: gl.getUniformLocation(prog, "u_time"),
       p: gl.getUniformLocation(prog, "u_p"),
-      intensity: gl.getUniformLocation(prog, "u_intensity"),
-      flash: gl.getUniformLocation(prog, "u_flash"),
-      tear: gl.getUniformLocation(prog, "u_tear"),
-      tearDir: gl.getUniformLocation(prog, "u_tearDir"),
+      hit: gl.getUniformLocation(prog, "u_hit"),
+      hitAxis: gl.getUniformLocation(prog, "u_hitAxis"),
+      hitSkew: gl.getUniformLocation(prog, "u_hitSkew"),
     };
 
     const tex = gl.createTexture();
@@ -227,17 +164,16 @@
     const ctx = off.getContext("2d");
     let lastFont = 0;
     let lastDpr = 0;
-    let flash = 0;
-    let tear = 0;
-    let tearDir = [1, 0];
-    let nextEvent = 0.6;
+    let hit = 0;
+    let hitAxis = [0, 1];
+    let hitSkew = 0;
+    let nextHit = 0.8 + Math.random() * 1.2;
     let running = true;
     let raf = 0;
     const t0 = performance.now();
 
     const fontFamily =
-      opts.fontFamily ||
-      '"Onyx", "Times New Roman", Times, serif';
+      opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
     const text = opts.text || "f00";
     const ink = opts.ink || "#090909";
 
@@ -247,23 +183,20 @@
       const sb = el
         ? el.getBoundingClientRect()
         : { width: fontPx * 1.55, height: fontPx * 0.86 };
-      /* pad around the layout box for bloom / CA / warp (not a huge rect) */
-      const padX = Math.max(12, sb.width * 0.12);
-      const padY = Math.max(12, sb.height * 0.16);
+      const padX = Math.max(12, sb.width * 0.14);
+      const padY = Math.max(12, sb.height * 0.2);
       const w = Math.ceil(sb.width + padX * 2);
       const h = Math.ceil(sb.height + padY * 2);
       off.width = Math.max(2, Math.floor(w * dpr));
       off.height = Math.max(2, Math.floor(h * dpr));
-      /* width reset clears state */
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       ctx.font = `400 ${fontPx}px ${fontFamily}`;
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
       ctx.fillStyle = ink;
-      /* soft ink so bloom has emulsion to catch */
-      ctx.shadowColor = "rgba(9,9,9,0.4)";
-      ctx.shadowBlur = Math.max(2, fontPx * 0.016);
+      ctx.shadowColor = "rgba(9,9,9,0.25)";
+      ctx.shadowBlur = Math.max(1, fontPx * 0.01);
       ctx.fillText(text, w / 2, h / 2 + fontPx * 0.02);
 
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -280,20 +213,15 @@
       lastDpr = dpr;
     };
 
-    const scheduleEvents = (now) => {
-      if (now < nextEvent) return;
-      const p = opts.getP();
-      const hero = 1 - p;
-      /* film events denser while the mark is large */
-      if (Math.random() < 0.62 + hero * 0.2) {
-        flash = 0.4 + Math.random() * 0.75 * (0.45 + hero);
-      }
-      if (Math.random() < 0.5 + hero * 0.3) {
-        tear = 0.65 + Math.random() * 1.1;
-        const a = Math.random() * Math.PI * 2;
-        tearDir = [Math.cos(a), Math.sin(a)];
-      }
-      nextEvent = now + 0.55 + Math.random() * (1.1 + p * 2.0);
+    const fireHit = () => {
+      /* random stretch axis + skew — big, short */
+      const mode = Math.floor(Math.random() * 4);
+      if (mode === 0) hitAxis = [0, 1.15]; /* vertical stretch */
+      else if (mode === 1) hitAxis = [0, -0.95]; /* vertical squash */
+      else if (mode === 2) hitAxis = [1.05, 0.25]; /* wide */
+      else hitAxis = [-0.35, 0.9]; /* tall skew-ish */
+      hitSkew = (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 1.1);
+      hit = 1.0;
     };
 
     const frame = () => {
@@ -307,15 +235,20 @@
       }
 
       const now = (performance.now() - t0) / 1000;
-      scheduleEvents(now);
-      flash *= 0.88;
-      tear *= 0.91;
-      if (flash < 0.01) flash = 0;
-      if (tear < 0.02) tear = 0;
+      if (now >= nextHit) {
+        fireHit();
+        const p = opts.getP ? opts.getP() : 0;
+        /* denser hits when logo is large; still occasional when small */
+        nextHit = now + 0.7 + Math.random() * (1.4 + p * 2.2);
+      }
+      /* super quick decay — snap stretch, not a long goo */
+      hit *= 0.78;
+      if (hit < 0.02) hit = 0;
 
-      const p = opts.getP();
       const op = opts.getOpacity ? opts.getOpacity() : 1;
       canvas.style.opacity = String(Math.max(0, Math.min(1, op)));
+
+      const p = opts.getP ? opts.getP() : 0;
 
       gl.useProgram(prog);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -327,10 +260,9 @@
       gl.uniform2f(u.res, canvas.width, canvas.height);
       gl.uniform1f(u.time, now);
       gl.uniform1f(u.p, p);
-      gl.uniform1f(u.intensity, 1.0);
-      gl.uniform1f(u.flash, flash);
-      gl.uniform1f(u.tear, tear);
-      gl.uniform2f(u.tearDir, tearDir[0], tearDir[1]);
+      gl.uniform1f(u.hit, hit);
+      gl.uniform2f(u.hitAxis, hitAxis[0], hitAxis[1]);
+      gl.uniform1f(u.hitSkew, hitSkew);
 
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -339,7 +271,6 @@
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
-    /* wait for font then start */
     const start = () => {
       paintTexture(opts.getFontPx() || 120);
       running = true;
