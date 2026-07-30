@@ -1,8 +1,7 @@
-/* f00 hub — splash mark via throw engine (develop → project → display)
- * Not CSS blur. Not uniform softness. Structure → emulsion → optics.
- */
+/* f00 hub splash — throw engine: develop once, project continuously */
 import {
   throwTextPlate,
+  reprojectPlate,
   displayToCanvas,
 } from "./throw/engine/throw.js";
 
@@ -12,74 +11,118 @@ export function mountThrowPlate(opts) {
   if (!canvas || !splash) return null;
 
   const reduced = !!opts.staticOnly;
-  let seed =
+  const seed =
     (opts.seed != null
       ? opts.seed
       : window.F00Projection?.seedFor?.(canvas, "plate:splash") ??
-        (Math.random() * 0xffffffff)) >>> 0;
+        Math.random() * 0xffffffff) >>> 0;
+
   let running = true;
   let raf = 0;
-  let lastThrow = 0;
+  let cache = null; /* { density, optics, w, h, cssW, cssH, fontKey } */
+  let lastGeom = "";
+  let busy = false;
 
   const fontFamily =
     opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
 
-  const render = async (time) => {
-    const fontPx = opts.getFontPx?.() || 120;
-    if (fontPx < 8) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const sb = splash.getBoundingClientRect();
-    const padX = Math.max(24, sb.width * 0.2);
-    const padY = Math.max(24, sb.height * 0.26);
-    const cssW = Math.ceil(sb.width + padX * 2);
-    const cssH = Math.ceil(sb.height + padY * 2);
-    const w = Math.max(64, Math.floor(cssW * dpr));
-    const h = Math.max(64, Math.floor(cssH * dpr));
+  const geomKey = (fontPx, cssW, cssH, dpr) =>
+    `${fontPx}|${cssW}|${cssH}|${dpr}`;
 
-    if (document.fonts?.load) {
-      try {
-        await document.fonts.load(`400 ${fontPx * dpr}px Onyx`);
-      } catch (_) {}
+  const fullThrow = async (time) => {
+    if (busy) return;
+    busy = true;
+    try {
+      const fontPx = opts.getFontPx?.() || 120;
+      if (fontPx < 8) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const sb = splash.getBoundingClientRect();
+      if (sb.width < 8 || sb.height < 8) return;
+      const padX = Math.max(32, sb.width * 0.22);
+      const padY = Math.max(32, sb.height * 0.28);
+      const cssW = Math.ceil(sb.width + padX * 2);
+      const cssH = Math.ceil(sb.height + padY * 2);
+      /* cap pixels for performance while keeping detail */
+      const maxEdge = 1400;
+      let w = Math.floor(cssW * dpr);
+      let h = Math.floor(cssH * dpr);
+      const scale = Math.min(1, maxEdge / Math.max(w, h));
+      w = Math.max(128, Math.floor(w * scale));
+      h = Math.max(96, Math.floor(h * scale));
+      const fontKey = geomKey(fontPx, cssW, cssH, dpr);
+
+      if (document.fonts?.load) {
+        try {
+          await document.fonts.load(`400 ${Math.round(fontPx * dpr * scale)}px Onyx`);
+        } catch (_) {}
+      }
+
+      const result = throwTextPlate({
+        text: opts.text || "f00",
+        width: w,
+        height: h,
+        fontPx: Math.round(fontPx * dpr * scale),
+        fontFamily,
+        seed,
+        time: time || 0,
+      });
+      cache = {
+        density: result.density,
+        optics: result.optics,
+        w,
+        h,
+        cssW,
+        cssH,
+        fontKey,
+      };
+      displayToCanvas(canvas, result);
+      canvas.style.width = `${cssW}px`;
+      canvas.style.height = `${cssH}px`;
+      lastGeom = fontKey;
+    } finally {
+      busy = false;
     }
-
-    const result = throwTextPlate({
-      text: opts.text || "f00",
-      width: w,
-      height: h,
-      fontPx: fontPx * dpr,
-      fontFamily,
-      seed,
-      time: time || 0,
-    });
-    displayToCanvas(canvas, result);
-    canvas.style.width = `${cssW}px`;
-    canvas.style.height = `${cssH}px`;
-    const op = opts.getOpacity?.() ?? 1;
-    canvas.style.opacity = String(Math.max(0, Math.min(1, op)));
   };
 
+  const reproject = (time) => {
+    if (!cache || busy) return;
+    const result = reprojectPlate(
+      cache.density,
+      cache.w,
+      cache.h,
+      cache.optics,
+      seed,
+      time
+    );
+    displayToCanvas(canvas, result);
+  };
+
+  let lastRep = 0;
   const loop = (ts) => {
     if (!running) return;
     raf = requestAnimationFrame(loop);
-    /* re-throw density with time is expensive; reproject every ~120ms for living air */
-    if (ts - lastThrow > 120) {
-      lastThrow = ts;
-      /* keep seed — same specimen, living optics via time in project() */
-      render(ts / 1000);
+    const fontPx = opts.getFontPx?.() || 120;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const sb = splash.getBoundingClientRect();
+    const cssW = Math.ceil(sb.width + Math.max(32, sb.width * 0.22) * 2);
+    const cssH = Math.ceil(sb.height + Math.max(32, sb.height * 0.28) * 2);
+    const gk = geomKey(fontPx, cssW, cssH, dpr);
+    if (gk !== lastGeom) {
+      fullThrow(ts / 1000);
+    } else if (ts - lastRep > 50) {
+      lastRep = ts;
+      reproject(ts / 1000);
     }
     const op = opts.getOpacity?.() ?? 1;
     canvas.style.opacity = String(Math.max(0, Math.min(1, op)));
   };
 
-  const start = () => {
-    render(0).then(() => {
-      if (!reduced) {
-        lastThrow = performance.now();
-        raf = requestAnimationFrame(loop);
-      }
-    });
-  };
-  start();
+  fullThrow(0).then(() => {
+    if (!reduced) {
+      lastRep = performance.now();
+      raf = requestAnimationFrame(loop);
+    }
+  });
 
   return {
     destroy() {
@@ -87,14 +130,13 @@ export function mountThrowPlate(opts) {
       cancelAnimationFrame(raf);
     },
     resize() {
-      render(performance.now() / 1000);
+      fullThrow(performance.now() / 1000);
     },
   };
 }
 
 window.F00ThrowPlate = { mount: mountThrowPlate };
 
-/* self-mount splash — module order vs classic defer is unreliable */
 const boot = () => {
   const canvas = document.querySelector("canvas.splash-film");
   const splash = document.querySelector(".splash");
