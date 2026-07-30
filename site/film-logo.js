@@ -1,12 +1,11 @@
-/* f00 — WebGL film PROJECTOR for the splash plate
+/* f00 — continuous film PROJECTOR (entropy, no neutral state)
  *
- * Dream: this is not a font. It is a 70mm frame — dye on film — thrown by a
- * lamp through a lens onto a screen. Geometry changes because the PLATE moves
- * relative to lamp/lens (weave, buckle, tilt, throw), not because glyphs skew.
+ * Dream: light → imperfect film plate → lens → screen.
+ * Not a font. Not a scheduled effect. Never a rest pose.
+ * Patterns + chaos: continuous dynamical state drives optics forever.
  *
- * MUST: gate weave · plate tilt (homography) · buckle Z→scale · always-on wave
- * SHOULD: focus breathing (blur+scale) · soft lamp falloff on alpha
- * NEVER: RGB fringe · grain · per-glyph morph · snap stretch
+ * Experts: no timers/events; floors always nonzero; soft alpha bleed;
+ * whole-plate projection math only; SVG rejected for the seen plate.
  */
 (() => {
   const VERT = `
@@ -25,12 +24,13 @@
     uniform vec2 u_res;
     uniform float u_time;
     uniform float u_p;
-    /* register event — same physical channels, amplified (0..1 sine envelope) */
-    uniform float u_event;
-    uniform vec2 u_evWeave;   /* extra gate slip direction */
-    uniform vec2 u_evTilt;    /* extra pitch/yaw */
-    uniform vec2 u_evPivot;   /* buckle / slip focus in UV */
-    uniform float u_evBuckle;
+    /* continuous dynamical readouts — never “event on/off” */
+    uniform vec2 u_weave;
+    uniform vec2 u_tilt;
+    uniform float u_buckle;
+    uniform float u_breath;
+    uniform float u_wave;
+    uniform float u_energy; /* soft emergent amplitude from dynamics */
 
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -45,93 +45,84 @@
       vec2 u = f * f * (3.0 - 2.0 * f);
       return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
     }
-    /* low-frequency only — optical scale, not texture grain */
     float fbm2(vec2 p) {
-      return 0.66 * noise(p) + 0.34 * noise(p * 1.97 + 3.1);
-    }
-    vec2 n2(float t, float s) {
-      return vec2(
-        fbm2(vec2(t * 0.17 + s, t * 0.13 + s * 2.1)) * 2.0 - 1.0,
-        fbm2(vec2(t * 0.11 + s * 3.3, t * 0.19 + 1.7)) * 2.0 - 1.0
-      );
-    }
-
-    vec4 sampleInk(vec2 uv) {
-      if (uv.x < -0.06 || uv.x > 1.06 || uv.y < -0.06 || uv.y > 1.06) {
-        return vec4(0.0);
-      }
-      return texture2D(u_tex, clamp(uv, 0.0, 1.0));
-    }
-
-    /* soft alpha bloom = focus softness of the thrown silhouette */
-    float bloomA(vec2 uv, float spreadPx) {
-      vec2 px = spreadPx / u_res;
-      float acc = 0.0;
-      float wsum = 0.0;
-      for (int y = -2; y <= 2; y++) {
-        for (int x = -2; x <= 2; x++) {
-          float w = exp(-0.45 * float(x * x + y * y));
-          acc += sampleInk(uv + vec2(float(x), float(y)) * px).a * w;
-          wsum += w;
-        }
-      }
-      return acc / wsum;
+      return 0.65 * noise(p) + 0.35 * noise(p * 1.93 + 2.7);
     }
 
     /*
-     * Inverse optical path: screen UV → film UV.
-     * Whole-frame geometry only. Flat black plate.
+     * Soft projected edge: multi-tap alpha ALWAYS blurred.
+     * Floor prevents CAD-perfect silhouettes. Anisotropic = horizontal gate.
+     */
+    float sampleInkSoft(vec2 uv, float defocusPx) {
+      float floorPx = 0.85; /* never razor */
+      float spread = floorPx + defocusPx;
+      vec2 px = vec2(1.2, 0.88) * spread / u_res;
+      float acc = 0.0;
+      float wsum = 0.0;
+      for (int y = -3; y <= 3; y++) {
+        for (int x = -3; x <= 3; x++) {
+          float w = exp(-0.32 * float(x * x + y * y));
+          vec2 suv = uv + vec2(float(x), float(y)) * px;
+          float a = 0.0;
+          if (suv.x > -0.05 && suv.x < 1.05 && suv.y > -0.05 && suv.y < 1.05) {
+            a = texture2D(u_tex, clamp(suv, 0.0, 1.0)).a;
+          }
+          acc += a * w;
+          wsum += w;
+        }
+      }
+      float soft = acc / wsum;
+      float core = 0.0;
+      if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) {
+        core = texture2D(u_tex, uv).a;
+      }
+      /* dye bleed: soft under + around edge, never binary mask */
+      return max(soft * 0.92, core * 0.55 + soft * 0.45);
+    }
+
+    /*
+     * Inverse optical path: screen → film.
+     * Whole plate only. Floors baked into uniforms from host.
      */
     vec2 projectUV(vec2 uv, float t, out float defocus) {
       float hero = 1.0 - clamp(u_p, 0.0, 1.0);
-      float live = 0.55 + 0.45 * hero;
-      float e = u_event;
-      e = e * e * (3.0 - 2.0 * e);
-
+      float live = 0.6 + 0.4 * hero;
       vec2 p = uv - 0.5;
 
-      /* 1) Gate weave — rigid plate slide in the aperture (always) */
-      vec2 weave = n2(t * 0.85, 1.0) * (0.0016 * live);
-      weave += u_evWeave * e * 0.0045;
-      p -= weave;
+      /* 1 gate weave — rigid plate slip (always) */
+      p -= u_weave * live;
 
-      /* 2) Film buckle Z — bow toward lamp: center magnifies (throw change) */
-      float zIdle = (fbm2(uv * 1.1 + vec2(t * 0.07, t * 0.05)) - 0.5) * 0.012 * live;
-      /* continuous micro-wave on the plate (always slight) */
-      zIdle += sin(uv.x * 4.2 + t * 0.55) * cos(uv.y * 3.3 - t * 0.42) * 0.0035 * live;
-      float r2p = dot(p, p);
-      float zEv = 0.0;
-      if (e > 0.001) {
-        vec2 d = uv - u_evPivot;
-        zEv = u_evBuckle * e * exp(-dot(d, d) * 2.8);
-      }
-      float Z = zIdle + zEv;
-      /* perspective-ish local scale from plate distance */
-      float mag = 1.0 / max(1.0 - 2.4 * Z, 0.82);
+      /* 2 continuous buckle field + energy-coupled swell (never flat) */
+      float zField = (fbm2(uv * 1.05 + vec2(t * 0.055, t * 0.04)) - 0.5);
+      zField += sin(uv.x * 3.7 + t * 0.41 + u_wave) * cos(uv.y * 3.1 - t * 0.37) * 0.45;
+      float Z = zField * (0.0045 + 0.006 * u_energy) * live + u_buckle * live;
+      float mag = 1.0 / max(1.0 - 2.6 * Z, 0.8);
       p *= mag;
 
-      /* 3) Plate tilt → soft keystone (whole projected frame) */
-      vec2 tilt = n2(t * 0.22, 2.0) * (0.012 * live);
-      tilt += u_evTilt * e * 0.035;
+      /* 3 plate tilt → soft keystone of the whole throw */
+      vec2 tilt = u_tilt * live;
       float denom = 1.0 + tilt.y * p.y + tilt.x * p.x;
-      p /= max(denom, 0.78);
+      p /= max(denom, 0.76);
 
-      /* 4) Throw / focus breathing — global scale of the throw */
-      float breath = 1.0 + 0.006 * live * sin(t * 0.75 + fbm2(vec2(t * 0.2, 4.0)) * 2.0);
-      breath += e * 0.012 * sin(e * 3.14159);
+      /* 4 throw breathing */
+      float breath = u_breath;
       p /= breath;
 
-      /* 5) Screen / air undulation AFTER projection (soft, always-on wave) */
+      /* 5 always-on screen/air undulation */
+      float w = u_wave;
       vec2 air = vec2(
-        sin(p.y * 5.5 + t * 0.38) * 0.0018,
-        cos(p.x * 4.8 - t * 0.33) * 0.0015
+        sin(p.y * 5.2 + t * 0.33 + w) * (0.0022 + 0.0015 * u_energy),
+        cos(p.x * 4.6 - t * 0.29 - w * 0.7) * (0.0019 + 0.0012 * u_energy)
       ) * live;
-      air += n2(t * 0.12 + p.x + p.y, 4.0) * (0.0011 * live);
-      air += e * 0.003 * n2(t + 9.0, 5.0);
+      air += (vec2(fbm2(p * 2.0 + t * 0.08), fbm2(p.yx * 2.0 - t * 0.07)) - 0.5)
+           * (0.0014 + 0.001 * u_energy) * live;
       p += air;
 
-      /* defocus amount for bloom (optics, not grain) */
-      defocus = abs(Z) * 40.0 + length(tilt) * 8.0 + abs(breath - 1.0) * 25.0 + e * 0.8;
+      defocus = 0.55
+        + abs(Z) * 55.0
+        + length(tilt) * 14.0
+        + abs(breath - 1.0) * 40.0
+        + u_energy * 0.9;
 
       return p + 0.5;
     }
@@ -139,20 +130,14 @@
     void main() {
       float defocus = 0.0;
       vec2 uv = projectUV(v_uv, u_time, defocus);
+      float a = sampleInkSoft(uv, defocus);
 
-      float a = sampleInk(uv).a;
-
-      /* focus breathing — soft silhouette, still black */
-      float spread = 0.35 + defocus * 1.1;
-      float ba = bloomA(uv, spread);
-      a = max(a, ba * (0.08 + 0.1 * clamp(defocus, 0.0, 1.5)));
-
-      /* soft lamp falloff on the thrown plate (alpha only) */
+      /* soft lamp falloff — throw never evenly lit */
       vec2 q = v_uv - 0.5;
-      float fall = 1.0 - 0.05 * dot(q, q) * 4.0;
-      a *= clamp(fall, 0.9, 1.0);
+      a *= clamp(1.0 - 0.07 * dot(q, q) * 4.0, 0.86, 1.0);
 
-      vec3 col = vec3(0.04);
+      /* flat black ink, imperfect edge already in alpha */
+      vec3 col = vec3(0.045);
       a = clamp(a, 0.0, 1.0);
       gl_FragColor = vec4(col * a, a);
     }
@@ -182,9 +167,88 @@
     return p;
   }
 
-  function swellEnvelope(phase) {
-    if (phase <= 0 || phase >= 1) return 0;
-    return Math.sin(phase * Math.PI);
+  const FLOOR = 0.008;
+  function floorAbs(v, m) {
+    const mm = m == null ? FLOOR : m;
+    if (v === 0 || !Number.isFinite(v)) return mm;
+    return Math.sign(v) * Math.max(Math.abs(v), mm);
+  }
+
+  function randn() {
+    /* Box-Muller — continuous noise, not a schedule */
+    let u = 0;
+    let v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  /**
+   * Continuous dynamical system (Rössler-ish + OU walks).
+   * Uniforms are READOUTS — never idle/event modes, never reset-to-identity.
+   */
+  function createDynamics() {
+    /* asymmetric ICs — never the origin */
+    const s = {
+      x: 0.4 + Math.random() * 0.3,
+      y: -0.2 + Math.random() * 0.4,
+      z: 0.15 + Math.random() * 0.2,
+      bx: (Math.random() - 0.5) * 0.4,
+      by: (Math.random() - 0.5) * 0.4,
+      w: 0.55 + Math.random() * 0.35,
+      phi: Math.random() * Math.PI * 2,
+      e: 0.12 + Math.random() * 0.08, /* energy channel never starts at 0 */
+    };
+    const a = 0.2;
+    const c = 5.7;
+
+    return {
+      update(dt) {
+        dt = Math.min(Math.max(dt, 0), 0.05);
+        const { x, y, z } = s;
+        const bz = 0.2 + 0.06 * s.bx;
+        /* Euler is enough; incommensurate drifts break metronome */
+        s.x += dt * (-y - z);
+        s.y += dt * (x + a * y);
+        s.z += dt * (bz + z * (x - c));
+        /* soft clamp chaos so it stays optical, not nauseating */
+        s.x = Math.tanh(s.x * 0.15) * 6;
+        s.y = Math.tanh(s.y * 0.15) * 6;
+        s.z = Math.tanh(s.z * 0.08) * 8;
+
+        const sq = Math.sqrt(dt);
+        s.bx += dt * (-0.035 * s.bx) + 0.018 * randn() * sq;
+        s.by += dt * (-0.035 * s.by) + 0.018 * randn() * sq;
+        s.w += dt * (-0.07 * (s.w - (0.65 + 0.25 * s.by)));
+        s.w = Math.max(0.35, Math.min(1.4, s.w));
+        s.phi += dt * (s.w + 0.12 * s.y);
+
+        const E = s.x * s.x + s.y * s.y;
+        /* continuous energy — soft follow, hysteresis-ish, NEVER parks at 0 */
+        const eTarget =
+          E > 12 ? 0.85 : E > 7 ? 0.45 : E > 3 ? 0.22 : 0.1;
+        s.e += dt * (eTarget - s.e) * (E > 10 ? 1.6 : 0.7);
+        s.e = Math.max(0.06, Math.min(1, s.e));
+
+        const n = Math.hypot(s.x, s.y) || 1;
+        const en = s.e;
+
+        return {
+          weave: [
+            floorAbs(0.0014 * (s.x / n) + 0.0009 * Math.sin(s.phi) + 0.0005 * s.bx, 0.0007),
+            floorAbs(0.0012 * (s.y / n) + 0.0007 * Math.cos(s.phi * 0.9) + 0.0004 * s.by, 0.0006),
+          ],
+          tilt: [
+            floorAbs(0.01 * s.y * 0.08 + 0.006 * s.bx + 0.004 * en * (s.x / n), 0.004),
+            floorAbs(0.01 * s.x * 0.08 + 0.006 * s.by + 0.004 * en * (s.y / n), 0.004),
+          ],
+          buckle: floorAbs(0.0022 * Math.tanh(s.z * 0.2) + 0.0015 * en * Math.sin(s.phi), 0.0009),
+          breath: 1 + floorAbs(0.0045 * Math.sin(s.phi) + 0.002 * s.bx + 0.003 * en, 0.0015),
+          wave: floorAbs(s.phi * 0.15 + s.by * 0.5, 0.05),
+          energy: en,
+        };
+      },
+    };
   }
 
   function mountFilmLogo(opts) {
@@ -224,11 +288,12 @@
       res: gl.getUniformLocation(prog, "u_res"),
       time: gl.getUniformLocation(prog, "u_time"),
       p: gl.getUniformLocation(prog, "u_p"),
-      event: gl.getUniformLocation(prog, "u_event"),
-      evWeave: gl.getUniformLocation(prog, "u_evWeave"),
-      evTilt: gl.getUniformLocation(prog, "u_evTilt"),
-      evPivot: gl.getUniformLocation(prog, "u_evPivot"),
-      evBuckle: gl.getUniformLocation(prog, "u_evBuckle"),
+      weave: gl.getUniformLocation(prog, "u_weave"),
+      tilt: gl.getUniformLocation(prog, "u_tilt"),
+      buckle: gl.getUniformLocation(prog, "u_buckle"),
+      breath: gl.getUniformLocation(prog, "u_breath"),
+      wave: gl.getUniformLocation(prog, "u_wave"),
+      energy: gl.getUniformLocation(prog, "u_energy"),
     };
 
     const tex = gl.createTexture();
@@ -245,9 +310,11 @@
     let running = true;
     let raf = 0;
     const t0 = performance.now();
+    let lastNow = t0;
+    const dyn = createDynamics();
 
-    let ev = null;
-    let nextEv = 1.4 + Math.random() * 1.8;
+    /* instance entropy — this plate will never equal another load */
+    const instanceSeed = Math.random() * 1000;
 
     const fontFamily =
       opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
@@ -260,9 +327,8 @@
       const sb = el
         ? el.getBoundingClientRect()
         : { width: fontPx * 1.55, height: fontPx * 0.86 };
-      /* pad for keystone / weave so plate edges don't clip the throw */
-      const padX = Math.max(20, sb.width * 0.2);
-      const padY = Math.max(20, sb.height * 0.26);
+      const padX = Math.max(24, sb.width * 0.22);
+      const padY = Math.max(24, sb.height * 0.28);
       const w = Math.ceil(sb.width + padX * 2);
       const h = Math.ceil(sb.height + padY * 2);
       off.width = Math.max(2, Math.floor(w * dpr));
@@ -273,8 +339,9 @@
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
       ctx.fillStyle = ink;
-      ctx.shadowColor = "rgba(9,9,9,0.18)";
-      ctx.shadowBlur = Math.max(1, fontPx * 0.006);
+      /* slight soft ink already on the plate (pre-lens) */
+      ctx.shadowColor = "rgba(9,9,9,0.35)";
+      ctx.shadowBlur = Math.max(2, fontPx * 0.014);
       ctx.fillText(text, w / 2, h / 2 + fontPx * 0.02);
 
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -291,23 +358,7 @@
       lastDpr = dpr;
     };
 
-    const startEvent = (now) => {
-      const ang = Math.random() * Math.PI * 2;
-      ev = {
-        t0: now,
-        /* long organic register slip — not a snap */
-        dur: 1.1 + Math.random() * 1.3,
-        weave: [Math.cos(ang) * (0.6 + Math.random() * 0.8), Math.sin(ang) * (0.4 + Math.random() * 0.6)],
-        tilt: [
-          (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.9),
-          (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.9),
-        ],
-        pivot: [0.32 + Math.random() * 0.36, 0.32 + Math.random() * 0.36],
-        buckle: (Math.random() < 0.5 ? -1 : 1) * (0.012 + Math.random() * 0.02),
-      };
-    };
-
-    const frame = () => {
+    const frame = (ts) => {
       if (!running) return;
       raf = requestAnimationFrame(frame);
       const fontPx = opts.getFontPx();
@@ -317,30 +368,13 @@
         paintTexture(fontPx);
       }
 
-      const now = (performance.now() - t0) / 1000;
+      const nowMs = ts || performance.now();
+      const dt = Math.min(0.05, Math.max(0, (nowMs - lastNow) / 1000));
+      lastNow = nowMs;
+      const now = (nowMs - t0) / 1000 + instanceSeed * 0.01;
+
+      const st = dyn.update(dt);
       const p = opts.getP ? opts.getP() : 0;
-
-      if (!ev && now >= nextEv) startEvent(now);
-
-      let eventAmt = 0;
-      let evWeave = [0, 0];
-      let evTilt = [0, 0];
-      let evPivot = [0.5, 0.5];
-      let evBuckle = 0;
-      if (ev) {
-        const phase = (now - ev.t0) / ev.dur;
-        if (phase >= 1) {
-          ev = null;
-          nextEv = now + 1.6 + Math.random() * (2.4 + p * 2.8);
-        } else {
-          eventAmt = swellEnvelope(phase);
-          evWeave = ev.weave;
-          evTilt = ev.tilt;
-          evPivot = ev.pivot;
-          evBuckle = ev.buckle;
-        }
-      }
-
       const op = opts.getOpacity ? opts.getOpacity() : 1;
       canvas.style.opacity = String(Math.max(0, Math.min(1, op)));
 
@@ -354,11 +388,12 @@
       gl.uniform2f(u.res, canvas.width, canvas.height);
       gl.uniform1f(u.time, now);
       gl.uniform1f(u.p, p);
-      gl.uniform1f(u.event, eventAmt);
-      gl.uniform2f(u.evWeave, evWeave[0], evWeave[1]);
-      gl.uniform2f(u.evTilt, evTilt[0], evTilt[1]);
-      gl.uniform2f(u.evPivot, evPivot[0], evPivot[1]);
-      gl.uniform1f(u.evBuckle, evBuckle);
+      gl.uniform2f(u.weave, st.weave[0], st.weave[1]);
+      gl.uniform2f(u.tilt, st.tilt[0], st.tilt[1]);
+      gl.uniform1f(u.buckle, st.buckle);
+      gl.uniform1f(u.breath, st.breath);
+      gl.uniform1f(u.wave, st.wave);
+      gl.uniform1f(u.energy, st.energy);
 
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -370,6 +405,7 @@
     const start = () => {
       paintTexture(opts.getFontPx() || 120);
       running = true;
+      lastNow = performance.now();
       raf = requestAnimationFrame(frame);
     };
     if (document.fonts && document.fonts.load) {
