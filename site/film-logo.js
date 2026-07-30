@@ -53,32 +53,37 @@
     }
 
     /*
-     * Soft projected edge — NON-UNIFORM entropy (order in disorder).
-     * No flat “CSS blur.” Emulsion thickness, gate smear, and local focus
-     * vary along the silhouette: denser here, freer there — never the same
-     * twice, never a perfect Gaussian matte.
+     * Softness only where emulsion / focus *locally* fails — never a uniform radius.
+     * Uniform blur is mathematics applied as manufacture; nature has no flat focus field.
+     * Low-frequency focus map + high-frequency emulsion: each edge cell different.
      */
-    float sampleInkSoft(vec2 uv, float defocusPx) {
-      float floorPx = u_edgeFloor;
-      /* local emulsion density — spatial, not a flat radius */
-      float emul = 0.55 + 0.9 * fbm2(uv * 14.0 + vec2(u_wave * 0.2, u_energy));
-      float emul2 = 0.55 + 0.9 * fbm2(uv * 27.0 - vec2(u_energy, u_wave * 0.15));
-      float spread = (floorPx + defocusPx) * mix(0.65, 1.45, emul);
-      /* anisotropic smear: gate + lens, different X/Y, different per specimen point */
+    float sampleInkSoft(vec2 uv, float optics) {
+      /* spatial focus residual — varies across the plate, not one global blur */
+      float focusMap = fbm2(uv * 3.2 + vec2(u_wave * 0.15, u_energy * 0.4));
+      float focusMap2 = fbm2(uv * 7.5 - vec2(u_energy, u_wave * 0.2));
+      float emul = fbm2(uv * 18.0 + vec2(u_energy * 0.5, u_wave));
+      float emul2 = fbm2(uv * 31.0 + 4.0);
+      /* some regions nearly sharp, some bleed — never same width all around */
+      float local = mix(0.15, 1.0, focusMap) * mix(0.5, 1.35, emul);
+      local *= mix(0.7, 1.25, focusMap2);
+      float spread = (u_edgeFloor * 0.35 + optics * 0.25) * local;
+      /* anisotropic: gate vs lens, different every texel neighborhood */
       vec2 aniso = vec2(
-        1.05 + 0.55 * (emul - 0.5),
-        0.82 + 0.5 * (emul2 - 0.5)
+        mix(0.55, 1.45, emul),
+        mix(0.5, 1.4, emul2)
       );
       vec2 px = aniso * spread / u_res;
+
       float acc = 0.0;
       float wsum = 0.0;
       for (int y = -3; y <= 3; y++) {
         for (int x = -3; x <= 3; x++) {
-          /* kernel weight warped by local noise — not a perfect isotropic Gaussian */
-          float dist = float(x * x) * (0.85 + 0.4 * emul)
-                     + float(y * y) * (0.95 + 0.35 * emul2);
-          float w = exp(-0.28 * dist);
-          w *= 0.75 + 0.5 * noise(uv * 40.0 + vec2(float(x), float(y)));
+          float wx = float(x) * (0.6 + emul);
+          float wy = float(y) * (0.6 + emul2);
+          float dist = wx * wx + wy * wy;
+          float w = exp(-0.35 * dist);
+          /* break kernel symmetry — no perfect Gaussian */
+          w *= 0.55 + 0.9 * noise(uv * 55.0 + vec2(float(x) * 1.7, float(y) * 2.1));
           vec2 suv = uv + vec2(float(x), float(y)) * px;
           float a = 0.0;
           if (suv.x > -0.05 && suv.x < 1.05 && suv.y > -0.05 && suv.y < 1.05) {
@@ -93,9 +98,9 @@
       if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) {
         core = texture2D(u_tex, uv).a;
       }
-      /* uneven dye bleed mix — more soft in thin emulsion zones */
-      float mixS = mix(0.38, 0.62, emul2);
-      return max(soft * mix(0.88, 0.98, emul), core * (1.0 - mixS) + soft * mixS);
+      /* where focusMap is high, hold core; where low, let edge dissolve unevenly */
+      float hold = mix(0.25, 0.75, focusMap);
+      return core * hold + soft * (1.0 - hold * 0.85);
     }
 
     /*
@@ -395,9 +400,9 @@
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
       ctx.fillStyle = ink;
-      /* soft ink already on the plate (pre-lens) — unique bleed per throw */
-      ctx.shadowColor = "rgba(9,9,9,0.35)";
-      ctx.shadowBlur = Math.max(2, fontPx * inkBlur);
+      /* no uniform canvas shadowBlur — that is flat manufactured soft */
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
       ctx.fillText(text, w / 2, h / 2 + fontPx * 0.02);
 
       gl.bindTexture(gl.TEXTURE_2D, tex);

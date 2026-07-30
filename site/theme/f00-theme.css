@@ -858,9 +858,9 @@ footer, .site-footer, .foot {
 }
 
 /*
- * Every .f00-proj is a complete projection onto the display:
- * gate translate + keystone (perspective) + roll + non-uniform defocus.
- * Not “layout jitter” — optical throw per object.
+ * Every .f00-proj is seen under light — pose can shift; never uniform CSS blur.
+ * Uniform blur is manufactured chaos. Softness lives only in non-uniform fields
+ * (shader emulsion / uneven edges), never filter: blur(constant).
  */
 .f00-proj {
   transform:
@@ -870,9 +870,8 @@ footer, .site-footer, .foot {
     rotateZ(var(--p-rz, 0deg))
     translate3d(var(--p-x, 0px), var(--p-y, 0px), 0);
   transform-origin: 50% 50%;
-  filter: blur(var(--p-defocus, 0px));
-  will-change: transform, filter;
-  /* keep hit targets sane */
+  filter: none !important; /* ban uniform blur */
+  will-change: transform;
   backface-visibility: hidden;
 }
 
@@ -904,29 +903,9 @@ label.f00-proj, .lede.f00-proj, .blurb.f00-proj, .brand-mark.f00-proj,
   z-index: 6;
 }
 
-/* type specimen — tracking/word/baseline iota; still legible */
-p, li, label, .lede, .howto, .blurb, td, th,
-h1, h2, h3, h4, .brand-mark, .brand-sub, .nav a,
-.section-head h2, .card-meta, .facts, .btn, .foot, .foot a,
-.foot-stars, code, pre {
-  letter-spacing: calc(var(--f00-tracking-body, 0.02em) + var(--e-t-track, var(--e-track, 0em)));
-  word-spacing: var(--e-t-word, var(--e-word, 0em));
-  position: relative;
-  top: var(--e-t-y, 0px);
-  opacity: var(--e-t-op, 1);
-}
-.brand-mark, .brand-sub, .nav a {
-  letter-spacing: calc(var(--f00-tracking-chip, 0.12em) + var(--e-t-track, 0em) + var(--e-ch-track, 0em));
-}
-.brand, .nav, .top-inner, .foot {
-  position: relative;
-  top: var(--e-ch-y, 0px);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .card, .panel, .box, .f00-box,
-  article.card, .feature-card, .doc-card, .install-card,
-  .benchmark-card, .tool-card, .release-card, .announcement {
+  .f00-proj {
     will-change: auto;
+    /* still a unique specimen pose; freeze live optics */
   }
 }

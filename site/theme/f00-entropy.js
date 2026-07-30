@@ -159,7 +159,8 @@
     el.style.setProperty("--p-rz", `${rz.toFixed(3)}deg`);
     el.style.setProperty("--p-x", `${gx.toFixed(2)}px`);
     el.style.setProperty("--p-y", `${gy.toFixed(2)}px`);
-    el.style.setProperty("--p-defocus", `${def.toFixed(3)}px`);
+    /* never drive CSS filter:blur — uniform blur is not of nature */
+    el.style.setProperty("--p-defocus", "0px");
     el.style.setProperty("--p-lamp", p.lamp.toFixed(4));
     el.style.setProperty("--p-emul", p.emul.toFixed(3));
 
