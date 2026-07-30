@@ -182,6 +182,23 @@
         "site": "https://throw.f00.sh/",
         "repo": "https://github.com/f00-sh/throw"
       }
+    },
+    {
+      "id": "joule",
+      "name": "joule",
+      "status": "wip",
+      "domain": "joule.f00.sh",
+      "site": "https://joule.f00.sh/",
+      "repo": "https://github.com/f00-sh/joule",
+      "repo_slug": "f00-sh/joule",
+      "pages_project": null,
+      "packages": null,
+      "local": "joule",
+      "license": "MIT",
+      "one_liner": "Decentralized mesh supercomputer: pool idle GPUs into open-weight AI inference (Kimi-class)",
+      "docs": null,
+      "blurb": "Donate idle GPU cycles to an open mesh. Earn millijoules. Run open-weight models (Kimi-class) with multi-node placement. Access only if you contribute.",
+      "facts": []
     }
   ]
 }

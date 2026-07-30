@@ -91,6 +91,7 @@ That regenerates hub product cards, this table, and README projects.
 | TRN | `released` | `$PROJECTS/trn` | https://trn.f00.sh/ | n/a (Pages `f00-trn`) |
 | Heartbox | `released` | `$PROJECTS/heartbox` | https://heartbox.f00.sh/ | n/a (Pages `f00-heartbox`) |
 | throw | `wip` | — | https://throw.f00.sh/ | n/a |
+| joule | `wip` | `$PROJECTS/joule` | https://joule.f00.sh/ | n/a |
 
 **Card rule:** `status=released` → hub card. `wip` / other → listed here, not on f00.sh grid.
 
