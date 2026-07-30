@@ -1,13 +1,30 @@
 /**
- * Injects the ONE shared org stylesheet into HTML on *.f00.sh if missing.
+ * Inject shared f00-theme.css into HTML on *.f00.sh if missing.
+ * Never touch assets/theme files.
  */
 const THEME_LINK =
   '<link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" data-f00-theme="1" />';
 
+const SKIP_PREFIXES = [
+  "/theme/",
+  "/assets/",
+  "/styles",
+  "/catalog.json",
+  "/favicon",
+];
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
-    if (url.pathname.startsWith("/theme/f00-theme")) {
+    const path = url.pathname;
+
+    // Never intercept static theme/assets
+    if (SKIP_PREFIXES.some((p) => path.startsWith(p) || path.includes(p))) {
+      return fetch(request);
+    }
+    // only HTML navigations
+    const accept = request.headers.get("accept") || "";
+    if (!accept.includes("text/html") && request.method === "GET") {
       return fetch(request);
     }
 

@@ -120,8 +120,8 @@
   --site-poppy: var(--f00-accent);
   --site-ink: #090909;
   --site-box-text: #090909;
-  --tex-paper: url("https://f00.sh/assets/textures/wc-paper-v2.png");
-  --tex-petals: url("https://f00.sh/assets/textures/petals-v2.png");
+  --tex-paper: url("https://f00.sh/assets/textures/paper-grain-a3.png");
+  --tex-petals: url("https://f00.sh/assets/textures/petals-a3.png");
   --tex-foil: url("https://f00.sh/assets/textures/foil-v2.png");
 }
 

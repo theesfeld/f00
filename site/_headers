@@ -214,3 +214,20 @@
   Content-Type: image/png
   Cache-Control: public, max-age=86400, immutable
   Access-Control-Allow-Origin: *
+/assets/textures/paper-grain-a3.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/assets/textures/petals-a3.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/theme/textures/*
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
