@@ -432,14 +432,8 @@ html.logo-docked .splash-wrap.is-film .splash,
   text-align: center;
   white-space: nowrap;
 }
-.foot-right {
-  justify-self: end;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
 .foot-stars {
+  justify-self: end;
   text-decoration: none;
   font-family: var(--font-chip, ui-monospace, monospace);
   letter-spacing: 0.12em;
@@ -447,19 +441,20 @@ html.logo-docked .splash-wrap.is-film .splash,
   color: rgba(208, 213, 219, 0.92) !important;
 }
 .foot-stars:hover { color: #e4e8ed !important; }
-/* quiet collective give — same URL on hub + every project site */
-.foot-donate,
-a[data-f00-donate] {
+/* quiet collective give — header nav (hub + every project site) */
+.nav .nav-donate,
+.nav a[data-f00-donate],
+a.nav-donate[data-f00-donate] {
   text-decoration: none;
   letter-spacing: 0.14em;
   text-transform: lowercase;
-  color: rgba(208, 213, 219, 0.72) !important;
+  color: rgba(208, 213, 219, 0.78) !important;
   border-bottom: 1px solid transparent;
 }
-.foot-donate:hover,
-a[data-f00-donate]:hover {
+.nav .nav-donate:hover,
+.nav a[data-f00-donate]:hover {
   color: #e4e8ed !important;
-  border-bottom-color: rgba(208, 213, 219, 0.35);
+  border-bottom-color: rgba(208, 213, 219, 0.4);
 }
 .foot a:not(.foot-stars) {
   color: rgba(208, 213, 219, 0.92);
@@ -478,7 +473,6 @@ a[data-f00-donate]:hover {
   }
   .foot-left,
   .foot-center,
-  .foot-right,
   .foot-stars {
     justify-self: center;
   }

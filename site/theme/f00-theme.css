@@ -563,20 +563,20 @@ hr { border: 0; border-top: 1px solid rgba(208, 213, 219, 0.45); }
 * { --radius: 0; }
 
 /* GitHub star count in footers */
-/* collective give — same href on every *.f00.sh footer */
-.foot-donate,
-a[data-f00-donate] {
+/* collective give — same href on every *.f00.sh header nav */
+.nav .nav-donate,
+.nav a[data-f00-donate],
+a.nav-donate[data-f00-donate] {
   text-decoration: none !important;
   letter-spacing: 0.14em;
   text-transform: lowercase;
-  color: rgba(208, 213, 219, 0.72) !important;
+  color: rgba(208, 213, 219, 0.78) !important;
   border-bottom: 1px solid transparent !important;
-  margin-left: 0.75rem;
 }
-.foot-donate:hover,
-a[data-f00-donate]:hover {
+.nav .nav-donate:hover,
+.nav a[data-f00-donate]:hover {
   color: #e4e8ed !important;
-  border-bottom-color: rgba(208, 213, 219, 0.35) !important;
+  border-bottom-color: rgba(208, 213, 219, 0.4) !important;
 }
 .foot-stars, a[data-f00-stars], a[data-f00-stars-total] {
   text-decoration: none !important;

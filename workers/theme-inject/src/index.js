@@ -100,34 +100,30 @@ function pinStars(html) {
 /** One collective donate link on every *.f00.sh site (never per-project). */
 const DONATE_HREF = "https://f00.sh/donate";
 const DONATE_JS =
-  "/* f00 collective donate — one pool, all sites */\n(() => {\n" +
+  "/* f00 collective donate — header nav, one pool */\n(() => {\n" +
   "  if (document.querySelector(\"[data-f00-donate]\")) return;\n" +
-  "  const foot = document.querySelector(\"footer.foot, footer, .foot, .site-footer\");\n" +
-  "  if (!foot) return;\n" +
+  "  const nav = document.querySelector(\"nav.nav, header .nav, .top-inner .nav, .site-header nav, header nav\");\n" +
+  "  if (!nav) return;\n" +
   "  const a = document.createElement(\"a\");\n" +
   "  a.href = " +
   JSON.stringify(DONATE_HREF) +
   ";\n" +
-  "  a.className = \"foot-donate\";\n" +
+  "  a.className = \"nav-donate\";\n" +
   "  a.dataset.f00Donate = \"1\";\n" +
   "  a.textContent = \"donate\";\n" +
   "  a.rel = \"noopener\";\n" +
-  "  const stars = foot.querySelector(\"[data-f00-stars-total], .foot-stars, a[data-f00-stars]\");\n" +
-  "  if (stars && stars.parentNode === foot) foot.insertBefore(a, stars);\n" +
-  "  else if (stars && stars.parentElement) stars.parentElement.insertBefore(a, stars);\n" +
-  "  else foot.appendChild(a);\n" +
+  "  const gh = [...nav.querySelectorAll(\"a\")].find((el) => /github/i.test(el.href || \"\") || /github/i.test(el.textContent || \"\"));\n" +
+  "  if (gh) nav.insertBefore(a, gh);\n" +
+  "  else nav.appendChild(a);\n" +
   "})();";
 const DONATE_SCRIPT =
   "<script data-f00-donate-script>" + DONATE_JS + "</script>";
 
 function pinDonate(html) {
-  /* rewrite any old donate URLs to the collective pool */
+  /* normalize any existing collective donate anchors */
   html = html.replace(
-    /href=["'][^"']*donate[^"']*["']/gi,
-    (m) => {
-      if (/f00\.sh\/donate/.test(m)) return `href="${DONATE_HREF}"`;
-      return m;
-    }
+    /(<a[^>]*data-f00-donate[^>]*href=["'])[^"']*(["'])/gi,
+    `$1${DONATE_HREF}$2`
   );
   if (!html.includes("data-f00-donate-script") && !html.includes("data-f00-donate")) {
     if (/<\/body>/i.test(html)) {
@@ -135,15 +131,6 @@ function pinDonate(html) {
     } else {
       html += DONATE_SCRIPT;
     }
-  } else if (
-    html.includes("data-f00-donate") &&
-    !html.includes(DONATE_HREF) &&
-    /data-f00-donate/.test(html)
-  ) {
-    html = html.replace(
-      /(<a[^>]*data-f00-donate[^>]*href=["'])[^"']*(["'])/gi,
-      `$1${DONATE_HREF}$2`
-    );
   }
   return html;
 }
