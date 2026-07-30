@@ -1,7 +1,7 @@
-/* f00 hub splash — throw DEVELOP once (CPU), PROJECT living (WebGL)
+/* f00 hub splash — DEVELOP once, PROJECT living (throttled)
  *
- * Scroll shrink is CSS transform only (compositor). GPU lives at a
- * throttled rate and is paused while the finger is moving on mobile.
+ * Scroll shrink = compositor transform only.
+ * iOS: 1:1 scroll map, no GL while moving, tiny backing store.
  */
 import {
   develop,
@@ -23,6 +23,10 @@ function detectMobileBudget() {
 export function mountThrowPlate(opts) {
   const canvas = opts.canvas;
   const splash = opts.splashEl;
+  const wrap =
+    opts.wrapEl ||
+    canvas.closest?.(".splash-wrap") ||
+    document.querySelector(".splash-wrap");
   if (!canvas || !splash) return null;
 
   const reduced = !!opts.staticOnly;
@@ -51,6 +55,9 @@ export function mountThrowPlate(opts) {
   let projector = null;
   let lastGlDraw = 0;
   let lastScrollY = -1;
+  let lastAppliedP = -1;
+  let lastAppliedScale = -1;
+  let loopLive = false;
 
   let maxPx = 120;
   let restPx = 56;
@@ -61,16 +68,26 @@ export function mountThrowPlate(opts) {
   let targetP = 0;
   let dispScale = 1;
   let lastTs = 0;
-  let inkHeightFrac = 0.78;
+  let inkTopFrac = 0.12;
+  let inkHeightFrac = 0.76;
+  let inkCenterFrac = 0.5;
+  let baseCssW = 0;
   let baseCssH = 0;
-  let restScale = 0.35;
-  let travelY = 0; /* px from band-center → header-center at p=1 */
+  let restScale = 0.12;
+  let travelY = 0;
+  let opticalNudge = 0;
 
   const fontFamily =
     opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
+  const root = document.documentElement;
+
+  const setScrollingFlag = (on) => {
+    const cur = root.dataset.f00Scrolling === "1";
+    if (on && !cur) root.dataset.f00Scrolling = "1";
+    else if (!on && cur) root.dataset.f00Scrolling = "0";
+  };
 
   const refreshMetrics = () => {
-    const root = document.documentElement;
     const cs = getComputedStyle(root);
     const m = parseFloat(cs.getPropertyValue("--splash-max"));
     const r = parseFloat(cs.getPropertyValue("--splash-rest"));
@@ -82,18 +99,11 @@ export function mountThrowPlate(opts) {
     if (Number.isFinite(sh) && sh > 32) shrinkRange = sh;
     else shrinkRange = Math.max(64, (maxPx - restPx) * 0.86);
 
-    /* vertical travel: optical center → header mid (no chrome at rest) */
     const viewH = window.innerHeight || 800;
-    /*
-     * Onyx "f" flourish loads the top of the box — true bbox center reads high.
-     * Nudge rest pose slightly down so the mass feels centered.
-     */
-    const opticalNudge = Math.min(36, Math.max(12, viewH * 0.028));
+    opticalNudge = Math.min(28, Math.max(10, viewH * 0.022));
     const bandMid = viewH * 0.5 + opticalNudge;
     const headMid = headerH * 0.5;
     travelY = headMid - bandMid;
-    /* rest offset (p=0): keep the nudge; docks to 0 via travel lerp */
-    canvas.dataset.opticalNudge = String(opticalNudge);
   };
 
   const readTargetP = () => {
@@ -105,37 +115,69 @@ export function mountThrowPlate(opts) {
     return Math.max(0, Math.min(1, y / Math.max(shrinkRange, 1)));
   };
 
-  const applyCssScale = (p, follow) => {
+  const frameEl =
+    document.getElementById("splash-frame") ||
+    document.querySelector(".splash-frame");
+
+  /** Keep frame dock class in lockstep with p (don't wait on app.js rAF). */
+  const syncDockClass = (wantDock) => {
+    const on = !!wantDock;
+    if (root.classList.contains("logo-docked") === on) return on;
+    root.classList.toggle("logo-docked", on);
+    if (frameEl) frameEl.classList.toggle("is-header-dock", on);
+    /* reflow so wrap collapses before we plant the plate */
+    if (wrap) void wrap.offsetHeight;
+    return on;
+  };
+
+  /** Center on ink mass, not film pad. */
+  const applyCssScale = (p, force) => {
     const pp = Math.max(0, Math.min(1, p));
     const targetScale = Math.max(
-      0.05,
+      0.04,
       Math.min(1.05, 1 - pp * (1 - restScale))
     );
-    const f = follow ?? 1;
-    dispScale += (targetScale - dispScale) * f;
+    dispScale = targetScale;
+
+    /* dock class + frame pin first, then plant */
+    const hardDock = syncDockClass(pp > 0.88);
 
     /*
-     * Compositor-only: optical center + rise into header + scale.
-     * travelY already includes rest optical nudge → header mid.
-     * When hard-docked, frame is the header bar → y = 0.
+     * Ink center offset inside the plate (css px at scale 1), then scaled.
+     * Positive inkCenterFrac > 0.5 → ink sits low in texture → shift up.
      */
-    const docked =
-      pp > 0.88 || document.documentElement.classList.contains("logo-docked");
-    const nudge = parseFloat(canvas.dataset.opticalNudge || "0") || 0;
-    /* p=0: +nudge (down); p→1: travel toward header (travelY already from nudged mid) */
-    const y = docked ? 0 : nudge + travelY * pp;
+    const inkBiasY = -(inkCenterFrac - 0.5) * baseCssH * dispScale;
 
-    canvas.style.left = "50%";
-    canvas.style.top = "50%";
-    canvas.style.transformOrigin = "50% 50%";
+    /*
+     * hardDock: frame is the header bar — only ink bias.
+     * free: rise from optical center toward header.
+     */
+    const y = hardDock
+      ? inkBiasY
+      : opticalNudge + travelY * pp + inkBiasY;
+
+    if (
+      !force &&
+      Math.abs(pp - lastAppliedP) < 0.0004 &&
+      Math.abs(dispScale - lastAppliedScale) < 0.0004
+    ) {
+      return;
+    }
+    lastAppliedP = pp;
+    lastAppliedScale = dispScale;
+
+    if (baseCssW > 0) {
+      const dw = Math.max(36, baseCssW * restScale);
+      const dh = Math.max(24, baseCssH * restScale);
+      root.style.setProperty("--splash-dock-w", `${dw.toFixed(1)}px`);
+      root.style.setProperty("--splash-dock-h", `${dh.toFixed(1)}px`);
+    }
+
     canvas.style.transform = [
       "translate3d(-50%, -50%, 0)",
       `translate3d(0, ${y.toFixed(2)}px, 0)`,
       `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
     ].join(" ");
-    canvas.style.opacity = "1";
-    canvas.dataset.throwScale = String(dispScale);
-    canvas.dataset.throwP = String(pp.toFixed(4));
   };
 
   const ensureGl = () => {
@@ -146,7 +188,6 @@ export function mountThrowPlate(opts) {
     return projector;
   };
 
-  /** CPU develop once at measured max — emulsion specimen. */
   const fullDevelop = async () => {
     if (busy) return;
     busy = true;
@@ -154,24 +195,20 @@ export function mountThrowPlate(opts) {
       refreshMetrics();
       if (!(maxPx > 24)) return;
 
-      /* iOS: smaller backing store — looks sharp enough at rest scale */
-      const dpr = Math.min(
-        window.devicePixelRatio || 1,
-        mobile ? 1.15 : 1.5
-      );
+      const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.5);
       const layoutW = maxPx * 1.35;
       const layoutH = maxPx * 0.88;
-      const padX = Math.max(mobile ? 28 : 36, layoutW * (mobile ? 0.12 : 0.14));
-      const padY = Math.max(mobile ? 32 : 40, layoutH * (mobile ? 0.14 : 0.16));
+      const padX = Math.max(mobile ? 22 : 36, layoutW * (mobile ? 0.1 : 0.14));
+      const padY = Math.max(mobile ? 24 : 40, layoutH * (mobile ? 0.12 : 0.16));
       const cssW = Math.ceil(layoutW + padX * 2);
       const cssH = Math.ceil(layoutH + padY * 2);
 
-      const maxEdge = mobile ? 560 : 1100;
+      const maxEdge = mobile ? 420 : 960;
       let w = Math.floor(cssW * dpr);
       let h = Math.floor(cssH * dpr);
       const sc = Math.min(1, maxEdge / Math.max(w, h, 1));
-      w = Math.max(160, Math.floor(w * sc));
-      h = Math.max(120, Math.floor(h * sc));
+      w = Math.max(140, Math.floor(w * sc));
+      h = Math.max(100, Math.floor(h * sc));
 
       if (document.fonts?.load) {
         try {
@@ -197,7 +234,7 @@ export function mountThrowPlate(opts) {
 
       const glp = ensureGl();
       if (!glp) {
-        console.warn("[throw-plate] WebGL unavailable — no living projector");
+        console.warn("[throw-plate] WebGL unavailable");
         return;
       }
       glp.uploadDensity(density, w, h);
@@ -205,49 +242,68 @@ export function mountThrowPlate(opts) {
       let inkTop = -1;
       let inkBot = -1;
       for (let y = 0; y < h; y++) {
+        let rowHit = false;
         for (let x = 0; x < w; x++) {
           if (density[y * w + x] > 0.08) {
-            if (inkTop < 0) inkTop = y;
-            inkBot = y;
+            rowHit = true;
             break;
           }
         }
+        if (rowHit) {
+          if (inkTop < 0) inkTop = y;
+          inkBot = y;
+        }
       }
       if (inkTop < 0) {
-        inkHeightFrac = 0.78;
+        inkTopFrac = 0.12;
+        inkHeightFrac = 0.76;
+        inkCenterFrac = 0.5;
       } else {
-        inkHeightFrac = Math.max(0.4, (inkBot - inkTop + 1) / h);
+        inkTopFrac = inkTop / h;
+        inkHeightFrac = Math.max(0.35, (inkBot - inkTop + 1) / h);
+        inkCenterFrac = inkTopFrac + inkHeightFrac * 0.5;
       }
+
+      baseCssW = cssW;
       baseCssH = cssH;
-      const headerBudget = Math.max(
-        28,
-        (parseFloat(
-          getComputedStyle(document.documentElement).getPropertyValue(
-            "--header-h"
-          )
-        ) || 54) * 0.72
-      );
-      const targetInkH = Math.max(28, Math.min(headerBudget, restPx * 0.85));
+
+      /* fit ink (not pad) inside header bar with a little air */
+      const headerBudget = Math.max(26, headerH * 0.58);
+      const targetInkH = Math.max(26, Math.min(headerBudget, restPx * 0.75));
       const fullInkH = inkHeightFrac * cssH;
       restScale =
         fullInkH > 1
-          ? Math.max(0.05, Math.min(0.2, targetInkH / fullInkH))
-          : Math.min(0.18, restPx / Math.max(maxPx, 1));
+          ? Math.max(0.04, Math.min(0.16, targetInkH / fullInkH))
+          : Math.min(0.14, restPx / Math.max(maxPx, 1));
 
       thrownMaxPx = maxPx;
       canvas.style.width = `${cssW}px`;
       canvas.style.height = `${cssH}px`;
+      canvas.style.left = "50%";
+      canvas.style.top = "50%";
+      canvas.style.transformOrigin = "50% 50%";
       canvas.style.willChange = "transform";
-      /* promote layer once */
       canvas.style.webkitBackfaceVisibility = "hidden";
       canvas.style.backfaceVisibility = "hidden";
-      applyCssScale(smoothP, 1);
-      /* first living frame */
+      canvas.style.position = "absolute";
+
+      root.style.setProperty(
+        "--splash-dock-w",
+        `${Math.max(36, cssW * restScale).toFixed(1)}px`
+      );
+      root.style.setProperty(
+        "--splash-dock-h",
+        `${Math.max(24, cssH * restScale).toFixed(1)}px`
+      );
+
+      lastAppliedP = -1;
+      applyCssScale(smoothP, true);
+
       if (!reduced) {
         glp.draw({
           time: performance.now() / 1000,
           p: smoothP,
-          liveAmp: 0.28 + 0.72 * (1 - smoothP),
+          liveAmp: mobile ? 0.35 : 0.28 + 0.72 * (1 - smoothP),
           optics,
           seed,
         });
@@ -260,79 +316,76 @@ export function mountThrowPlate(opts) {
 
   const scheduleDevelop = (why) => {
     clearTimeout(pendingThrow);
-    pendingThrow = setTimeout(() => {
-      if (!running) return;
-      refreshMetrics();
-      if (
-        thrownMaxPx > 0 &&
-        Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) < 0.04 &&
-        why !== "force"
-      ) {
-        return;
-      }
-      lastFull = performance.now();
-      fullDevelop();
-    }, why === "boot" ? 0 : 50);
+    pendingThrow = setTimeout(
+      () => {
+        if (!running) return;
+        refreshMetrics();
+        if (
+          thrownMaxPx > 0 &&
+          Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) < 0.04 &&
+          why !== "force"
+        ) {
+          return;
+        }
+        lastFull = performance.now();
+        fullDevelop();
+      },
+      why === "boot" ? 0 : 80
+    );
   };
 
   const loop = (ts) => {
-    if (!running) return;
+    if (!running || !loopLive) return;
     raf = requestAnimationFrame(loop);
 
-    const dt = lastTs ? Math.min(0.048, (ts - lastTs) / 1000) : 0.016;
+    const dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
     lastTs = ts;
 
     targetP = readTargetP();
     const prevP = smoothP;
-    /*
-     * Snappy follow — especially on touch. Lag made shrink feel "insane"
-     * even when the device could keep up with layout.
-     */
-    const snappiness = mobile ? 32 : 22;
-    const k = 1 - Math.exp(-dt * snappiness);
-    smoothP += (targetP - smoothP) * k;
-    /* snap when essentially there — avoids endless micro-lerp */
-    if (Math.abs(targetP - smoothP) < 0.0008) smoothP = targetP;
 
-    applyCssScale(smoothP, 1);
+    /* iOS: direct map — lag felt like jank even when GPU was fine */
+    if (mobile || reduced) {
+      smoothP = targetP;
+    } else {
+      const k = 1 - Math.exp(-dt * 26);
+      smoothP += (targetP - smoothP) * k;
+      if (Math.abs(targetP - smoothP) < 0.0006) smoothP = targetP;
+    }
+
+    applyCssScale(smoothP, false);
 
     const scrollY = window.scrollY || 0;
     const scrollDelta = Math.abs(scrollY - lastScrollY);
     lastScrollY = scrollY;
 
     const moving =
-      Math.abs(smoothP - prevP) > 0.0002 ||
-      Math.abs(targetP - smoothP) > 0.001 ||
-      scrollDelta > 0.5;
+      Math.abs(smoothP - prevP) > 0.00015 ||
+      Math.abs(targetP - smoothP) > 0.0008 ||
+      scrollDelta > 0.25;
 
     if (moving) {
       scrollIdleAt = ts;
-      document.documentElement.dataset.f00Scrolling = "1";
-    } else if (ts - scrollIdleAt > 140) {
-      if (document.documentElement.dataset.f00Scrolling === "1") {
-        document.documentElement.dataset.f00Scrolling = "0";
-      }
+      setScrollingFlag(true);
+    } else if (ts - scrollIdleAt > 120) {
+      setScrollingFlag(false);
     }
 
-    /*
-     * GPU budget:
-     *  - while finger is moving on mobile: pure CSS scale (0 GL)
-     *  - desktop scroll: ~20fps living
-     *  - idle hero: ~24fps mobile / 30fps desktop
-     *  - docked: ~10fps (still alive, cheap)
-     */
+    const docked = smoothP > 0.88;
+
+    /* GPU: mobile = still plate while scrolling; rare ticks when idle */
     if (projector && !reduced) {
-      const docked = smoothP > 0.88;
-      let interval = mobile ? 42 : 33;
-      if (moving) interval = mobile ? 1e9 : 50;
-      else if (docked) interval = mobile ? 100 : 80;
+      let interval = mobile ? 90 : 36;
+      if (moving) interval = mobile ? 1e12 : 55;
+      else if (docked) interval = mobile ? 160 : 90;
 
       if (ts - lastGlDraw >= interval) {
-        const liveAmp = 0.28 + 0.72 * (1 - smoothP);
         projector.draw({
           time: ts / 1000,
           p: smoothP,
-          liveAmp: moving ? liveAmp * 0.55 : liveAmp,
+          liveAmp: mobile
+            ? 0.22 + 0.35 * (1 - smoothP)
+            : 0.28 + 0.72 * (1 - smoothP),
           optics,
           seed,
         });
@@ -340,16 +393,51 @@ export function mountThrowPlate(opts) {
       }
     }
 
+    /*
+     * Mobile hard-docked + idle: stop the rAF pump entirely.
+     * Only after logo-docked so we never freeze mid-travel off-screen.
+     */
+    if (
+      mobile &&
+      root.classList.contains("logo-docked") &&
+      !moving &&
+      ts - scrollIdleAt > 280
+    ) {
+      loopLive = false;
+      setScrollingFlag(false);
+      return;
+    }
+
     if (
       !moving &&
       maxPx > 40 &&
       (thrownMaxPx < 40 ||
         Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) > 0.06) &&
-      performance.now() - lastFull > 280
+      performance.now() - lastFull > 400
     ) {
       refreshMetrics();
       scheduleDevelop("max-changed");
     }
+  };
+
+  const ensureLoop = () => {
+    if (!running || reduced) return;
+    if (loopLive) return;
+    loopLive = true;
+    lastTs = 0;
+    raf = requestAnimationFrame(loop);
+  };
+
+  const onScroll = () => {
+    /* kick loop; apply one scale immediately for first paint of the gesture */
+    targetP = readTargetP();
+    if (mobile) {
+      smoothP = targetP;
+      applyCssScale(smoothP, false);
+    }
+    setScrollingFlag(true);
+    scrollIdleAt = performance.now();
+    ensureLoop();
   };
 
   let resizeTimer = 0;
@@ -358,9 +446,14 @@ export function mountThrowPlate(opts) {
     resizeTimer = setTimeout(() => {
       refreshMetrics();
       scheduleDevelop("resize");
-    }, 140);
+      ensureLoop();
+    }, 160);
   };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onResize, { passive: true });
+  /* iOS momentum scroll often fires via touchmove more than scroll mid-gesture */
+  window.addEventListener("touchmove", onScroll, { passive: true });
 
   const start = async () => {
     refreshMetrics();
@@ -379,7 +472,7 @@ export function mountThrowPlate(opts) {
     lastFull = performance.now();
     scrollIdleAt = performance.now();
     if (!reduced) {
-      raf = requestAnimationFrame(loop);
+      ensureLoop();
     } else if (projector) {
       projector.draw({
         time: 0,
@@ -388,7 +481,7 @@ export function mountThrowPlate(opts) {
         optics,
         seed,
       });
-      applyCssScale(smoothP, 1);
+      applyCssScale(smoothP, true);
     }
   };
   start();
@@ -396,10 +489,13 @@ export function mountThrowPlate(opts) {
   return {
     destroy() {
       running = false;
+      loopLive = false;
       cancelAnimationFrame(raf);
       clearTimeout(pendingThrow);
       clearTimeout(resizeTimer);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("touchmove", onScroll);
       projector?.destroy();
       projector = null;
     },
@@ -427,6 +523,7 @@ const boot = () => {
   const handle = mountThrowPlate({
     canvas,
     splashEl: splash,
+    wrapEl: wrap,
     text: "f00",
     staticOnly: reduced,
     getP: null,

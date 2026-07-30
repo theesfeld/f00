@@ -125,7 +125,7 @@ header.top::before,
   z-index: 1;
   pointer-events: auto;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   max-width: var(--max);
@@ -138,30 +138,33 @@ header.top::before,
   box-shadow: none !important;
   background: transparent !important;
 }
+/*
+ * Hub film page: no text brand in the header.
+ * The living mark plants in the center on dock; nav sits end.
+ */
+html:has(.splash-frame) .brand {
+  display: none !important;
+}
+html:has(.splash-frame) .top-inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  justify-content: stretch;
+}
+html:has(.splash-frame) .nav {
+  grid-column: 2;
+  justify-self: end;
+}
 .brand {
   display: inline-flex;
   align-items: baseline;
   gap: 0.25rem;
   text-decoration: none;
   cursor: pointer;
-  /* keep hit target; text yields to film mark when docked */
   z-index: 2;
 }
 .brand-mark { font-size: 1.45rem; letter-spacing: 0.14em; }
 .brand-sub { letter-spacing: 0.14em; font-size: 0.8rem; }
-/* text brand yields once the film mark docks — class only, no per-frame --p layout */
-.brand-mark,
-.brand-sub {
-  opacity: 1;
-  transition: opacity 0.18s linear;
-}
-html.logo-docked .brand-mark,
-html.logo-docked .brand-sub {
-  opacity: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .brand-mark, .brand-sub { transition: none; }
-}
 .nav { display: flex; gap: 1.15rem; font-size: 0.82rem; letter-spacing: 0.14em; }
 .nav a {
   text-decoration: none;
@@ -226,14 +229,45 @@ html.logo-docked .splash-frame {
   align-items: center !important;
   justify-content: center !important;
   contain: layout style;
+  /* film park sits above header rule, centered in the bar */
+  z-index: 55 !important;
+  overflow: visible;
+  pointer-events: none !important;
 }
 .splash-wrap.is-film {
   max-width: min(100%, 92vw);
+  position: relative;
 }
+/*
+ * Docked: collapse the wrap to rest plate size so we are not flex-centering
+ * a 400px hero box inside a 64px header (that was the “sitting weird”).
+ */
 html.logo-docked .splash-wrap.is-film,
 .splash-frame.is-header-dock .splash-wrap.is-film {
-  /* rest-sized stick only — no hero max box in the header */
+  width: var(--splash-dock-w, 5.5rem);
+  height: var(--splash-dock-h, 2.35rem);
+  max-width: none;
+  max-height: calc(var(--header-h) * 0.85);
   line-height: 0;
+  overflow: visible;
+  flex: 0 0 auto;
+  pointer-events: auto;
+  cursor: pointer;
+}
+html.logo-docked .splash-wrap.is-film .splash,
+.splash-frame.is-header-dock .splash-wrap.is-film .splash {
+  /* measure stub only — never layout the giant max glyph into the header */
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  border: 0 !important;
+  font-size: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 .splash-frame::before { content: none !important; display: none !important; }
 

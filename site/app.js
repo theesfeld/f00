@@ -146,20 +146,21 @@
     document.body.appendChild(splashFrame);
   }
 
+  /* docked film mark is the home control (no text brand on hub) */
+  const filmHome = document.querySelector(".splash-wrap");
+  if (filmHome) {
+    filmHome.addEventListener("click", (e) => {
+      if (!root.classList.contains("logo-docked")) return;
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
   let lastDocked = null;
-  let lastPBucket = -1;
 
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
-    /*
-     * --p is no longer used for layout (height/top/font). Keep a coarse
-     * bucket for any remaining CSS hooks without writing every scroll px.
-     */
-    const bucket = Math.round(v * 20) / 20;
-    if (bucket !== lastPBucket) {
-      lastPBucket = bucket;
-      root.style.setProperty("--p", bucket.toFixed(2));
-    }
+    /* --p unused for layout; skip style writes on the scroll hot path */
     const docked = v > 0.88;
     if (docked !== lastDocked) {
       lastDocked = docked;
