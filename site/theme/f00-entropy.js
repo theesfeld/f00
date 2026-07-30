@@ -1,9 +1,11 @@
-/* f00 — projection entropy (org-wide)
+/* f00 — Projection Specimen Engine (org-wide)
  *
- * When a surface is projected onto the display, seed a unique specimen.
- * ORDER IN DISORDER: variance is never uniform (not one global blur, not
- * identical box offsets). Snowflakes / zebra / drip — same species, never
- * clones. Zen band: readable, usable. No metronome. No CAD perfection.
+ * GOAL: every surface projected onto the display is a unique organic throw.
+ * Header/footer rules, body type, cards, chrome — never CAD-perfect, never
+ * identical twins. Species remains f00; specimen is always new.
+ *
+ * Zen band: readable, usable, hittable. Order in disorder.
+ * Vocabulary: projection / throw / specimen — not “page load.”
  */
 (() => {
   if (typeof document === "undefined") return;
@@ -13,7 +15,7 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const root = document.documentElement;
 
-  /* crypto-backed seed for this throw — never persisted */
+  /* ── seed this throw (never persisted) ── */
   const seed = (() => {
     try {
       const a = new Uint32Array(2);
@@ -26,7 +28,6 @@
 
   let s = seed || 1;
   const rnd = () => {
-    /* mulberry32 */
     s |= 0;
     s = (s + 0x6d2b79f5) | 0;
     let t = Math.imul(s ^ (s >>> 15), 1 | s);
@@ -35,28 +36,94 @@
   };
   const range = (a, b) => a + (b - a) * rnd();
   const signed = (m) => range(-m, m);
-
   const set = (k, v) => root.style.setProperty(k, v);
 
-  /* —— field / emulsion / type (document specimen) —— */
-  const bgX = 50 + signed(4.2);
-  const bgY = 50 + signed(3.6);
-  const bgS = 1 + signed(0.018);
+  const chromeR = () => Math.round(range(200, 220));
+  const chromeG = () => Math.round(range(208, 222));
+  const chromeB = () => Math.round(range(214, 228));
+  const chromeA = (lo, hi) => range(lo, hi);
+
+  /* ── field specimen ── */
+  const bgX = 50 + signed(4.5);
+  const bgY = 50 + signed(3.8);
   set("--e-bg-x", `${bgX.toFixed(3)}%`);
   set("--e-bg-y", `${bgY.toFixed(3)}%`);
-  set("--e-bg-scale", bgS.toFixed(4));
-  /* type tracking: independent X-ish feel via tracking only (still readable) */
-  set("--e-track", `${signed(0.012).toFixed(4)}em`);
-  /* chrome rule: imperfect, not one global line weight for all edges */
-  set("--e-line-t", `${range(0.8, 1.25).toFixed(3)}px`);
-  set("--e-line-b", `${range(0.8, 1.25).toFixed(3)}px`);
-  set("--e-chrome-op", range(0.48, 0.72).toFixed(3));
-  set("--e-chrome-op-b", range(0.45, 0.7).toFixed(3));
-  set("--e-paper", range(0.96, 1.0).toFixed(4));
-  /* legacy single-line fallbacks */
+  set("--e-bg-scale", (1 + signed(0.02)).toFixed(4));
+  set("--e-track", `${signed(0.014).toFixed(4)}em`);
+  set("--e-word", `${signed(0.02).toFixed(4)}em`);
+  set("--e-paper", range(0.965, 1).toFixed(4));
+  set("--e-chrome-op", chromeA(0.48, 0.7).toFixed(3));
+  set("--e-chrome-op-b", chromeA(0.44, 0.68).toFixed(3));
+  set("--e-line-t", `${range(0.75, 1.3).toFixed(3)}px`);
+  set("--e-line-b", `${range(0.75, 1.3).toFixed(3)}px`);
   set("--e-line", `var(--e-line-b)`);
 
-  /* —— each box is its own organ under the skin (still grid-usable) —— */
+  /* ── imperfect emulsion RULE (never a CAD 1px collinear border) ── */
+  const rulePath = (segments) => {
+    const n = segments || 7 + Math.floor(rnd() * 6);
+    const mid = 1.2 + signed(0.15);
+    let d = `M 0 ${(mid + signed(0.55)).toFixed(3)}`;
+    for (let i = 1; i <= n; i++) {
+      const x = ((i / n) * 100).toFixed(3);
+      /* low-amp wander — species: a line; specimen: not straight */
+      const y = (mid + signed(0.65)).toFixed(3);
+      d += ` L ${x} ${y}`;
+    }
+    return d;
+  };
+
+  const makeRuleSvg = (opts) => {
+    const stroke = opts.stroke;
+    const sw = opts.width;
+    const d = rulePath(opts.segments);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "e-rule");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("viewBox", "0 0 100 2.5");
+    svg.innerHTML = `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+    return svg;
+  };
+
+  const attachRule = (el, side) => {
+    if (!el || el.dataset.f00Rule === "1") return;
+    el.dataset.f00Rule = "1";
+    el.classList.add("e-rule-host");
+    if (side === "top") el.classList.add("e-rule-top");
+    else el.classList.add("e-rule-bottom");
+    /* kill perfect border on this edge — SVG is the projected line */
+    if (side === "bottom") {
+      el.style.borderBottomColor = "transparent";
+      el.style.borderBottomWidth = "0";
+    } else {
+      el.style.borderTopColor = "transparent";
+      el.style.borderTopWidth = "0";
+    }
+    const a = side === "bottom"
+      ? chromeA(0.48, 0.72)
+      : chromeA(0.45, 0.7);
+    const r = chromeR();
+    const g = chromeG();
+    const b = chromeB();
+    const stroke = `rgba(${r},${g},${b},${a.toFixed(3)})`;
+    const width = range(0.9, 1.45).toFixed(2);
+    const svg = makeRuleSvg({ stroke, width, segments: 8 + Math.floor(rnd() * 7) });
+    el.appendChild(svg);
+  };
+
+  const ruleHosts = () => {
+    document.querySelectorAll(".top-inner, header.top .top-inner").forEach((el) => {
+      attachRule(el, "bottom");
+    });
+    document.querySelectorAll(".foot, footer, .site-footer").forEach((el) => {
+      attachRule(el, "top");
+    });
+    document.querySelectorAll(".section-head").forEach((el) => {
+      attachRule(el, "bottom");
+    });
+  };
+
+  /* ── boxes: each organ under the skin ── */
   const boxSel = [
     ".card",
     ".panel",
@@ -72,55 +139,116 @@
     ".announcement",
   ].join(",");
 
-  const paintBoxes = (rootEl) => {
-    rootEl.querySelectorAll(boxSel).forEach((el) => {
+  const paintBoxes = (scope) => {
+    scope.querySelectorAll(boxSel).forEach((el) => {
       if (el.dataset.f00EntropyBox === "1") return;
       el.dataset.f00EntropyBox = "1";
-      /* non-uniform: each edge of each box is its own slight throw */
-      el.style.setProperty("--e-rot", `${signed(0.28).toFixed(3)}deg`);
-      el.style.setProperty("--e-x", `${signed(1.8).toFixed(2)}px`);
-      el.style.setProperty("--e-y", `${signed(1.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-t", `${range(1.45, 2.55).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-r", `${range(1.45, 2.55).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-b", `${range(1.45, 2.55).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-l", `${range(1.45, 2.55).toFixed(2)}px`);
-      el.style.setProperty("--e-bw", `var(--e-bw-t)`); /* fallback */
+      el.style.setProperty("--e-rot", `${signed(0.32).toFixed(3)}deg`);
+      el.style.setProperty("--e-x", `${signed(2.0).toFixed(2)}px`);
+      el.style.setProperty("--e-y", `${signed(1.7).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-t", `${range(1.4, 2.6).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-r", `${range(1.4, 2.6).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-b", `${range(1.4, 2.6).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-l", `${range(1.4, 2.6).toFixed(2)}px`);
       el.style.setProperty("--e-op", range(0.97, 1).toFixed(4));
     });
   };
 
-  paintBoxes(document);
+  /* ── type: every text node-block is a slight specimen ── */
+  const typeSel = [
+    "p",
+    "li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "label",
+    "td",
+    "th",
+    ".lede",
+    ".howto",
+    ".blurb",
+    ".brand-mark",
+    ".brand-sub",
+    ".nav a",
+    ".section-head h2",
+    ".card-meta",
+    ".facts",
+    ".btn",
+    ".foot",
+    ".foot a",
+    ".foot-stars",
+    "code",
+    "pre",
+  ].join(",");
 
-  /* SPA / catalog cards painted later */
+  const paintType = (scope) => {
+    scope.querySelectorAll(typeSel).forEach((el) => {
+      if (el.dataset.f00EntropyType === "1") return;
+      /* skip WebGL-hidden splash glyphs */
+      if (el.closest && el.closest(".splash-wrap.is-film .splash")) return;
+      if (el.classList && el.classList.contains("glyph")) return;
+      el.dataset.f00EntropyType = "1";
+      el.style.setProperty("--e-t-track", `${signed(0.016).toFixed(4)}em`);
+      el.style.setProperty("--e-t-word", `${signed(0.028).toFixed(4)}em`);
+      /* baseline: tiny optical seat, not layout reflow */
+      el.style.setProperty("--e-t-y", `${signed(0.35).toFixed(2)}px`);
+      el.style.setProperty("--e-t-op", range(0.94, 1).toFixed(4));
+    });
+  };
+
+  /* ── chrome bits ── */
+  const paintChrome = (scope) => {
+    scope.querySelectorAll(".brand, .nav, .top-inner, .foot").forEach((el) => {
+      if (el.dataset.f00EntropyChrome === "1") return;
+      el.dataset.f00EntropyChrome = "1";
+      el.style.setProperty("--e-ch-y", `${signed(0.4).toFixed(2)}px`);
+      el.style.setProperty("--e-ch-track", `${signed(0.02).toFixed(4)}em`);
+    });
+  };
+
+  const paintAll = (scope) => {
+    const sc = scope || document;
+    paintBoxes(sc);
+    paintType(sc);
+    paintChrome(sc);
+  };
+
+  ruleHosts();
+  paintAll(document);
+
   const mo = new MutationObserver((muts) => {
     for (const m of muts) {
       m.addedNodes.forEach((n) => {
         if (n.nodeType !== 1) return;
-        if (n.matches && n.matches(boxSel)) paintBoxes(n.parentNode || document);
-        else if (n.querySelectorAll) paintBoxes(n);
+        paintAll(n);
+        if (n.matches && (n.matches(".section-head") || n.matches(".foot") || n.matches(".top-inner"))) {
+          ruleHosts();
+        }
+        if (n.querySelectorAll) {
+          if (n.querySelector(".section-head, .foot, .top-inner")) ruleHosts();
+        }
       });
     }
   });
   mo.observe(document.documentElement, { childList: true, subtree: true });
 
-  /* continuous field air only — never jumps cards under the cursor */
+  /* continuous field air only */
   if (!reduced) {
     let bx = bgX;
     let by = bgY;
     let t0 = performance.now();
     let last = t0;
-    /* independent slow phases (not a metronome loop length) */
     const p1 = range(0.05, 0.12);
     const p2 = range(0.07, 0.15);
     const p3 = range(0.03, 0.09);
-    const a1 = range(0.35, 0.9);
-    const a2 = range(0.25, 0.7);
+    const a1 = range(0.35, 0.95);
+    const a2 = range(0.25, 0.75);
 
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const t = (now - t0) / 1000;
-      /* organic walk toward a moving attractor */
       const tx = bgX + Math.sin(t * p1) * a1 + Math.sin(t * p3 * 1.7) * a2 * 0.4;
       const ty = bgY + Math.cos(t * p2) * a2 + Math.sin(t * p1 * 0.6) * a1 * 0.35;
       bx += (tx - bx) * Math.min(1, dt * 0.35);

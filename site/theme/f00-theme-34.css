@@ -794,39 +794,67 @@ html body {
 
 /* f00-theme-34.css dye-cream-v32 */
 
-/* ════════ PROJECTION ENTROPY (zen band) ════════
-   Set by https://f00.sh/theme/f00-entropy.js when a surface is projected.
-   Never CAD-perfect boxes/lines/field; never unreadable chaos.
+/* ════════ PROJECTION SPECIMEN ENGINE (zen band) ════════
+   https://f00.sh/theme/f00-entropy.js — every object is a throw.
+   Order in disorder. Never CAD-perfect lines/type/boxes.
 */
 :root {
   --e-bg-x: 50%;
   --e-bg-y: 50%;
   --e-bg-scale: 1;
   --e-track: 0em;
+  --e-word: 0em;
   --e-line: 1px;
+  --e-line-t: 1px;
+  --e-line-b: 1px;
   --e-chrome-op: 0.62;
+  --e-chrome-op-b: 0.58;
   --e-paper: 1;
 }
 
 html, body {
   letter-spacing: calc(var(--f00-tracking-body) + var(--e-track, 0em)) !important;
-  /* emulsion seat in the gate — never exact center, never exact scale twin */
+  word-spacing: var(--e-word, 0em);
   background-position: var(--e-bg-x) var(--e-bg-y) !important;
   background-size: cover !important;
 }
 
-/* chrome rules — imperfect, NON-UNIFORM (header ≠ footer weight/opacity) */
-header, .site-header, .top, .nav-shell, .header-inner,
-.site-header, .top {
-  border-bottom-width: var(--e-line-t, var(--e-line, 1px)) !important;
+/* theme full-bleed rules — entropy may still tint; SVG rules replace host borders */
+header, .site-header, .top, .nav-shell, .header-inner {
   border-bottom-color: rgba(208, 213, 219, var(--e-chrome-op)) !important;
 }
 footer, .site-footer, .foot {
-  border-top-width: var(--e-line-b, var(--e-line, 1px)) !important;
   border-top-color: rgba(208, 213, 219, var(--e-chrome-op-b, var(--e-chrome-op))) !important;
 }
-.section-head, hr {
-  border-bottom-width: var(--e-line-b, var(--e-line, 1px)) !important;
+
+/* imperfect emulsion RULE — SVG path, never a perfect collinear border */
+.e-rule-host {
+  position: relative !important;
+}
+.e-rule-host > .e-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 3px;
+  pointer-events: none;
+  z-index: 3;
+  overflow: visible;
+  display: block;
+}
+.e-rule-host.e-rule-bottom > .e-rule {
+  bottom: 0;
+  transform: translateY(50%);
+}
+.e-rule-host.e-rule-top > .e-rule {
+  top: 0;
+  transform: translateY(-50%);
+}
+.e-rule-host.e-rule-bottom {
+  border-bottom: 0 !important;
+}
+.e-rule-host.e-rule-top {
+  border-top: 0 !important;
 }
 
 /* hospital boxes — each edge its own organ; still grid-usable */
@@ -845,16 +873,29 @@ article.card, .feature-card, .doc-card, .install-card,
   background-color: rgba(232, 223, 212, var(--e-paper, 1)) !important;
 }
 
-/* type: never identical tracking between throws; still legible */
-p, li, label, .lede, .howto, .blurb, td, th {
-  letter-spacing: calc(var(--f00-tracking-body) + var(--e-track, 0em));
+/* type specimen — tracking/word/baseline iota; still legible */
+p, li, label, .lede, .howto, .blurb, td, th,
+h1, h2, h3, h4, .brand-mark, .brand-sub, .nav a,
+.section-head h2, .card-meta, .facts, .btn, .foot, .foot a,
+.foot-stars, code, pre {
+  letter-spacing: calc(var(--f00-tracking-body, 0.02em) + var(--e-t-track, var(--e-track, 0em)));
+  word-spacing: var(--e-t-word, var(--e-word, 0em));
+  position: relative;
+  top: var(--e-t-y, 0px);
+  opacity: var(--e-t-op, 1);
+}
+.brand-mark, .brand-sub, .nav a {
+  letter-spacing: calc(var(--f00-tracking-chip, 0.12em) + var(--e-t-track, 0em) + var(--e-ch-track, 0em));
+}
+.brand, .nav, .top-inner, .foot {
+  position: relative;
+  top: var(--e-ch-y, 0px);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card, .panel, .box, .f00-box,
   article.card, .feature-card, .doc-card, .install-card,
   .benchmark-card, .tool-card, .release-card, .announcement {
-    /* still unique rot/shift from entropy.js; no animated field */
     will-change: auto;
   }
 }

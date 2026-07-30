@@ -85,9 +85,9 @@ header.top::before,
   width: 100%;
   margin: 0 auto;
   padding: 0.95rem var(--pad);
-  /* THE only header rule — content width like footer */
+  /* rule is projected SVG (.e-rule) — never a CAD 1px collinear border */
   border: 0 !important;
-  border-bottom: 1px solid rgba(208, 213, 219, 0.62) !important;
+  border-bottom: 0 !important;
   box-shadow: none !important;
   background: transparent !important;
 }
