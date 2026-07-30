@@ -195,9 +195,9 @@
       "packages": null,
       "local": "joule",
       "license": "MIT",
-      "one_liner": "Decentralized mesh supercomputer: pool idle GPUs into open-weight AI inference (Kimi-class)",
+      "one_liner": "Distributed internet-wide supercomputer cluster: pool idle GPUs into open-weight AI inference (Kimi-class)",
       "docs": null,
-      "blurb": "Donate idle GPU cycles to an open mesh. Earn millijoules. Run open-weight models (Kimi-class) with multi-node placement. Access only if you contribute.",
+      "blurb": "Donate idle GPU cycles to a global volunteer cluster. Earn millijoules. Live dashboard of pool capacity. Open-weight models (Kimi-class). Access only if you contribute.",
       "facts": []
     }
   ]
