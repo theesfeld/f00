@@ -934,8 +934,12 @@ label.f00-proj, .lede.f00-proj, .blurb.f00-proj, .brand-mark.f00-proj,
 }
 
 .splash-wrap.f00-proj {
-  /* plate projection: same stack as every other object */
   z-index: 6;
+}
+/* film plate owns motion — entropy must not transform the wrap */
+.splash-wrap.is-film.f00-proj {
+  transform: none !important;
+  will-change: auto !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

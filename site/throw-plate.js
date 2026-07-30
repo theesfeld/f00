@@ -1,8 +1,7 @@
-/* f00 hub splash — throw at REAL max size, live with CSS
+/* f00 hub splash — throw once at max, butter-smooth CSS scale on scroll
  *
- * Develop+project once at optical max. Scroll = CSS scale + soft pose.
- * Re-throw when --splash-max lands (app measures after boot) — never stuck
- * at the CSS fallback ~18rem.
+ * Layout size stays locked at max (no font-size reflow).
+ * Scroll drives a lerped p → pure GPU transform. Never re-raster mid-scroll.
  */
 import {
   throwTextPlate,
@@ -27,41 +26,63 @@ export function mountThrowPlate(opts) {
   let cache = null;
   let busy = false;
   let lastFull = 0;
-  let lastScrollP = -1;
-  let scrollIdleAt = 0;
   let lastIdleRep = 0;
+  let scrollIdleAt = 0;
   let thrownMaxPx = 0;
   let pendingThrow = 0;
+
+  /* cached metrics — no getComputedStyle in the hot path */
+  let maxPx = 120;
+  let restPx = 56;
+  let shrinkRange = 400;
+
+  /* smoothed progress — kills discrete scroll-tick jumps */
+  let smoothP = 0;
+  let smoothOp = 1;
+  let targetP = 0;
+  let targetOp = 1;
 
   const fontFamily =
     opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
 
-  const readP = () => {
-    if (opts.getP) return opts.getP();
-    const v = parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("--p")
-    );
-    return Number.isFinite(v) ? v : 0;
+  const refreshMetrics = () => {
+    const root = document.documentElement;
+    const cs = getComputedStyle(root);
+    const m = parseFloat(cs.getPropertyValue("--splash-max"));
+    const r = parseFloat(cs.getPropertyValue("--splash-rest"));
+    const sh = parseFloat(cs.getPropertyValue("--shrink-range"));
+    if (Number.isFinite(m) && m > 24) maxPx = m;
+    if (Number.isFinite(r) && r > 8) restPx = r;
+    if (Number.isFinite(sh) && sh > 32) shrinkRange = sh;
+    else shrinkRange = Math.max(64, (maxPx - restPx) * 0.86);
   };
 
-  const measureCss = () => {
-    const fontPx = opts.getFontPx?.() || 120;
-    const root = document.documentElement;
-    const maxPx =
-      parseFloat(getComputedStyle(root).getPropertyValue("--splash-max")) ||
-      fontPx;
-    const restPx =
-      parseFloat(getComputedStyle(root).getPropertyValue("--splash-rest")) ||
-      fontPx * 0.35;
-    return { fontPx, maxPx, restPx };
+  const readTargetP = () => {
+    if (opts.getP) {
+      const v = opts.getP();
+      if (Number.isFinite(v)) return Math.max(0, Math.min(1, v));
+    }
+    /* direct from scroll — no CSS lag */
+    const y = window.scrollY || 0;
+    return Math.max(0, Math.min(1, y / Math.max(shrinkRange, 1)));
+  };
+
+  const readTargetOp = () => {
+    if (opts.getOpacity) {
+      const v = opts.getOpacity();
+      if (Number.isFinite(v)) return Math.max(0, Math.min(1, v));
+    }
+    const y = window.scrollY || 0;
+    if (y <= shrinkRange) return 1;
+    const restH = restPx * 0.84;
+    const fadeDist = Math.max(72, restH * 0.95);
+    return Math.max(0, 1 - (y - shrinkRange) / fadeDist);
   };
 
   /**
-   * CSS pose: scale from max→rest with p + gentle organic breath.
-   * Canvas is drawn at max; scale only shrinks — never re-raster on scroll.
+   * GPU-only pose. Scale is the scroll story; breath is slow + tiny.
    */
-  const applyLivePose = (p, time) => {
-    const { maxPx, restPx } = measureCss();
+  const applyLivePose = (p, op, time) => {
     const pp = Math.max(0, Math.min(1, p));
     const s =
       maxPx > 0
@@ -69,39 +90,33 @@ export function mountThrowPlate(opts) {
         : 1 - pp * 0.55;
     const scale = Math.max(0.12, Math.min(1.05, s));
 
-    const breath = 0.22 + 0.78 * (1 - pp);
+    /* slow organic drift — never high-frequency jitter */
+    const breath = 0.18 + 0.55 * (1 - pp);
     const t = time || 0;
-    const phase = t * 0.31 + pp * 1.7;
-    const ox = Math.sin(phase) * 0.55 * breath + Math.sin(pp * 2.4) * 0.35;
-    const oy = Math.cos(phase * 0.87) * 0.4 * breath + Math.sin(pp * 1.9) * 0.2;
-    const rot =
-      Math.sin(phase * 0.45 + seed * 1e-9) * 0.22 * breath +
-      Math.sin(pp * 1.3) * 0.12;
-    const skewX =
-      Math.sin(phase * 0.21) * 0.18 * breath + Math.cos(pp * 2.1) * 0.08;
+    const phase = t * 0.18; /* ~slow */
+    const ox = Math.sin(phase) * 0.35 * breath;
+    const oy = Math.cos(phase * 0.91) * 0.25 * breath;
+    const rot = Math.sin(phase * 0.37 + seed * 1e-9) * 0.12 * breath;
 
-    canvas.style.transformOrigin = "50% 0%";
     canvas.style.transform = [
-      "translate(-50%, 0)",
-      `scale(${scale.toFixed(4)})`,
-      `translate(${ox.toFixed(2)}px, ${oy.toFixed(2)}px)`,
-      `rotate(${rot.toFixed(3)}deg)`,
-      `skewX(${skewX.toFixed(3)}deg)`,
+      "translate3d(-50%, 0, 0)",
+      `scale3d(${scale.toFixed(5)}, ${scale.toFixed(5)}, 1)`,
+      `translate3d(${ox.toFixed(3)}px, ${oy.toFixed(3)}px, 0)`,
+      `rotate(${rot.toFixed(4)}deg)`,
     ].join(" ");
+    canvas.style.opacity = String(op);
     canvas.dataset.throwScale = String(scale);
-    canvas.dataset.throwP = String(pp.toFixed(3));
+    canvas.dataset.throwP = String(pp.toFixed(4));
   };
 
   const fullThrow = async (time) => {
     if (busy) return;
     busy = true;
     try {
-      const { maxPx } = measureCss();
+      refreshMetrics();
       if (!(maxPx > 24)) return;
 
-      /* size plate from measured max — ignore early small splash rect */
       const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-      /* glyph box ≈ 1.3×w × 0.86×h of font; light pad for film fringe only */
       const layoutW = maxPx * 1.4;
       const layoutH = maxPx * 0.9;
       const padX = Math.max(18, layoutW * 0.08);
@@ -109,7 +124,6 @@ export function mountThrowPlate(opts) {
       const cssW = Math.ceil(layoutW + padX * 2);
       const cssH = Math.ceil(layoutH + padY * 2);
 
-      /* raster cap — CSS size stays full so scale looks correct */
       const maxEdge = 1000;
       let w = Math.floor(cssW * dpr);
       let h = Math.floor(cssH * dpr);
@@ -154,7 +168,9 @@ export function mountThrowPlate(opts) {
       canvas.style.height = `${cssH}px`;
       canvas.style.left = "50%";
       canvas.style.top = "0";
-      applyLivePose(readP(), time || 0);
+      canvas.style.transformOrigin = "50% 0%";
+      canvas.style.willChange = "transform, opacity";
+      applyLivePose(smoothP, smoothOp, time || 0);
     } finally {
       busy = false;
     }
@@ -164,87 +180,118 @@ export function mountThrowPlate(opts) {
     clearTimeout(pendingThrow);
     pendingThrow = setTimeout(() => {
       if (!running) return;
-      const { maxPx } = measureCss();
+      refreshMetrics();
       if (
         thrownMaxPx > 0 &&
-        Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) < 0.04
+        Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) < 0.04 &&
+        why !== "force"
       ) {
-        return; /* already at this size */
+        return;
       }
       lastFull = performance.now();
       fullThrow(performance.now() / 1000);
-    }, why === "boot" ? 0 : 40);
+    }, why === "boot" ? 0 : 50);
   };
 
-  const idleReproject = (time, p) => {
-    if (!cache || busy || reduced) return;
-    const liveAmp = 0.25 + 0.55 * (1 - Math.max(0, Math.min(1, p)));
-    const result = reprojectPlate(
-      cache.density,
-      cache.w,
-      cache.h,
-      cache.optics,
-      seed,
-      time,
-      liveAmp
-    );
-    displayToCanvas(canvas, result);
-  };
-
+  let lastTs = 0;
   const loop = (ts) => {
     if (!running) return;
     raf = requestAnimationFrame(loop);
-    const p = readP();
-    const t = ts / 1000;
-    applyLivePose(p, t);
 
-    /* catch app.js measure landing after our first throw */
-    const { maxPx } = measureCss();
+    const dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
+    lastTs = ts;
+
+    targetP = readTargetP();
+    targetOp = readTargetOp();
+
+    /* exp lerp — higher when catching up fast scroll, still smooth */
+    const k = 1 - Math.exp(-dt * 14); /* ~snappy but not snapped */
+    const prevP = smoothP;
+    smoothP += (targetP - smoothP) * k;
+    smoothOp += (targetOp - smoothOp) * k;
+    /* snap when essentially there — avoid eternal micro-drift */
+    if (Math.abs(targetP - smoothP) < 0.0004) smoothP = targetP;
+    if (Math.abs(targetOp - smoothOp) < 0.001) smoothOp = targetOp;
+
+    applyLivePose(smoothP, smoothOp, ts / 1000);
+
+    /* signal scroll activity for entropy / others */
+    const moving = Math.abs(smoothP - prevP) > 0.0002 || Math.abs(targetP - smoothP) > 0.002;
+    if (moving) {
+      scrollIdleAt = ts;
+      document.documentElement.dataset.f00Scrolling = "1";
+    } else if (ts - scrollIdleAt > 140) {
+      if (document.documentElement.dataset.f00Scrolling === "1") {
+        document.documentElement.dataset.f00Scrolling = "0";
+      }
+    }
+
+    /* re-throw only if measured max jumped (not on scroll) */
     if (
+      !moving &&
       maxPx > 40 &&
       (thrownMaxPx < 40 ||
-        Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) > 0.06)
+        Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) > 0.06) &&
+      performance.now() - lastFull > 240
     ) {
-      if (performance.now() - lastFull > 180) scheduleThrow("max-changed");
+      refreshMetrics();
+      scheduleThrow("max-changed");
     }
 
-    if (Math.abs(p - lastScrollP) > 0.002) {
-      lastScrollP = p;
-      scrollIdleAt = ts;
-    } else if (
+    /* living light only after full settle — never during motion */
+    if (
       !reduced &&
       cache &&
-      ts - scrollIdleAt > 280 &&
-      ts - lastIdleRep > 900
+      !busy &&
+      !moving &&
+      ts - scrollIdleAt > 1200 &&
+      ts - lastIdleRep > 2500
     ) {
       lastIdleRep = ts;
-      idleReproject(t, p);
+      const liveAmp = 0.2 + 0.45 * (1 - smoothP);
+      const result = reprojectPlate(
+        cache.density,
+        cache.w,
+        cache.h,
+        cache.optics,
+        seed,
+        ts / 1000,
+        liveAmp
+      );
+      displayToCanvas(canvas, result);
     }
-
-    const op = opts.getOpacity?.() ?? 1;
-    canvas.style.opacity = String(Math.max(0, Math.min(1, op)));
   };
 
   let resizeTimer = 0;
   const onResize = () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => scheduleThrow("resize"), 120);
+    resizeTimer = setTimeout(() => {
+      refreshMetrics();
+      scheduleThrow("resize");
+    }, 140);
   };
   window.addEventListener("resize", onResize, { passive: true });
 
   const start = async () => {
+    refreshMetrics();
     if (document.fonts?.ready) {
       try {
         await document.fonts.ready;
       } catch (_) {}
     }
-    /* wait one frame so app.js measure can set --splash-max */
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await new Promise((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(r))
+    );
+    refreshMetrics();
+    targetP = readTargetP();
+    smoothP = targetP;
+    targetOp = readTargetOp();
+    smoothOp = targetOp;
     await fullThrow(0);
     lastFull = performance.now();
     scrollIdleAt = performance.now();
     if (!reduced) raf = requestAnimationFrame(loop);
-    else applyLivePose(readP(), 0);
+    else applyLivePose(smoothP, smoothOp, 0);
   };
   start();
 
@@ -257,6 +304,7 @@ export function mountThrowPlate(opts) {
       window.removeEventListener("resize", onResize);
     },
     resize() {
+      refreshMetrics();
       scheduleThrow("resize");
     },
     rethrow() {
@@ -285,18 +333,9 @@ const boot = () => {
       const fs = parseFloat(getComputedStyle(splash).fontSize);
       return Number.isFinite(fs) ? fs : 120;
     },
-    getP: () => {
-      const v = parseFloat(
-        getComputedStyle(document.documentElement).getPropertyValue("--p")
-      );
-      return Number.isFinite(v) ? v : 0;
-    },
-    getOpacity: () => {
-      const v = parseFloat(
-        getComputedStyle(document.documentElement).getPropertyValue("--dock-op")
-      );
-      return Number.isFinite(v) ? v : 1;
-    },
+    /* live scroll math inside plate — no CSS-var lag */
+    getP: null,
+    getOpacity: null,
   });
   if (handle) wrap.classList.add("is-film");
   window.__f00ThrowHandle = handle;

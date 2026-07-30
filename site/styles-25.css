@@ -160,7 +160,7 @@ main {
   position: absolute;
   left: 50%;
   top: 0;
-  transform: translate(-50%, 0);
+  transform: translate3d(-50%, 0, 0);
   transform-origin: 50% 0%;
   z-index: 2;
   pointer-events: none;
@@ -169,11 +169,24 @@ main {
   filter: none !important;
   mix-blend-mode: normal;
   will-change: transform, opacity;
+  backface-visibility: hidden;
+  contain: layout style;
 }
 .splash-wrap.is-film .splash-film {
   display: block;
 }
-/* DOM mark holds layout + a11y; invisible when shader plate is live */
+/* film plate: lock layout at MAX — no font-size reflow on scroll (jank killer) */
+.splash-wrap.is-film {
+  transform: none !important; /* never fight plate with entropy pose */
+  will-change: auto;
+}
+.splash-wrap.is-film .splash {
+  font-size: var(--splash-max) !important;
+  color: transparent !important;
+  text-shadow: none !important;
+  animation: none !important;
+  transition: none !important;
+}
 .splash-wrap.is-film .splash,
 .splash-wrap.is-film .splash .glyph {
   color: transparent !important;

@@ -483,13 +483,18 @@
   if (!reduced) {
     let t0 = performance.now();
     let last = t0;
+    let frame = 0;
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const t = (now - t0) / 1000;
+      frame++;
+
+      /* while logo scroll is live, don't thrash the main thread with poses */
+      const scrolling = root.dataset.f00Scrolling === "1";
 
       const field = projections.get(root);
-      if (field?.role === "field") {
+      if (field?.role === "field" && !scrolling) {
         const tx =
           field.bgX +
           Math.sin(t * field.p1) * field.a1 +
@@ -504,17 +509,21 @@
         root.style.setProperty("--e-bg-y", `${field.by.toFixed(3)}%`);
       }
 
-      projections.forEach((p) => {
-        if (p.role === "field") return;
-        p.phi += dt * p.omega;
-        p.liveGateX = Math.sin(p.phi) * p.ampGate;
-        p.liveGateY = Math.cos(p.phi * 0.93) * p.ampGate * 0.85;
-        p.liveTiltX = Math.sin(p.phi * 0.41) * p.ampTilt;
-        p.liveTiltY = Math.cos(p.phi * 0.37) * p.ampTilt;
-        p.liveDef = (0.5 + 0.5 * Math.sin(p.phi * 0.55)) * p.ampDef;
-        p.liveRot = Math.sin(p.phi * 0.29) * p.ampRot;
-        applyProjectionCSS(p);
-      });
+      /* ~20fps pose updates when idle; skip plate/splash; skip while scrolling */
+      if (!scrolling && frame % 3 === 0) {
+        projections.forEach((p) => {
+          if (p.role === "field" || p.role === "plate") return;
+          if (p.el?.classList?.contains("splash-wrap")) return;
+          p.phi += dt * p.omega * 3; /* compensate for 3-frame step */
+          p.liveGateX = Math.sin(p.phi) * p.ampGate;
+          p.liveGateY = Math.cos(p.phi * 0.93) * p.ampGate * 0.85;
+          p.liveTiltX = Math.sin(p.phi * 0.41) * p.ampTilt;
+          p.liveTiltY = Math.cos(p.phi * 0.37) * p.ampTilt;
+          p.liveDef = (0.5 + 0.5 * Math.sin(p.phi * 0.55)) * p.ampDef;
+          p.liveRot = Math.sin(p.phi * 0.29) * p.ampRot;
+          applyProjectionCSS(p);
+        });
+      }
 
       requestAnimationFrame(tick);
     };

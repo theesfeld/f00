@@ -137,12 +137,13 @@
      *   with splashH ≈ maxH − scrollY → bottom gap stays `gap`
      */
     shrinkRange = Math.max(64, splashMaxH - splashRestH);
+    root.style.setProperty("--shrink-range", `${shrinkRange.toFixed(1)}px`);
     notifyThrow();
   };
 
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
-    root.style.setProperty("--p", v.toFixed(4));
+    root.style.setProperty("--p", v.toFixed(5));
     if (hero) {
       hero.classList.toggle("is-done", v > 0.98);
       hero.classList.add("is-live");
@@ -151,8 +152,8 @@
 
   const setDock = (yPx, op) => {
     dockOp = Math.max(0, Math.min(1, op));
-    root.style.setProperty("--dock-y", `${yPx.toFixed(1)}px`);
-    root.style.setProperty("--dock-op", dockOp.toFixed(3));
+    root.style.setProperty("--dock-y", `${yPx.toFixed(2)}px`);
+    root.style.setProperty("--dock-op", dockOp.toFixed(4));
   };
 
   const updateHeroScroll = () => {
@@ -164,7 +165,7 @@
     const y = window.scrollY;
     if (y <= shrinkRange) {
       /* phase 1: shrink UP under header; body gap constant */
-      setProgress(y / shrinkRange);
+      setProgress(y / Math.max(shrinkRange, 1));
       setDock(0, 1);
       return;
     }
@@ -180,6 +181,7 @@
   };
 
   if (splash) {
+    /* rAF scroll — one update per frame, no scroll-event storms */
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
