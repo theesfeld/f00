@@ -21,21 +21,24 @@ README_PATH = ROOT / "README.md"
 AGENTS_PATH = ROOT / "AGENTS.md"
 INDEX_PATH = ROOT / "site" / "index.html"
 
-BEGIN = "<!-- f00-catalog:products:begin -->"
-END = "<!-- f00-catalog:products:end -->"
+BEGIN = "<!-- f00-catalog:projects:begin -->"
+END = "<!-- f00-catalog:projects:end -->"
 
 
 def load_catalog() -> dict:
     data = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
-    if not isinstance(data.get("products"), list):
-        raise SystemExit("catalog.json: missing products[]")
+    if not isinstance(data.get("projects"), list):
+        if isinstance(data.get("products"), list):
+            data["projects"] = data["products"]
+        else:
+            raise SystemExit("catalog.json: missing projects[]")
     if not data.get("theme", {}).get("css"):
         raise SystemExit("catalog.json: missing theme.css")
     return data
 
 
-def released(products: list[dict]) -> list[dict]:
-    return [p for p in products if p.get("status") == "released"]
+def released(projects: list[dict]) -> list[dict]:
+    return [p for p in projects if p.get("status") == "released"]
 
 
 def escape_attr(s: str) -> str:
@@ -69,7 +72,7 @@ def card_html(p: dict) -> str:
         docs_btn = (
             f'\n            <a class="btn ghost sm" href="{escape_attr(docs)}">docs</a>'
         )
-    return f"""        <article class="card" data-product="{escape_attr(p.get('id', ''))}">
+    return f"""        <article class="card" data-project="{escape_attr(p.get('id', ''))}">
           <div class="card-meta mono">{escape_attr(domain)}</div>
           <h3>{escape_attr(name)}</h3>
           <p>
@@ -82,9 +85,9 @@ def card_html(p: dict) -> str:
         </article>"""
 
 
-def products_grid_html(products: list[dict]) -> str:
-    cards = "\n\n".join(card_html(p) for p in released(products))
-    return f"""      <div class="grid" id="product-grid" data-from-catalog="1">
+def projects_grid_html(projects: list[dict]) -> str:
+    cards = "\n\n".join(card_html(p) for p in released(projects))
+    return f"""      <div class="grid" id="project-grid" data-from-catalog="1">
 {BEGIN}
 {cards}
 {END}
@@ -93,7 +96,7 @@ def products_grid_html(products: list[dict]) -> str:
 
 def patch_index(catalog: dict) -> None:
     html = INDEX_PATH.read_text(encoding="utf-8")
-    grid = products_grid_html(catalog["products"])
+    grid = projects_grid_html(catalog["projects"])
 
     # Prefer stable marker replace when present.
     if BEGIN in html and END in html:
@@ -111,17 +114,17 @@ def patch_index(catalog: dict) -> None:
         html = pattern.sub(grid, html, count=1)
     else:
         pattern = re.compile(
-            r'(<section class="products" id="products">.*?</header>\s*)'
+            r'(<section class="projects" id="projects">.*?</header>\s*)'
             r'<div class="grid".*?</div>\s*'
             r'(</section>)',
             re.S,
         )
         if not pattern.search(html):
-            raise SystemExit("index.html: could not find products .grid to replace")
+            raise SystemExit("index.html: could not find projects .grid to replace")
         html = pattern.sub(rf"\1{grid}\n    \2", html, count=1)
 
     # Meta description from released names
-    names = ", ".join(p["name"] for p in released(catalog["products"]))
+    names = ", ".join(p["name"] for p in released(catalog["projects"]))
     html = re.sub(
         r'(<meta name="description" content=")[^"]*(" />)',
         rf'\1f00: freestanding tools that feel inevitable. {names}.\2',
@@ -134,7 +137,7 @@ def patch_index(catalog: dict) -> None:
 
 def patch_readme(catalog: dict) -> None:
     rows = []
-    for p in released(catalog["products"]):
+    for p in released(catalog["projects"]):
         name = p["name"]
         site = p.get("site") or ""
         domain = p.get("domain") or site
@@ -153,7 +156,7 @@ def patch_readme(catalog: dict) -> None:
             *rows,
         ]
     )
-    block = f"""## Products
+    block = f"""## Projects
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
 > **Theme (ONE shared CSS):** [{theme}]({theme}) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Product CSS = layout only.
@@ -164,20 +167,20 @@ _After editing `catalog.json`, run `python3 scripts/sync-from-catalog.py`._
 """
     text = README_PATH.read_text(encoding="utf-8")
     text2, n = re.subn(
-        r"## Products\n.*?(?=\n## )",
+        r"## Projects\n.*?(?=\n## )",
         block + "\n",
         text,
         count=1,
         flags=re.S,
     )
     if n != 1:
-        raise SystemExit("README.md: could not find ## Products section")
+        raise SystemExit("README.md: could not find ## Projects section")
     README_PATH.write_text(text2, encoding="utf-8")
     print(f"updated {README_PATH.relative_to(ROOT)}")
 
 
 def patch_agents(catalog: dict) -> None:
-    released_p = released(catalog["products"])
+    released_p = released(catalog["projects"])
     domain_bits = ["`f00.sh` hub"]
     for p in released_p:
         if p.get("domain"):
@@ -187,7 +190,7 @@ def patch_agents(catalog: dict) -> None:
 
     theme_css = catalog["theme"]["css"]
     rows = []
-    for p in catalog["products"]:
+    for p in catalog["projects"]:
         local = p.get("local") or "—"
         site = p.get("site") or "—"
         packages = p.get("packages") or "n/a"
@@ -210,7 +213,7 @@ Then run:
 python3 scripts/sync-from-catalog.py
 ```
 
-That regenerates hub product cards, this table, and README products.
+That regenerates hub product cards, this table, and README projects.
 
 | Field | URL / path |
 |-------|------------|
@@ -220,7 +223,7 @@ That regenerates hub product cards, this table, and README products.
 
 `$PROJECTS` is the developer machines' projects root (here: `/home/glenda/Projects`).
 
-| Product | Status | Path (local) | Site | Packages |
+| Project | Status | Path (local) | Site | Packages |
 |---------|--------|--------------|------|----------|
 {chr(10).join(rows)}
 
@@ -232,7 +235,7 @@ That regenerates hub product cards, this table, and README products.
     # product law 2 — point at catalog
     text = re.sub(
         r"2\. \*\*Release → card\.\*\*.*",
-        "2. **Release → card.** Set `status: \"released\"` on the product in `site/catalog.json` and run `scripts/sync-from-catalog.py`. No card until released. Update catalog blurb/facts/links when the product ships again.",
+        "2. **Release → card.** Set `status: \"released\"` on the product in `site/catalog.json` and run `scripts/sync-from-catalog.py`. No card until released. Update catalog blurb/facts/links when the project ships again.",
         text,
         count=1,
     )
@@ -253,9 +256,9 @@ That regenerates hub product cards, this table, and README products.
         count=1,
     )
 
-    # replace Sister products section
+    # replace Catalog section
     text2, n = re.subn(
-        r"## Sister products\n.*?(?=\n## License\n)",
+        r"## Catalog\n.*?(?=\n## License\n)",
         sister + "\n",
         text,
         count=1,
@@ -271,7 +274,7 @@ That regenerates hub product cards, this table, and README products.
             flags=re.S,
         )
     if n != 1:
-        raise SystemExit("AGENTS.md: could not find Sister products / Catalog section")
+        raise SystemExit("AGENTS.md: could not find Catalog / Catalog section")
 
     AGENTS_PATH.write_text(text2, encoding="utf-8")
     print(f"updated {AGENTS_PATH.relative_to(ROOT)}")
@@ -292,8 +295,8 @@ def main(argv: list[str] | None = None) -> int:
     patch_readme(catalog)
     patch_agents(catalog)
 
-    n = len(released(catalog["products"]))
-    print(f"ok — {n} released product(s), theme={catalog['theme']['css']}")
+    n = len(released(catalog["projects"]))
+    print(f"ok — {n} released project(s), theme={catalog['theme']['css']}")
 
     if check:
         dirty = []

@@ -26,7 +26,7 @@
     "accent": "#C50A1B",
     "metal": "#B8BEC2",
     "sky": "#2096EE",
-    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme.css for hub + every *.f00.sh subdomain. Heartbox video palette. Product CSS layout-only.",
+    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme.css for hub + every *.f00.sh project site. Heartbox video shell (sky / white boxes / poppy text). Project CSS is layout-only.",
     "layout": "bleach",
     "contrast": "heart-shaped-box",
     "css_snapshot": "site/theme/f00-theme-15.css",
@@ -37,9 +37,32 @@
     "packages": "dist.f00.sh"
   },
   "laws": {
-    "release_to_card": "Only products with status=released get a hub card. Add/update the product entry here when you ship a release."
+    "release_to_card": "Only projects with status=released get a hub card. Add/update the project entry here when you ship a release."
   },
-  "products": [
+  "infra": [
+    {
+      "id": "homebrew-tap",
+      "name": "homebrew-tap",
+      "repo": "https://github.com/f00-sh/homebrew-tap",
+      "repo_slug": "f00-sh/homebrew-tap",
+      "role": "Homebrew tap for f00-sh projects"
+    },
+    {
+      "id": "scoop-bucket",
+      "name": "scoop-bucket",
+      "repo": "https://github.com/f00-sh/scoop-bucket",
+      "repo_slug": "f00-sh/scoop-bucket",
+      "role": "Scoop bucket for f00-sh projects"
+    },
+    {
+      "id": "github-org-profile",
+      "name": ".github",
+      "repo": "https://github.com/f00-sh/.github",
+      "repo_slug": "f00-sh/.github",
+      "role": "Organization profile and community health files"
+    }
+  ],
+  "projects": [
     {
       "id": "f00tils",
       "name": "f00tils",
@@ -92,8 +115,8 @@
       "packages": null,
       "local": "cel",
       "license": "MIT",
-      "one_liner": "Femcel / Incel self-assessment (formal product model)",
-      "blurb": "Femcel / Incel self-assessment from a formal product model. Transparent factors, optional X priors, shareable score card.",
+      "one_liner": "Femcel / Incel self-assessment (formal project model)",
+      "blurb": "Femcel / Incel self-assessment from a formal project model. Transparent factors, optional X priors, shareable score card.",
       "facts": [
         "survey \u00b7 methodology \u00b7 PNG export",
         "web app"
@@ -133,35 +156,12 @@
       "local": "heartbox",
       "license": "MIT",
       "one_liner": "Hand-tinted Technicolor dark theme \u2014 f00 default brand palette",
-      "blurb": "Hand-tinted Technicolor dark theme: poppy red, verse-sky blue, hospital gloom, cream light, and cool silver metal. One palette, ports for terminals, editors, and tools. <strong>Default f00 brand theme</strong> for the hub and every product site.",
+      "blurb": "Hand-tinted Technicolor dark theme: poppy red, verse-sky blue, hospital gloom, cream light, and cool silver metal. One palette, ports for terminals, editors, and tools. <strong>Default f00 brand theme</strong> for the hub and every project site.",
       "facts": [
         "canonical palette \u00b7 50+ app ports",
         "f00 default theme \u00b7 MIT"
       ],
       "docs": "https://heartbox.f00.sh/#install"
-    }
-  ],
-  "infra": [
-    {
-      "id": "homebrew-tap",
-      "name": "homebrew-tap",
-      "repo": "https://github.com/f00-sh/homebrew-tap",
-      "repo_slug": "f00-sh/homebrew-tap",
-      "role": "Homebrew tap for f00-sh products"
-    },
-    {
-      "id": "scoop-bucket",
-      "name": "scoop-bucket",
-      "repo": "https://github.com/f00-sh/scoop-bucket",
-      "repo_slug": "f00-sh/scoop-bucket",
-      "role": "Scoop bucket for f00-sh products"
-    },
-    {
-      "id": "github-org-profile",
-      "name": ".github",
-      "repo": "https://github.com/f00-sh/.github",
-      "repo_slug": "f00-sh/.github",
-      "role": "Organization profile and community health files"
     }
   ]
 }

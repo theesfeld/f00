@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Enroll a new product into the f00 catalog + optional product-site theme wiring.
+"""Enroll a new project into the f00 catalog + optional project-site theme wiring.
 
 Usage:
-  python3 scripts/enroll-product.py \\
+  python3 scripts/enroll-project.py \\
     --id mytool \\
     --name "My Tool" \\
     --one-liner "Short description" \\
@@ -39,10 +39,10 @@ def save(data: dict) -> None:
     CATALOG.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def ensure_product(data: dict, args: argparse.Namespace) -> dict:
-    products = data.setdefault("products", [])
+def ensure_project(data: dict, args: argparse.Namespace) -> dict:
+    projects = data.setdefault("projects", [])
     existing = None
-    for p in products:
+    for p in projects:
         if p.get("id") == args.id:
             existing = p
             break
@@ -74,10 +74,10 @@ def ensure_product(data: dict, args: argparse.Namespace) -> dict:
         }
     )
     if existing is None:
-        products.append(entry)
-        print(f"added product {args.id} status={args.status}")
+        projects.append(entry)
+        print(f"added project {args.id} status={args.status}")
     else:
-        print(f"updated product {args.id} status={args.status}")
+        print(f"updated project {args.id} status={args.status}")
     return entry
 
 
@@ -162,8 +162,8 @@ def main() -> int:
     ap.add_argument("--packages", default=None)
     ap.add_argument("--local", default=None, help="Local folder name under $PROJECTS")
     ap.add_argument("--license", default="MIT")
-    ap.add_argument("--docs", default=None, help="Docs URL (product site #docs or methodology)")
-    ap.add_argument("--repo-path", default=None, help="Local product repo to theme-link")
+    ap.add_argument("--docs", default=None, help="Docs URL (project site #docs or methodology)")
+    ap.add_argument("--repo-path", default=None, help="Local project repo to theme-link")
     ap.add_argument("--no-sync", action="store_true")
     ap.add_argument("--no-theme-link", action="store_true")
     args = ap.parse_args()
@@ -173,7 +173,7 @@ def main() -> int:
         return 2
 
     data = load()
-    ensure_product(data, args)
+    ensure_project(data, args)
     save(data)
 
     if not args.no_sync:

@@ -1,4 +1,4 @@
-/* f00.sh — catalog cards + silver sparkles + logo color glitches */
+/* f00.sh — catalog project cards + silver sparkles + logo color glitches */
 (() => {
   const CATALOG_URLS = [
     "/catalog.json",
@@ -6,7 +6,6 @@
     "https://f00.sh/catalog.json",
   ];
 
-  // Heartbox palette — glitch colors for logo
   const THEME_COLORS = [
     "#C50A1B", "#2096EE", "#EDE6DE", "#B8BEC2", "#C47A72",
     "#D4A83A", "#5A8A3A", "#454B93", "#C45A20",
@@ -44,7 +43,7 @@
     const docsBtn = docs
       ? `<a class="btn ghost sm" href="${docs}">docs</a>`
       : "";
-    return `<article class="card" data-product="${escapeHtml(p.id || "")}">
+    return `<article class="card" data-project="${escapeHtml(p.id || "")}">
       <div class="card-meta mono">${domain}</div>
       <h3>${name}</h3>
       <p>${blurb}</p>
@@ -57,12 +56,21 @@
     </article>`;
   };
 
-  const renderProducts = (catalog) => {
+  const projectsList = (catalog) => {
+    if (!catalog) return [];
+    return catalog.projects || catalog.products || [];
+  };
+
+  const renderProjects = (catalog) => {
     const grid =
+      document.getElementById("project-grid") ||
       document.getElementById("product-grid") ||
+      document.querySelector(".projects .grid") ||
       document.querySelector(".products .grid");
-    if (!grid || !catalog || !Array.isArray(catalog.products)) return;
-    const released = catalog.products.filter((p) => p.status === "released");
+    if (!grid) return;
+    const list = projectsList(catalog);
+    if (!Array.isArray(list)) return;
+    const released = list.filter((p) => p.status === "released");
     if (!released.length) return;
     grid.innerHTML = released.map(cardHtml).join("");
     grid.dataset.fromCatalog = "live";
@@ -83,12 +91,12 @@
 
   loadCatalog().then((catalog) => {
     if (catalog) {
-      renderProducts(catalog);
+      renderProjects(catalog);
       window.F00_CATALOG = catalog;
     }
   });
 
-  // —— Logo glitches: random Heartbox theme color ——
+// —— Logo glitches: random Heartbox theme color ——
   const glyphs = document.querySelectorAll(".splash .glyph");
   const prefersReduced = window.matchMedia(
     "(prefers-reduced-motion: reduce)"

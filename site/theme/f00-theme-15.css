@@ -1,16 +1,18 @@
 /* SNAPSHOT — use https://f00.sh/theme/f00-theme.css */
-/* f00 SHARED THEME — ONE CSS for ALL *.f00.sh
+/* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
    Live: https://f00.sh/theme/f00-theme.css
-   Load first on every product page (hub injects if missing via Worker).
 
    <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" />
 
-   Heartbox v0.2.1 — Heart-Shaped Box video-locked palette
+   Heartbox v0.2.1 (Heart-Shaped Box video)
    Sky #2096EE · Poppy #C50A1B · Night #090909 · Cream #EDE6DE · Silver #B8BEC2
-   Layout: Bleach hard boxes · Onyx logo · zine body · chip chrome
-   Product CSS = structure only. Never redefine --f00-*.
 
-   Deploy stamp: 2026-07-29T20:41Z
+   Website shell (all f00 sites):
+     organic verse-sky field · black splash logo · white header/footer text
+     white Bleach boxes · poppy red text inside boxes
+   Project CSS = layout/structure only. Never redefine --f00-* brand tokens.
+
+   Deploy stamp: 2026-07-30T11:09:36Z
 */
 
 @font-face {
@@ -60,8 +62,8 @@
   --f00-bright-white: #F5F1EA;
   --f00-ink: #090909;
   --f00-radius: 0;
-  --f00-box-border: 1px solid var(--f00-border-strong);
-  --f00-rule: 1px solid rgba(184, 190, 194, 0.4);
+  --f00-box-border: 2px solid #ffffff;
+  --f00-rule: 1px solid rgba(197, 10, 27, 0.3);
   --f00-pad-box: 1rem 1.1rem;
   --f00-font-brand: "Onyx", "Times New Roman", Times, serif;
   --f00-font-zine: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
@@ -82,104 +84,313 @@
   --f00-size-chip: 0.72rem;
   --f00-size-nav: 0.88rem;
   --f00-size-title: clamp(1.25rem, 2.8vw, 1.75rem);
-  --bg: var(--f00-bg); --bg-2: var(--f00-bg-elevated); --bg-elevated: var(--f00-bg-elevated);
-  --bg-panel: var(--f00-bg-panel); --bg-muted: var(--f00-bg-muted);
-  --fg: var(--f00-fg); --text: var(--f00-fg); --muted: var(--f00-muted);
-  --dim: var(--f00-dim); --faint: var(--f00-faint);
-  --accent: var(--f00-accent); --accent-dim: var(--f00-accent-dim);
-  --accent-hot: var(--f00-accent-hot); --accent-soft: var(--f00-accent-soft);
-  --amber: var(--f00-warn); --line: var(--f00-line); --border: var(--f00-border);
-  --border-strong: var(--f00-border-strong); --danger: var(--f00-danger);
-  --warn: var(--f00-warn); --ok: var(--f00-ok); --code-bg: var(--f00-code-bg);
-  --metal: var(--f00-metal); --sky: var(--f00-sky); --radius: 0;
-  --font-brand: var(--f00-font-brand); --font-display: var(--f00-font-chip);
-  --font: var(--f00-font-chip); --sans: var(--f00-font-zine); --font-sans: var(--f00-font-zine);
-  --font-body: var(--f00-font-zine); --font-mono: var(--f00-font-chip); --mono: var(--f00-font-zine);
-  --font-hand: var(--f00-font-chip); --font-accent: var(--f00-font-chip); --font-chip: var(--f00-font-chip);
+
+  /* aliases */
+  --bg: transparent;
+  --bg-2: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-muted: transparent;
+  --fg: #ffffff;
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.82);
+  --dim: rgba(255, 255, 255, 0.7);
+  --faint: rgba(255, 255, 255, 0.55);
+  --accent: var(--f00-accent);
+  --accent-dim: var(--f00-accent-dim);
+  --accent-hot: var(--f00-accent-hot);
+  --accent-soft: var(--f00-accent-soft);
+  --amber: var(--f00-warn);
+  --line: rgba(255, 255, 255, 0.45);
+  --border: rgba(255, 255, 255, 0.55);
+  --border-strong: #ffffff;
+  --danger: var(--f00-danger);
+  --warn: var(--f00-warn);
+  --ok: var(--f00-ok);
+  --code-bg: var(--f00-code-bg);
+  --metal: var(--f00-metal);
+  --sky: var(--f00-sky);
+  --radius: 0;
+  --font-brand: var(--f00-font-brand);
+  --font-display: var(--f00-font-chip);
+  --font: var(--f00-font-chip);
+  --sans: var(--f00-font-zine);
+  --font-sans: var(--f00-font-zine);
+  --font-body: var(--f00-font-zine);
+  --font-mono: var(--f00-font-chip);
+  --mono: var(--f00-font-zine);
+  --font-hand: var(--f00-font-chip);
+  --font-accent: var(--f00-font-chip);
+  --font-chip: var(--f00-font-chip);
+
+  /* website surface tokens */
+  --site-sky: var(--f00-sky);
+  --site-poppy: var(--f00-accent);
+  --site-ink: var(--f00-ink);
+  --site-box: #ffffff;
+  --site-box-text: var(--f00-accent);
 }
+
+/* ════════ WEBSITE SHELL (all f00 project sites) ════════ */
 html { color-scheme: dark; }
-::selection { background: var(--f00-accent); color: var(--f00-fg); }
-body {
-  background: var(--f00-bg); color: var(--f00-fg);
-  font-family: var(--f00-font-zine) !important; font-size: var(--f00-size-body);
-  line-height: 1.55; letter-spacing: var(--f00-tracking-body); -webkit-font-smoothing: antialiased;
+html, body {
+  min-height: 100%;
 }
+body {
+  margin: 0 !important;
+  font-family: var(--f00-font-zine) !important;
+  font-size: var(--f00-size-body) !important;
+  line-height: 1.55 !important;
+  letter-spacing: var(--f00-tracking-body);
+  color: #ffffff !important;
+  /* organic verse sky field */
+  background:
+    radial-gradient(ellipse 72% 58% at 14% 16%, rgba(74, 173, 245, 0.95) 0%, transparent 58%),
+    radial-gradient(ellipse 80% 55% at 86% 14%, rgba(32, 150, 238, 0.88) 0%, transparent 52%),
+    radial-gradient(ellipse 50% 42% at 48% 38%, rgba(74, 173, 245, 0.35) 0%, transparent 62%),
+    radial-gradient(ellipse 95% 70% at 42% 100%, rgba(6, 58, 110, 0.72) 0%, transparent 55%),
+    radial-gradient(ellipse 42% 36% at 78% 62%, rgba(10, 92, 173, 0.45) 0%, transparent 55%),
+    linear-gradient(168deg, #4AADF5 0%, #2096EE 34%, #0A5CAD 72%, #063A6E 100%) !important;
+  background-attachment: fixed !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* film grain overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.28;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+
+/* content above grain */
+body > * { position: relative; z-index: 1; }
+
+::selection { background: var(--f00-accent); color: #fff; }
+
+/* type */
 p, li, label, legend, th, td, input, textarea, select, button,
 .lede, .hint, .howto, .eyebrow, .btn, .panel, .field, .status, .docs-list {
   font-family: var(--f00-font-zine) !important;
 }
-input, textarea, select, button, .btn { font-size: var(--f00-size-small); line-height: 1.4; border-radius: 0 !important; }
-p, .lede, .howto, li { font-size: var(--f00-size-body); line-height: 1.55; color: var(--f00-muted); }
-p strong, .lede strong, li strong { color: var(--f00-fg); font-weight: 700; }
-h1, h2, h3, h4, .f00-display, .font-display, .section-head h2, .panel h2, .card h3 {
-  font-family: var(--f00-font-chip) !important; letter-spacing: var(--f00-tracking-chip);
-  font-weight: 600 !important; color: var(--f00-fg);
+p, .lede, .howto, .lead, .hero-copy p, .blurb {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
-h1 { font-size: var(--f00-size-title); line-height: 1.15; letter-spacing: 0.08em; text-transform: uppercase; }
-h2 { font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700 !important; }
-h3 { font-size: 1.05rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.nav, .nav a, .card-meta, .mono, .math-mono, code, kbd, pre {
-  font-family: var(--f00-font-chip) !important; letter-spacing: var(--f00-tracking-chip);
+p strong, .lede strong, li strong { color: #fff !important; font-weight: 700; }
+
+h1, h2, h3, h4 {
+  font-family: var(--f00-font-chip) !important;
+  letter-spacing: 0.12em;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  text-transform: uppercase;
 }
-.nav, .nav a { font-size: var(--f00-size-nav); letter-spacing: 0.1em; text-transform: lowercase; }
-.card-meta, .eyebrow, .label {
-  font-size: var(--f00-size-chip); letter-spacing: 0.16em; text-transform: uppercase; color: var(--f00-metal);
+/* titles on sky stay white; inside white boxes → poppy (see .card h3) */
+
+/* ── Header / nav: white ── */
+header, .site-header, .top, .nav-shell, .header-inner {
+  background: transparent !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
-footer, .foot, .site-footer, .footer-bottom, .footer-inner {
-  font-family: var(--f00-font-chip) !important; font-size: var(--f00-size-nav) !important;
-  letter-spacing: 0.1em; color: var(--f00-muted); border-top: var(--f00-rule);
+.site-header, .top {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.65) !important;
 }
-footer *, .foot *, .site-footer *, .footer-bottom *, .footer-inner * { font-family: inherit !important; }
-.splash, .splash .glyph {
-  font-family: var(--f00-font-brand) !important; font-weight: 400 !important; letter-spacing: var(--f00-tracking-brand);
+.nav, .nav a, .site-nav, .site-nav a, header a, .site-header a, .top a {
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-family: var(--f00-font-chip) !important;
+}
+.nav a:hover, .site-nav a:hover, header a:hover {
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+.brand, .logo, .logo-text, .brand-mark, .brand-sub {
+  color: #ffffff !important;
 }
 .brand-mark, .f00-brand, .font-brand {
-  font-family: var(--f00-font-brand) !important; font-weight: 400 !important;
-  font-size: var(--f00-size-brand-mark) !important; letter-spacing: var(--f00-tracking-brand-mark) !important; line-height: 1 !important;
+  font-family: var(--f00-font-brand) !important;
+  font-weight: 400 !important;
 }
-.brand { display: inline-flex; align-items: baseline; gap: 0.2rem; text-decoration: none; color: var(--f00-fg); }
-.brand-sub { font-family: var(--f00-font-chip) !important; letter-spacing: 0.12em; color: var(--f00-muted); font-size: 0.9rem; }
-.metal, .f00-metal { color: var(--f00-metal); }
-a { color: var(--f00-sky); }
-a:hover { color: var(--f00-accent-hot); }
-.card, .panel, .box, .f00-box, .site-header, .announcement, input, textarea, select, .btn, button { border-radius: 0 !important; }
-.card, .panel, .box, .f00-box {
-  border: var(--f00-box-border); background: var(--f00-bg-elevated); padding: var(--f00-pad-box); box-shadow: none;
+/* splash logo black on sky */
+.splash, .splash .glyph {
+  font-family: var(--f00-font-brand) !important;
+  color: var(--f00-ink) !important;
 }
-.card h3, .panel h2, .panel h3 { margin-top: 0; border-bottom: var(--f00-rule); padding-bottom: 0.45rem; margin-bottom: 0.65rem; }
-.btn, button.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
-  font-family: var(--f00-font-chip) !important; font-size: var(--f00-size-chip);
-  letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
-  border: 1px solid var(--f00-border-strong); padding: 0.5rem 0.85rem;
-  color: var(--f00-fg); background: transparent; box-shadow: none;
+.splash .glyph { color: var(--f00-ink) !important; }
+
+/* ── Footer: white ── */
+footer, .foot, .site-footer, .footer-bottom, .footer-inner {
+  background: transparent !important;
+  color: #ffffff !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.65) !important;
+  font-family: var(--f00-font-chip) !important;
+  letter-spacing: 0.1em;
 }
-.btn:hover { border-color: var(--f00-fg); background: rgba(237, 230, 222, 0.06); }
-.btn.primary, .btn-primary, button.primary {
-  background: var(--f00-fg) !important; color: var(--f00-ink) !important;
-  border-color: var(--f00-fg) !important; font-weight: 700;
+footer a, .foot a, .site-footer a { color: rgba(255, 255, 255, 0.9) !important; }
+footer a:hover, .foot a:hover { color: #fff !important; }
+
+/* ── WHITE boxes + POPPY text (Bleach catalog) ── */
+.card, .panel, .box, .f00-box,
+article.card, .feature-card, .doc-card, .install-card,
+.score-card, .result-card, .howto, .docs-list,
+.announcement, .status, .field-group,
+.shell > .panel, section.panel,
+.benchmark-card, .tool-card, .release-card {
+  background: #ffffff !important;
+  color: var(--f00-accent) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
-.btn.accent, .btn-accent {
-  background: var(--f00-accent) !important; color: var(--f00-fg) !important; border-color: var(--f00-accent) !important;
+.card *, .panel *:not(a):not(.btn):not(button),
+.box *, .f00-box *, article.card * {
+  color: inherit;
 }
-.btn.ghost, .btn-ghost {
-  background: transparent !important; color: var(--f00-fg) !important; border-color: var(--f00-border) !important;
+.card h1, .card h2, .card h3, .card h4,
+.panel h1, .panel h2, .panel h3, .panel h4,
+.box h1, .box h2, .box h3,
+.card p, .panel p, .box p,
+.card li, .panel li,
+.card .mono, .panel .mono,
+.card-meta, .facts, .facts li,
+.card code, .panel code {
+  color: var(--f00-accent) !important;
 }
-.btn.sm { padding: 0.35rem 0.65rem; font-size: 0.68rem; }
+.card a:not(.btn), .panel a:not(.btn) {
+  color: var(--f00-sky-deep) !important;
+  text-decoration: underline;
+}
+.card h3, .panel h2, .panel h3 {
+  border-bottom: 1px solid rgba(197, 10, 27, 0.3) !important;
+  padding-bottom: 0.4rem;
+  margin-top: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* kill dark overlays / CRT that hide the sky on project sites */
+.crt, .scanlines, .vignette, .field, .tint,
+.bg-layer, .hero-bg, .noise {
+  /* keep hub crt if present but soft; project dark full-page overlays become transparent */
+}
+/* project sites often put dark bg on wrappers */
+.wrap, .shell, main, #main, .main, .content, .page,
+.hero, .hero-grid, .hero-copy, .section, .container,
+.site-main, .layout, #root, .app {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+/* dark solid backgrounds → transparent so sky shows */
+.site-header, .announcement {
+  background: transparent !important;
+}
+
+/* ── Buttons (work on sky and inside white boxes) ── */
+.btn, button.btn, a.btn, .btn-primary, .btn-ghost, .btn-sm {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f00-font-chip) !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  border-radius: 0 !important;
+  border: 1px solid #ffffff !important;
+  padding: 0.45rem 0.75rem !important;
+  color: #ffffff !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.btn:hover, a.btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+.btn.primary, .btn-primary, a.btn.primary {
+  background: var(--f00-accent) !important;
+  border-color: var(--f00-accent) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.btn.primary:hover, .btn-primary:hover {
+  background: var(--f00-accent-hot) !important;
+  border-color: var(--f00-accent-hot) !important;
+}
+/* buttons inside white cards: poppy outline */
+.card .btn, .panel .btn, .box .btn {
+  border-color: var(--f00-accent) !important;
+  color: var(--f00-accent) !important;
+  background: transparent !important;
+}
+.card .btn.primary, .panel .btn.primary, .card .btn-primary {
+  background: var(--f00-accent) !important;
+  color: #ffffff !important;
+  border-color: var(--f00-accent) !important;
+}
+.btn.sm, .btn-sm { padding: 0.35rem 0.6rem !important; font-size: 0.64rem !important; }
+
+/* forms */
 input, textarea, select {
-  background: var(--f00-code-bg) !important; color: var(--f00-fg) !important;
-  border: 1px solid var(--f00-line) !important; padding: 0.55rem 0.65rem;
+  background: #ffffff !important;
+  color: var(--f00-accent) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 0 !important;
+  padding: 0.55rem 0.65rem;
 }
-input:focus, textarea:focus, select:focus { outline: none; border-color: var(--f00-metal) !important; box-shadow: none; }
-pre, code, kbd { background: var(--f00-code-bg); border: 1px solid var(--f00-line); color: var(--f00-fg); }
-pre { padding: 0.85rem 1rem; overflow-x: auto; }
-code, kbd { padding: 0.1em 0.35em; }
-pre code { border: 0; padding: 0; background: transparent; }
-hr { border: 0; border-top: var(--f00-rule); margin: 1.5rem 0; }
+input::placeholder, textarea::placeholder { color: rgba(197, 10, 27, 0.45) !important; }
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--f00-sky) !important;
+  border-color: var(--f00-sky) !important;
+}
+
+/* code blocks stay night (readable) */
+pre, pre code {
+  background: var(--f00-code-bg) !important;
+  color: var(--f00-fg) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 0 !important;
+}
+code, kbd {
+  background: rgba(9, 9, 9, 0.35) !important;
+  color: #fff !important;
+  border-radius: 0 !important;
+}
+.card code, .panel code {
+  background: rgba(197, 10, 27, 0.08) !important;
+  color: var(--f00-accent) !important;
+}
+
+/* tables */
 table { border-collapse: collapse; width: 100%; }
-th, td { border: 1px solid var(--f00-line); padding: 0.45rem 0.6rem; text-align: left; }
-th {
-  font-family: var(--f00-font-chip) !important; text-transform: uppercase; letter-spacing: 0.12em;
-  font-size: var(--f00-size-chip); color: var(--f00-metal); background: var(--f00-bg-elevated);
+th, td {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  padding: 0.45rem 0.6rem;
+  color: #fff !important;
 }
+.card th, .card td, .panel th, .panel td {
+  border-color: rgba(197, 10, 27, 0.25) !important;
+  color: var(--f00-accent) !important;
+}
+th {
+  font-family: var(--f00-font-chip) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: var(--f00-size-chip);
+}
+
+a { color: #ffffff; }
+a:hover { color: #F5F1EA; }
+.card a, .panel a { color: #0A5CAD !important; }
+
+hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.45); }
+
 * { --radius: 0; }
