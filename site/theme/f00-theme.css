@@ -777,4 +777,17 @@ label.field input, label.field textarea {
   color: var(--surf-cream) !important;
 }
 
-/* f00-theme.css */
+/* f00-theme-30.css */
+
+
+/* html body background lock — resist SPA shorthand resets */
+html body {
+  background-color: #2096ee !important;
+  background-image: var(--tex-hero) !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* f00-theme.css body-lock-v31 */
