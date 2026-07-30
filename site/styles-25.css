@@ -448,8 +448,8 @@ html.logo-docked .splash-wrap.is-film .splash,
 }
 
 /* ── visual mantra page ──
- * Theme paints body silver (#D0D5DB) for field chrome. Verses sit on
- * hospital-cream plates (entropy frames) — they need card ink, not silver.
+ * Verses ARE hub cards (article.card) — cream plate, organic frame, texture,
+ * letterpress, under-title rules come from theme + f00-entropy. Layout only here.
  */
 .page-mantra main.mantra {
   position: relative;
@@ -462,7 +462,7 @@ html.logo-docked .splash-wrap.is-film .splash,
   margin-bottom: 2.25rem;
   padding-bottom: 1.1rem;
 }
-/* hero copy on the poppy field — cream, not silver wash */
+/* head copy on the poppy field */
 .page-mantra .mantra-kicker,
 .page-mantra .mantra-kicker.e-text,
 .page-mantra .mantra-kicker .e-word,
@@ -501,72 +501,32 @@ html.logo-docked .splash-wrap.is-film .splash,
   max-width: 36rem;
   text-shadow: 0 1px 2px rgba(9, 9, 9, 0.32);
 }
+/* stack of real .card plates — same throws as the hub grid */
 .page-mantra .mantra-body {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.35rem;
 }
-.page-mantra .mantra-verse {
+.page-mantra .mantra-body > .card {
+  width: 100%;
+  max-width: 100%;
   margin: 0;
-  padding: 1.15rem 1.2rem 1.25rem;
-  /* fallback cream if entropy frame is late / reduced-motion */
-  background: #E8DFD4;
-  color: #D44A18 !important;
 }
-.page-mantra .mantra-verse.e-frame-host {
-  background: transparent !important;
-}
-/* card-grade ink on cream — beat theme silver !important + letterpress spans */
-.page-mantra .mantra-verse,
-.page-mantra .mantra-verse.e-text,
-.page-mantra .mantra-verse .e-word,
-.page-mantra .mantra-verse .e-glyph {
-  color: #D44A18 !important;
-}
-.page-mantra .mantra-verse h2,
-.page-mantra .mantra-verse h2.e-text,
-.page-mantra .mantra-verse h2 .e-word,
-.page-mantra .mantra-verse h2 .e-glyph {
-  margin: 0 0 0.55rem;
-  font-family: var(--font-brand, "Onyx", "Times New Roman", Times, serif);
-  font-weight: 400;
-  font-size: clamp(1.25rem, 2.4vw, 1.55rem);
-  letter-spacing: 0.03em;
-  line-height: 1.1;
-  color: #8A2810 !important;
-  text-transform: none;
-  border: 0 !important;
-  padding: 0;
-  text-shadow: none;
-}
-.page-mantra .mantra-verse p,
-.page-mantra .mantra-verse p.e-text,
-.page-mantra .mantra-verse p .e-word,
-.page-mantra .mantra-verse p .e-glyph {
+.page-mantra .mantra-body > .card p {
   margin: 0 0 0.75rem;
-  font-size: 0.95rem;
-  line-height: 1.58;
-  color: #C43A12 !important;
-  font-weight: 600;
-  text-shadow: none;
 }
-.page-mantra .mantra-verse p:last-child { margin-bottom: 0; }
-.page-mantra .mantra-seal,
-.page-mantra .mantra-seal.e-text,
-.page-mantra .mantra-seal .e-word,
-.page-mantra .mantra-seal .e-glyph {
-  margin-top: 1rem !important;
-  padding-top: 0.85rem;
-  font-family: var(--font-chip, ui-monospace, monospace);
-  font-size: 0.82rem !important;
-  letter-spacing: 0.06em;
+.page-mantra .mantra-body > .card p:last-child {
+  margin-bottom: 0;
+}
+/* seal line uses card-meta mono — a little top air after body copy */
+.page-mantra .mantra-seal {
+  margin-top: 0.85rem !important;
+  padding-top: 0.65rem;
+  display: block;
   line-height: 1.55 !important;
-  color: #8A2810 !important;
-  font-weight: 700 !important;
-  text-shadow: none;
 }
 .page-mantra .mantra-close {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 /* mantra header always shows brand (no film splash on this page) */
 .page-mantra header.top,
