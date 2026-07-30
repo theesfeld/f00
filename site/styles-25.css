@@ -8,7 +8,7 @@
   --splash-rest: clamp(4.25rem, 12vw, 7rem);
   --splash-slot-h: 70vh;
   /* same air: header line → logo top  AND  logo bottom → projects line */
-  --logo-gap: 1.35rem;
+  --logo-gap: 1.5rem;
   --p: 0;
   --dock-y: 0px;
   --dock-op: 1;
@@ -318,7 +318,7 @@ main {
     --splash-max: clamp(5.5rem, 26vw, 10rem);
     --splash-rest: clamp(3.5rem, 16vw, 5.5rem);
     --header-h: 3.1rem;
-    --logo-gap: 1.35rem;
+    --logo-gap: 1.5rem;
   }
   .card h3 { font-size: 0.88rem; }
   .grid { gap: 1.1rem; }

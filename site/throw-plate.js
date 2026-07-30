@@ -50,6 +50,11 @@ export function mountThrowPlate(opts) {
   let targetOp = 1;
   let dispScale = 1;
   let lastTs = 0;
+  /* density ink bounds as fraction of canvas — equal air uses ink, not pad */
+  let inkTopFrac = 0.04;
+  let inkHeightFrac = 0.78;
+  let baseCssH = 0;
+  let restScale = 0.35; /* calibrated so ink height ≈ rest glyph band */
 
   const fontFamily =
     opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
@@ -89,17 +94,23 @@ export function mountThrowPlate(opts) {
 
   const applyCssScale = (p, op, follow) => {
     const pp = Math.max(0, Math.min(1, p));
-    const targetScale =
-      maxPx > 0
-        ? Math.max(
-            0.12,
-            Math.min(1.05, (restPx + (maxPx - restPx) * (1 - pp)) / maxPx)
-          )
-        : Math.max(0.12, 1 - pp * 0.55);
+    /* s=1 at hero; s=restScale when docked — restScale from real ink metrics */
+    const targetScale = Math.max(
+      0.12,
+      Math.min(1.05, 1 - pp * (1 - restScale))
+    );
     const f = follow ?? 1;
     dispScale += (targetScale - dispScale) * f;
+    /*
+     * Lift by scaled top pad so visual ink top sits on the wrap top
+     * (wrap already has --logo-gap under header).
+     */
+    const yShift = -inkTopFrac * (baseCssH || 0) * dispScale;
     canvas.style.transformOrigin = "50% 0%";
-    canvas.style.transform = `translate3d(-50%, 0, 0) scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`;
+    canvas.style.transform = [
+      `translate3d(-50%, ${yShift.toFixed(2)}px, 0)`,
+      `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
+    ].join(" ");
     canvas.style.opacity = String(op);
     canvas.dataset.throwScale = String(dispScale);
     canvas.dataset.throwP = String(pp.toFixed(4));
@@ -120,10 +131,11 @@ export function mountThrowPlate(opts) {
       if (!(maxPx > 24)) return;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      const layoutW = maxPx * 1.4;
-      const layoutH = maxPx * 0.9;
-      const padX = Math.max(18, layoutW * 0.08);
-      const padY = Math.max(18, layoutH * 0.1);
+      const layoutW = maxPx * 1.35;
+      const layoutH = maxPx * 0.88;
+      /* tight pad — film fringe only; big pad was throwing dock air off */
+      const padX = Math.max(14, layoutW * 0.06);
+      const padY = Math.max(12, layoutH * 0.06);
       const cssW = Math.ceil(layoutW + padX * 2);
       const cssH = Math.ceil(layoutH + padY * 2);
 
@@ -162,6 +174,37 @@ export function mountThrowPlate(opts) {
         return;
       }
       glp.uploadDensity(density, w, h);
+
+      /* ink bounds — equal dock air is about ink, not transparent pad */
+      let inkTop = -1;
+      let inkBot = -1;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (density[y * w + x] > 0.08) {
+            if (inkTop < 0) inkTop = y;
+            inkBot = y;
+            break;
+          }
+        }
+      }
+      if (inkTop < 0) {
+        inkTopFrac = 0.03;
+        inkHeightFrac = 0.78;
+      } else {
+        inkTopFrac = Math.max(0, inkTop / h - 0.008);
+        inkHeightFrac = Math.max(0.4, (inkBot - inkTop + 1) / h);
+      }
+      baseCssH = cssH;
+      /*
+       * restScale so visual ink height ≈ measured rest glyph band (restPx*0.86).
+       * That keeps logo-gap under header ≈ logo-gap above projects when p=1.
+       */
+      const targetInkH = Math.max(36, restPx * 0.86);
+      const fullInkH = inkHeightFrac * cssH;
+      restScale =
+        fullInkH > 1
+          ? Math.max(0.12, Math.min(0.55, targetInkH / fullInkH))
+          : restPx / Math.max(maxPx, 1);
 
       thrownMaxPx = maxPx;
       canvas.style.width = `${cssW}px`;

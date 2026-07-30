@@ -94,9 +94,9 @@
       edgeB: R.range(1.15, 3.1),
       edgeL: R.range(1.15, 3.1),
       lamp: R.range(0.93, 1),
-      track: R.signed(0.022),
-      word: R.signed(0.035),
-      baseY: R.signed(0.55),
+      track: R.signed(0.035),
+      word: R.signed(0.05),
+      baseY: R.signed(0.65),
       defocus0: R.range(0.04, 0.22) * blur,
       emul: R.range(0.7, 1.35),
       /* slight pad / content drift — cards stop looking cloned */
@@ -171,6 +171,22 @@
       el.style.setProperty("--e-t-track", `${p.track.toFixed(4)}em`);
       el.style.setProperty("--e-t-word", `${p.word.toFixed(4)}em`);
       el.style.setProperty("--e-t-op", Math.min(1, p.lamp + 0.02).toFixed(4));
+      /* beat theme !important letter-spacing on titles; body still uses vars */
+      if (p.inCard) {
+        const baseTrack = p.role === "type" && el.matches("h1,h2,h3,h4")
+          ? 0.04
+          : 0.02;
+        el.style.setProperty(
+          "letter-spacing",
+          `${(baseTrack + p.track).toFixed(4)}em`,
+          "important"
+        );
+        el.style.setProperty(
+          "word-spacing",
+          `${p.word.toFixed(4)}em`,
+          "important"
+        );
+      }
     }
   };
 
@@ -191,10 +207,15 @@
     el.style.transform = `translate3d(${gx.toFixed(3)}px, ${gy.toFixed(3)}px, 0) rotate(${rz.toFixed(4)}deg)`;
 
     if (p.role === "type" || p.role === "chrome") {
-      el.style.setProperty(
-        "--e-t-y",
-        `${(p.baseY + p.dispY * 0.2).toFixed(3)}px`
-      );
+      const ty = p.baseY + p.dispY * 0.35;
+      el.style.setProperty("--e-t-y", `${ty.toFixed(3)}px`);
+      /* include baseline drift in the same transform (no second layout) */
+      if (p.inCard) {
+        const gx = p.gateX + p.dispX;
+        const gy = p.gateY + p.dispY + ty * 0.35;
+        const rz = p.rotZ + p.dispRot;
+        el.style.transform = `translate3d(${gx.toFixed(3)}px, ${gy.toFixed(3)}px, 0) rotate(${rz.toFixed(4)}deg)`;
+      }
     }
   };
 
@@ -210,6 +231,16 @@
   const register = (el, role, gains) => {
     if (!el || projections.has(el)) return;
     const p = createProjection(el, role, gains);
+    p.inCard = !!el.closest?.(
+      ".card, article.card, .panel, .box, .f00-box, .feature-card"
+    );
+    /* card body type: a bit more breath — readable, not drunk */
+    if (p.inCard && role === "type") {
+      p.ampGate *= 1.35;
+      p.ampRot *= 1.25;
+      p.track *= 1.4;
+      p.word *= 1.3;
+    }
     projections.set(el, p);
     el.dataset.f00Projection = p.seed.toString(16);
     el.classList.add("f00-proj");
@@ -438,7 +469,8 @@
     if (role === "plate") return { pose: 0.9, blur: 0.9, persp: 0.7 };
     /* solid cards: almost still — micro pose only (frames own the edge) */
     if (role === "solid") return { pose: 0.35, blur: 0.25, persp: 0.2 };
-    if (role === "type") return { pose: 0.35, blur: 0.3, persp: 0.18 };
+    /* body type: enough to feel projected, still readable */
+    if (role === "type") return { pose: 0.55, blur: 0.35, persp: 0.22 };
     if (role === "chrome") return { pose: 0.45, blur: 0.28, persp: 0.32 };
     return { pose: 0.7, blur: 0.4, persp: 0.5 };
   };

@@ -413,7 +413,8 @@ article.card h3 {
   font-family: var(--f00-font-brand) !important;
   font-weight: 400 !important;
   font-size: clamp(1.35rem, 2.4vw, 1.75rem) !important;
-  letter-spacing: 0.04em !important;
+  /* base track; entropy may override with !important specimen value */
+  letter-spacing: calc(0.04em + var(--e-t-track, 0em)) !important;
   line-height: 1.05 !important;
   color: #8A2810 !important;
   text-transform: uppercase !important;
@@ -952,9 +953,16 @@ article.card.f00-proj, .feature-card.f00-proj, .doc-card.f00-proj,
 p.f00-proj, li.f00-proj, h1.f00-proj, h2.f00-proj, h3.f00-proj, h4.f00-proj,
 label.f00-proj, .lede.f00-proj, .blurb.f00-proj, .brand-mark.f00-proj,
 .brand-sub.f00-proj, .nav a.f00-proj, .section-head h2.f00-proj,
-.card-meta.f00-proj, .btn.f00-proj, .foot.f00-proj, .foot a.f00-proj {
+.card-meta.f00-proj, .btn.f00-proj, .foot.f00-proj, .foot a.f00-proj,
+.card p.f00-proj, .card li.f00-proj, .card .facts.f00-proj,
+article.card p.f00-proj, article.card li.f00-proj {
   letter-spacing: calc(var(--f00-tracking-body, 0.02em) + var(--e-t-track, 0em));
   word-spacing: var(--e-t-word, 0em);
+}
+/* card body type may carry micro transform from entropy — keep usable */
+.card p.f00-proj, .card li.f00-proj, .card .card-meta.f00-proj,
+.card .facts.f00-proj, article.card p.f00-proj {
+  transform-origin: 0 50%;
 }
 
 .splash-wrap.f00-proj {
