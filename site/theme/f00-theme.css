@@ -999,6 +999,37 @@ article.card p.f00-proj, article.card li.f00-proj {
   transform-origin: 0 50%;
 }
 
+/*
+ * Word-level baseline entropy — never a perfect collinear type line.
+ * Close to straight; each word is its own micro-projection.
+ */
+.e-text .e-word,
+span.e-word {
+  display: inline-block;
+  position: relative;
+  transform:
+    translate3d(var(--ew-x, 0px), var(--ew-y, 0px), 0)
+    rotate(var(--ew-r, 0deg));
+  transform-origin: 50% 85%;
+  letter-spacing: calc(0em + var(--ew-tr, 0em));
+  /* no transition — specimen pose, not animation */
+  transition: none !important;
+}
+.e-text {
+  /* room for ±1px baseline drift without collision */
+  line-height: 1.48;
+}
+.card .e-text,
+article.card .e-text,
+.panel .e-text {
+  line-height: 1.5;
+}
+/* titles: slightly calmer word drift still present via same spans */
+.card h3 .e-word,
+article.card h3 .e-word {
+  transform-origin: 50% 70%;
+}
+
 .splash-wrap.f00-proj {
   z-index: 6;
 }

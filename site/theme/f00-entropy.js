@@ -238,6 +238,66 @@
     applyLiveMotion(p);
   };
 
+  /**
+   * Body text must not sit on a perfect baseline.
+   * Wrap words in specimen spans — close to straight, never CAD-collinear.
+   */
+  const organicizeText = (el) => {
+    if (!el || el.dataset.f00Words === "1") return;
+    if (el.closest?.("code, pre, .btn, a.btn, script, style, .e-rule, .e-frame"))
+      return;
+    if (el.matches?.("code, pre, .btn, a.btn")) return;
+    el.dataset.f00Words = "1";
+    el.classList.add("e-text");
+
+    const baseSeed = seedFor(el, "words");
+    let wIndex = 0;
+
+    const wrapTextNode = (node) => {
+      const text = node.textContent;
+      if (!text || !/\S/.test(text)) return;
+      const frag = document.createDocumentFragment();
+      const parts = text.split(/(\s+)/);
+      for (const part of parts) {
+        if (!part) continue;
+        if (/^\s+$/.test(part)) {
+          frag.appendChild(document.createTextNode(part));
+          continue;
+        }
+        const span = document.createElement("span");
+        span.className = "e-word";
+        span.textContent = part;
+        const wr = mulberry(hashStr(baseSeed + "|" + wIndex + "|" + part));
+        wIndex++;
+        /* micro baseline + tilt — readable, not drunk */
+        const y = -0.85 + wr() * 1.7; /* px */
+        const x = -0.25 + wr() * 0.5;
+        const rot = -0.4 + wr() * 0.8; /* deg */
+        const track = -0.01 + wr() * 0.02; /* em nudge */
+        span.style.setProperty("--ew-y", `${y.toFixed(2)}px`);
+        span.style.setProperty("--ew-x", `${x.toFixed(2)}px`);
+        span.style.setProperty("--ew-r", `${rot.toFixed(3)}deg`);
+        span.style.setProperty("--ew-tr", `${track.toFixed(4)}em`);
+        frag.appendChild(span);
+      }
+      node.parentNode.replaceChild(frag, node);
+    };
+
+    const walk = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        wrapTextNode(node);
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      if (node.matches?.(".e-word, .e-rule, .e-frame, br, code, pre, svg")) return;
+      /* recurse into inline markup; snapshot list — we mutate */
+      const kids = Array.from(node.childNodes);
+      kids.forEach(walk);
+    };
+
+    Array.from(el.childNodes).forEach(walk);
+  };
+
   const register = (el, role, gains) => {
     if (!el || projections.has(el)) return;
     const p = createProjection(el, role, gains);
@@ -255,6 +315,8 @@
     el.dataset.f00Projection = p.seed.toString(16);
     el.classList.add("f00-proj");
     applyProjectionCSS(p);
+    /* word-level baseline entropy for body type (not chrome chrome chrome) */
+    if (role === "type") organicizeText(el);
   };
 
   /* ── emulsion RULE: universal — never a CAD hairline ── */
