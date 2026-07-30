@@ -1,13 +1,13 @@
 # f00
 
-**[f00.sh](https://f00.sh)** — home for f00 projects.
+**[f00.sh](https://f00.sh)** — a collective. Software, art, and other projects that refuse fake polish.
 
 ## Projects
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
-> **Theme (ONE shared CSS):** [https://f00.sh/theme/f00-theme.css](https://f00.sh/theme/f00-theme.css) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Product CSS = layout only.
+> **Theme (ONE shared CSS):** [https://f00.sh/theme/f00-theme.css](https://f00.sh/theme/f00-theme.css) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Project CSS = layout only.
 
-| Product | Site | Repo | One-liner |
+| Project | Site | Repo | One-liner |
 |---------|------|------|-----------|
 | **f00tils** | [coreutils.f00.sh](https://coreutils.f00.sh/) | [f00-sh/f00tils](https://github.com/f00-sh/f00tils) | Freestanding assembly GNU userland (`f00` multicall) |
 | **clun** | [clun.f00.sh](https://clun.f00.sh/) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |

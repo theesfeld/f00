@@ -127,7 +127,7 @@ def patch_index(catalog: dict) -> None:
     names = ", ".join(p["name"] for p in released(catalog["projects"]))
     html = re.sub(
         r'(<meta name="description" content=")[^"]*(" />)',
-        rf'\1f00: freestanding tools that feel inevitable. {names}.\2',
+        rf'\1f00 is a collective — software, art, zines, film, sound. Projects with guts. {names}.\2',
         html,
         count=1,
     )
@@ -151,7 +151,7 @@ def patch_readme(catalog: dict) -> None:
     theme = catalog["theme"]["css"]
     table = "\n".join(
         [
-            "| Product | Site | Repo | One-liner |",
+            "| Project | Site | Repo | One-liner |",
             "|---------|------|------|-----------|",
             *rows,
         ]
@@ -159,7 +159,7 @@ def patch_readme(catalog: dict) -> None:
     block = f"""## Projects
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
-> **Theme (ONE shared CSS):** [{theme}]({theme}) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Product CSS = layout only.
+> **Theme (ONE shared CSS):** [{theme}]({theme}) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Project CSS = layout only.
 
 {table}
 
