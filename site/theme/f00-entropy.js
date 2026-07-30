@@ -213,19 +213,16 @@
     const gy = p.gateY + p.dispY;
     const rz = p.rotZ + p.dispRot;
 
-    /* direct transform = compositor-friendly continuous flow */
-    el.style.transform = `translate3d(${gx.toFixed(3)}px, ${gy.toFixed(3)}px, 0) rotate(${rz.toFixed(4)}deg)`;
+    /*
+     * Letterpress text owns glyph-level entropy — keep block pose tiny
+     * so we don't double-transform and look drunk.
+     */
+    const press = el.classList?.contains("e-text") ? 0.28 : 1;
+    el.style.transform = `translate3d(${(gx * press).toFixed(3)}px, ${(gy * press).toFixed(3)}px, 0) rotate(${(rz * press).toFixed(4)}deg)`;
 
     if (p.role === "type" || p.role === "chrome") {
-      const ty = p.baseY + p.dispY * 0.35;
+      const ty = (p.baseY + p.dispY * 0.35) * press;
       el.style.setProperty("--e-t-y", `${ty.toFixed(3)}px`);
-      /* include baseline drift in the same transform (no second layout) */
-      if (p.inCard) {
-        const gx = p.gateX + p.dispX;
-        const gy = p.gateY + p.dispY + ty * 0.35;
-        const rz = p.rotZ + p.dispRot;
-        el.style.transform = `translate3d(${gx.toFixed(3)}px, ${gy.toFixed(3)}px, 0) rotate(${rz.toFixed(4)}deg)`;
-      }
     }
   };
 
@@ -239,8 +236,9 @@
   };
 
   /**
-   * Body text must not sit on a perfect baseline.
-   * Wrap words in specimen spans — close to straight, never CAD-collinear.
+   * Letterpress spacer model — what a hand compositor actually gets wrong:
+   *   kerning / sidebearings, word space quads, baseline, sort rotation,
+   *   impression scale, ink density. Slight. Never drunk. Never uniform.
    */
   const organicizeText = (el) => {
     if (!el || el.dataset.f00Words === "1") return;
@@ -250,8 +248,63 @@
     el.dataset.f00Words = "1";
     el.classList.add("e-text");
 
-    const baseSeed = seedFor(el, "words");
+    const baseSeed = seedFor(el, "press");
     let wIndex = 0;
+    let gIndex = 0;
+    /* calmer on titles; more on body */
+    const isTitle = el.matches?.("h1, h2, h3, h4, .card-meta, .brand-mark, .brand-sub");
+    const amp = isTitle ? 0.55 : 1;
+
+    const makeGlyph = (ch, wordKey) => {
+      const gr = mulberry(
+        hashStr(baseSeed + "|g|" + gIndex + "|" + wordKey + "|" + ch)
+      );
+      gIndex++;
+      const span = document.createElement("span");
+      span.className = "e-glyph";
+      span.textContent = ch;
+      /* sidebearing / kern — not tracking the whole word as one unit */
+      const kern = (-0.04 + gr() * 0.08) * amp; /* em */
+      const y = (-0.7 + gr() * 1.4) * amp; /* px baseline */
+      const rot = (-0.5 + gr() * 1.0) * amp; /* deg — sort not square in stick */
+      const scale = 0.975 + gr() * 0.05 * amp; /* impression squash 0.975–1.025 */
+      const ink = 0.84 + gr() * 0.16; /* ink opacity — never perfect solid */
+      span.style.setProperty("--eg-k", `${kern.toFixed(4)}em`);
+      span.style.setProperty("--eg-y", `${y.toFixed(2)}px`);
+      span.style.setProperty("--eg-r", `${rot.toFixed(3)}deg`);
+      span.style.setProperty("--eg-s", scale.toFixed(4));
+      span.style.setProperty("--eg-ink", ink.toFixed(3));
+      return span;
+    };
+
+    const makeSpace = (raw) => {
+      const sr = mulberry(hashStr(baseSeed + "|sp|" + wIndex + "|" + raw.length));
+      const span = document.createElement("span");
+      span.className = "e-space";
+      span.textContent = "\u00a0"; /* nbsp keeps the quad */
+      /* word-space quad variance — letterpress spacer stack */
+      const wEm = (0.2 + sr() * 0.16) * (0.85 + 0.15 * amp); /* ~0.20–0.36em */
+      span.style.setProperty("--es-w", `${wEm.toFixed(3)}em`);
+      /* tiny vertical drift on the space itself rarely matters; skip */
+      return span;
+    };
+
+    const makeWord = (word) => {
+      const wordKey = wIndex + "|" + word;
+      const wr = mulberry(hashStr(baseSeed + "|w|" + wordKey));
+      wIndex++;
+      const wordEl = document.createElement("span");
+      wordEl.className = "e-word";
+      /* whole-word stick sometimes sits a hair off */
+      const wy = (-0.25 + wr() * 0.5) * amp;
+      const wr_ = (-0.12 + wr() * 0.24) * amp;
+      wordEl.style.setProperty("--ew-y", `${wy.toFixed(2)}px`);
+      wordEl.style.setProperty("--ew-r", `${wr_.toFixed(3)}deg`);
+      for (const ch of word) {
+        wordEl.appendChild(makeGlyph(ch, wordKey));
+      }
+      return wordEl;
+    };
 
     const wrapTextNode = (node) => {
       const text = node.textContent;
@@ -261,24 +314,10 @@
       for (const part of parts) {
         if (!part) continue;
         if (/^\s+$/.test(part)) {
-          frag.appendChild(document.createTextNode(part));
+          frag.appendChild(makeSpace(part));
           continue;
         }
-        const span = document.createElement("span");
-        span.className = "e-word";
-        span.textContent = part;
-        const wr = mulberry(hashStr(baseSeed + "|" + wIndex + "|" + part));
-        wIndex++;
-        /* micro baseline + tilt — readable, not drunk */
-        const y = -0.85 + wr() * 1.7; /* px */
-        const x = -0.25 + wr() * 0.5;
-        const rot = -0.4 + wr() * 0.8; /* deg */
-        const track = -0.01 + wr() * 0.02; /* em nudge */
-        span.style.setProperty("--ew-y", `${y.toFixed(2)}px`);
-        span.style.setProperty("--ew-x", `${x.toFixed(2)}px`);
-        span.style.setProperty("--ew-r", `${rot.toFixed(3)}deg`);
-        span.style.setProperty("--ew-tr", `${track.toFixed(4)}em`);
-        frag.appendChild(span);
+        frag.appendChild(makeWord(part));
       }
       node.parentNode.replaceChild(frag, node);
     };
@@ -289,10 +328,13 @@
         return;
       }
       if (node.nodeType !== Node.ELEMENT_NODE) return;
-      if (node.matches?.(".e-word, .e-rule, .e-frame, br, code, pre, svg")) return;
-      /* recurse into inline markup; snapshot list — we mutate */
-      const kids = Array.from(node.childNodes);
-      kids.forEach(walk);
+      if (
+        node.matches?.(
+          ".e-word, .e-glyph, .e-space, .e-rule, .e-frame, br, code, pre, svg"
+        )
+      )
+        return;
+      Array.from(node.childNodes).forEach(walk);
     };
 
     Array.from(el.childNodes).forEach(walk);
