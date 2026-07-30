@@ -231,3 +231,21 @@
   Cache-Control: public, max-age=86400, immutable
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
+
+/assets/f00-stars.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/theme/f00-stars.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/assets/f00-stars-v1.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=300, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
