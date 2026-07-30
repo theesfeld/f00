@@ -68,7 +68,7 @@ That regenerates hub product cards, this table, and README projects.
 | Field | URL / path |
 |-------|------------|
 | Catalog | `site/catalog.json` → https://f00.sh/catalog.json |
-| Theme CSS | `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme-32.css |
+| Theme CSS | `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme-33.css |
 | Org | github.com/f00-sh |
 
 `$PROJECTS` is the developer machines' projects root (here: `/home/glenda/Projects`).

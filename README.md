@@ -5,7 +5,7 @@
 ## Projects
 
 > **Source of truth:** [`site/catalog.json`](site/catalog.json) → https://f00.sh/catalog.json
-> **Theme (ONE shared CSS):** [https://f00.sh/theme/f00-theme-32.css](https://f00.sh/theme/f00-theme-32.css) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Product CSS = layout only.
+> **Theme (ONE shared CSS):** [https://f00.sh/theme/f00-theme-33.css](https://f00.sh/theme/f00-theme-33.css) — domain-level for all `*.f00.sh`. Heart-Shaped Box contrasts · Bleach boxes. Product CSS = layout only.
 
 | Product | Site | Repo | One-liner |
 |---------|------|------|-----------|
