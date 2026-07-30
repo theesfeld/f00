@@ -331,44 +331,31 @@
   });
 
   /*
-   * Splash plate is one petal on the same tray as cards/rules/type
-   * (F00Projection seed from f00-entropy.js). No primary object.
+   * Splash mark via throw engine (structure → develop → project → display).
+   * Not CSS blur. Peer to every other projected object on the surface.
    */
   const splashWrap = document.querySelector(".splash-wrap");
   const filmCanvas = document.querySelector("canvas.splash-film");
-  const mountPlate = () => {
-    if (
-      !filmCanvas ||
-      !splashWrap ||
-      !splash ||
-      !window.F00FilmLogo ||
-      typeof window.F00FilmLogo.mount !== "function"
-    ) {
-      return;
-    }
-    filmHandle = window.F00FilmLogo.mount({
+  if (
+    filmCanvas &&
+    splashWrap &&
+    splash &&
+    window.F00ThrowPlate &&
+    typeof window.F00ThrowPlate.mount === "function"
+  ) {
+    filmHandle = window.F00ThrowPlate.mount({
       canvas: filmCanvas,
       splashEl: splash,
       text: "f00",
-      ink: "#090909",
-      fontFamily: '"Onyx", "Times New Roman", Times, serif',
       staticOnly: prefersReduced,
       getFontPx: () => {
         const fs = parseFloat(getComputedStyle(splash).fontSize);
         return Number.isFinite(fs) ? fs : splashMaxPx || 120;
       },
-      getP: () =>
-        parseFloat(getComputedStyle(root).getPropertyValue("--p")) || 0,
       getOpacity: () => dockOp,
     });
     if (filmHandle) {
       splashWrap.classList.add("is-film");
-      /* same petal stamping as boxes — entropy may have run first */
-      if (!splashWrap.dataset.f00Petal) {
-        splashWrap.dataset.f00Petal = "1";
-      }
     }
-  };
-  /* entropy script is defer-ordered before app; projection seed should exist */
-  mountPlate();
+  }
 })();

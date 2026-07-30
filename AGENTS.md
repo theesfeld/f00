@@ -31,7 +31,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
    - **No manufactured perfection:** no rest pose that is pure identity; no exact-duplicate throws; no razor CAD edges as the aesthetic goal; no timer choreography that feels like a metronome. Nature = pattern + chaos + entropy.
    - **What stays fixed:** brand tokens (theme, palette, type roles), structure, copy intent, product identity — so it still reads as f00.
    - **What lives:** optics and material presence — soft edges, continuous organic motion where motion exists, specimen uniqueness when a surface is first projected, hospital-flower light not UI chrome polish.
-   - **Implementation:** shared `https://f00.sh/theme/f00-theme-34.css` + `https://f00.sh/theme/f00-entropy.js` (Worker injects on `*.f00.sh`). Splash WebGL plate is one cel under the same law.
+   - **Implementation:** shared `https://f00.sh/theme/f00-theme-34.css` + `https://f00.sh/theme/f00-entropy.js` (Worker injects on `*.f00.sh`). **throw** (`$PROJECTS/throw`, wip) is the develop→project engine — not blur filters. Hub mark uses `site/throw/` + `throw-plate.js`.
    - **Art law:** digital is the frame; the picture is imperfect organic reality (medical models, poppies, foil, dye, innards). Do not ship static boilerplate text-on-flat as the emotional register of a scene.
 
 ## Layout
@@ -90,6 +90,7 @@ That regenerates hub product cards, this table, and README projects.
 | Cel Index | `released` | `$PROJECTS/cel` | https://cel.f00.sh/ | n/a (Pages `f00-cel`) |
 | TRN | `released` | `$PROJECTS/trn` | https://trn.f00.sh/ | n/a (Pages `f00-trn`) |
 | Heartbox | `released` | `$PROJECTS/heartbox` | https://heartbox.f00.sh/ | n/a (Pages `f00-heartbox`) |
+| throw | `wip` | — | https://throw.f00.sh/ | n/a |
 
 **Card rule:** `status=released` → hub card. `wip` / other → listed here, not on f00.sh grid.
 

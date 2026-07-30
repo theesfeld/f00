@@ -858,19 +858,15 @@ footer, .site-footer, .foot {
 }
 
 /*
- * Every .f00-proj is seen under light — pose can shift; never uniform CSS blur.
- * Uniform blur is manufactured chaos. Softness lives only in non-uniform fields
- * (shader emulsion / uneven edges), never filter: blur(constant).
+ * Object poses may carry specimen micro-offset from entropy.js.
+ * Real develop+project for marks lives in throw engine — not CSS blur theater.
  */
 .f00-proj {
   transform:
-    perspective(var(--p-persp, 900px))
-    rotateX(var(--p-rx, 0deg))
-    rotateY(var(--p-ry, 0deg))
-    rotateZ(var(--p-rz, 0deg))
-    translate3d(var(--p-x, 0px), var(--p-y, 0px), 0);
+    rotate(var(--p-rz, var(--e-rot, 0deg)))
+    translate3d(var(--p-x, var(--e-x, 0px)), var(--p-y, var(--e-y, 0px)), 0);
   transform-origin: 50% 50%;
-  filter: none !important; /* ban uniform blur */
+  filter: none !important;
   will-change: transform;
   backface-visibility: hidden;
 }
@@ -888,14 +884,12 @@ article.card.f00-proj, .feature-card.f00-proj, .doc-card.f00-proj,
   background-color: rgba(232, 223, 212, var(--e-paper, 1)) !important;
 }
 
-/* type projections: softer optics, still legible */
 p.f00-proj, li.f00-proj, h1.f00-proj, h2.f00-proj, h3.f00-proj, h4.f00-proj,
 label.f00-proj, .lede.f00-proj, .blurb.f00-proj, .brand-mark.f00-proj,
 .brand-sub.f00-proj, .nav a.f00-proj, .section-head h2.f00-proj,
 .card-meta.f00-proj, .btn.f00-proj, .foot.f00-proj, .foot a.f00-proj {
   letter-spacing: calc(var(--f00-tracking-body, 0.02em) + var(--e-t-track, 0em));
   word-spacing: var(--e-t-word, 0em);
-  /* blur already on .f00-proj; keep tiny */
 }
 
 .splash-wrap.f00-proj {

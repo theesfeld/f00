@@ -162,6 +162,26 @@
         "f00 default theme \u00b7 MIT"
       ],
       "docs": "https://heartbox.f00.sh/#install"
+    },
+    {
+      "id": "throw",
+      "name": "throw",
+      "status": "wip",
+      "domain": "throw.f00.sh",
+      "site": "https://throw.f00.sh/",
+      "repo": "https://github.com/f00-sh/throw",
+      "repo_slug": "f00-sh/throw",
+      "path": "throw",
+      "one_liner": "Entropic develop + optical projection engine",
+      "blurb": "Structure becomes film; film becomes light on a screen. Emulsion physics and projection chain \u2014 not blur filters. f00 looks are throws, not CAD.",
+      "facts": [
+        "structure \u2192 develop \u2192 project \u2192 display",
+        "uniformity is only mathematics"
+      ],
+      "links": {
+        "site": "https://throw.f00.sh/",
+        "repo": "https://github.com/f00-sh/throw"
+      }
     }
   ]
 }
