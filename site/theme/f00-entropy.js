@@ -92,13 +92,13 @@
       role,
       seed,
       R,
-      /* pose in px — must clear ~1–3px to read as imperfect, not subpixel */
-      gateX: R.signed(3.4 * pose),
-      gateY: R.signed(2.8 * pose),
-      tiltX: R.signed(0.85 * persp),
-      tiltY: R.signed(0.7 * persp),
-      buckle: R.signed(0.028 * pose),
-      rotZ: R.signed(1.15 * pose),
+      /* micro pose — a hair off, not floating */
+      gateX: R.signed(1.4 * pose),
+      gateY: R.signed(1.15 * pose),
+      tiltX: R.signed(0.55 * persp),
+      tiltY: R.signed(0.45 * persp),
+      buckle: R.signed(0.014 * pose),
+      rotZ: R.signed(0.42 * pose),
       /* border weights — never equal on all four sides */
       edgeT: R.range(1.15, 3.1),
       edgeR: R.range(1.15, 3.1),
@@ -110,18 +110,18 @@
       baseY: R.signed(0.65),
       defocus0: R.range(0.04, 0.22) * blur,
       emul: R.range(0.7, 1.35),
-      /* pad drift — layout variance you can feel between cards */
-      padT: R.range(0.88, 1.18),
-      padR: R.range(0.87, 1.16),
-      padB: R.range(0.89, 1.2),
-      padL: R.range(0.87, 1.16),
+      /* pad drift — slight, not lopsided */
+      padT: R.range(0.94, 1.1),
+      padR: R.range(0.93, 1.09),
+      padB: R.range(0.95, 1.12),
+      padL: R.range(0.93, 1.09),
       phi: R.range(0, Math.PI * 2),
       /* slow rates — flow, not twitch */
       omega: R.range(0.12, 0.42),
-      ampGate: R.range(0.25, 0.75) * pose,
-      ampTilt: R.range(0.04, 0.14) * persp,
+      ampGate: R.range(0.12, 0.4) * pose,
+      ampTilt: R.range(0.03, 0.1) * persp,
       ampDef: R.range(0.02, 0.08) * blur,
-      ampRot: R.range(0.04, 0.12) * pose,
+      ampRot: R.range(0.015, 0.05) * pose,
       liveGateX: 0,
       liveGateY: 0,
       liveTiltX: 0,
@@ -364,37 +364,33 @@
 
   /* ── emulsion RULE: ONE path language — chrome + cards share it ── */
   const rulePath = (R) => {
-    /*
-     * viewBox height is 8 → stretched to ~8px. amp must be ~1–2 units
-     * or the line reads as a CAD hairline (previous 0.5 was ~0.5px).
-     */
-    const n = 12 + Math.floor(R.rnd() * 10);
+    /* calm emulsion — a hair off collinear, not a seismograph */
+    const n = 10 + Math.floor(R.rnd() * 7);
     const mid = 4;
-    const amp = 0.85 + R.range(0, 0.95);
-    let y = mid + R.signed(amp * 0.55);
+    const amp = 0.38 + R.range(0, 0.42);
+    let y = mid + R.signed(amp * 0.5);
     let d = `M 0 ${y.toFixed(3)}`;
     for (let i = 1; i <= n; i++) {
       const x = (i / n) * 100;
-      y += R.signed(amp * 0.5);
-      y = mid + (y - mid) * 0.68 + R.signed(amp * 0.28);
-      y = Math.max(1.0, Math.min(7.0, y));
-      const cx = x - 50 / n + R.signed(0.55);
-      const cy = y + R.signed(amp * 0.4);
+      y += R.signed(amp * 0.45);
+      y = mid + (y - mid) * 0.78 + R.signed(amp * 0.22);
+      y = Math.max(1.6, Math.min(6.4, y));
+      const cx = x - 50 / n + R.signed(0.3);
+      const cy = y + R.signed(amp * 0.3);
       d += ` Q ${cx.toFixed(3)} ${cy.toFixed(3)} ${x.toFixed(3)} ${y.toFixed(3)}`;
     }
     return d;
   };
 
   /**
-   * Nearly-straight frame — still a box, never CAD.
-   * viewBox 0..100. amp ~1–2.4 ≈ 1–2.5% of card size (~4–9px on a
-   * 350px card) — the previous 0.12–0.28 was sub-pixel and invisible.
+   * Nearly-straight frame — box first, organic second.
+   * amp ~0.28–0.55 on 100-unit viewBox ≈ 1–2px on a 350px card.
    */
   const framePath = (R) => {
-    const inset = 0.65 + R.range(0, 0.55);
-    const amp = 1.0 + R.range(0, 1.4);
+    const inset = 0.55 + R.range(0, 0.28);
+    const amp = 0.28 + R.range(0, 0.28);
     const j = (m) => R.signed(m);
-    const n = 5;
+    const n = 3;
     const pts = [];
 
     const edge = (count, at) => {
@@ -407,16 +403,16 @@
 
     /* top L→R */
     edge(n, (t, end) => [
-      inset + t * (100 - 2 * inset) + j(end ? 0.15 : 0.35),
-      inset + (end ? j(0.15) : j(amp)),
+      inset + t * (100 - 2 * inset) + j(end ? 0.06 : 0.1),
+      inset + (end ? j(0.06) : j(amp)),
     ]);
-    /* right T→B (skip first = shared corner) */
+    /* right T→B */
     for (let i = 1; i <= n; i++) {
       const t = i / n;
       const end = i === n;
       pts.push([
-        100 - inset + (end ? j(0.15) : j(amp)),
-        inset + t * (100 - 2 * inset) + j(end ? 0.15 : 0.35),
+        100 - inset + (end ? j(0.06) : j(amp)),
+        inset + t * (100 - 2 * inset) + j(end ? 0.06 : 0.1),
       ]);
     }
     /* bottom R→L */
@@ -424,16 +420,16 @@
       const t = i / n;
       const end = i === n;
       pts.push([
-        100 - inset - t * (100 - 2 * inset) + j(end ? 0.15 : 0.35),
-        100 - inset + (end ? j(0.15) : j(amp)),
+        100 - inset - t * (100 - 2 * inset) + j(end ? 0.06 : 0.1),
+        100 - inset + (end ? j(0.06) : j(amp)),
       ]);
     }
-    /* left B→T (skip last corner — close to start) */
+    /* left B→T */
     for (let i = 1; i < n; i++) {
       const t = i / n;
       pts.push([
         inset + j(amp),
-        100 - inset - t * (100 - 2 * inset) + j(0.35),
+        100 - inset - t * (100 - 2 * inset) + j(0.1),
       ]);
     }
 
@@ -442,8 +438,8 @@
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1];
       const b = pts[i];
-      const mx = (a[0] + b[0]) / 2 + j(amp * 0.55);
-      const my = (a[1] + b[1]) / 2 + j(amp * 0.55);
+      const mx = (a[0] + b[0]) / 2 + j(amp * 0.35);
+      const my = (a[1] + b[1]) / 2 + j(amp * 0.35);
       d += ` Q ${mx.toFixed(3)} ${my.toFixed(3)} ${fmt(b)}`;
     }
     d += " Z";
@@ -517,8 +513,8 @@
     const eg = Math.round(R.range(166, 198));
     const eb = Math.round(R.range(174, 204));
     const ea = R.range(0.7, 0.92);
-    /* stroke in viewBox units; ~0.7–1.1 ≈ 2.5–4px on a 350px card */
-    const sw = 0.7 + R.range(0, 0.4);
+    /* metal edge — present, not a heavy ink outline */
+    const sw = 0.42 + R.range(0, 0.22);
     const { d, d01 } = framePath(R);
     const id = seed.toString(16);
     const clipId = `e-clip-${id}`;
@@ -713,8 +709,8 @@
 
   const gainsFor = (role) => {
     if (role === "plate") return { pose: 0.9, blur: 0.9, persp: 0.7 };
-    /* solid cards: enough pose to leave CAD, still calm */
-    if (role === "solid") return { pose: 0.72, blur: 0.3, persp: 0.32 };
+    /* solid cards: nearly still — frame owns the organic edge */
+    if (role === "solid") return { pose: 0.38, blur: 0.22, persp: 0.2 };
     /* body type: enough to feel projected, still readable */
     if (role === "type") return { pose: 0.55, blur: 0.35, persp: 0.22 };
     if (role === "chrome") return { pose: 0.45, blur: 0.28, persp: 0.32 };

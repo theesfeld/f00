@@ -161,7 +161,8 @@
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
     /* --p unused for layout; skip style writes on the scroll hot path */
-    const docked = v > 0.88;
+    /* match throw-plate: snap header once mark is most of the way home */
+    const docked = v > 0.72;
     if (docked !== lastDocked) {
       lastDocked = docked;
       root.classList.toggle("logo-docked", docked);

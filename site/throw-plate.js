@@ -140,7 +140,8 @@ export function mountThrowPlate(opts) {
     dispScale = targetScale;
 
     /* dock class + frame pin first, then plant */
-    const hardDock = syncDockClass(pp > 0.88);
+    /* snap into header near the end of shrink — not only at full scroll */
+    const hardDock = syncDockClass(pp > 0.72);
 
     /*
      * Ink center offset inside the plate (css px at scale 1), then scaled.
@@ -371,7 +372,7 @@ export function mountThrowPlate(opts) {
       setScrollingFlag(false);
     }
 
-    const docked = smoothP > 0.88;
+    const docked = smoothP > 0.72;
 
     /* GPU: mobile = still plate while scrolling; rare ticks when idle */
     if (projector && !reduced) {
