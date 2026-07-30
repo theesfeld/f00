@@ -234,7 +234,7 @@ h1, h2, h3, h4 {
   color: #ffffff !important;
   text-transform: uppercase;
 }
-/* brand logo is always lowercase f00 — never uppercase the mark */
+/* brand logo is always lowercase f00 — never uppercase the mark (logo lowercase lock) */
 h1.splash, .splash, .splash .glyph,
 .brand-mark, .f00-brand {
   text-transform: none !important;

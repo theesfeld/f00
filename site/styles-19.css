@@ -41,6 +41,9 @@ body { margin: 0; min-height: 100dvh; overflow-x: hidden; }
   letter-spacing: var(--splash-tracking) !important; font-weight: 400 !important;
   user-select: none; white-space: nowrap; width: max-content;
 }
+.splash, .splash .glyph, h1.splash, .brand-mark {
+  text-transform: none !important;
+}
 .splash .glyph {
   display: inline; position: relative;
   font-size: inherit !important; font-family: inherit !important;
