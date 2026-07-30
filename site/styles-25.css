@@ -324,6 +324,102 @@ html:has(.hero.is-done) .splash-wrap.is-film .splash {
   color: rgba(208, 213, 219, 0.92) !important;
 }
 .foot-stars:hover { color: #e4e8ed !important; }
+.foot a:not(.foot-stars) {
+  color: rgba(208, 213, 219, 0.92);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.foot a:not(.foot-stars):hover {
+  color: #e4e8ed;
+  border-bottom-color: rgba(208, 213, 219, 0.45);
+}
+.foot-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.1rem;
+  align-items: baseline;
+}
+
+/* ── visual mantra page ── */
+.page-mantra main.mantra {
+  position: relative;
+  z-index: 1;
+  max-width: min(42rem, var(--max));
+  margin: 0 auto;
+  padding: calc(var(--header-h) + 2.25rem) var(--pad) 3.5rem;
+}
+.mantra-head {
+  margin-bottom: 2.25rem;
+  padding-bottom: 1.1rem;
+}
+.mantra-kicker {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(208, 213, 219, 0.72);
+}
+.mantra-head h1 {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-brand, "Onyx", "Times New Roman", Times, serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 6vw, 3.1rem);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: #EDE6DE;
+  text-transform: none;
+}
+.mantra-lede {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: rgba(232, 223, 212, 0.88);
+  max-width: 36rem;
+}
+.mantra-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.mantra-verse {
+  margin: 0;
+  padding: 1.15rem 1.2rem 1.25rem;
+  /* cream plate via entropy frame when present; fallback: */
+  background: transparent;
+}
+.mantra-verse h2 {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-brand, "Onyx", "Times New Roman", Times, serif);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  color: #8A2810;
+  text-transform: none;
+  border: 0 !important;
+  padding: 0;
+}
+.mantra-verse p {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.58;
+  color: #D44A18;
+  font-weight: 600;
+}
+.mantra-verse p:last-child { margin-bottom: 0; }
+.mantra-seal {
+  margin-top: 1rem !important;
+  padding-top: 0.85rem;
+  font-family: var(--font-chip, ui-monospace, monospace);
+  font-size: 0.82rem !important;
+  letter-spacing: 0.06em;
+  line-height: 1.55 !important;
+  color: #8A2810 !important;
+  font-weight: 700 !important;
+}
+.mantra-close {
+  margin-top: 0.5rem;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .splash { font-size: var(--splash-rest) !important; }

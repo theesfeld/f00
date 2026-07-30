@@ -908,7 +908,8 @@ article.card.e-frame-host,
 .benchmark-card.e-frame-host,
 .tool-card.e-frame-host,
 .release-card.e-frame-host,
-.announcement.e-frame-host {
+.announcement.e-frame-host,
+.mantra-verse.e-frame-host {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;

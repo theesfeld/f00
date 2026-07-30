@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>visual mantra — f00</title>
+  <meta name="description" content="f00 visual mantra: the world is a projection. Perfection is a math problem. Order lives inside disorder." />
+  <meta name="theme-color" content="#1E78C8" />
+  <link rel="canonical" href="https://f00.sh/mantra" />
+  <meta property="og:title" content="visual mantra — f00" />
+  <meta property="og:description" content="The world is a projection. Perfection is a math problem. Order lives inside disorder." />
+  <meta property="og:url" content="https://f00.sh/mantra" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/theme/brand/favicon-v32.svg?v=field" type="image/svg+xml" />
+  <link rel="icon" href="/theme/brand/icon-32-v32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/theme/brand/apple-touch-v32.png" sizes="180x180" />
+  <link rel="preload" href="/assets/fonts/Onyx.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/Onyx.otf" as="font" type="font/otf" crossorigin />
+  <link rel="stylesheet" href="/theme/f00-theme-34.css" />
+  <link rel="stylesheet" href="styles-25.css?v=25t" />
+  <script src="/theme/f00-entropy.js?v=21" data-f00-entropy-script defer></script>
+</head>
+<body class="page-mantra">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="https://f00.sh/" aria-label="f00 home">
+        <span class="brand-mark">f00</span>
+        <span class="brand-sub">.sh</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="https://f00.sh/#projects">projects</a>
+        <a href="https://github.com/f00-sh" rel="noopener">github</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="mantra">
+    <header class="mantra-head section-head">
+      <p class="mantra-kicker mono">f00 · visual mantra</p>
+      <h1>The world is a projection.</h1>
+      <p class="mantra-lede">
+        Not a page that loads. A throw of light through imperfect things
+        onto a surface that was never flat.
+      </p>
+    </header>
+
+    <article class="mantra-body">
+      <section class="mantra-verse">
+        <h2>Perfection is a math problem</h2>
+        <p>
+          Uniformity only lives in equations. Outside mathematics, nothing
+          is 100% straight, 100% crisp, 100% the same as last time.
+          Snowflakes, fingerprints, zebra stripes, the drip of a brush:
+          pattern without clones. Species you recognize; specimens you
+          never confuse.
+        </p>
+      </section>
+
+      <section class="mantra-verse">
+        <h2>Order lives inside disorder</h2>
+        <p>
+          Chaos is not a flat smear. A body under skin is organs, not
+          noise. Emulsion can be nearly straight on the film and still
+          arrive bent by light. Some edges stay sharp. Some dissolve.
+          Straightness can survive in places — never everywhere at once,
+          and never by force of a single soft filter.
+        </p>
+      </section>
+
+      <section class="mantra-verse">
+        <h2>Every object is a throw</h2>
+        <p>
+          Logo, card, rule, letter, field: each is light through a thing,
+          through a lens, onto a screen. Each has its own seat in the
+          tray — its own gate, keystone, focus, lamp. Not one shared wind
+          moving petals. Not layout jitter dressed up as life. A view of
+          a natural thing, projected onto the display.
+        </p>
+      </section>
+
+      <section class="mantra-verse">
+        <h2>Letterpress, not laser</h2>
+        <p>
+          Hand-set type knows the spacer’s hand: kerning that wanders,
+          word spaces that breathe, ink that is almost solid, sorts that
+          sit a hair off square. Close to a line. Never a CAD baseline.
+          Readable first. Alive second. Both required.
+        </p>
+      </section>
+
+      <section class="mantra-verse">
+        <h2>Usable zen</h2>
+        <p>
+          Entropy is not an excuse for mess. The band is narrow on
+          purpose: enough variation that the eye believes the world,
+          never so much that you cannot read, aim, or rest. Beauty that
+          works. Work that looks like it grew.
+        </p>
+      </section>
+
+      <section class="mantra-verse mantra-close">
+        <h2>What we refuse</h2>
+        <p>
+          Manufactured perfection. Identical throws. Razor edges as
+          religion. Metronome motion. Flat blur as “organic.” Anything
+          that pretends the screen is more pure than the room it sits in.
+        </p>
+        <p class="mantra-seal">
+          Project the real world onto the display.<br />
+          Leave the math for the math.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="foot">
+    <span><a href="https://f00.sh/">← f00</a> · visual mantra</span>
+    <a class="foot-stars" href="https://github.com/f00-sh" rel="noopener" data-f00-stars-total>★ …</a>
+  </footer>
+
+  <script data-f00-stars-script>
+/* f00 GitHub stars — hub + project footers (also SPA-safe) */
+(() => {
+  const fmt = (n) =>
+    typeof n === "number" && Number.isFinite(n) ? n.toLocaleString("en-US") : "—";
+  const cache = new Map();
+  const fetchRepo = async (repo) => {
+    if (cache.has(repo)) return cache.get(repo);
+    const p = fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Accept: "application/vnd.github+json" },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) =>
+        j && typeof j.stargazers_count === "number" ? j.stargazers_count : 0
+      )
+      .catch(() => 0);
+    cache.set(repo, p);
+    return p;
+  };
+  const projectsFromCatalog = async () => {
+    for (const url of [
+      "https://f00.sh/catalog.json",
+      "/catalog.json",
+      "catalog.json",
+    ]) {
+      try {
+        const r = await fetch(url, { credentials: "omit" });
+        if (!r.ok) continue;
+        const j = await r.json();
+        const list = j.projects || j.products || [];
+        const repos = list
+          .filter((p) => p && p.status === "released" && p.repo_slug)
+          .map((p) => p.repo_slug);
+        if (repos.length) return repos;
+      } catch {
+        /* next */
+      }
+    }
+    return [
+      "f00-sh/f00tils",
+      "f00-sh/clun",
+      "f00-sh/cel",
+      "f00-sh/trn",
+      "f00-sh/heartbox",
+    ];
+  };
+  const paint = (el, n) => {
+    if (el.dataset.f00StarsPainted === String(n)) return;
+    el.textContent = `★ ${fmt(n)}`;
+    el.setAttribute("aria-label", `${fmt(n)} GitHub stars`);
+    el.dataset.f00StarsPainted = String(n);
+  };
+  const run = async () => {
+    const totals = document.querySelectorAll("[data-f00-stars-total]");
+    if (!totals.length) return;
+    const repos = await projectsFromCatalog();
+    let sum = 0;
+    for (const repo of repos) sum += await fetchRepo(repo);
+    totals.forEach((el) => paint(el, sum));
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+})();
+  </script>
+</body>
+</html>

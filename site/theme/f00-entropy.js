@@ -674,6 +674,7 @@
     ".tool-card",
     ".release-card",
     ".announcement",
+    ".mantra-verse",
     ".splash-wrap",
     ".btn",
   ].join(",");
@@ -716,7 +717,7 @@
   };
 
   const cardFrameSel =
-    ".card, article.card, .panel, .box, .f00-box, .feature-card, .doc-card, .install-card, .benchmark-card, .tool-card, .release-card, .announcement";
+    ".card, article.card, .panel, .box, .f00-box, .feature-card, .doc-card, .install-card, .benchmark-card, .tool-card, .release-card, .announcement, .mantra-verse";
 
   const eachMatch = (sc, sel, fn) => {
     if (sc && sc.nodeType === 1 && sc.matches?.(sel)) fn(sc);
