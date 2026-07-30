@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Heartbox field favicon — readable at 16px: sky + poppy mass + cream mark -->
+  <!-- Heartbox field favicon ROOT-v32 — readable at 16px: sky + poppy mass + cream mark -->
   <defs>
     <radialGradient id="sky" cx="50%" cy="40%" r="70%">
       <stop offset="0%" stop-color="#3A94D8"/>
