@@ -478,6 +478,77 @@ a.nav-donate[data-f00-donate] {
   }
 }
 
+/* ── open ledger ── */
+.page-ledger .ledger-main {
+  max-width: min(56rem, 100%);
+}
+.ledger-meta {
+  margin: 0.75rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: rgba(237, 230, 222, 0.75);
+  text-shadow: 0 1px 2px rgba(9, 9, 9, 0.3);
+}
+.ledger-panel {
+  margin: 0 0 1.75rem;
+}
+.ledger-h2 {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(237, 230, 222, 0.85);
+  text-shadow: 0 1px 2px rgba(9, 9, 9, 0.3);
+}
+.ledger-bal {
+  margin: 0;
+  padding: 0.5rem 0;
+  color: #EDE6DE !important;
+}
+.ledger-bal li {
+  color: #EDE6DE !important;
+  font-weight: 600;
+}
+.ledger-wrap {
+  overflow-x: auto;
+  padding: 0.85rem 0.75rem 1rem !important;
+}
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  color: #C43A12;
+}
+.ledger-table th,
+.ledger-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid rgba(138, 40, 16, 0.18);
+}
+.ledger-table th {
+  font-family: var(--font-chip, ui-monospace, monospace);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  color: #8A2810;
+}
+.ledger-table .ledger-amt {
+  white-space: nowrap;
+  font-weight: 700;
+}
+.ledger-row.ledger-in .ledger-amt { color: #3D8A48; }
+.ledger-row.ledger-out .ledger-amt { color: #8A2810; }
+.ledger-source {
+  margin: 0.75rem 0 1.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: rgba(237, 230, 222, 0.8);
+}
+.ledger-source a { color: #EDE6DE; }
+.ledger-empty { color: rgba(237, 230, 222, 0.85); }
+
 /* ── mantra / join pages ──
  * Body sections ARE hub cards (article.card). Layout only here.
  */

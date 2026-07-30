@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ledger — f00</title>
+  <meta name="description" content="Open monetary ledger for the f00 collective. Every movement public. No payroll. No private books." />
+  <meta name="theme-color" content="#1E78C8" />
+  <link rel="canonical" href="https://f00.sh/ledger" />
+  <meta property="og:title" content="ledger — f00" />
+  <meta property="og:description" content="Fully open books. One pool. No payroll. Every penny accounted for." />
+  <meta property="og:url" content="https://f00.sh/ledger" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/theme/brand/favicon-v32.svg?v=field" type="image/svg+xml" />
+  <link rel="icon" href="/theme/brand/icon-32-v32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/theme/brand/apple-touch-v32.png" sizes="180x180" />
+  <link rel="preload" href="/assets/fonts/Onyx.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/Onyx.otf" as="font" type="font/otf" crossorigin />
+  <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" data-f00-theme="1" />
+  <link rel="stylesheet" href="styles-25.css?v=26h" />
+  <script src="/theme/f00-entropy.js?v=25" data-f00-entropy-script defer></script>
+  <script src="ledger.js?v=1" defer></script>
+</head>
+<body class="page-mantra page-ledger">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="https://f00.sh/" aria-label="f00 home">
+        <span class="brand-mark">f00</span>
+        <span class="brand-sub">.sh</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="https://f00.sh/#projects">projects</a>
+        <a href="/who">who</a>
+        <a class="nav-donate" data-f00-donate href="https://f00.sh/donate">donate</a>
+        <a href="https://github.com/f00-sh" rel="noopener">github</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="mantra ledger-main">
+    <header class="mantra-head section-head">
+      <p class="mantra-kicker mono">f00 · open books</p>
+      <h1>Every penny public.</h1>
+      <p class="mantra-lede">
+        Fully open monetary ledger. No private books. No payroll.
+        No profit to stewards. One collective pool — gifts, costs,
+        and physical cost-recovery — written down for anyone to read.
+      </p>
+      <p id="ledger-meta" class="ledger-meta mono"></p>
+    </header>
+
+    <section class="ledger-panel" aria-label="Balances">
+      <h2 class="ledger-h2 mono">balances</h2>
+      <div id="ledger-balances"></div>
+    </section>
+
+    <section class="ledger-panel" aria-label="Entries">
+      <h2 class="ledger-h2 mono">entries</h2>
+      <div id="ledger-root">
+        <p class="mono">loading ledger…</p>
+      </div>
+    </section>
+
+    <div class="mantra-body">
+      <article class="card" data-ledger="law">
+        <h3>The law of the books</h3>
+        <p>
+          Every movement of value into or out of the collective is a
+          line here. Kinds: gift, expense, physical sale, transfer,
+          note. No salary. No wage. No “contractor lifestyle” line
+          that is payroll in costume. Program spend only — albums,
+          books, zines, servers, supplies, postage — and even-split
+          of unrestricted gifts when that is how the table divides
+          bread.
+        </p>
+        <p>
+          Source of truth is the file
+          <a href="/ledger.json"><code class="mono">ledger.json</code></a>
+          in git. If it is not in the ledger, it did not happen.
+        </p>
+        <p class="card-meta mono mantra-seal">
+          <a href="/donate">donate</a>
+          ·
+          <a href="/who">who</a>
+          ·
+          <a href="/ledger.json">raw json</a>
+        </p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span class="foot-left"><a href="https://f00.sh/">← f00</a> · ledger</span>
+    <a class="foot-center" href="/who">who</a>
+    <a class="foot-stars" href="https://github.com/f00-sh" rel="noopener" data-f00-stars-total>★ …</a>
+  </footer>
+
+  <script data-f00-stars-script>
+/* f00 GitHub stars — hub + project footers (also SPA-safe) */
+(() => {
+  const fmt = (n) =>
+    typeof n === "number" && Number.isFinite(n) ? n.toLocaleString("en-US") : "—";
+  const cache = new Map();
+  const fetchRepo = async (repo) => {
+    if (cache.has(repo)) return cache.get(repo);
+    const p = fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Accept: "application/vnd.github+json" },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) =>
+        j && typeof j.stargazers_count === "number" ? j.stargazers_count : 0
+      )
+      .catch(() => 0);
+    cache.set(repo, p);
+    return p;
+  };
+  const projectsFromCatalog = async () => {
+    for (const url of [
+      "https://f00.sh/catalog.json",
+      "/catalog.json",
+      "catalog.json",
+    ]) {
+      try {
+        const r = await fetch(url, { credentials: "omit" });
+        if (!r.ok) continue;
+        const j = await r.json();
+        const list = j.projects || j.products || [];
+        const repos = list
+          .filter((p) => p && p.status === "released" && p.repo_slug)
+          .map((p) => p.repo_slug);
+        if (repos.length) return repos;
+      } catch {
+        /* next */
+      }
+    }
+    return [
+      "f00-sh/f00tils",
+      "f00-sh/clun",
+      "f00-sh/cel",
+      "f00-sh/trn",
+      "f00-sh/heartbox",
+      "f00-sh/joule",
+    ];
+  };
+  const paint = (el, n) => {
+    if (el.dataset.f00StarsPainted === String(n)) return;
+    el.textContent = `★ ${fmt(n)}`;
+    el.setAttribute("aria-label", `${fmt(n)} GitHub stars`);
+    el.dataset.f00StarsPainted = String(n);
+  };
+  const run = async () => {
+    const totals = document.querySelectorAll("[data-f00-stars-total]");
+    if (!totals.length) return;
+    const repos = await projectsFromCatalog();
+    let sum = 0;
+    for (const repo of repos) sum += await fetchRepo(repo);
+    totals.forEach((el) => paint(el, sum));
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", run);
+  } else {
+    run();
+  }
+})();
+  </script>
+</body>
+</html>

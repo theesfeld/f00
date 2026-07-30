@@ -1,0 +1,40 @@
+{
+  "$schema_comment": "OPEN MONETARY LEDGER for the f00 collective. Every movement of value goes here. Edit this file, commit, deploy. Live: https://f00.sh/ledger.json · page: https://f00.sh/ledger. No payroll. No private books.",
+  "version": 1,
+  "title": "f00 collective ledger",
+  "policy": {
+    "open": true,
+    "no_payroll": true,
+    "no_private_profit": true,
+    "one_pool": true,
+    "even_split_unrestricted_gifts": true,
+    "free_digital": true,
+    "physical_sales_feed_pool": true,
+    "stewards_only": true
+  },
+  "rails": ["xmr", "cash", "post", "other"],
+  "kinds": [
+    "opening",
+    "gift",
+    "expense",
+    "physical_sale",
+    "transfer",
+    "note"
+  ],
+  "updated": "2026-07-30",
+  "entries": [
+    {
+      "id": "2026-07-30-001",
+      "date": "2026-07-30",
+      "kind": "opening",
+      "direction": "none",
+      "amount": "0",
+      "currency": "USD",
+      "rail": "none",
+      "memo": "Ledger opened. Pool empty. Public from day zero.",
+      "program": null,
+      "steward": null,
+      "receipt": null
+    }
+  ]
+}

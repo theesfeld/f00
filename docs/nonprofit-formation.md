@@ -153,6 +153,21 @@ next server, next open tool.
 - Report: what shipped, where public, how free digital is obtained.
 - Money is **support for work**, not purchase of ownership.
 
+## Open ledger (mandatory)
+
+Public books live at:
+
+- Page: https://f00.sh/ledger  
+- SSOT: https://f00.sh/ledger.json (`site/ledger.json` in git)
+
+Rules:
+
+- **Every** gift, expense, physical sale, transfer is a dated entry.
+- **No payroll** — no salary, wage, stipend, owner draw (check script
+  rejects those words in memos).
+- Validate: `python3 scripts/check-ledger.py --check`
+- If it is not on the ledger, it did not happen.
+
 ## Anti-patterns
 
 - Per-project tip jars (re-creates fiefs).
@@ -160,6 +175,7 @@ next server, next open tool.
 - Closed source “for sustainability.”
 - Paywall “members area.”
 - Discord as the only vote record.
+- Private books alongside the public ledger.
 - Becoming a pass-through for one person’s lifestyle.
 
 ## Spin-out idea (later f00 project)
