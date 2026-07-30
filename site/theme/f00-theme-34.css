@@ -863,37 +863,58 @@ footer, .site-footer, .foot {
   border-top: 0 !important;
 }
 
-/* imperfect card FRAME — SVG path border; fill clipped to same path */
+/* imperfect card FRAME — SVG path IS the plate (fill + stroke) */
 .e-frame-host {
   position: relative !important;
 }
 .e-frame-host > .e-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 4;
-  overflow: visible;
-  display: block;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 0 !important; /* under content; cream lives here */
+  overflow: visible !important;
+  display: block !important;
 }
+/* kill rectangular CSS plate — SVG fill is the only cream */
 .e-frame-host.f00-proj,
 .card.e-frame-host,
 article.card.e-frame-host,
 .panel.e-frame-host,
 .box.e-frame-host,
-.f00-box.e-frame-host {
+.f00-box.e-frame-host,
+.feature-card.e-frame-host,
+.doc-card.e-frame-host,
+.install-card.e-frame-host,
+.benchmark-card.e-frame-host,
+.tool-card.e-frame-host,
+.release-card.e-frame-host,
+.announcement.e-frame-host {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
   border: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
   box-shadow: none !important;
-  /* clip-path set by entropy.js to the organic frame — cream never leaks */
+  /* clip-path set in JS — content/watercolor cannot escape the path */
   overflow: hidden !important;
-  /* allow SVG filter crisp/soft islands; never a uniform CSS blur */
+  filter: none !important; /* filters paint outside the frame */
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-.e-frame-host > .e-frame .e-frame-stroke {
-  /* stroke sits on the clip edge */
-  vector-effect: non-scaling-stroke;
+/* watercolor wash also clipped by host clip-path */
+.e-frame-host::before,
+.e-frame-host::after {
+  /* host clip-path already clips descendants/pseudos in modern engines */
+  border-radius: 0 !important;
+}
+.card.e-frame-host > *:not(.e-frame),
+article.card.e-frame-host > *:not(.e-frame),
+.panel.e-frame-host > *:not(.e-frame) {
+  position: relative;
+  z-index: 1;
 }
 
 /*

@@ -237,70 +237,76 @@
   };
 
   /**
-   * Imperfect closed frame — subtle wander (not wild).
-   * Returns { d, inset } in viewBox 0 0 100 100.
+   * Nearly-straight frame — pretty straight, never CAD-perfect.
+   * viewBox 0 0 100 100. Micro wander only (~0.1–0.25 units).
    */
   const framePath = (R) => {
+    const inset = 0.55 + R.range(0, 0.25);
+    /* max deviation from a true straight edge */
+    const amp = 0.08 + R.range(0, 0.12);
     const j = (m) => R.signed(m);
-    /* small inset + mild edge wander — organic, readable card */
-    const inset = 1.1 + R.range(0, 0.35);
-    const w = () => 0.18 + R.range(0, 0.32); /* much calmer than before */
+    const n = 3; /* few samples — smooth almost-lines, not scribbles */
     const pts = [];
-    const wt = w();
-    const wr = w();
-    const wb = w();
-    const wl = w();
-    const nTB = 4 + Math.floor(R.rnd() * 2);
-    const nLR = 3 + Math.floor(R.rnd() * 2);
+
+    const edge = (count, at) => {
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        const end = i === 0 || i === count;
+        pts.push(at(t, end));
+      }
+    };
+
     /* top L→R */
-    for (let i = 0; i <= nTB; i++) {
-      const t = i / nTB;
-      const end = i === 0 || i === nTB;
+    edge(n, (t, end) => [
+      inset + t * (100 - 2 * inset) + j(end ? 0.04 : 0.06),
+      inset + (end ? j(0.04) : j(amp)),
+    ]);
+    /* right T→B (skip first = shared corner) */
+    for (let i = 1; i <= n; i++) {
+      const t = i / n;
+      const end = i === n;
       pts.push([
-        inset + t * (100 - 2 * inset) + j(end ? 0.08 : 0.18),
-        inset + j(end ? 0.1 : wt) + (end ? 0 : R.signed(wt * 0.45)),
-      ]);
-    }
-    /* right T→B */
-    for (let i = 1; i <= nLR; i++) {
-      const t = i / nLR;
-      pts.push([
-        100 - inset + j(t === 1 ? 0.1 : wr) + (t === 1 ? 0 : R.signed(wr * 0.4)),
-        inset + t * (100 - 2 * inset) + j(0.14),
+        100 - inset + (end ? j(0.04) : j(amp)),
+        inset + t * (100 - 2 * inset) + j(end ? 0.04 : 0.06),
       ]);
     }
     /* bottom R→L */
-    for (let i = 1; i <= nTB; i++) {
-      const t = i / nTB;
+    for (let i = 1; i <= n; i++) {
+      const t = i / n;
+      const end = i === n;
       pts.push([
-        100 - inset - t * (100 - 2 * inset) + j(0.14),
-        100 - inset + j(t === 1 ? 0.1 : wb) + (t === 1 ? 0 : R.signed(wb * 0.4)),
+        100 - inset - t * (100 - 2 * inset) + j(end ? 0.04 : 0.06),
+        100 - inset + (end ? j(0.04) : j(amp)),
       ]);
     }
-    /* left B→T */
-    for (let i = 1; i < nLR; i++) {
-      const t = i / nLR;
+    /* left B→T (skip last corner — close to start) */
+    for (let i = 1; i < n; i++) {
+      const t = i / n;
       pts.push([
-        inset + j(wl) + R.signed(wl * 0.4),
-        100 - inset - t * (100 - 2 * inset) + j(0.14),
+        inset + j(amp),
+        100 - inset - t * (100 - 2 * inset) + j(0.06),
       ]);
     }
-    if (!pts.length) {
-      return {
-        d: `M ${inset} ${inset} L ${100 - inset} ${inset} L ${100 - inset} ${100 - inset} L ${inset} ${100 - inset} Z`,
-        inset,
-      };
-    }
-    let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+
+    const fmt = (p) => `${p[0].toFixed(3)} ${p[1].toFixed(3)}`;
+    let d = `M ${fmt(pts[0])}`;
     for (let i = 1; i < pts.length; i++) {
-      const prev = pts[i - 1];
-      const cur = pts[i];
-      const mx = (prev[0] + cur[0]) / 2 + j(0.18);
-      const my = (prev[1] + cur[1]) / 2 + j(0.18);
-      d += ` Q ${mx.toFixed(2)} ${my.toFixed(2)} ${cur[0].toFixed(2)} ${cur[1].toFixed(2)}`;
+      /* light control points — almost collinear, tiny bow */
+      const a = pts[i - 1];
+      const b = pts[i];
+      const mx = (a[0] + b[0]) / 2 + j(amp * 0.35);
+      const my = (a[1] + b[1]) / 2 + j(amp * 0.35);
+      d += ` Q ${mx.toFixed(3)} ${my.toFixed(3)} ${fmt(b)}`;
     }
     d += " Z";
-    return { d, inset };
+
+    /* objectBoundingBox clip path (0..1) — no transform tricks */
+    const d01 = d.replace(/(-?\d+\.\d+|-?\d+)/g, (num) => {
+      const v = parseFloat(num) / 100;
+      return v.toFixed(5);
+    });
+
+    return { d, d01, inset, amp };
   };
 
   const attachRule = (el, side) => {
@@ -336,17 +342,23 @@
     el.classList.add("e-frame-host");
     const seed = seedFor(el, "frame");
     const R = makeBag(mulberry(seed));
-    const r = Math.round(R.range(155, 190));
-    const g = Math.round(R.range(162, 196));
-    const b = Math.round(R.range(170, 202));
-    const a = R.range(0.62, 0.88);
-    const sw = (1.35 + R.range(0, 0.55)) * 0.32; /* stroke in viewBox units */
-    const { d } = framePath(R);
+    const r = Math.round(R.range(160, 192));
+    const g = Math.round(R.range(166, 198));
+    const b = Math.round(R.range(174, 204));
+    const a = R.range(0.7, 0.92);
+    /* stroke in viewBox units — thin metal edge */
+    const sw = 0.38 + R.range(0, 0.18);
+    const { d, d01 } = framePath(R);
     const clipId = `e-clip-${seed.toString(16)}`;
-    const filtId = `e-emul-${seed.toString(16)}`;
-    /* spatial crisp/soft: turbulence modulates a light blur — not uniform */
-    const baseF = 0.035 + R.range(0, 0.025);
-    const blurAmt = 0.35 + R.range(0, 0.55);
+
+    /*
+     * Architecture:
+     *  - Card CSS bg/border OFF (transparent)
+     *  - SVG path FILL is the cream plate (cannot exist outside the path)
+     *  - Stroke is the metal edge on that same path
+     *  - clip-path on the host clips content + ::before watercolor to the path
+     * No card-level SVG filter — filters paint outside and break the frame.
+     */
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-frame");
     svg.setAttribute("aria-hidden", "true");
@@ -355,31 +367,27 @@
     svg.innerHTML = `
       <defs>
         <clipPath id="${clipId}" clipPathUnits="objectBoundingBox">
-          <path d="${d}" transform="scale(0.01,0.01)"/>
+          <path d="${d01}"/>
         </clipPath>
-        <filter id="${filtId}" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="${baseF.toFixed(4)}" numOctaves="2" seed="${seed & 0xffff}" result="n"/>
-          <feComponentTransfer in="n" result="m">
-            <feFuncA type="discrete" tableValues="0 0 0 1 1 0 1 0 1 1"/>
-          </feComponentTransfer>
-          <feGaussianBlur in="SourceGraphic" stdDeviation="${blurAmt.toFixed(2)}" result="soft"/>
-          <feComposite in="soft" in2="m" operator="in" result="softMask"/>
-          <feComposite in="SourceGraphic" in2="softMask" operator="over"/>
-        </filter>
       </defs>
+      <path class="e-frame-fill" d="${d}" fill="#E8DFD4"/>
       <path class="e-frame-stroke" d="${d}" fill="none"
         stroke="rgba(${r},${g},${b},${a.toFixed(3)})"
         stroke-width="${sw.toFixed(3)}"
         stroke-linejoin="round" stroke-linecap="round"/>
     `.trim();
-    el.appendChild(svg);
-    /* fill (cream + watercolor) never escapes the organic frame */
+    /* paint plate behind content */
+    el.insertBefore(svg, el.firstChild);
+
+    el.style.setProperty("background", "transparent", "important");
+    el.style.setProperty("background-color", "transparent", "important");
+    el.style.setProperty("border", "0", "important");
+    el.style.setProperty("border-width", "0", "important");
+    el.style.setProperty("box-shadow", "none", "important");
+    el.style.filter = "none";
+    /* content + watercolor ::before stay inside the plate */
     el.style.clipPath = `url(#${clipId})`;
     el.style.webkitClipPath = `url(#${clipId})`;
-    el.style.borderColor = "transparent";
-    el.style.borderWidth = "0px";
-    /* spatial emulsion on whole card surface — islands of soft vs crisp */
-    el.style.filter = `url(#${filtId})`;
   };
 
   const solidSel = [
