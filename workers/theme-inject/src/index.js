@@ -21,9 +21,17 @@ export default {
     headers.delete("content-length");
     let html = await response.text();
 
-    // pin all sites to current theme CSS
+    // pin all sites to current shared shell CSS
     html = html.replace(
       /https:\/\/f00\.sh\/theme\/f00-theme(?:-\d+)?\.css/g,
+      "https://f00.sh/theme/f00-theme-16.css"
+    );
+    html = html.replace(
+      /(?:https:\/\/f00\.sh)?\/theme\/f00-theme(?:-\d+)?\.css/g,
+      "https://f00.sh/theme/f00-theme-16.css"
+    );
+    html = html.replace(
+      /https:\/\/f00\.sh\/theme\/(?:pack\/|textures\/)?hb-shell[^"'\s>]*\.css/g,
       "https://f00.sh/theme/f00-theme-16.css"
     );
     if (!html.includes("f00-theme-16.css") && !html.includes("data-f00-theme")) {
