@@ -331,19 +331,21 @@
   });
 
   /*
-   * Film PROJECTOR plate (film-logo.js).
-   * Each time this surface is projected onto the display → unique organic
-   * specimen (no session persistence). Reduced-motion still unique, frozen.
+   * Splash plate is one petal on the same tray as cards/rules/type
+   * (F00Projection seed from f00-entropy.js). No primary object.
    */
   const splashWrap = document.querySelector(".splash-wrap");
   const filmCanvas = document.querySelector("canvas.splash-film");
-  if (
-    filmCanvas &&
-    splashWrap &&
-    splash &&
-    window.F00FilmLogo &&
-    typeof window.F00FilmLogo.mount === "function"
-  ) {
+  const mountPlate = () => {
+    if (
+      !filmCanvas ||
+      !splashWrap ||
+      !splash ||
+      !window.F00FilmLogo ||
+      typeof window.F00FilmLogo.mount !== "function"
+    ) {
+      return;
+    }
     filmHandle = window.F00FilmLogo.mount({
       canvas: filmCanvas,
       splashEl: splash,
@@ -361,6 +363,12 @@
     });
     if (filmHandle) {
       splashWrap.classList.add("is-film");
+      /* same petal stamping as boxes — entropy may have run first */
+      if (!splashWrap.dataset.f00Petal) {
+        splashWrap.dataset.f00Petal = "1";
+      }
     }
-  }
+  };
+  /* entropy script is defer-ordered before app; projection seed should exist */
+  mountPlate();
 })();

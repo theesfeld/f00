@@ -867,10 +867,39 @@ article.card, .feature-card, .doc-card, .install-card,
     var(--e-bw-b, var(--e-bw, 2px))
     var(--e-bw-l, var(--e-bw, 2px)) !important;
   opacity: var(--e-op, 1);
-  transform: rotate(var(--e-rot, 0deg)) translate3d(var(--e-x, 0px), var(--e-y, 0px), 0);
+  /* petal seat (--e-*) + wind on the tray (--w-*) — same specimen, moving air */
+  transform:
+    rotate(calc(var(--e-rot, 0deg) + var(--w-rot, 0deg)))
+    translate3d(
+      calc(var(--e-x, 0px) + var(--w-x, 0px)),
+      calc(var(--e-y, 0px) + var(--w-y, 0px)),
+      0
+    );
   transform-origin: 50% 50%;
   will-change: transform;
   background-color: rgba(232, 223, 212, var(--e-paper, 1)) !important;
+}
+
+/* logo wrap is a petal too — no primary object */
+.splash-wrap {
+  transform:
+    rotate(calc(var(--e-rot, 0deg) + var(--w-rot, 0deg)))
+    translate3d(
+      calc(var(--e-x, 0px) + var(--w-x, 0px)),
+      calc(var(--e-y, 0px) + var(--w-y, 0px)),
+      0
+    );
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.btn {
+  transform:
+    rotate(calc(var(--e-rot, 0deg) + var(--w-rot, 0deg)))
+    translate3d(
+      calc(var(--e-x, 0px) + var(--w-x, 0px)),
+      calc(var(--e-y, 0px) + var(--w-y, 0px)),
+      0
+    );
 }
 
 /* type specimen — tracking/word/baseline iota; still legible */

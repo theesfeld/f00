@@ -1,11 +1,11 @@
-/* f00 — Projection Specimen Engine (org-wide)
+/* f00 — Projection Specimen Engine (org-wide, all objects equal)
  *
- * GOAL: every surface projected onto the display is a unique organic throw.
- * Header/footer rules, body type, cards, chrome — never CAD-perfect, never
- * identical twins. Species remains f00; specimen is always new.
+ * Tray of petals: every projection lays out a unique set of petals
+ * (specimen). Wind moves them — same petals, view changes slightly.
+ * Nothing underlying is rebuilt on each frame. No object is primary.
  *
- * Zen band: readable, usable, hittable. Order in disorder.
- * Vocabulary: projection / throw / specimen — not “page load.”
+ * Species = f00. Specimen = this throw. Wind = continuous air.
+ * Zen band: always usable.
  */
 (() => {
   if (typeof document === "undefined") return;
@@ -15,7 +15,7 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const root = document.documentElement;
 
-  /* ── seed this throw (never persisted) ── */
+  /* ── one seed for THIS projection onto the display ── */
   const seed = (() => {
     try {
       const a = new Uint32Array(2);
@@ -38,17 +38,29 @@
   const signed = (m) => range(-m, m);
   const set = (k, v) => root.style.setProperty(k, v);
 
-  const chromeR = () => Math.round(range(200, 220));
-  const chromeG = () => Math.round(range(208, 222));
-  const chromeB = () => Math.round(range(214, 228));
-  const chromeA = (lo, hi) => range(lo, hi);
+  /* public: logo plate and others share this throw */
+  window.F00Projection = {
+    seed,
+    reduced,
+    rnd: () => rnd(),
+    range,
+    signed,
+    /* 0..1 wind phase readouts (updated every frame when wind runs) */
+    wind: { x: 0, y: 0, rot: 0, t: 0 },
+  };
 
-  /* ── field specimen ── */
+  const chromeA = (lo, hi) => range(lo, hi);
+  const chromeRGB = () => [
+    Math.round(range(200, 220)),
+    Math.round(range(208, 222)),
+    Math.round(range(214, 228)),
+  ];
+
+  /* ── field petal seat ── */
   const bgX = 50 + signed(4.5);
   const bgY = 50 + signed(3.8);
   set("--e-bg-x", `${bgX.toFixed(3)}%`);
   set("--e-bg-y", `${bgY.toFixed(3)}%`);
-  set("--e-bg-scale", (1 + signed(0.02)).toFixed(4));
   set("--e-track", `${signed(0.014).toFixed(4)}em`);
   set("--e-word", `${signed(0.02).toFixed(4)}em`);
   set("--e-paper", range(0.965, 1).toFixed(4));
@@ -56,42 +68,25 @@
   set("--e-chrome-op-b", chromeA(0.44, 0.68).toFixed(3));
   set("--e-line-t", `${range(0.75, 1.3).toFixed(3)}px`);
   set("--e-line-b", `${range(0.75, 1.3).toFixed(3)}px`);
-  set("--e-line", `var(--e-line-b)`);
+  set("--w-x", "0px");
+  set("--w-y", "0px");
+  set("--w-rot", "0deg");
 
-  /* ── imperfect emulsion RULE (never a CAD 1px collinear border) ── */
-  const rulePath = (segments) => {
-    const n = segments || 7 + Math.floor(rnd() * 6);
+  /* ── emulsion rule (path is the petal’s edge; wind can nudge later) ── */
+  const rulePath = () => {
+    const n = 7 + Math.floor(rnd() * 7);
     const mid = 1.2 + signed(0.15);
     let d = `M 0 ${(mid + signed(0.55)).toFixed(3)}`;
     for (let i = 1; i <= n; i++) {
-      const x = ((i / n) * 100).toFixed(3);
-      /* low-amp wander — species: a line; specimen: not straight */
-      const y = (mid + signed(0.65)).toFixed(3);
-      d += ` L ${x} ${y}`;
+      d += ` L ${((i / n) * 100).toFixed(3)} ${(mid + signed(0.65)).toFixed(3)}`;
     }
     return d;
-  };
-
-  const makeRuleSvg = (opts) => {
-    const stroke = opts.stroke;
-    const sw = opts.width;
-    const d = rulePath(opts.segments);
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "e-rule");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("preserveAspectRatio", "none");
-    svg.setAttribute("viewBox", "0 0 100 2.5");
-    svg.innerHTML = `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
-    return svg;
   };
 
   const attachRule = (el, side) => {
     if (!el || el.dataset.f00Rule === "1") return;
     el.dataset.f00Rule = "1";
-    el.classList.add("e-rule-host");
-    if (side === "top") el.classList.add("e-rule-top");
-    else el.classList.add("e-rule-bottom");
-    /* kill perfect border on this edge — SVG is the projected line */
+    el.classList.add("e-rule-host", side === "top" ? "e-rule-top" : "e-rule-bottom");
     if (side === "bottom") {
       el.style.borderBottomColor = "transparent";
       el.style.borderBottomWidth = "0";
@@ -99,32 +94,25 @@
       el.style.borderTopColor = "transparent";
       el.style.borderTopWidth = "0";
     }
-    const a = side === "bottom"
-      ? chromeA(0.48, 0.72)
-      : chromeA(0.45, 0.7);
-    const r = chromeR();
-    const g = chromeG();
-    const b = chromeB();
-    const stroke = `rgba(${r},${g},${b},${a.toFixed(3)})`;
-    const width = range(0.9, 1.45).toFixed(2);
-    const svg = makeRuleSvg({ stroke, width, segments: 8 + Math.floor(rnd() * 7) });
+    const [r, g, b] = chromeRGB();
+    const a = chromeA(0.45, 0.72);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "e-rule");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("viewBox", "0 0 100 2.5");
+    svg.innerHTML = `<path d="${rulePath()}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${range(0.9, 1.45).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
     el.appendChild(svg);
   };
 
   const ruleHosts = () => {
-    document.querySelectorAll(".top-inner, header.top .top-inner").forEach((el) => {
-      attachRule(el, "bottom");
-    });
-    document.querySelectorAll(".foot, footer, .site-footer").forEach((el) => {
-      attachRule(el, "top");
-    });
-    document.querySelectorAll(".section-head").forEach((el) => {
-      attachRule(el, "bottom");
-    });
+    document.querySelectorAll(".top-inner").forEach((el) => attachRule(el, "bottom"));
+    document.querySelectorAll(".foot, footer, .site-footer").forEach((el) => attachRule(el, "top"));
+    document.querySelectorAll(".section-head").forEach((el) => attachRule(el, "bottom"));
   };
 
-  /* ── boxes: each organ under the skin ── */
-  const boxSel = [
+  /* ── every solid object is a petal on the tray ── */
+  const solidSel = [
     ".card",
     ".panel",
     ".box",
@@ -137,24 +125,10 @@
     ".tool-card",
     ".release-card",
     ".announcement",
+    ".splash-wrap",
+    ".btn",
   ].join(",");
 
-  const paintBoxes = (scope) => {
-    scope.querySelectorAll(boxSel).forEach((el) => {
-      if (el.dataset.f00EntropyBox === "1") return;
-      el.dataset.f00EntropyBox = "1";
-      el.style.setProperty("--e-rot", `${signed(0.32).toFixed(3)}deg`);
-      el.style.setProperty("--e-x", `${signed(2.0).toFixed(2)}px`);
-      el.style.setProperty("--e-y", `${signed(1.7).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-t", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-r", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-b", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-l", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-op", range(0.97, 1).toFixed(4));
-    });
-  };
-
-  /* ── type: every text node-block is a slight specimen ── */
   const typeSel = [
     "p",
     "li",
@@ -182,34 +156,54 @@
     "pre",
   ].join(",");
 
-  const paintType = (scope) => {
-    scope.querySelectorAll(typeSel).forEach((el) => {
-      if (el.dataset.f00EntropyType === "1") return;
-      /* skip WebGL-hidden splash glyphs */
-      if (el.closest && el.closest(".splash-wrap.is-film .splash")) return;
-      if (el.classList && el.classList.contains("glyph")) return;
-      el.dataset.f00EntropyType = "1";
-      el.style.setProperty("--e-t-track", `${signed(0.016).toFixed(4)}em`);
-      el.style.setProperty("--e-t-word", `${signed(0.028).toFixed(4)}em`);
-      /* baseline: tiny optical seat, not layout reflow */
-      el.style.setProperty("--e-t-y", `${signed(0.35).toFixed(2)}px`);
-      el.style.setProperty("--e-t-op", range(0.94, 1).toFixed(4));
+  const paintSolid = (scope) => {
+    scope.querySelectorAll(solidSel).forEach((el) => {
+      if (el.dataset.f00Petal === "1") return;
+      el.dataset.f00Petal = "1";
+      /* fixed petal geometry for this throw — wind adds --w-* later */
+      el.style.setProperty("--e-rot", `${signed(0.32).toFixed(3)}deg`);
+      el.style.setProperty("--e-x", `${signed(2.0).toFixed(2)}px`);
+      el.style.setProperty("--e-y", `${signed(1.7).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-t", `${range(1.4, 2.6).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-r", `${range(1.4, 2.6).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-b", `${range(1.4, 2.6).toFixed(2)}px`);
+      el.style.setProperty("--e-bw-l", `${range(1.4, 2.6).toFixed(2)}px`);
+      el.style.setProperty("--e-op", range(0.97, 1).toFixed(4));
+      /* per-petal phase so wind moves them differently (same wind field) */
+      el.style.setProperty("--e-phase", range(0, Math.PI * 2).toFixed(4));
+      el.style.setProperty("--e-gain", range(0.55, 1.15).toFixed(3));
     });
   };
 
-  /* ── chrome bits ── */
+  const paintType = (scope) => {
+    scope.querySelectorAll(typeSel).forEach((el) => {
+      if (el.dataset.f00PetalType === "1") return;
+      if (el.closest && el.closest(".splash-wrap.is-film .splash")) return;
+      if (el.classList && el.classList.contains("glyph")) return;
+      el.dataset.f00PetalType = "1";
+      el.style.setProperty("--e-t-track", `${signed(0.016).toFixed(4)}em`);
+      el.style.setProperty("--e-t-word", `${signed(0.028).toFixed(4)}em`);
+      el.style.setProperty("--e-t-y", `${signed(0.35).toFixed(2)}px`);
+      el.style.setProperty("--e-t-op", range(0.94, 1).toFixed(4));
+      el.style.setProperty("--e-phase", range(0, Math.PI * 2).toFixed(4));
+      el.style.setProperty("--e-gain", range(0.4, 1.0).toFixed(3));
+    });
+  };
+
   const paintChrome = (scope) => {
     scope.querySelectorAll(".brand, .nav, .top-inner, .foot").forEach((el) => {
-      if (el.dataset.f00EntropyChrome === "1") return;
-      el.dataset.f00EntropyChrome = "1";
+      if (el.dataset.f00PetalChrome === "1") return;
+      el.dataset.f00PetalChrome = "1";
       el.style.setProperty("--e-ch-y", `${signed(0.4).toFixed(2)}px`);
       el.style.setProperty("--e-ch-track", `${signed(0.02).toFixed(4)}em`);
+      el.style.setProperty("--e-phase", range(0, Math.PI * 2).toFixed(4));
+      el.style.setProperty("--e-gain", range(0.3, 0.9).toFixed(3));
     });
   };
 
   const paintAll = (scope) => {
     const sc = scope || document;
-    paintBoxes(sc);
+    paintSolid(sc);
     paintType(sc);
     paintChrome(sc);
   };
@@ -222,39 +216,70 @@
       m.addedNodes.forEach((n) => {
         if (n.nodeType !== 1) return;
         paintAll(n);
-        if (n.matches && (n.matches(".section-head") || n.matches(".foot") || n.matches(".top-inner"))) {
+        if (
+          n.matches?.(".section-head, .foot, .top-inner") ||
+          n.querySelector?.(".section-head, .foot, .top-inner")
+        ) {
           ruleHosts();
-        }
-        if (n.querySelectorAll) {
-          if (n.querySelector(".section-head, .foot, .top-inner")) ruleHosts();
         }
       });
     }
   });
   mo.observe(document.documentElement, { childList: true, subtree: true });
 
-  /* continuous field air only */
+  /*
+   * Wind on the tray: continuous shared field.
+   * Petals keep fixed specimen vars; wind offsets move the whole tray slightly.
+   * Same petals — view changes. Usability: tiny amplitudes.
+   */
   if (!reduced) {
-    let bx = bgX;
-    let by = bgY;
     let t0 = performance.now();
     let last = t0;
-    const p1 = range(0.05, 0.12);
-    const p2 = range(0.07, 0.15);
-    const p3 = range(0.03, 0.09);
-    const a1 = range(0.35, 0.95);
-    const a2 = range(0.25, 0.75);
+    const p1 = range(0.04, 0.1);
+    const p2 = range(0.06, 0.13);
+    const p3 = range(0.03, 0.08);
+    const a1 = range(0.4, 1.0);
+    const a2 = range(0.3, 0.8);
+    let bx = bgX;
+    let by = bgY;
 
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const t = (now - t0) / 1000;
+      window.F00Projection.wind.t = t;
+
+      /* field air */
       const tx = bgX + Math.sin(t * p1) * a1 + Math.sin(t * p3 * 1.7) * a2 * 0.4;
       const ty = bgY + Math.cos(t * p2) * a2 + Math.sin(t * p1 * 0.6) * a1 * 0.35;
       bx += (tx - bx) * Math.min(1, dt * 0.35);
       by += (ty - by) * Math.min(1, dt * 0.35);
       set("--e-bg-x", `${bx.toFixed(3)}%`);
       set("--e-bg-y", `${by.toFixed(3)}%`);
+
+      /* shared wind readouts (CSS + logo) */
+      const wx = Math.sin(t * p1 * 0.9) * 0.55 + Math.sin(t * p3) * 0.25;
+      const wy = Math.cos(t * p2 * 0.85) * 0.45 + Math.sin(t * p1 * 0.5) * 0.2;
+      const wr = Math.sin(t * p2 * 0.4 + p3) * 0.06;
+      window.F00Projection.wind.x = wx;
+      window.F00Projection.wind.y = wy;
+      window.F00Projection.wind.rot = wr;
+      set("--w-x", `${wx.toFixed(3)}px`);
+      set("--w-y", `${wy.toFixed(3)}px`);
+      set("--w-rot", `${wr.toFixed(4)}deg`);
+
+      /* per-petal phase offset: same wind, different response (tray of petals) */
+      document.querySelectorAll("[data-f00-petal='1']").forEach((el) => {
+        const ph = parseFloat(el.style.getPropertyValue("--e-phase")) || 0;
+        const g = parseFloat(el.style.getPropertyValue("--e-gain")) || 1;
+        const lx = wx * g * Math.cos(ph * 0.3) + wy * g * 0.15 * Math.sin(ph);
+        const ly = wy * g * Math.sin(ph * 0.25) + wx * g * 0.12 * Math.cos(ph);
+        const lr = wr * g * (0.7 + 0.3 * Math.sin(ph));
+        el.style.setProperty("--w-x", `${lx.toFixed(3)}px`);
+        el.style.setProperty("--w-y", `${ly.toFixed(3)}px`);
+        el.style.setProperty("--w-rot", `${lr.toFixed(4)}deg`);
+      });
+
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);

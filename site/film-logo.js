@@ -201,21 +201,36 @@
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
 
+  /** Seeded rng from the shared projection throw when available. */
+  function makeRng(seed) {
+    let s = (seed >>> 0) || 1;
+    return () => {
+      s |= 0;
+      s = (s + 0x6d2b79f5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
   /**
    * Continuous dynamical system (Rössler-ish + OU walks).
-   * Uniforms are READOUTS — never idle/event modes, never reset-to-identity.
+   * Same throw seed as shell petals when F00Projection exists — one tray.
    */
-  function createDynamics() {
-    /* asymmetric ICs — never the origin */
+  function createDynamics(seed) {
+    const r =
+      typeof seed === "number"
+        ? makeRng(seed ^ 0x9e3779b9)
+        : () => Math.random();
     const s = {
-      x: 0.4 + Math.random() * 0.3,
-      y: -0.2 + Math.random() * 0.4,
-      z: 0.15 + Math.random() * 0.2,
-      bx: (Math.random() - 0.5) * 0.4,
-      by: (Math.random() - 0.5) * 0.4,
-      w: 0.55 + Math.random() * 0.35,
-      phi: Math.random() * Math.PI * 2,
-      e: 0.12 + Math.random() * 0.08, /* energy channel never starts at 0 */
+      x: 0.35 + r() * 0.4,
+      y: -0.25 + r() * 0.5,
+      z: 0.12 + r() * 0.25,
+      bx: (r() - 0.5) * 0.45,
+      by: (r() - 0.5) * 0.45,
+      w: 0.5 + r() * 0.4,
+      phi: r() * Math.PI * 2,
+      e: 0.1 + r() * 0.12,
     };
     const a = 0.2;
     const c = 5.7;
@@ -333,17 +348,22 @@
     let raf = 0;
     const t0 = performance.now();
     let lastNow = t0;
-    const dyn = createDynamics();
+    /* share throw seed with shell — logo is a petal on the same tray */
+    const throwSeed =
+      (window.F00Projection && window.F00Projection.seed) ||
+      ((Math.random() * 0xffffffff) >>> 0);
+    const dyn = createDynamics(throwSeed);
+    const rPlate = makeRng(throwSeed ^ 0x85ebca6b);
 
     /*
-     * Specimen entropy for THIS projection onto the display.
-     * Never persisted — no sessionStorage. Fresh organic thing every throw.
+     * Specimen for THIS projection — never persisted.
+     * Same seed family as F00Projection (tray of petals).
      */
-    const instanceSeed = Math.random() * 1000;
-    const edgeFloor = 0.7 + Math.random() * 0.55; /* px soft edge */
-    const lampAmt = 0.055 + Math.random() * 0.04;
-    const padScale = 0.9 + Math.random() * 0.25;
-    const inkBlur = 0.01 + Math.random() * 0.012;
+    const instanceSeed = rPlate() * 1000;
+    const edgeFloor = 0.7 + rPlate() * 0.55;
+    const lampAmt = 0.055 + rPlate() * 0.04;
+    const padScale = 0.9 + rPlate() * 0.25;
+    const inkBlur = 0.01 + rPlate() * 0.012;
 
     const fontFamily =
       opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
