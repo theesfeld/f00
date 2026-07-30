@@ -37,9 +37,11 @@ export function sampleOptics(seed, rnd) {
 }
 
 /**
- * Live optical drift — same specimen chain, air and machine not frozen.
+ * Live optical drift — same specimen, air not frozen.
+ * liveAmp (0..1): stronger when mark is large, calmer when small.
  */
-export function evolveOptics(opt, time, seed) {
+export function evolveOptics(opt, time, seed, liveAmp = 1) {
+  const a = Math.max(0.15, Math.min(1.2, liveAmp));
   const o = {
     seed: opt.seed,
     bulb: { ...opt.bulb },
@@ -48,13 +50,17 @@ export function evolveOptics(opt, time, seed) {
     screen: { ...opt.screen },
   };
   const t = time;
-  o.film.x += Math.sin(t * 0.7) * 0.008 + (fbm2(t * 0.1, 0.2, seed) - 0.5) * 0.01;
-  o.film.y += Math.cos(t * 0.55) * 0.006 + (fbm2(0.3, t * 0.12, seed ^ 1) - 0.5) * 0.008;
-  o.film.rx += Math.sin(t * 0.33) * 0.015;
-  o.film.ry += Math.cos(t * 0.29) * 0.012;
-  o.film.rz += Math.sin(t * 0.21) * 0.01;
-  o.bulb.intensity *= 0.92 + 0.16 * fbm2(t * 0.4, 1.1, seed ^ 2);
-  o.lens.focus += Math.sin(t * 0.19) * 0.04;
+  o.film.x +=
+    (Math.sin(t * 0.7) * 0.008 + (fbm2(t * 0.1, 0.2, seed) - 0.5) * 0.01) * a;
+  o.film.y +=
+    (Math.cos(t * 0.55) * 0.006 +
+      (fbm2(0.3, t * 0.12, seed ^ 1) - 0.5) * 0.008) *
+    a;
+  o.film.rx += Math.sin(t * 0.33) * 0.015 * a;
+  o.film.ry += Math.cos(t * 0.29) * 0.012 * a;
+  o.film.rz += Math.sin(t * 0.21) * 0.01 * a;
+  o.bulb.intensity *= 0.92 + 0.16 * fbm2(t * 0.4, 1.1, seed ^ 2) * a;
+  o.lens.focus += Math.sin(t * 0.19) * 0.04 * a;
   return o;
 }
 
@@ -138,21 +144,23 @@ export function project(density, w, h, opt, time = 0) {
       else if (hold < 0.35) coc *= 1.6;
 
       let dens = 0;
-      if (coc < 0.4) {
+      if (coc < 0.55) {
         dens = sampleD(filmX, filmY);
       } else {
+        /* anisotropic soft CoC — few taps, spatial not flat blur */
         const em = fbm2(u * 16, v * 16, seed ^ 0xe111);
-        const anX = 0.4 + em * 1.2;
-        const anY = 1.6 - em;
-        const taps = 4;
+        const anX = 0.45 + em * 1.1;
+        const anY = 1.55 - em * 0.9;
+        const taps = 2;
         let acc = 0;
         let wt = 0;
-        const step = coc * 0.4;
+        const step = coc * 0.45;
         for (let ty = -taps; ty <= taps; ty++) {
           for (let tx = -taps; tx <= taps; tx++) {
             const dist = tx * tx * anX + ty * ty * anY;
             let ww = Math.exp(-dist / (1 + coc));
-            ww *= 0.45 + fbm2(u * 50 + tx, v * 50 + ty, seed ^ 0x99);
+            /* cheap spatial weight — avoid fbm per tap */
+            ww *= 0.55 + 0.45 * ((tx * 0.17 + ty * 0.31 + em) % 1);
             acc += sampleD(filmX + tx * step, filmY + ty * step) * ww;
             wt += ww;
           }

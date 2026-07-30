@@ -4,8 +4,7 @@
  *   light → object-as-film → lens → screen
  * Logo, cards, header, footer, type, rules, field — each a complete throw
  * with private seed + private optical stack. Not “positions of petals.”
- * An entropic *view* of a natural thing. Species f00; never clones.
- * Zen band: readable / usable.
+ * Zen band: readable / usable. Organic, never CAD-uniform.
  */
 (() => {
   if (typeof document === "undefined") return;
@@ -48,9 +47,8 @@
   const makeBag = (rnd) => ({
     rnd,
     range: (a, b) => a + (b - a) * rnd(),
-    signed: (m) => aSigned(rnd, m),
+    signed: (m) => -m + 2 * m * rnd(),
   });
-  const aSigned = (rnd, m) => -m + 2 * m * rnd();
 
   const seedFor = (el, role) => {
     const id =
@@ -74,41 +72,44 @@
     const seed = seedFor(el, role);
     const R = makeBag(mulberry(seed));
     const g = gains || {};
-    /* zen clamps: max amplitudes by role */
     const pose = g.pose ?? 1;
     const blur = g.blur ?? 1;
     const persp = g.persp ?? 1;
 
+    /* organic but zen — enough to break factory uniformity */
     return {
       el,
       role,
       seed,
       R,
-      /* static specimen of this throw (never rebuilt mid-session) */
-      gateX: R.signed(0.9 * pose),
-      gateY: R.signed(0.75 * pose),
-      tiltX: R.signed(0.55 * persp), /* deg keystone-ish */
-      tiltY: R.signed(0.45 * persp),
-      buckle: R.signed(0.012 * pose),
-      rotZ: R.signed(0.28 * pose),
-      edgeT: R.range(1.35, 2.65),
-      edgeR: R.range(1.35, 2.65),
-      edgeB: R.range(1.35, 2.65),
-      edgeL: R.range(1.35, 2.65),
-      lamp: R.range(0.92, 1),
-      track: R.signed(0.016),
-      word: R.signed(0.028),
-      baseY: R.signed(0.35),
-      defocus0: R.range(0.04, 0.22) * blur, /* px — non-zero floor */
-      emul: R.range(0.7, 1.35), /* local emulsion thickness proxy */
-      /* continuous private dynamics */
+      gateX: R.signed(1.65 * pose),
+      gateY: R.signed(1.35 * pose),
+      tiltX: R.signed(0.75 * persp),
+      tiltY: R.signed(0.6 * persp),
+      buckle: R.signed(0.018 * pose),
+      rotZ: R.signed(0.55 * pose),
+      /* border weights — never equal on all four sides */
+      edgeT: R.range(1.15, 3.1),
+      edgeR: R.range(1.15, 3.1),
+      edgeB: R.range(1.15, 3.1),
+      edgeL: R.range(1.15, 3.1),
+      lamp: R.range(0.93, 1),
+      track: R.signed(0.022),
+      word: R.signed(0.035),
+      baseY: R.signed(0.55),
+      defocus0: R.range(0.04, 0.22) * blur,
+      emul: R.range(0.7, 1.35),
+      /* slight pad / content drift — cards stop looking cloned */
+      padT: R.range(0.95, 1.12),
+      padR: R.range(0.94, 1.1),
+      padB: R.range(0.96, 1.14),
+      padL: R.range(0.94, 1.1),
       phi: R.range(0, Math.PI * 2),
-      omega: R.range(0.28, 1.15),
-      ampGate: R.range(0.15, 0.7) * pose,
-      ampTilt: R.range(0.05, 0.22) * persp,
-      ampDef: R.range(0.02, 0.12) * blur,
-      ampRot: R.range(0.015, 0.07) * pose,
-      /* live */
+      omega: R.range(0.22, 0.85),
+      ampGate: R.range(0.2, 0.85) * pose,
+      ampTilt: R.range(0.04, 0.18) * persp,
+      ampDef: R.range(0.02, 0.1) * blur,
+      ampRot: R.range(0.02, 0.09) * pose,
       liveGateX: 0,
       liveGateY: 0,
       liveTiltX: 0,
@@ -126,7 +127,6 @@
     reduced,
     projections,
     seedFor,
-    /** optical readout for WebGL plates sharing scene time */
     getPlateOptics(el) {
       const p = projections.get(el);
       if (!p) return null;
@@ -150,16 +150,13 @@
     const tx = p.tiltX + p.liveTiltX;
     const ty = p.tiltY + p.liveTiltY;
     const rz = p.rotZ + p.liveRot;
-    const def = Math.max(0.03, p.defocus0 + p.liveDef);
 
-    /* full stack as transform: perspective keystone + gate + roll */
     el.style.setProperty("--p-persp", "900px");
     el.style.setProperty("--p-rx", `${tx.toFixed(3)}deg`);
     el.style.setProperty("--p-ry", `${ty.toFixed(3)}deg`);
     el.style.setProperty("--p-rz", `${rz.toFixed(3)}deg`);
     el.style.setProperty("--p-x", `${gx.toFixed(2)}px`);
     el.style.setProperty("--p-y", `${gy.toFixed(2)}px`);
-    /* never drive CSS filter:blur — uniform blur is not of nature */
     el.style.setProperty("--p-defocus", "0px");
     el.style.setProperty("--p-lamp", p.lamp.toFixed(4));
     el.style.setProperty("--p-emul", p.emul.toFixed(3));
@@ -170,6 +167,12 @@
       el.style.setProperty("--e-bw-b", `${p.edgeB.toFixed(2)}px`);
       el.style.setProperty("--e-bw-l", `${p.edgeL.toFixed(2)}px`);
       el.style.setProperty("--e-op", p.lamp.toFixed(4));
+      if (p.padT != null) {
+        el.style.setProperty("--e-pad-t", p.padT.toFixed(3));
+        el.style.setProperty("--e-pad-r", p.padR.toFixed(3));
+        el.style.setProperty("--e-pad-b", p.padB.toFixed(3));
+        el.style.setProperty("--e-pad-l", p.padL.toFixed(3));
+      }
     }
     if (p.role === "type" || p.role === "chrome") {
       el.style.setProperty("--e-t-track", `${p.track.toFixed(4)}em`);
@@ -180,7 +183,6 @@
       );
       el.style.setProperty("--e-t-op", Math.min(1, p.lamp + 0.02).toFixed(4));
     }
-    /* alias legacy vars used by older CSS */
     el.style.setProperty("--e-rot", `${rz.toFixed(3)}deg`);
     el.style.setProperty("--e-x", `${gx.toFixed(2)}px`);
     el.style.setProperty("--e-y", `${gy.toFixed(2)}px`);
@@ -198,40 +200,145 @@
     applyProjectionCSS(p);
   };
 
-  /* ── emulsion RULE: own projection (path = this throw’s line) ── */
+  /* ── emulsion RULE: never a CAD hairline ── */
   const rulePath = (R) => {
-    const n = 7 + Math.floor(R.rnd() * 8);
-    const mid = 1.2 + R.signed(0.2);
-    let d = `M 0 ${(mid + R.signed(0.6)).toFixed(3)}`;
+    /* continuous organic path — enough Y wander to never read as CAD */
+    const n = 16 + Math.floor(R.rnd() * 12);
+    const mid = 4;
+    let y = mid + R.signed(1.4);
+    let d = `M 0 ${y.toFixed(3)}`;
     for (let i = 1; i <= n; i++) {
-      d += ` L ${((i / n) * 100).toFixed(3)} ${(mid + R.signed(0.7)).toFixed(3)}`;
+      const x = (i / n) * 100;
+      /* correlated wander — line, not white noise scribble */
+      y += R.signed(1.15);
+      y = mid + (y - mid) * 0.68 + R.signed(0.5);
+      y = Math.max(0.5, Math.min(7.5, y));
+      const cx = x - 50 / n + R.signed(0.65);
+      const cy = y + R.signed(0.85);
+      d += ` Q ${cx.toFixed(3)} ${cy.toFixed(3)} ${x.toFixed(3)} ${y.toFixed(3)}`;
     }
+    return d;
+  };
+
+  /** imperfect closed frame — inset so overflow:hidden cards still show it */
+  const framePath = (R) => {
+    const j = (m) => R.signed(m);
+    /* viewBox 0 0 100 100; inset keeps stroke inside clipped boxes */
+    const inset = 1.4 + R.range(0, 0.6);
+    const w = (edge) => 0.55 + R.range(0, 1.1); /* per-edge wander amp */
+    const pts = [];
+    const pushEdge = (n, at) => {
+      for (let i = 0; i <= n; i++) {
+        const t = i / n;
+        pts.push(at(t, i === 0 || i === n));
+      }
+    };
+    const wt = w("t");
+    const wr = w("r");
+    const wb = w("b");
+    const wl = w("l");
+    /* top L→R */
+    pushEdge(6 + Math.floor(R.rnd() * 4), (t, end) => [
+      inset + t * (100 - 2 * inset) + j(end ? 0.15 : 0.45),
+      inset + j(end ? 0.2 : wt) + (end ? 0 : R.signed(wt * 0.7)),
+    ]);
+    /* right T→B (skip first = top-right already) */
+    {
+      const n = 5 + Math.floor(R.rnd() * 3);
+      for (let i = 1; i <= n; i++) {
+        const t = i / n;
+        pts.push([
+          100 - inset + j(t === 1 ? 0.2 : wr) + (t === 1 ? 0 : R.signed(wr * 0.65)),
+          inset + t * (100 - 2 * inset) + j(0.35),
+        ]);
+      }
+    }
+    /* bottom R→L */
+    {
+      const n = 6 + Math.floor(R.rnd() * 4);
+      for (let i = 1; i <= n; i++) {
+        const t = i / n;
+        pts.push([
+          100 - inset - t * (100 - 2 * inset) + j(0.35),
+          100 - inset + j(t === 1 ? 0.2 : wb) + (t === 1 ? 0 : R.signed(wb * 0.65)),
+        ]);
+      }
+    }
+    /* left B→T (skip last = close to start) */
+    {
+      const n = 5 + Math.floor(R.rnd() * 3);
+      for (let i = 1; i < n; i++) {
+        const t = i / n;
+        pts.push([
+          inset + j(wl) + R.signed(wl * 0.65),
+          100 - inset - t * (100 - 2 * inset) + j(0.35),
+        ]);
+      }
+    }
+    if (!pts.length) {
+      return `M ${inset} ${inset} L ${100 - inset} ${inset} L ${100 - inset} ${100 - inset} L ${inset} ${100 - inset} Z`;
+    }
+    let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1];
+      const cur = pts[i];
+      const mx = (prev[0] + cur[0]) / 2 + j(0.55);
+      const my = (prev[1] + cur[1]) / 2 + j(0.55);
+      d += ` Q ${mx.toFixed(2)} ${my.toFixed(2)} ${cur[0].toFixed(2)} ${cur[1].toFixed(2)}`;
+    }
+    d += " Z";
     return d;
   };
 
   const attachRule = (el, side) => {
     if (!el || el.dataset.f00Rule === "1") return;
     el.dataset.f00Rule = "1";
-    el.classList.add("e-rule-host", side === "top" ? "e-rule-top" : "e-rule-bottom");
-    if (side === "bottom") {
-      el.style.borderBottom = "0";
-    } else {
-      el.style.borderTop = "0";
-    }
+    el.classList.add(
+      "e-rule-host",
+      side === "top" ? "e-rule-top" : "e-rule-bottom"
+    );
+    if (side === "bottom") el.style.borderBottom = "0";
+    else el.style.borderTop = "0";
+
     const seed = seedFor(el, "rule:" + side);
     const R = makeBag(mulberry(seed));
-    const r = Math.round(R.range(198, 222));
-    const g = Math.round(R.range(206, 224));
-    const b = Math.round(R.range(212, 230));
-    const a = R.range(0.42, 0.74);
+    const r = Math.round(R.range(188, 218));
+    const g = Math.round(R.range(196, 222));
+    const b = Math.round(R.range(204, 228));
+    const a = R.range(0.48, 0.82);
+    const sw = R.range(1.05, 1.85);
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-rule");
     svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("preserveAspectRatio", "none");
-    svg.setAttribute("viewBox", "0 0 100 2.5");
-    svg.innerHTML = `<path d="${rulePath(R)}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${R.range(0.8, 1.55).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+    svg.setAttribute("viewBox", "0 0 100 8");
+    svg.innerHTML = `<path d="${rulePath(R)}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
     el.appendChild(svg);
-    register(el, "rule", { pose: 0.35, blur: 0.5, persp: 0.25 });
+    register(el, "rule", { pose: 0.3, blur: 0.4, persp: 0.2 });
+  };
+
+  const attachFrame = (el) => {
+    if (!el || el.dataset.f00Frame === "1") return;
+    el.dataset.f00Frame = "1";
+    el.classList.add("e-frame-host");
+    const seed = seedFor(el, "frame");
+    const R = makeBag(mulberry(seed));
+    const r = Math.round(R.range(155, 190));
+    const g = Math.round(R.range(162, 196));
+    const b = Math.round(R.range(170, 202));
+    const a = R.range(0.62, 0.92);
+    const sw = R.range(1.55, 2.65);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "e-frame");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    /* no non-scaling-stroke — stroke scales with box so edge reads as emulsion */
+    svg.innerHTML = `<path d="${framePath(R)}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${(sw * 0.35).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    el.appendChild(svg);
+    /* hide CAD border — frame is the projection edge */
+    el.style.borderColor = "transparent";
+    el.style.borderWidth = "0px";
   };
 
   const solidSel = [
@@ -279,38 +386,54 @@
   ].join(",");
 
   const gainsFor = (role) => {
-    if (role === "plate") return { pose: 0.85, blur: 0.9, persp: 0.7 };
-    if (role === "solid") return { pose: 1, blur: 0.45, persp: 0.85 };
-    if (role === "type") return { pose: 0.25, blur: 0.35, persp: 0.15 };
-    if (role === "chrome") return { pose: 0.4, blur: 0.3, persp: 0.3 };
-    return { pose: 0.6, blur: 0.4, persp: 0.5 };
+    if (role === "plate") return { pose: 0.9, blur: 0.9, persp: 0.7 };
+    /* solid cards: readable organic — not wild, not factory grid */
+    if (role === "solid") return { pose: 1.25, blur: 0.4, persp: 0.95 };
+    if (role === "type") return { pose: 0.35, blur: 0.3, persp: 0.18 };
+    if (role === "chrome") return { pose: 0.45, blur: 0.28, persp: 0.32 };
+    return { pose: 0.7, blur: 0.4, persp: 0.5 };
+  };
+
+  const cardFrameSel =
+    ".card, article.card, .panel, .box, .f00-box, .feature-card, .doc-card, .install-card, .benchmark-card, .tool-card, .release-card, .announcement";
+
+  const eachMatch = (sc, sel, fn) => {
+    if (sc && sc.nodeType === 1 && sc.matches?.(sel)) fn(sc);
+    sc?.querySelectorAll?.(sel)?.forEach(fn);
   };
 
   const paint = (scope) => {
     const sc = scope || document;
-    sc.querySelectorAll(solidSel).forEach((el) => {
+    eachMatch(sc, solidSel, (el) => {
       const role = el.classList.contains("splash-wrap") ? "plate" : "solid";
       register(el, role, gainsFor(role));
+      if (role === "solid" && el.matches(cardFrameSel)) attachFrame(el);
     });
-    sc.querySelectorAll(typeSel).forEach((el) => {
+    eachMatch(sc, typeSel, (el) => {
       if (el.closest?.(".splash-wrap.is-film .splash")) return;
       if (el.classList?.contains("glyph")) return;
       register(el, "type", gainsFor("type"));
     });
-    sc.querySelectorAll(".brand, .nav").forEach((el) =>
+    eachMatch(sc, ".brand, .nav", (el) =>
       register(el, "chrome", gainsFor("chrome"))
     );
   };
 
   const ruleHosts = () => {
-    document.querySelectorAll(".top-inner").forEach((el) => attachRule(el, "bottom"));
+    document
+      .querySelectorAll(".top-inner")
+      .forEach((el) => attachRule(el, "bottom"));
     document
       .querySelectorAll(".foot, footer, .site-footer")
       .forEach((el) => attachRule(el, "top"));
-    document.querySelectorAll(".section-head").forEach((el) => attachRule(el, "bottom"));
+    document
+      .querySelectorAll(".section-head")
+      .forEach((el) => attachRule(el, "bottom"));
+    document
+      .querySelectorAll(".card h3, .card .card-actions, .panel h3")
+      .forEach((el) => attachRule(el, "bottom"));
   };
 
-  /* field = own projection */
   {
     const R = makeBag(mulberry(throwSalt ^ 0x51ed));
     root.style.setProperty("--e-bg-x", `${(50 + R.signed(4.5)).toFixed(3)}%`);
@@ -344,8 +467,12 @@
         if (n.nodeType !== 1) return;
         paint(n);
         if (
-          n.matches?.(".section-head, .foot, .top-inner") ||
-          n.querySelector?.(".section-head, .foot, .top-inner")
+          n.matches?.(
+            ".section-head, .foot, .top-inner, .card, article.card, .card h3, .card-actions"
+          ) ||
+          n.querySelector?.(
+            ".section-head, .foot, .top-inner, .card, article.card, .card h3, .card-actions"
+          )
         ) {
           ruleHosts();
         }
@@ -379,7 +506,6 @@
 
       projections.forEach((p) => {
         if (p.role === "field") return;
-        /* private continuous optics for THIS projection only */
         p.phi += dt * p.omega;
         p.liveGateX = Math.sin(p.phi) * p.ampGate;
         p.liveGateY = Math.cos(p.phi * 0.93) * p.ampGate * 0.85;

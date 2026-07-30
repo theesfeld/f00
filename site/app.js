@@ -334,28 +334,9 @@
    * Splash mark via throw engine (structure → develop → project → display).
    * Not CSS blur. Peer to every other projected object on the surface.
    */
+  /* throw-plate.js self-mounts as module — only attach handle, never double-develop */
   const splashWrap = document.querySelector(".splash-wrap");
-  const filmCanvas = document.querySelector("canvas.splash-film");
-  if (
-    filmCanvas &&
-    splashWrap &&
-    splash &&
-    window.F00ThrowPlate &&
-    typeof window.F00ThrowPlate.mount === "function"
-  ) {
-    filmHandle = window.F00ThrowPlate.mount({
-      canvas: filmCanvas,
-      splashEl: splash,
-      text: "f00",
-      staticOnly: prefersReduced,
-      getFontPx: () => {
-        const fs = parseFloat(getComputedStyle(splash).fontSize);
-        return Number.isFinite(fs) ? fs : splashMaxPx || 120;
-      },
-      getOpacity: () => dockOp,
-    });
-    if (filmHandle) {
-      splashWrap.classList.add("is-film");
-    }
+  if (splashWrap?.dataset.throwMounted === "1" && window.__f00ThrowHandle) {
+    filmHandle = window.__f00ThrowHandle;
   }
 })();

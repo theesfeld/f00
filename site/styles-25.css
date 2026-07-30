@@ -154,19 +154,20 @@ main {
   pointer-events: none;
   overflow: visible; /* bloom / CA pad extends past glyph box */
 }
-/* WebGL canvas — true film plate (warp / CA / bloom / grain in shader) */
+/* throw canvas — developed once; JS owns scale + organic pose on scroll */
 .splash-film {
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  transform: translate(-50%, 0);
+  transform-origin: 50% 0%;
   z-index: 2;
   pointer-events: none;
   display: none;
   background: transparent !important;
-  /* no CSS filter — shader owns the look */
   filter: none !important;
   mix-blend-mode: normal;
+  will-change: transform, opacity;
 }
 .splash-wrap.is-film .splash-film {
   display: block;
@@ -259,7 +260,7 @@ main {
 }
 .card-actions {
   display: flex; flex-wrap: wrap; margin-top: 0.75rem; padding-top: 0.65rem;
-  border-top: 1px solid rgba(9, 9, 9, 0.25);
+  border-top: 0 !important; /* SVG emulsion rule via entropy */
 }
 .card-actions .btn { margin: 0 0.4rem 0.35rem 0; }
 .facts { margin: 0.75rem 0; padding: 0; list-style: none; font-size: 0.85rem; }

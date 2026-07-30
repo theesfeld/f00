@@ -49,8 +49,8 @@ export function throwTextPlate(opts) {
 }
 
 /** Reproject same developed density with living optics (cheaper). */
-export function reprojectPlate(density, w, h, optics, seed, time) {
-  const live = evolveOptics(optics, time, seed);
+export function reprojectPlate(density, w, h, optics, seed, time, liveAmp = 1) {
+  const live = evolveOptics(optics, time, seed, liveAmp);
   const rgba = project(density, w, h, live, time);
   return { seed, width: w, height: h, rgba, density, optics };
 }

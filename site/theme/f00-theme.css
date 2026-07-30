@@ -836,7 +836,7 @@ footer, .site-footer, .foot {
   left: 0;
   right: 0;
   width: 100%;
-  height: 3px;
+  height: 8px;
   pointer-events: none;
   z-index: 3;
   overflow: visible;
@@ -855,6 +855,36 @@ footer, .site-footer, .foot {
 }
 .e-rule-host.e-rule-top {
   border-top: 0 !important;
+}
+
+/* imperfect card FRAME — SVG path border, not CAD 1px rect */
+.e-frame-host {
+  position: relative !important;
+}
+.e-frame-host > .e-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+  overflow: visible;
+  display: block;
+}
+.e-frame-host.f00-proj,
+.card.e-frame-host,
+article.card.e-frame-host,
+.panel.e-frame-host,
+.box.e-frame-host,
+.f00-box.e-frame-host {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+/* keep watercolor clip but leave 1px air so emulsion stroke isn't sheared */
+.card.e-frame-host,
+article.card.e-frame-host,
+.panel.e-frame-host {
+  overflow: hidden !important;
 }
 
 /*
@@ -882,6 +912,11 @@ article.card.f00-proj, .feature-card.f00-proj, .doc-card.f00-proj,
     var(--e-bw-l, var(--e-bw, 2px)) !important;
   opacity: var(--e-op, var(--p-lamp, 1));
   background-color: rgba(232, 223, 212, var(--e-paper, 1)) !important;
+  /* slight specimen pad drift — still a usable card */
+  padding-top: calc(1.05rem * var(--e-pad-t, 1)) !important;
+  padding-right: calc(1.15rem * var(--e-pad-r, 1)) !important;
+  padding-bottom: calc(1.2rem * var(--e-pad-b, 1)) !important;
+  padding-left: calc(1.15rem * var(--e-pad-l, 1)) !important;
 }
 
 p.f00-proj, li.f00-proj, h1.f00-proj, h2.f00-proj, h3.f00-proj, h4.f00-proj,
