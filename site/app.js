@@ -85,21 +85,21 @@
       parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
     logoGapPx = readLogoGap();
     /*
-     * First screen: full viewport under header. Logo is centered in that
-     * band; project cards live in the next screen (below the fold).
+     * First screen: open field under the fixed header. Logo is centered
+     * in that band (not the full viewport — that reads too high). Cards
+     * live on the next screen (below the fold).
      */
     const viewH = window.innerHeight;
-    /* first screen under fixed header — cards start at the fold */
     const bandH = Math.max(200, viewH - headerH);
-    /* size mark for the full viewport center (slightly inside edges) */
-    const margin = Math.max(24, Math.min(72, viewH * 0.07));
-    const availH = Math.max(160, viewH - margin * 2 - headerH * 0.35);
-    const availW = window.innerWidth * 0.88;
+    /* air above/below the ink so the mark floats, not fills the band */
+    const air = Math.max(36, Math.min(96, bandH * 0.11));
+    const availH = Math.max(160, bandH - air * 2);
+    const availW = window.innerWidth * 0.84;
     /* rest: compact brand in the header bar */
     splashRestPx = Math.min(56, Math.max(40, window.innerWidth * 0.038));
     /*
      * Onyx "f00": glyph box ≈ 0.84×font tall, ≈ 1.28×font wide.
-     * Fill the centered band without kissing the header or fold.
+     * Fit the open band with room under the header rule and above the fold.
      */
     const byH = availH / 0.84;
     const byW = availW / 1.28;

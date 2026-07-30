@@ -143,14 +143,18 @@ main {
 
 /*
  * Film logo frame — fixed on body.
- *  p=0 → full band under header, mark vertically centered
+ *  p=0 → band under header, mark centered in that band (not full-viewport)
  *  p=1 / .is-header-dock → compact brand in header center
+ *
+ * Full-viewport center sits optically high under fixed chrome; we center
+ * in the open field below the header instead.
  */
 .splash-frame {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
-  top: 0 !important;
+  /* drop under header as p→0; park at top when docked */
+  top: calc(var(--header-h) * (1 - var(--p, 0))) !important;
   z-index: 60 !important;
   display: flex;
   justify-content: center;
@@ -159,11 +163,17 @@ main {
   margin: 0;
   padding: 0 var(--pad);
   /*
-   * p=0: full viewport — mark truly centered on screen
-   * p=1: collapses to header bar height (hard-dock class also pins)
+   * p=0: height = viewport − header (center in open field)
+   * p=1: height = header bar
    */
-  height: calc(100dvh - (100dvh - var(--header-h)) * var(--p, 0));
-  min-height: calc(100svh - (100svh - var(--header-h)) * var(--p, 0));
+  height: calc(
+    (100dvh - var(--header-h)) * (1 - var(--p, 0)) +
+    var(--header-h) * var(--p, 0)
+  );
+  min-height: calc(
+    (100svh - var(--header-h)) * (1 - var(--p, 0)) +
+    var(--header-h) * var(--p, 0)
+  );
   pointer-events: none !important;
   transform: none !important;
   opacity: var(--dock-op, 1);
