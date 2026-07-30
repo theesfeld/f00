@@ -1,7 +1,7 @@
 /**
  * throw — GPU PROJECT
- * Developed density as texture; fragment shader runs the optical chain
- * every frame on the device. Living, not a frozen bitmap.
+ * Developed density as texture; fragment shader runs the optical chain.
+ * Quality tiers: high (desktop) · fast (iOS / coarse pointers).
  */
 
 const VERT = `
@@ -13,21 +13,21 @@ void main() {
 }
 `;
 
-/* density in R channel (or A). Black ink via alpha. */
-const FRAG = `
-precision highp float;
+/* Full optical chain — desktop / high-power */
+const FRAG_HIGH = `
+precision mediump float;
 varying vec2 v_uv;
 uniform sampler2D u_density;
 uniform vec2 u_res;
 uniform float u_time;
-uniform float u_p;       /* scroll progress 0..1 */
-uniform float u_live;    /* living amp (large mark = more) */
+uniform float u_p;
+uniform float u_live;
 uniform float u_seed;
-uniform vec2 u_film;     /* gate slip */
-uniform vec2 u_tilt;     /* keystone */
-uniform float u_rz;      /* roll */
+uniform vec2 u_film;
+uniform vec2 u_tilt;
+uniform float u_rz;
 uniform float u_focus;
-uniform float u_und;     /* screen undulation */
+uniform float u_und;
 uniform float u_bulb;
 uniform vec2 u_bulbPos;
 
@@ -48,23 +48,16 @@ float fbm(vec2 p) {
   return 0.55 * noise(p) + 0.3 * noise(p * 2.03 + 1.7) + 0.15 * noise(p * 4.1 + 3.1);
 }
 
-/* sample developed density (stored in .a) */
 float sampleD(vec2 uv) {
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 0.0;
   return texture2D(u_density, uv).a;
 }
 
-/*
- * Local CoC — spatial, never flat blur.
- * fail high = soft island; fail low = sharp (order in disorder).
- */
 float sampleInk(vec2 uv, float coc) {
   float core = sampleD(uv);
   float hold = fbm(uv * 1.7 + 0.2);
-  /* some regions nearly no CoC (straightness survives) */
   if (hold > 0.62) coc *= 0.08;
   else if (hold < 0.35) coc *= 1.55;
-
   if (coc < 0.45) return core;
 
   float em = fbm(uv * 16.0);
@@ -96,19 +89,16 @@ void main() {
   float sx = (uv.x - 0.5) * 2.0;
   float sy = (uv.y - 0.5) * 2.0;
 
-  /* screen undulation — living, never flat; keep glyph inside pad */
   float und = u_und * live;
   sx += (fbm(vec2(uv.x * 4.0 + t * 0.11, uv.y * 4.0)) - 0.5) * und * 1.05;
   sy += (fbm(vec2(uv.x * 3.6, uv.y * 3.6 + t * 0.09)) - 0.5) * und * 0.9;
 
-  /* film keystone + gate — continuous drift */
   float kx = u_tilt.y * live * 0.85;
   float ky = u_tilt.x * live * 0.85;
   float denom = max(1.0 + kx * sx + ky * sy, 0.72);
   float fx = sx / denom + u_film.x * 1.8 * live;
   float fy = sy / denom + u_film.y * 1.8 * live;
 
-  /* roll */
   float cz = cos(u_rz * live * 0.9);
   float sz = sin(u_rz * live * 0.9);
   float rxx = fx * cz - fy * sz;
@@ -116,7 +106,6 @@ void main() {
   fx = rxx;
   fy = ryy;
 
-  /* buckle magnification field — organic swell */
   float buckle = (fbm(vec2(uv.x * 2.6 + t * 0.05, uv.y * 2.6 - t * 0.03)) - 0.5) * 0.09 * live;
   float mag = 1.0 / max(1.0 - 1.8 * buckle, 0.78);
   fx *= mag;
@@ -124,24 +113,100 @@ void main() {
 
   vec2 filmUV = vec2(fx * 0.5 + 0.5, fy * 0.5 + 0.5);
 
-  /* local focus error → CoC in px */
   float filmZ = buckle + (fbm(uv * 8.0) - 0.5) * 0.08;
   float focusErr = abs(filmZ - (u_focus - 0.5) * 0.12);
   float coc = focusErr * (3.0 + 4.0 * live) * min(u_res.x, u_res.y) * 0.0035;
-  coc *= 0.55 + 0.55 * hero; /* calmer when docked */
+  coc *= 0.55 + 0.55 * hero;
 
   float dens = sampleInk(filmUV, coc);
 
-  /* bulb — off-center, never flat */
   vec2 lp = uv - (0.5 + u_bulbPos * live);
   float r2 = dot(lp, lp);
   float flicker = 0.9 + 0.12 * fbm(vec2(t * 1.1, 0.7));
   float illum = u_bulb * flicker * (1.0 / (0.55 + r2 * 1.6));
   dens = clamp(dens * illum, 0.0, 1.0);
 
-  /* black ink, premultiplied-ish */
-  float a = dens;
-  gl_FragColor = vec4(vec3(0.0), a);
+  gl_FragColor = vec4(vec3(0.0), dens);
+}
+`;
+
+/* Mobile / iOS — same look, far fewer ALU + texture samples */
+const FRAG_FAST = `
+precision mediump float;
+varying vec2 v_uv;
+uniform sampler2D u_density;
+uniform vec2 u_res;
+uniform float u_time;
+uniform float u_p;
+uniform float u_live;
+uniform float u_seed;
+uniform vec2 u_film;
+uniform vec2 u_tilt;
+uniform float u_rz;
+uniform float u_focus;
+uniform float u_und;
+uniform float u_bulb;
+uniform vec2 u_bulbPos;
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7)) + u_seed) * 43758.5453123);
+}
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = hash(i);
+  float b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0));
+  float d = hash(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+float sampleD(vec2 uv) {
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 0.0;
+  return texture2D(u_density, uv).a;
+}
+
+void main() {
+  float t = u_time;
+  float live = clamp(u_live, 0.15, 1.2);
+
+  vec2 uv = v_uv;
+  float sx = (uv.x - 0.5) * 2.0;
+  float sy = (uv.y - 0.5) * 2.0;
+
+  /* one-octave undulation — still living, ~1/3 the cost of fbm */
+  float und = u_und * live;
+  sx += (noise(vec2(uv.x * 3.2 + t * 0.1, uv.y * 3.2)) - 0.5) * und;
+  sy += (noise(vec2(uv.x * 2.9, uv.y * 2.9 + t * 0.08)) - 0.5) * und * 0.85;
+
+  float kx = u_tilt.y * live * 0.75;
+  float ky = u_tilt.x * live * 0.75;
+  float denom = max(1.0 + kx * sx + ky * sy, 0.75);
+  float fx = sx / denom + u_film.x * 1.5 * live;
+  float fy = sy / denom + u_film.y * 1.5 * live;
+
+  float cz = cos(u_rz * live * 0.85);
+  float sz = sin(u_rz * live * 0.85);
+  float rxx = fx * cz - fy * sz;
+  float ryy = fx * sz + fy * cz;
+
+  /* soft buckle without multi-octave fbm */
+  float buckle = (noise(vec2(uv.x * 2.4 + t * 0.05, uv.y * 2.4)) - 0.5) * 0.07 * live;
+  float mag = 1.0 / max(1.0 - 1.6 * buckle, 0.8);
+  rxx *= mag;
+  ryy *= mag;
+
+  vec2 filmUV = vec2(rxx * 0.5 + 0.5, ryy * 0.5 + 0.5);
+
+  /* no CoC kernel — single tap (scale already softens via CSS on mobile) */
+  float dens = sampleD(filmUV);
+
+  vec2 lp = uv - (0.5 + u_bulbPos * live);
+  float illum = u_bulb * (0.92 + 0.08 * sin(t * 1.05)) * (1.0 / (0.55 + dot(lp, lp) * 1.6));
+  dens = clamp(dens * illum, 0.0, 1.0);
+
+  gl_FragColor = vec4(vec3(0.0), dens);
 }
 `;
 
@@ -165,6 +230,8 @@ function createProgram(gl, vsSrc, fsSrc) {
   gl.attachShader(p, vs);
   gl.attachShader(p, fs);
   gl.linkProgram(p);
+  gl.deleteShader(vs);
+  gl.deleteShader(fs);
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
     console.warn("[throw-gl] link", gl.getProgramInfoLog(p));
     return null;
@@ -172,29 +239,42 @@ function createProgram(gl, vsSrc, fsSrc) {
   return p;
 }
 
+function preferFastQuality() {
+  try {
+    if (window.matchMedia("(pointer: coarse)").matches) return true;
+    if (window.matchMedia("(max-width: 900px)").matches) return true;
+    const ua = navigator.userAgent || "";
+    if (/iPhone|iPad|iPod|Android/i.test(ua)) return true;
+    /* save-data / low-end hints */
+    if (navigator.connection?.saveData) return true;
+    if ((navigator.hardwareConcurrency || 8) <= 4) return true;
+  } catch (_) {}
+  return false;
+}
+
 /**
- * Mount a living WebGL projector for a developed density field.
- * @returns {{ draw: Function, uploadDensity: Function, resize: Function, destroy: Function } | null}
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ quality?: "high"|"fast" }} [opts]
  */
-export function createGlProjector(canvas) {
+export function createGlProjector(canvas, opts = {}) {
+  const fast = opts.quality === "fast" || (opts.quality !== "high" && preferFastQuality());
+  const glOpts = {
+    alpha: true,
+    premultipliedAlpha: true,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    /* preserveDrawingBuffer forces a full copy every frame on mobile GPUs */
+    preserveDrawingBuffer: false,
+    powerPreference: fast ? "default" : "high-performance",
+    desynchronized: true,
+  };
   const gl =
-    canvas.getContext("webgl", {
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: false,
-      depth: false,
-      stencil: false,
-      preserveDrawingBuffer: true,
-      powerPreference: "high-performance",
-    }) ||
-    canvas.getContext("experimental-webgl", {
-      alpha: true,
-      premultipliedAlpha: true,
-      preserveDrawingBuffer: true,
-    });
+    canvas.getContext("webgl", glOpts) ||
+    canvas.getContext("experimental-webgl", glOpts);
   if (!gl) return null;
 
-  const prog = createProgram(gl, VERT, FRAG);
+  const prog = createProgram(gl, VERT, fast ? FRAG_FAST : FRAG_HIGH);
   if (!prog) return null;
 
   const buf = gl.createBuffer();
@@ -235,7 +315,6 @@ export function createGlProjector(canvas) {
 
   const uploadDensity = (density, w, h) => {
     if (destroyed) return;
-    /* pack float density → RGBA (alpha = dens) */
     const rgba = new Uint8Array(w * h * 4);
     for (let i = 0; i < w * h; i++) {
       const a = Math.max(0, Math.min(255, (density[i] * 255 + 0.5) | 0));
@@ -252,7 +331,6 @@ export function createGlProjector(canvas) {
     }
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    /* density rows are top→bottom (canvas 2d); WebGL samples v=0 at bottom */
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(
       gl.TEXTURE_2D,
@@ -276,8 +354,6 @@ export function createGlProjector(canvas) {
     const live = state.liveAmp != null ? state.liveAmp : 1;
     const t = state.time || 0;
 
-    /* evolve optics on CPU (cheap) — matches throw evolveOptics spirit */
-    /* continuous living optics — visible drift, still zen */
     const filmX =
       o.film.x +
       (Math.sin(t * 0.55) * 0.014 + Math.sin(t * 0.19 + state.seed) * 0.01) *
@@ -333,5 +409,5 @@ export function createGlProjector(canvas) {
     } catch (_) {}
   };
 
-  return { uploadDensity, draw, destroy, gl };
+  return { uploadDensity, draw, destroy, gl, quality: fast ? "fast" : "high" };
 }

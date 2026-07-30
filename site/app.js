@@ -44,7 +44,6 @@
   let splashRestH = 0;
   let logoGapPx = 28;
   let shrinkRange = 1;
-  let dockOp = 1;
   let filmHandle = null;
 
   const measureHeader = () => {
@@ -145,40 +144,45 @@
     document.body.appendChild(splashFrame);
   }
 
+  let lastDocked = null;
+  let lastPBucket = -1;
+
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
-    root.style.setProperty("--p", v.toFixed(5));
+    /*
+     * --p is no longer used for layout (height/top/font). Keep a coarse
+     * bucket for any remaining CSS hooks without writing every scroll px.
+     */
+    const bucket = Math.round(v * 20) / 20;
+    if (bucket !== lastPBucket) {
+      lastPBucket = bucket;
+      root.style.setProperty("--p", bucket.toFixed(2));
+    }
     const docked = v > 0.88;
-    root.classList.toggle("logo-docked", docked);
-    if (splashFrame) {
-      splashFrame.classList.toggle("is-header-dock", docked);
+    if (docked !== lastDocked) {
+      lastDocked = docked;
+      root.classList.toggle("logo-docked", docked);
+      if (splashFrame) {
+        splashFrame.classList.toggle("is-header-dock", docked);
+      }
+      if (hero) {
+        hero.classList.toggle("is-done", docked);
+      }
     }
-    if (hero) {
-      hero.classList.toggle("is-done", docked);
-      hero.classList.add("is-live");
-    }
-  };
-
-  const setDock = (yPx, op) => {
-    dockOp = Math.max(0, Math.min(1, op));
-    root.style.setProperty("--dock-y", "0px");
-    root.style.setProperty("--dock-op", dockOp.toFixed(4));
+    if (hero) hero.classList.add("is-live");
   };
 
   const updateHeroScroll = () => {
     if (!splash || prefersReduced) {
       setProgress(prefersReduced ? 1 : 0);
-      setDock(0, 1);
       return;
     }
     const y = window.scrollY;
     if (y <= shrinkRange) {
       setProgress(y / Math.max(shrinkRange, 1));
     } else {
-      /* compact mark pinned in header center — no fade */
       setProgress(1);
     }
-    setDock(0, 1);
   };
 
   if (splash) {

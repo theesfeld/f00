@@ -104,11 +104,15 @@ header.top::before,
 }
 .brand-mark { font-size: 1.45rem; letter-spacing: 0.14em; }
 .brand-sub { letter-spacing: 0.14em; font-size: 0.8rem; }
-/* text brand fades as film logo parks in header center */
+/* text brand yields once the film mark docks — class only, no per-frame --p layout */
 .brand-mark,
 .brand-sub {
-  opacity: calc(1 - var(--p, 0));
-  transition: opacity 0.15s linear;
+  opacity: 1;
+  transition: opacity 0.18s linear;
+}
+html.logo-docked .brand-mark,
+html.logo-docked .brand-sub {
+  opacity: 0;
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-mark, .brand-sub { transition: none; }
@@ -142,19 +146,15 @@ main {
 }
 
 /*
- * Film logo frame — fixed on body.
- *  p=0 → band under header, mark centered in that band (not full-viewport)
- *  p=1 / .is-header-dock → compact brand in header center
- *
- * Full-viewport center sits optically high under fixed chrome; we center
- * in the open field below the header instead.
+ * Film logo frame — fixed band under header (layout STABLE while scrolling).
+ * Shrink / rise is canvas transform only (compositor). Hard-dock class pins
+ * into the header once — never animate height/top via --p (iOS layout thrash).
  */
 .splash-frame {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
-  /* drop under header as p→0; park at top when docked */
-  top: calc(var(--header-h) * (1 - var(--p, 0))) !important;
+  top: var(--header-h) !important;
   z-index: 60 !important;
   display: flex;
   justify-content: center;
@@ -162,25 +162,16 @@ main {
   width: 100%;
   margin: 0;
   padding: 0 var(--pad);
-  /*
-   * p=0: height = viewport − header (center in open field)
-   * p=1: height = header bar
-   */
-  height: calc(
-    (100dvh - var(--header-h)) * (1 - var(--p, 0)) +
-    var(--header-h) * var(--p, 0)
-  );
-  min-height: calc(
-    (100svh - var(--header-h)) * (1 - var(--p, 0)) +
-    var(--header-h) * var(--p, 0)
-  );
+  height: calc(100dvh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
   pointer-events: none !important;
   transform: none !important;
-  opacity: var(--dock-op, 1);
+  opacity: 1;
   overflow: visible;
   will-change: auto;
+  contain: layout style;
 }
-/* hard dock into the header chrome */
+/* hard dock into the header chrome — one class flip, not a continuous lerp */
 .splash-frame.is-header-dock,
 html.logo-docked .splash-frame {
   top: 0 !important;
@@ -190,6 +181,7 @@ html.logo-docked .splash-frame {
   padding: 0 var(--pad) !important;
   align-items: center !important;
   justify-content: center !important;
+  contain: layout style;
 }
 .splash-wrap.is-film {
   max-width: min(100%, 92vw);
@@ -237,10 +229,8 @@ html.logo-docked .splash-wrap.is-film,
   will-change: auto;
 }
 .splash-wrap.is-film .splash {
-  /* same rest↔max curve as hero measure; canvas still CSS-scales the film */
-  font-size: calc(
-    var(--splash-rest) + (var(--splash-max) - var(--splash-rest)) * (1 - var(--p, 0))
-  ) !important;
+  /* fixed size — visual shrink is canvas transform only (no text reflow / frame) */
+  font-size: var(--splash-max) !important;
   color: transparent !important;
   text-shadow: none !important;
   animation: none !important;

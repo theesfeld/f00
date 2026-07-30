@@ -820,17 +820,26 @@
   if (!reduced) {
     let t0 = performance.now();
     let last = t0;
+    let lastFieldWrite = 0;
     const tick = (now) => {
       const dt = Math.min(0.048, (now - last) / 1000);
       last = now;
       const t = (now - t0) / 1000;
       const scrolling = root.dataset.f00Scrolling === "1";
 
-      /* exp lerp factor — continuous flow, never stepped frames */
-      const follow = 1 - Math.exp(-dt * (scrolling ? 4 : 7));
+      /*
+       * While scrolling: freeze entropy style writes. Scroll shrink must own
+       * the main thread / compositor (esp. iOS). Resume living motion at rest.
+       */
+      if (scrolling) {
+        requestAnimationFrame(tick);
+        return;
+      }
+
+      const follow = 1 - Math.exp(-dt * 7);
 
       const field = projections.get(root);
-      if (field?.role === "field") {
+      if (field?.role === "field" && now - lastFieldWrite > 48) {
         const tx =
           field.bgX +
           Math.sin(t * field.p1) * field.a1 +
@@ -843,34 +852,23 @@
         field.by += (ty - field.by) * follow * 0.55;
         root.style.setProperty("--e-bg-x", `${field.bx.toFixed(4)}%`);
         root.style.setProperty("--e-bg-y", `${field.by.toFixed(4)}%`);
+        lastFieldWrite = now;
       }
 
-      /*
-       * Continuous phase every frame. Lerp display toward target so motion
-       * reads as liquid, not a 20fps sample-and-hold.
-       * While scrolling: still advance phase lightly so settle is already flowing.
-       */
-      const ampScale = scrolling ? 0.35 : 1;
       projections.forEach((p) => {
         if (p.role === "field" || p.role === "plate") return;
         if (p.el?.classList?.contains("splash-wrap")) return;
 
-        /* slow multi-rate drift — incommensurate periods = organic */
-        p.phi += dt * p.omega * (scrolling ? 0.45 : 1);
+        p.phi += dt * p.omega;
         const ph = p.phi;
         const targetX =
-          (Math.sin(ph) * 0.72 + Math.sin(ph * 0.37) * 0.28) *
-          p.ampGate *
-          ampScale;
+          (Math.sin(ph) * 0.72 + Math.sin(ph * 0.37) * 0.28) * p.ampGate;
         const targetY =
           (Math.cos(ph * 0.93) * 0.7 + Math.sin(ph * 0.51) * 0.3) *
           p.ampGate *
-          0.85 *
-          ampScale;
+          0.85;
         const targetRot =
-          (Math.sin(ph * 0.29) * 0.75 + Math.sin(ph * 0.11) * 0.25) *
-          p.ampRot *
-          ampScale;
+          (Math.sin(ph * 0.29) * 0.75 + Math.sin(ph * 0.11) * 0.25) * p.ampRot;
 
         p.liveGateX = targetX;
         p.liveGateY = targetY;

@@ -1,7 +1,7 @@
-/* f00 hub splash — throw DEVELOP once (CPU), PROJECT every frame (WebGL)
+/* f00 hub splash — throw DEVELOP once (CPU), PROJECT living (WebGL)
  *
- * Living optical chain on the GPU. CSS scale for scroll shrink.
- * Never a frozen bitmap that only scales.
+ * Scroll shrink is CSS transform only (compositor). GPU lives at a
+ * throttled rate and is paused while the finger is moving on mobile.
  */
 import {
   develop,
@@ -11,12 +11,22 @@ import {
 import { createGlProjector } from "./throw/engine/gl-project.js";
 import { mulberry32 } from "./throw/engine/math.js";
 
+function detectMobileBudget() {
+  try {
+    if (window.matchMedia("(pointer: coarse)").matches) return true;
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent || "")) return true;
+    if (window.matchMedia("(max-width: 900px)").matches) return true;
+  } catch (_) {}
+  return false;
+}
+
 export function mountThrowPlate(opts) {
   const canvas = opts.canvas;
   const splash = opts.splashEl;
   if (!canvas || !splash) return null;
 
   const reduced = !!opts.staticOnly;
+  const mobile = detectMobileBudget();
   const seed =
     (opts.seed != null
       ? opts.seed
@@ -39,22 +49,22 @@ export function mountThrowPlate(opts) {
   let thrownMaxPx = 0;
   let pendingThrow = 0;
   let projector = null;
+  let lastGlDraw = 0;
+  let lastScrollY = -1;
 
   let maxPx = 120;
   let restPx = 56;
   let shrinkRange = 400;
+  let headerH = 54;
 
   let smoothP = 0;
-  let smoothOp = 1;
   let targetP = 0;
-  let targetOp = 1;
   let dispScale = 1;
   let lastTs = 0;
-  /* density ink bounds as fraction of canvas — equal air uses ink, not pad */
-  let inkTopFrac = 0.04;
   let inkHeightFrac = 0.78;
   let baseCssH = 0;
-  let restScale = 0.35; /* calibrated so ink height ≈ rest glyph band */
+  let restScale = 0.35;
+  let travelY = 0; /* px from band-center → header-center at p=1 */
 
   const fontFamily =
     opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
@@ -65,10 +75,19 @@ export function mountThrowPlate(opts) {
     const m = parseFloat(cs.getPropertyValue("--splash-max"));
     const r = parseFloat(cs.getPropertyValue("--splash-rest"));
     const sh = parseFloat(cs.getPropertyValue("--shrink-range"));
+    const hh = parseFloat(cs.getPropertyValue("--header-h"));
     if (Number.isFinite(m) && m > 24) maxPx = m;
     if (Number.isFinite(r) && r > 8) restPx = r;
+    if (Number.isFinite(hh) && hh > 20) headerH = hh;
     if (Number.isFinite(sh) && sh > 32) shrinkRange = sh;
     else shrinkRange = Math.max(64, (maxPx - restPx) * 0.86);
+
+    /* vertical travel: band mid → header mid (frame stays layout-stable) */
+    const viewH = window.innerHeight || 800;
+    const bandH = Math.max(120, viewH - headerH);
+    const bandMid = headerH + bandH * 0.5;
+    const headMid = headerH * 0.5;
+    travelY = headMid - bandMid;
   };
 
   const readTargetP = () => {
@@ -80,43 +99,42 @@ export function mountThrowPlate(opts) {
     return Math.max(0, Math.min(1, y / Math.max(shrinkRange, 1)));
   };
 
-  const readTargetOp = () => {
-    if (opts.getOpacity) {
-      const v = opts.getOpacity();
-      if (Number.isFinite(v)) return Math.max(0, Math.min(1, v));
-    }
-    /* docked mark stays fully opaque — no dissolve */
-    return 1;
-  };
-
-  const applyCssScale = (p, op, follow) => {
+  const applyCssScale = (p, follow) => {
     const pp = Math.max(0, Math.min(1, p));
-    /* s=1 at hero; s=restScale when docked — restScale from real ink metrics */
     const targetScale = Math.max(
       0.05,
       Math.min(1.05, 1 - pp * (1 - restScale))
     );
     const f = follow ?? 1;
     dispScale += (targetScale - dispScale) * f;
+
     /*
-     * Always center the plate in its frame (hero band or header bar).
-     * Frame flex + translate(-50%,-50%) scale about center — any device.
+     * Compositor-only: center of band + rise into header + scale.
+     * Frame layout does not change with p (iOS-safe).
+     * When hard-docked, travel is 0 (frame is already the header bar).
      */
+    const docked =
+      pp > 0.88 || document.documentElement.classList.contains("logo-docked");
+    const y = docked ? 0 : travelY * pp;
+
     canvas.style.left = "50%";
     canvas.style.top = "50%";
     canvas.style.transformOrigin = "50% 50%";
     canvas.style.transform = [
       "translate3d(-50%, -50%, 0)",
+      `translate3d(0, ${y.toFixed(2)}px, 0)`,
       `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
     ].join(" ");
-    canvas.style.opacity = String(op);
+    canvas.style.opacity = "1";
     canvas.dataset.throwScale = String(dispScale);
     canvas.dataset.throwP = String(pp.toFixed(4));
   };
 
   const ensureGl = () => {
     if (projector) return projector;
-    projector = createGlProjector(canvas);
+    projector = createGlProjector(canvas, {
+      quality: mobile ? "fast" : "high",
+    });
     return projector;
   };
 
@@ -128,24 +146,24 @@ export function mountThrowPlate(opts) {
       refreshMetrics();
       if (!(maxPx > 24)) return;
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      /* iOS: smaller backing store — looks sharp enough at rest scale */
+      const dpr = Math.min(
+        window.devicePixelRatio || 1,
+        mobile ? 1.15 : 1.5
+      );
       const layoutW = maxPx * 1.35;
       const layoutH = maxPx * 0.88;
-      /*
-       * Generous film pad — optical warp/buckle samples outside the glyph.
-       * Too-tight pad = clipped flourishes (f top / o sides look cut off).
-       */
-      const padX = Math.max(36, layoutW * 0.14);
-      const padY = Math.max(40, layoutH * 0.16);
+      const padX = Math.max(mobile ? 28 : 36, layoutW * (mobile ? 0.12 : 0.14));
+      const padY = Math.max(mobile ? 32 : 40, layoutH * (mobile ? 0.14 : 0.16));
       const cssW = Math.ceil(layoutW + padX * 2);
       const cssH = Math.ceil(layoutH + padY * 2);
 
-      const maxEdge = 1100;
+      const maxEdge = mobile ? 560 : 1100;
       let w = Math.floor(cssW * dpr);
       let h = Math.floor(cssH * dpr);
       const sc = Math.min(1, maxEdge / Math.max(w, h, 1));
-      w = Math.max(200, Math.floor(w * sc));
-      h = Math.max(140, Math.floor(h * sc));
+      w = Math.max(160, Math.floor(w * sc));
+      h = Math.max(120, Math.floor(h * sc));
 
       if (document.fonts?.load) {
         try {
@@ -176,7 +194,6 @@ export function mountThrowPlate(opts) {
       }
       glp.uploadDensity(density, w, h);
 
-      /* ink bounds — equal dock air is about ink, not transparent pad */
       let inkTop = -1;
       let inkBot = -1;
       for (let y = 0; y < h; y++) {
@@ -189,22 +206,19 @@ export function mountThrowPlate(opts) {
         }
       }
       if (inkTop < 0) {
-        inkTopFrac = 0.03;
         inkHeightFrac = 0.78;
       } else {
-        /* keep a little air above highest ink so warp can't kiss the header */
-      inkTopFrac = Math.max(0, inkTop / h - 0.02);
-      inkHeightFrac = Math.max(0.4, (inkBot - inkTop + 1) / h);
+        inkHeightFrac = Math.max(0.4, (inkBot - inkTop + 1) / h);
       }
       baseCssH = cssH;
-      /*
-       * restScale → compact docked mark (~brand height under header).
-       * Was targeting ~restPx (too large) so the dock sat on top of cards.
-       */
-      /* fit comfortably inside header chrome (~header-h − a few px) */
-      const headerBudget = Math.max(28, (parseFloat(
-        getComputedStyle(document.documentElement).getPropertyValue("--header-h")
-      ) || 54) * 0.72);
+      const headerBudget = Math.max(
+        28,
+        (parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--header-h"
+          )
+        ) || 54) * 0.72
+      );
       const targetInkH = Math.max(28, Math.min(headerBudget, restPx * 0.85));
       const fullInkH = inkHeightFrac * cssH;
       restScale =
@@ -215,10 +229,22 @@ export function mountThrowPlate(opts) {
       thrownMaxPx = maxPx;
       canvas.style.width = `${cssW}px`;
       canvas.style.height = `${cssH}px`;
-      canvas.style.left = "50%";
-      canvas.style.top = "0";
-      canvas.style.willChange = "transform, opacity";
-      applyCssScale(smoothP, smoothOp, 1);
+      canvas.style.willChange = "transform";
+      /* promote layer once */
+      canvas.style.webkitBackfaceVisibility = "hidden";
+      canvas.style.backfaceVisibility = "hidden";
+      applyCssScale(smoothP, 1);
+      /* first living frame */
+      if (!reduced) {
+        glp.draw({
+          time: performance.now() / 1000,
+          p: smoothP,
+          liveAmp: 0.28 + 0.72 * (1 - smoothP),
+          optics,
+          seed,
+        });
+        lastGlDraw = performance.now();
+      }
     } finally {
       busy = false;
     }
@@ -249,35 +275,60 @@ export function mountThrowPlate(opts) {
     lastTs = ts;
 
     targetP = readTargetP();
-    targetOp = readTargetOp();
-    const k = 1 - Math.exp(-dt * 11);
     const prevP = smoothP;
+    /*
+     * Snappy follow — especially on touch. Lag made shrink feel "insane"
+     * even when the device could keep up with layout.
+     */
+    const snappiness = mobile ? 32 : 22;
+    const k = 1 - Math.exp(-dt * snappiness);
     smoothP += (targetP - smoothP) * k;
-    smoothOp += (targetOp - smoothOp) * k;
+    /* snap when essentially there — avoids endless micro-lerp */
+    if (Math.abs(targetP - smoothP) < 0.0008) smoothP = targetP;
 
-    applyCssScale(smoothP, smoothOp, k);
+    applyCssScale(smoothP, 1);
 
-    /* GPU project every frame — living light on device */
-    if (projector && !reduced) {
-      const liveAmp = 0.28 + 0.72 * (1 - smoothP);
-      projector.draw({
-        time: ts / 1000,
-        p: smoothP,
-        liveAmp,
-        optics,
-        seed,
-      });
-    }
+    const scrollY = window.scrollY || 0;
+    const scrollDelta = Math.abs(scrollY - lastScrollY);
+    lastScrollY = scrollY;
 
     const moving =
-      Math.abs(smoothP - prevP) > 0.00015 ||
-      Math.abs(targetP - smoothP) > 0.0015;
+      Math.abs(smoothP - prevP) > 0.0002 ||
+      Math.abs(targetP - smoothP) > 0.001 ||
+      scrollDelta > 0.5;
+
     if (moving) {
       scrollIdleAt = ts;
       document.documentElement.dataset.f00Scrolling = "1";
-    } else if (ts - scrollIdleAt > 180) {
+    } else if (ts - scrollIdleAt > 140) {
       if (document.documentElement.dataset.f00Scrolling === "1") {
         document.documentElement.dataset.f00Scrolling = "0";
+      }
+    }
+
+    /*
+     * GPU budget:
+     *  - while finger is moving on mobile: pure CSS scale (0 GL)
+     *  - desktop scroll: ~20fps living
+     *  - idle hero: ~24fps mobile / 30fps desktop
+     *  - docked: ~10fps (still alive, cheap)
+     */
+    if (projector && !reduced) {
+      const docked = smoothP > 0.88;
+      let interval = mobile ? 42 : 33;
+      if (moving) interval = mobile ? 1e9 : 50;
+      else if (docked) interval = mobile ? 100 : 80;
+
+      if (ts - lastGlDraw >= interval) {
+        const liveAmp = 0.28 + 0.72 * (1 - smoothP);
+        projector.draw({
+          time: ts / 1000,
+          p: smoothP,
+          liveAmp: moving ? liveAmp * 0.55 : liveAmp,
+          optics,
+          seed,
+        });
+        lastGlDraw = ts;
       }
     }
 
@@ -316,8 +367,6 @@ export function mountThrowPlate(opts) {
     refreshMetrics();
     targetP = readTargetP();
     smoothP = targetP;
-    targetOp = readTargetOp();
-    smoothOp = targetOp;
     await fullDevelop();
     lastFull = performance.now();
     scrollIdleAt = performance.now();
@@ -331,7 +380,7 @@ export function mountThrowPlate(opts) {
         optics,
         seed,
       });
-      applyCssScale(smoothP, smoothOp, 1);
+      applyCssScale(smoothP, 1);
     }
   };
   start();
