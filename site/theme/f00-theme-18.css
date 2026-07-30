@@ -1,10 +1,10 @@
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
-   Live: https://f00.sh/theme/f00-theme-19.css
+   Live: https://f00.sh/theme/f00-theme-20.css
 
-   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-19.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-20.css" />
 
    Heartbox v0.2.1 (Heart-Shaped Box video)
-   Website shell: verse-sky + watercolor paper + petal relief map
+   Website shell: technicolor poppy photo on verse-sky + paper tooth
    Project cards: poppy · painted WC paper · per-card wash variance · black type · 2px silver
    Project CSS = layout/structure only.
 
@@ -261,13 +261,18 @@ header, .site-header, .top, .nav-shell, .header-inner {
 }
 .splash .glyph { color: var(--f00-ink) !important; }
 
-/* Footer — white */
+/* Footer — white; brand name stays lowercase f00 */
 footer, .foot, .site-footer, .footer-bottom, .footer-inner {
   background: transparent !important;
   color: #ffffff !important;
   border-top: 1px solid rgba(255, 255, 255, 0.7) !important;
   font-family: var(--f00-font-chip) !important;
   letter-spacing: 0.1em;
+  text-transform: none !important;
+}
+footer span, .foot span, .site-footer span,
+footer, .foot, .site-footer {
+  text-transform: none !important;
 }
 footer a, .foot a, .site-footer a { color: rgba(255, 255, 255, 0.92) !important; }
 footer a:hover, .foot a:hover { color: #fff !important; }
