@@ -5,7 +5,6 @@
  */
 import {
   throwTextPlate,
-  reprojectPlate,
   displayToCanvas,
 } from "./throw/engine/throw.js";
 
@@ -79,33 +78,54 @@ export function mountThrowPlate(opts) {
     return Math.max(0, 1 - (y - shrinkRange) / fadeDist);
   };
 
-  /**
-   * GPU-only pose. Scale is the scroll story; breath is slow + tiny.
-   */
-  const applyLivePose = (p, op, time) => {
-    const pp = Math.max(0, Math.min(1, p));
-    const s =
-      maxPx > 0
-        ? (restPx + (maxPx - restPx) * (1 - pp)) / maxPx
-        : 1 - pp * 0.55;
-    const scale = Math.max(0.12, Math.min(1.05, s));
+  /* lerped organic offsets — continuous flow, never sample-and-hold */
+  let dispOx = 0;
+  let dispOy = 0;
+  let dispRot = 0;
+  let dispScale = 1;
 
-    /* slow organic drift — never high-frequency jitter */
-    const breath = 0.18 + 0.55 * (1 - pp);
+  /**
+   * GPU-only pose. Scale = scroll story; breath = slow multi-rate drift.
+   * Everything is lerped so settle/idle never stutters.
+   */
+  const applyLivePose = (p, op, time, follow) => {
+    const pp = Math.max(0, Math.min(1, p));
+    const targetScale =
+      maxPx > 0
+        ? Math.max(
+            0.12,
+            Math.min(1.05, (restPx + (maxPx - restPx) * (1 - pp)) / maxPx)
+          )
+        : Math.max(0.12, 1 - pp * 0.55);
+
+    /* incommensurate slow rates → liquid idle, not a single LFO */
+    const breath = 0.2 + 0.65 * (1 - pp);
     const t = time || 0;
-    const phase = t * 0.18; /* ~slow */
-    const ox = Math.sin(phase) * 0.35 * breath;
-    const oy = Math.cos(phase * 0.91) * 0.25 * breath;
-    const rot = Math.sin(phase * 0.37 + seed * 1e-9) * 0.12 * breath;
+    const ph = t * 0.14;
+    const targetOx =
+      (Math.sin(ph) * 0.55 + Math.sin(ph * 0.41 + 1.2) * 0.35) * breath;
+    const targetOy =
+      (Math.cos(ph * 0.87) * 0.45 + Math.sin(ph * 0.29) * 0.25) * breath;
+    const targetRot =
+      (Math.sin(ph * 0.33 + seed * 1e-9) * 0.55 +
+        Math.sin(ph * 0.17) * 0.35) *
+      0.14 *
+      breath;
+
+    const f = follow ?? 1;
+    dispScale += (targetScale - dispScale) * f;
+    dispOx += (targetOx - dispOx) * f;
+    dispOy += (targetOy - dispOy) * f;
+    dispRot += (targetRot - dispRot) * f;
 
     canvas.style.transform = [
       "translate3d(-50%, 0, 0)",
-      `scale3d(${scale.toFixed(5)}, ${scale.toFixed(5)}, 1)`,
-      `translate3d(${ox.toFixed(3)}px, ${oy.toFixed(3)}px, 0)`,
-      `rotate(${rot.toFixed(4)}deg)`,
+      `scale3d(${dispScale.toFixed(5)}, ${dispScale.toFixed(5)}, 1)`,
+      `translate3d(${dispOx.toFixed(3)}px, ${dispOy.toFixed(3)}px, 0)`,
+      `rotate(${dispRot.toFixed(4)}deg)`,
     ].join(" ");
     canvas.style.opacity = String(op);
-    canvas.dataset.throwScale = String(scale);
+    canvas.dataset.throwScale = String(dispScale);
     canvas.dataset.throwP = String(pp.toFixed(4));
   };
 
@@ -198,67 +218,45 @@ export function mountThrowPlate(opts) {
     if (!running) return;
     raf = requestAnimationFrame(loop);
 
-    const dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
+    const dt = lastTs ? Math.min(0.048, (ts - lastTs) / 1000) : 0.016;
     lastTs = ts;
 
     targetP = readTargetP();
     targetOp = readTargetOp();
 
-    /* exp lerp — higher when catching up fast scroll, still smooth */
-    const k = 1 - Math.exp(-dt * 14); /* ~snappy but not snapped */
+    /*
+     * Silk follow: snappy enough to track scroll, soft enough that settle
+     * eases instead of hard-stopping. Never reproject (bitmap swaps = jerk).
+     */
+    const k = 1 - Math.exp(-dt * 11);
     const prevP = smoothP;
     smoothP += (targetP - smoothP) * k;
     smoothOp += (targetOp - smoothOp) * k;
-    /* snap when essentially there — avoid eternal micro-drift */
-    if (Math.abs(targetP - smoothP) < 0.0004) smoothP = targetP;
-    if (Math.abs(targetOp - smoothOp) < 0.001) smoothOp = targetOp;
 
-    applyLivePose(smoothP, smoothOp, ts / 1000);
+    applyLivePose(smoothP, smoothOp, ts / 1000, k);
 
-    /* signal scroll activity for entropy / others */
-    const moving = Math.abs(smoothP - prevP) > 0.0002 || Math.abs(targetP - smoothP) > 0.002;
+    const moving =
+      Math.abs(smoothP - prevP) > 0.00015 ||
+      Math.abs(targetP - smoothP) > 0.0015;
     if (moving) {
       scrollIdleAt = ts;
       document.documentElement.dataset.f00Scrolling = "1";
-    } else if (ts - scrollIdleAt > 140) {
+    } else if (ts - scrollIdleAt > 180) {
       if (document.documentElement.dataset.f00Scrolling === "1") {
         document.documentElement.dataset.f00Scrolling = "0";
       }
     }
 
-    /* re-throw only if measured max jumped (not on scroll) */
+    /* re-throw only if measured max jumped (resize / late measure) */
     if (
       !moving &&
       maxPx > 40 &&
       (thrownMaxPx < 40 ||
         Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) > 0.06) &&
-      performance.now() - lastFull > 240
+      performance.now() - lastFull > 280
     ) {
       refreshMetrics();
       scheduleThrow("max-changed");
-    }
-
-    /* living light only after full settle — never during motion */
-    if (
-      !reduced &&
-      cache &&
-      !busy &&
-      !moving &&
-      ts - scrollIdleAt > 1200 &&
-      ts - lastIdleRep > 2500
-    ) {
-      lastIdleRep = ts;
-      const liveAmp = 0.2 + 0.45 * (1 - smoothP);
-      const result = reprojectPlate(
-        cache.density,
-        cache.w,
-        cache.h,
-        cache.optics,
-        seed,
-        ts / 1000,
-        liveAmp
-      );
-      displayToCanvas(canvas, result);
     }
   };
 

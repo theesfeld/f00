@@ -105,17 +105,22 @@
       padB: R.range(0.96, 1.14),
       padL: R.range(0.94, 1.1),
       phi: R.range(0, Math.PI * 2),
-      omega: R.range(0.22, 0.85),
-      ampGate: R.range(0.2, 0.85) * pose,
-      ampTilt: R.range(0.04, 0.18) * persp,
-      ampDef: R.range(0.02, 0.1) * blur,
-      ampRot: R.range(0.02, 0.09) * pose,
+      /* slow rates — flow, not twitch */
+      omega: R.range(0.12, 0.42),
+      ampGate: R.range(0.15, 0.55) * pose,
+      ampTilt: R.range(0.03, 0.12) * persp,
+      ampDef: R.range(0.02, 0.08) * blur,
+      ampRot: R.range(0.015, 0.06) * pose,
       liveGateX: 0,
       liveGateY: 0,
       liveTiltX: 0,
       liveTiltY: 0,
       liveDef: 0,
       liveRot: 0,
+      /* displayed (lerped) — what actually hits the DOM */
+      dispX: 0,
+      dispY: 0,
+      dispRot: 0,
     };
   };
 
@@ -143,24 +148,12 @@
     },
   };
 
-  const applyProjectionCSS = (p) => {
+  /** static specimen props once; live motion is transform only */
+  const applyStaticCSS = (p) => {
     const el = p.el;
-    const gx = p.gateX + p.liveGateX;
-    const gy = p.gateY + p.liveGateY;
-    const tx = p.tiltX + p.liveTiltX;
-    const ty = p.tiltY + p.liveTiltY;
-    const rz = p.rotZ + p.liveRot;
-
-    el.style.setProperty("--p-persp", "900px");
-    el.style.setProperty("--p-rx", `${tx.toFixed(3)}deg`);
-    el.style.setProperty("--p-ry", `${ty.toFixed(3)}deg`);
-    el.style.setProperty("--p-rz", `${rz.toFixed(3)}deg`);
-    el.style.setProperty("--p-x", `${gx.toFixed(2)}px`);
-    el.style.setProperty("--p-y", `${gy.toFixed(2)}px`);
-    el.style.setProperty("--p-defocus", "0px");
     el.style.setProperty("--p-lamp", p.lamp.toFixed(4));
     el.style.setProperty("--p-emul", p.emul.toFixed(3));
-
+    el.style.setProperty("--p-defocus", "0px");
     if (p.role === "solid" || p.role === "plate" || p.role === "chrome") {
       el.style.setProperty("--e-bw-t", `${p.edgeT.toFixed(2)}px`);
       el.style.setProperty("--e-bw-r", `${p.edgeR.toFixed(2)}px`);
@@ -177,18 +170,41 @@
     if (p.role === "type" || p.role === "chrome") {
       el.style.setProperty("--e-t-track", `${p.track.toFixed(4)}em`);
       el.style.setProperty("--e-t-word", `${p.word.toFixed(4)}em`);
-      el.style.setProperty(
-        "--e-t-y",
-        `${(p.baseY + p.liveGateY * 0.2).toFixed(2)}px`
-      );
       el.style.setProperty("--e-t-op", Math.min(1, p.lamp + 0.02).toFixed(4));
     }
-    el.style.setProperty("--e-rot", `${rz.toFixed(3)}deg`);
-    el.style.setProperty("--e-x", `${gx.toFixed(2)}px`);
-    el.style.setProperty("--e-y", `${gy.toFixed(2)}px`);
-    el.style.setProperty("--w-x", "0px");
-    el.style.setProperty("--w-y", "0px");
-    el.style.setProperty("--w-rot", "0deg");
+  };
+
+  /**
+   * Hot path: one composite transform string — continuous, no stepped CSS vars.
+   * (CSS-var transforms updated every N frames read as jerky idle motion.)
+   */
+  const applyLiveMotion = (p) => {
+    const el = p.el;
+    if (!el || p.role === "plate") return;
+    if (el.classList?.contains("splash-wrap")) return;
+
+    const gx = p.gateX + p.dispX;
+    const gy = p.gateY + p.dispY;
+    const rz = p.rotZ + p.dispRot;
+
+    /* direct transform = compositor-friendly continuous flow */
+    el.style.transform = `translate3d(${gx.toFixed(3)}px, ${gy.toFixed(3)}px, 0) rotate(${rz.toFixed(4)}deg)`;
+
+    if (p.role === "type" || p.role === "chrome") {
+      el.style.setProperty(
+        "--e-t-y",
+        `${(p.baseY + p.dispY * 0.2).toFixed(3)}px`
+      );
+    }
+  };
+
+  const applyProjectionCSS = (p) => {
+    applyStaticCSS(p);
+    /* seed displayed pose so first paint isn't zero */
+    p.dispX = p.liveGateX;
+    p.dispY = p.liveGateY;
+    p.dispRot = p.liveRot;
+    applyLiveMotion(p);
   };
 
   const register = (el, role, gains) => {
@@ -483,18 +499,17 @@
   if (!reduced) {
     let t0 = performance.now();
     let last = t0;
-    let frame = 0;
     const tick = (now) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const dt = Math.min(0.048, (now - last) / 1000);
       last = now;
       const t = (now - t0) / 1000;
-      frame++;
-
-      /* while logo scroll is live, don't thrash the main thread with poses */
       const scrolling = root.dataset.f00Scrolling === "1";
 
+      /* exp lerp factor — continuous flow, never stepped frames */
+      const follow = 1 - Math.exp(-dt * (scrolling ? 4 : 7));
+
       const field = projections.get(root);
-      if (field?.role === "field" && !scrolling) {
+      if (field?.role === "field") {
         const tx =
           field.bgX +
           Math.sin(t * field.p1) * field.a1 +
@@ -503,27 +518,49 @@
           field.bgY +
           Math.cos(t * field.p2) * field.a2 +
           Math.sin(t * field.p1 * 0.6) * field.a1 * 0.35;
-        field.bx += (tx - field.bx) * Math.min(1, dt * 0.35);
-        field.by += (ty - field.by) * Math.min(1, dt * 0.35);
-        root.style.setProperty("--e-bg-x", `${field.bx.toFixed(3)}%`);
-        root.style.setProperty("--e-bg-y", `${field.by.toFixed(3)}%`);
+        field.bx += (tx - field.bx) * follow * 0.55;
+        field.by += (ty - field.by) * follow * 0.55;
+        root.style.setProperty("--e-bg-x", `${field.bx.toFixed(4)}%`);
+        root.style.setProperty("--e-bg-y", `${field.by.toFixed(4)}%`);
       }
 
-      /* ~20fps pose updates when idle; skip plate/splash; skip while scrolling */
-      if (!scrolling && frame % 3 === 0) {
-        projections.forEach((p) => {
-          if (p.role === "field" || p.role === "plate") return;
-          if (p.el?.classList?.contains("splash-wrap")) return;
-          p.phi += dt * p.omega * 3; /* compensate for 3-frame step */
-          p.liveGateX = Math.sin(p.phi) * p.ampGate;
-          p.liveGateY = Math.cos(p.phi * 0.93) * p.ampGate * 0.85;
-          p.liveTiltX = Math.sin(p.phi * 0.41) * p.ampTilt;
-          p.liveTiltY = Math.cos(p.phi * 0.37) * p.ampTilt;
-          p.liveDef = (0.5 + 0.5 * Math.sin(p.phi * 0.55)) * p.ampDef;
-          p.liveRot = Math.sin(p.phi * 0.29) * p.ampRot;
-          applyProjectionCSS(p);
-        });
-      }
+      /*
+       * Continuous phase every frame. Lerp display toward target so motion
+       * reads as liquid, not a 20fps sample-and-hold.
+       * While scrolling: still advance phase lightly so settle is already flowing.
+       */
+      const ampScale = scrolling ? 0.35 : 1;
+      projections.forEach((p) => {
+        if (p.role === "field" || p.role === "plate") return;
+        if (p.el?.classList?.contains("splash-wrap")) return;
+
+        /* slow multi-rate drift — incommensurate periods = organic */
+        p.phi += dt * p.omega * (scrolling ? 0.45 : 1);
+        const ph = p.phi;
+        const targetX =
+          (Math.sin(ph) * 0.72 + Math.sin(ph * 0.37) * 0.28) *
+          p.ampGate *
+          ampScale;
+        const targetY =
+          (Math.cos(ph * 0.93) * 0.7 + Math.sin(ph * 0.51) * 0.3) *
+          p.ampGate *
+          0.85 *
+          ampScale;
+        const targetRot =
+          (Math.sin(ph * 0.29) * 0.75 + Math.sin(ph * 0.11) * 0.25) *
+          p.ampRot *
+          ampScale;
+
+        p.liveGateX = targetX;
+        p.liveGateY = targetY;
+        p.liveRot = targetRot;
+
+        p.dispX += (targetX - p.dispX) * follow;
+        p.dispY += (targetY - p.dispY) * follow;
+        p.dispRot += (targetRot - p.dispRot) * follow;
+
+        applyLiveMotion(p);
+      });
 
       requestAnimationFrame(tick);
     };

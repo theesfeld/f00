@@ -898,13 +898,13 @@ article.card.e-frame-host,
  * Real develop+project for marks lives in throw engine — not CSS blur theater.
  */
 .f00-proj {
-  transform:
-    rotate(var(--p-rz, var(--e-rot, 0deg)))
-    translate3d(var(--p-x, var(--e-x, 0px)), var(--p-y, var(--e-y, 0px)), 0);
+  /* transform set continuously by entropy.js (translate3d + rotate) */
   transform-origin: 50% 50%;
   filter: none !important;
   will-change: transform;
   backface-visibility: hidden;
+  /* no CSS transition — JS already lerps; transition fights and stutters */
+  transition: none !important;
 }
 
 .card.f00-proj, .panel.f00-proj, .box.f00-proj, .f00-box.f00-proj,
