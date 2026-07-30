@@ -1,8 +1,8 @@
-/* f00 hub splash — throw once, live with CSS
+/* f00 hub splash — throw at REAL max size, live with CSS
  *
- * Develop+project ONCE at max optical size (the look you love).
- * Scroll = CSS scale + gentle organic pose. Never re-raster every tick.
- * Optics evolve softly with p (large → more breath; docked → calm).
+ * Develop+project once at optical max. Scroll = CSS scale + soft pose.
+ * Re-throw when --splash-max lands (app measures after boot) — never stuck
+ * at the CSS fallback ~18rem.
  */
 import {
   throwTextPlate,
@@ -30,8 +30,8 @@ export function mountThrowPlate(opts) {
   let lastScrollP = -1;
   let scrollIdleAt = 0;
   let lastIdleRep = 0;
-  let baseCssW = 0;
-  let baseCssH = 0;
+  let thrownMaxPx = 0;
+  let pendingThrow = 0;
 
   const fontFamily =
     opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
@@ -46,7 +46,6 @@ export function mountThrowPlate(opts) {
 
   const measureCss = () => {
     const fontPx = opts.getFontPx?.() || 120;
-    const sb = splash.getBoundingClientRect();
     const root = document.documentElement;
     const maxPx =
       parseFloat(getComputedStyle(root).getPropertyValue("--splash-max")) ||
@@ -54,13 +53,12 @@ export function mountThrowPlate(opts) {
     const restPx =
       parseFloat(getComputedStyle(root).getPropertyValue("--splash-rest")) ||
       fontPx * 0.35;
-    return { fontPx, maxPx, restPx, sb };
+    return { fontPx, maxPx, restPx };
   };
 
   /**
-   * CSS pose for living plate: scale (scroll) + gentle organic motion.
-   * Origin top-center so shrink rises under the header.
-   * Keeps translate(-50%,0) so plate centers over the DOM mark.
+   * CSS pose: scale from max→rest with p + gentle organic breath.
+   * Canvas is drawn at max; scale only shrinks — never re-raster on scroll.
    */
   const applyLivePose = (p, time) => {
     const { maxPx, restPx } = measureCss();
@@ -71,10 +69,8 @@ export function mountThrowPlate(opts) {
         : 1 - pp * 0.55;
     const scale = Math.max(0.12, Math.min(1.05, s));
 
-    /* breath amp: more free when large, calmer when docked — never wild */
     const breath = 0.22 + 0.78 * (1 - pp);
     const t = time || 0;
-    /* slow entropic gate — size change itself modulates phase */
     const phase = t * 0.31 + pp * 1.7;
     const ox = Math.sin(phase) * 0.55 * breath + Math.sin(pp * 2.4) * 0.35;
     const oy = Math.cos(phase * 0.87) * 0.4 * breath + Math.sin(pp * 1.9) * 0.2;
@@ -100,29 +96,37 @@ export function mountThrowPlate(opts) {
     if (busy) return;
     busy = true;
     try {
-      const { maxPx, sb } = measureCss();
-      if (sb.width < 4 && maxPx < 40) return;
+      const { maxPx } = measureCss();
+      if (!(maxPx > 24)) return;
+
+      /* size plate from measured max — ignore early small splash rect */
       const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-      /* develop at max optical size once — scale with CSS for shrink */
-      const layoutW = Math.max(sb.width || maxPx * 1.5, maxPx * 1.55);
-      const layoutH = Math.max(sb.height || maxPx * 0.9, maxPx * 0.95);
-      const padX = Math.max(28, layoutW * 0.18);
-      const padY = Math.max(28, layoutH * 0.22);
+      /* glyph box ≈ 1.3×w × 0.86×h of font; light pad for film fringe only */
+      const layoutW = maxPx * 1.4;
+      const layoutH = maxPx * 0.9;
+      const padX = Math.max(18, layoutW * 0.08);
+      const padY = Math.max(18, layoutH * 0.1);
       const cssW = Math.ceil(layoutW + padX * 2);
       const cssH = Math.ceil(layoutH + padY * 2);
-      /* cap raster — look stays; scroll stays free */
-      const maxEdge = 900;
+
+      /* raster cap — CSS size stays full so scale looks correct */
+      const maxEdge = 1000;
       let w = Math.floor(cssW * dpr);
       let h = Math.floor(cssH * dpr);
       const sc = Math.min(1, maxEdge / Math.max(w, h, 1));
-      w = Math.max(160, Math.floor(w * sc));
-      h = Math.max(120, Math.floor(h * sc));
+      w = Math.max(200, Math.floor(w * sc));
+      h = Math.max(140, Math.floor(h * sc));
 
       if (document.fonts?.load) {
         try {
           await document.fonts.load(
             `400 ${Math.round(maxPx * dpr * sc)}px Onyx`
           );
+        } catch (_) {}
+      }
+      if (document.fonts?.ready) {
+        try {
+          await document.fonts.ready;
         } catch (_) {}
       }
 
@@ -144,12 +148,10 @@ export function mountThrowPlate(opts) {
         cssH,
         maxPx,
       };
-      baseCssW = cssW;
-      baseCssH = cssH;
+      thrownMaxPx = maxPx;
       displayToCanvas(canvas, result);
       canvas.style.width = `${cssW}px`;
       canvas.style.height = `${cssH}px`;
-      /* top-center over splash mark (left:50% in CSS) */
       canvas.style.left = "50%";
       canvas.style.top = "0";
       applyLivePose(readP(), time || 0);
@@ -158,7 +160,22 @@ export function mountThrowPlate(opts) {
     }
   };
 
-  /** Cheap idle reproject only — never on scroll ticks. */
+  const scheduleThrow = (why) => {
+    clearTimeout(pendingThrow);
+    pendingThrow = setTimeout(() => {
+      if (!running) return;
+      const { maxPx } = measureCss();
+      if (
+        thrownMaxPx > 0 &&
+        Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) < 0.04
+      ) {
+        return; /* already at this size */
+      }
+      lastFull = performance.now();
+      fullThrow(performance.now() / 1000);
+    }, why === "boot" ? 0 : 40);
+  };
+
   const idleReproject = (time, p) => {
     if (!cache || busy || reduced) return;
     const liveAmp = 0.25 + 0.55 * (1 - Math.max(0, Math.min(1, p)));
@@ -181,7 +198,16 @@ export function mountThrowPlate(opts) {
     const t = ts / 1000;
     applyLivePose(p, t);
 
-    /* track scroll motion — reproject only after settle */
+    /* catch app.js measure landing after our first throw */
+    const { maxPx } = measureCss();
+    if (
+      maxPx > 40 &&
+      (thrownMaxPx < 40 ||
+        Math.abs(maxPx - thrownMaxPx) / Math.max(thrownMaxPx, 1) > 0.06)
+    ) {
+      if (performance.now() - lastFull > 180) scheduleThrow("max-changed");
+    }
+
     if (Math.abs(p - lastScrollP) > 0.002) {
       lastScrollP = p;
       scrollIdleAt = ts;
@@ -191,7 +217,6 @@ export function mountThrowPlate(opts) {
       ts - scrollIdleAt > 280 &&
       ts - lastIdleRep > 900
     ) {
-      /* ~1fps while parked — living light, not scroll thrash */
       lastIdleRep = ts;
       idleReproject(t, p);
     }
@@ -203,33 +228,40 @@ export function mountThrowPlate(opts) {
   let resizeTimer = 0;
   const onResize = () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      if (performance.now() - lastFull < 250) return;
-      lastFull = performance.now();
-      fullThrow(performance.now() / 1000);
-    }, 160);
+    resizeTimer = setTimeout(() => scheduleThrow("resize"), 120);
   };
   window.addEventListener("resize", onResize, { passive: true });
 
-  fullThrow(0).then(() => {
+  const start = async () => {
+    if (document.fonts?.ready) {
+      try {
+        await document.fonts.ready;
+      } catch (_) {}
+    }
+    /* wait one frame so app.js measure can set --splash-max */
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await fullThrow(0);
     lastFull = performance.now();
     scrollIdleAt = performance.now();
-    if (!reduced) {
-      raf = requestAnimationFrame(loop);
-    } else {
-      applyLivePose(readP(), 0);
-    }
-  });
+    if (!reduced) raf = requestAnimationFrame(loop);
+    else applyLivePose(readP(), 0);
+  };
+  start();
 
   return {
     destroy() {
       running = false;
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
+      clearTimeout(pendingThrow);
       clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResize);
     },
     resize() {
-      onResize();
+      scheduleThrow("resize");
+    },
+    rethrow() {
+      thrownMaxPx = 0;
+      scheduleThrow("force");
     },
   };
 }

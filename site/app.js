@@ -74,6 +74,11 @@
     return h;
   };
 
+  const notifyThrow = () => {
+    const h = filmHandle || window.__f00ThrowHandle;
+    if (h && typeof h.resize === "function") h.resize();
+  };
+
   const measureSplashSizes = () => {
     if (!splash) return;
     const headerH =
@@ -81,21 +86,24 @@
     logoGapPx = readLogoGap();
     /*
      * Symmetric air: header line → logo top  ==  logo bottom → projects.
-     * Max mark fits between those two equal gaps (plus a little projects peek).
+     * Fill almost the whole band — mark should feel large, not a postage stamp.
      */
-    const peek = 72; /* projects section head visible under the mark */
+    const peek = 36; /* thin projects peek under the mark */
     const availH = Math.max(
-      160,
+      200,
       window.innerHeight - headerH - logoGapPx * 2 - peek
     );
-    const availW = window.innerWidth * 0.9;
+    const availW = window.innerWidth * 0.94;
     /* rest: catalog-scale mark under header */
     splashRestPx = Math.min(112, Math.max(52, window.innerWidth * 0.085));
-    /* max: fill band under header with equal air (Onyx ~0.55em × 3 ≈ 1.5em) */
-    const byH = availH / 0.92;
-    const byW = availW / 1.55;
+    /*
+     * Onyx "f00": glyph box ≈ 0.84×font tall, ≈ 1.28×font wide.
+     * Size by the tighter axis so the plate eats the hero band.
+     */
+    const byH = availH / 0.84;
+    const byW = availW / 1.28;
     splashMaxPx = Math.min(byH, byW);
-    splashMaxPx = Math.max(splashRestPx * 1.45, splashMaxPx);
+    splashMaxPx = Math.max(splashRestPx * 2.2, splashMaxPx);
 
     root.style.setProperty("--splash-max", `${splashMaxPx.toFixed(1)}px`);
     root.style.setProperty("--splash-rest", `${splashRestPx.toFixed(1)}px`);
@@ -103,10 +111,19 @@
     /* measure real painted heights at max/rest (Onyx metrics ≠ CSS math) */
     const pWas = root.style.getPropertyValue("--p");
     root.style.setProperty("--p", "0");
-    splashMaxH = measureAtFont(splashMaxPx) || splashMaxPx * 0.86;
+    splashMaxH = measureAtFont(splashMaxPx) || splashMaxPx * 0.84;
     root.style.setProperty("--p", "1");
-    splashRestH = measureAtFont(splashRestPx) || splashRestPx * 0.86;
+    splashRestH = measureAtFont(splashRestPx) || splashRestPx * 0.84;
     root.style.setProperty("--p", pWas || "0");
+
+    /* if measured box overshoots avail, scale font down to fit */
+    if (splashMaxH > availH * 1.02) {
+      splashMaxPx *= availH / splashMaxH;
+      root.style.setProperty("--splash-max", `${splashMaxPx.toFixed(1)}px`);
+      root.style.setProperty("--p", "0");
+      splashMaxH = measureAtFont(splashMaxPx) || splashMaxPx * 0.84;
+      root.style.setProperty("--p", pWas || "0");
+    }
 
     /* slot = air + maxH + air → projects line sits logo-gap under mark */
     const slotH = Math.ceil(logoGapPx + splashMaxH + logoGapPx);
@@ -120,6 +137,7 @@
      *   with splashH ≈ maxH − scrollY → bottom gap stays `gap`
      */
     shrinkRange = Math.max(64, splashMaxH - splashRestH);
+    notifyThrow();
   };
 
   const setProgress = (p) => {
@@ -186,8 +204,20 @@
       document.fonts.ready.then(() => {
         measureSplashSizes();
         updateHeroScroll();
+        notifyThrow();
       });
     }
+    /* throw module may boot after us — catch late handle */
+    let tries = 0;
+    const waitThrow = () => {
+      if (window.__f00ThrowHandle) {
+        filmHandle = window.__f00ThrowHandle;
+        notifyThrow();
+        return;
+      }
+      if (++tries < 40) requestAnimationFrame(waitThrow);
+    };
+    requestAnimationFrame(waitThrow);
   }
 
   const escapeHtml = (s) =>

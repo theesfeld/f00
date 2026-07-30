@@ -3,11 +3,12 @@
   --max: 68rem;
   --pad: clamp(1rem, 3vw, 2rem);
   --header-h: 3.35rem;
-  --splash-max: clamp(8rem, 28vw, 18rem);
+  /* fallbacks only — app.js overwrites with measured viewport fill */
+  --splash-max: clamp(12rem, 42vw, 36rem);
   --splash-rest: clamp(4.25rem, 12vw, 7rem);
-  --splash-slot-h: 40vh;
+  --splash-slot-h: 70vh;
   /* same air: header line → logo top  AND  logo bottom → projects line */
-  --logo-gap: 1.75rem;
+  --logo-gap: 1.35rem;
   --p: 0;
   --dock-y: 0px;
   --dock-op: 1;
