@@ -7,8 +7,9 @@
   --splash-max: clamp(12rem, 42vw, 36rem);
   --splash-rest: clamp(4.25rem, 12vw, 7rem);
   --splash-slot-h: 70vh;
-  /* same air: header line → logo top  AND  logo bottom → projects line */
+  /* same air when docked; --logo-hero-top adds room under header at full size */
   --logo-gap: 1.5rem;
+  --logo-hero-top: 1.15rem;
   --p: 0;
   --dock-y: 0px;
   --dock-op: 1;
@@ -125,7 +126,7 @@ main {
   pointer-events: none;
 }
 
-/* fixed under header — equal air above mark (= --logo-gap under header line) */
+/* fixed under header — equal air when docked; extra top air at full hero size */
 .splash-frame {
   position: fixed;
   top: var(--header-h);
@@ -137,8 +138,13 @@ main {
   align-items: flex-start;
   width: 100%;
   margin: 0;
-  /* top padding = logo-gap so header line ↔ logo top matches logo bottom ↔ projects */
-  padding: var(--logo-gap) var(--pad) 0;
+  /*
+   * p=0 (full): logo-gap + hero-top-air under the header rule
+   * p=1 (dock): just logo-gap (matches bottom air above projects)
+   */
+  padding:
+    calc(var(--logo-gap) + (1 - var(--p, 0)) * var(--logo-hero-top, 1.15rem))
+    var(--pad) 0;
   pointer-events: none;
   transform: translateY(var(--dock-y, 0px));
   opacity: var(--dock-op, 1);

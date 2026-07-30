@@ -102,10 +102,11 @@ export function mountThrowPlate(opts) {
     const f = follow ?? 1;
     dispScale += (targetScale - dispScale) * f;
     /*
-     * Lift by scaled top pad so visual ink top sits on the wrap top
-     * (wrap already has --logo-gap under header).
+     * At full size leave film-pad air under the header (don't yank ink flush).
+     * As we dock (p→1), cancel top pad so ink sits on the logo-gap line.
      */
-    const yShift = -inkTopFrac * (baseCssH || 0) * dispScale;
+    const padCancel = pp * pp; /* ease in — almost none at hero */
+    const yShift = -inkTopFrac * (baseCssH || 0) * dispScale * padCancel;
     canvas.style.transformOrigin = "50% 0%";
     canvas.style.transform = [
       `translate3d(-50%, ${yShift.toFixed(2)}px, 0)`,

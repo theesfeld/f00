@@ -85,13 +85,24 @@
       parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
     logoGapPx = readLogoGap();
     /*
-     * Symmetric air: header line → logo top  ==  logo bottom → projects.
-     * Fill almost the whole band — mark should feel large, not a postage stamp.
+     * Symmetric air when docked: header line → logo top  ==  logo bottom → projects.
+     * At full hero size we also reserve --logo-hero-top so the mark isn't hard
+     * against the header rule.
      */
+    const heroTopExtra = (() => {
+      const raw = getComputedStyle(root).getPropertyValue("--logo-hero-top").trim();
+      const n = parseFloat(raw);
+      if (!Number.isFinite(n)) return 18;
+      if (raw.endsWith("rem")) {
+        const fs = parseFloat(getComputedStyle(document.body).fontSize) || 16;
+        return n * fs;
+      }
+      return n;
+    })();
     const peek = 36; /* thin projects peek under the mark */
     const availH = Math.max(
       200,
-      window.innerHeight - headerH - logoGapPx * 2 - peek
+      window.innerHeight - headerH - logoGapPx * 2 - heroTopExtra - peek
     );
     const availW = window.innerWidth * 0.94;
     /* rest: catalog-scale mark under header */
