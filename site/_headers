@@ -436,3 +436,11 @@
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
   CDN-Cache-Control: max-age=60
+
+
+/theme/f00-theme-29.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  CDN-Cache-Control: max-age=60

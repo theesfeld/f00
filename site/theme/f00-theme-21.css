@@ -1,3 +1,4 @@
+/* form-field-fix-v1 */
 /* no-grid-photo-only-v3 silver-lite-1px */
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
    Live: https://f00.sh/theme/f00-theme-26.css
@@ -614,7 +615,7 @@ code:not(pre code), kbd {
   color: #F2F4F6 !important;
 }
 /* local dark overlays fight the shared sky */
-.field, .crt, .scanlines, #field, .grain {
+.crt, .scanlines, #field, .grain {
   display: none !important;
 }
 .vignette, .tint {
@@ -637,10 +638,68 @@ code:not(pre code), kbd {
 
 
 /* hide hub canvas / grain overlays — bg is the photo alone */
-.crt, #field, .grain, .vignette, .tint, .scanlines, .field {
+.crt, #field, .grain, .vignette, .tint, .scanlines {
   display: none !important;
 }
 
 /* pin-target-21-nogrids */
 
-/* pin-f00-theme-21.css-silver-lite */
+/* pin-f00-theme-28.css-silver-lite */
+
+
+/* form labels use class=field — must never be hidden (was killing TRN URL inputs) */
+label.field, .field:not(.crt):not(#field) {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #090909 !important;
+  font-family: var(--f00-font-zine) !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.85rem;
+}
+label.field input, label.field textarea, .field input, .field textarea,
+input[type="url"], input[type="text"], input[type="password"], textarea {
+  display: block !important;
+  visibility: visible !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #F2F4F6 !important;
+  color: #090909 !important;
+  border: 1px solid #C8CED4 !important;
+  border-radius: 0 !important;
+  padding: 0.55rem 0.65rem !important;
+  font-family: var(--f00-font-mono) !important;
+}
+.panel label, .card label, .box label, .llm-box label {
+  color: #090909 !important;
+  display: flex !important;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600 !important;
+}
+.toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  color: #090909 !important;
+  visibility: visible !important;
+}
+/* nested content boxes inside panels — stay ink on poppy, not black void */
+.panel .howto, .card .howto, .panel .docs-list, .card .docs-list,
+.panel .box, .card .box, .panel .nested, .panel > div:not(.panel-head) {
+  color: #090909 !important;
+}
+/* black install/code surfaces keep cream text */
+.panel pre, .card pre, .install-block, .code-block, [class*="install"] pre {
+  background: #050404 !important;
+  color: #EDE6DE !important;
+}
+.panel pre *, .card pre * { color: #EDE6DE !important; }
+
+
+/* f00-theme-21.css form-field-fix-v1 */
+
+/* f00-theme-21.css */
