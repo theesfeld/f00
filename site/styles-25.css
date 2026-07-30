@@ -463,9 +463,8 @@ html.logo-docked .splash-wrap.is-film .splash,
   }
 }
 
-/* ── visual mantra page ──
- * Verses ARE hub cards (article.card) — cream plate, organic frame, texture,
- * letterpress, under-title rules come from theme + f00-entropy. Layout only here.
+/* ── mantra / join pages ──
+ * Body sections ARE hub cards (article.card). Layout only here.
  */
 .page-mantra main.mantra {
   position: relative;
