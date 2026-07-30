@@ -9,8 +9,8 @@
     "pages_project": "f00"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-16.css",
-    "css_canonical": "https://f00.sh/theme/f00-theme-16.css",
+    "css": "https://f00.sh/theme/f00-theme-32.css",
+    "css_canonical": "https://f00.sh/theme/f00-theme-32.css",
     "css_path": "site/theme/f00-theme.css",
     "source": "heartbox",
     "source_name": "Heartbox",
@@ -23,14 +23,14 @@
     "font_hand": null,
     "bg": "#090909",
     "fg": "#EDE6DE",
-    "accent": "#C50A1B",
+    "accent": "#B82E18",
     "metal": "#B8BEC2",
-    "sky": "#2096EE",
-    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme-16.css for hub + every *.f00.sh project site. Heartbox video shell (sky / white boxes / poppy text). Project CSS is layout-only.",
+    "sky": "#2A7EB0",
+    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme-32.css for hub + every *.f00.sh project site. Dye-transfer poppy field, cool silver chrome, hospital cream boxes with poppy type. Project CSS is layout-only.",
     "layout": "bleach",
     "contrast": "heart-shaped-box",
-    "css_snapshot": "site/theme/f00-theme-16.css",
-    "palette_version": "0.2.1"
+    "css_snapshot": "site/theme/f00-theme-32.css",
+    "palette_version": "0.3.0"
   },
   "domains": {
     "hub": "f00.sh",
