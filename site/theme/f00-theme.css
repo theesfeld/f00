@@ -857,49 +857,51 @@ footer, .site-footer, .foot {
   border-top: 0 !important;
 }
 
-/* hospital boxes — each edge its own organ; still grid-usable */
-.card, .panel, .box, .f00-box,
-article.card, .feature-card, .doc-card, .install-card,
-.benchmark-card, .tool-card, .release-card, .announcement {
+/*
+ * Every .f00-proj is a complete projection onto the display:
+ * gate translate + keystone (perspective) + roll + non-uniform defocus.
+ * Not “layout jitter” — optical throw per object.
+ */
+.f00-proj {
+  transform:
+    perspective(var(--p-persp, 900px))
+    rotateX(var(--p-rx, 0deg))
+    rotateY(var(--p-ry, 0deg))
+    rotateZ(var(--p-rz, 0deg))
+    translate3d(var(--p-x, 0px), var(--p-y, 0px), 0);
+  transform-origin: 50% 50%;
+  filter: blur(var(--p-defocus, 0px));
+  will-change: transform, filter;
+  /* keep hit targets sane */
+  backface-visibility: hidden;
+}
+
+.card.f00-proj, .panel.f00-proj, .box.f00-proj, .f00-box.f00-proj,
+article.card.f00-proj, .feature-card.f00-proj, .doc-card.f00-proj,
+.install-card.f00-proj, .benchmark-card.f00-proj, .tool-card.f00-proj,
+.release-card.f00-proj, .announcement.f00-proj, .btn.f00-proj {
   border-width:
     var(--e-bw-t, var(--e-bw, 2px))
     var(--e-bw-r, var(--e-bw, 2px))
     var(--e-bw-b, var(--e-bw, 2px))
     var(--e-bw-l, var(--e-bw, 2px)) !important;
-  opacity: var(--e-op, 1);
-  /* petal seat (--e-*) + wind on the tray (--w-*) — same specimen, moving air */
-  transform:
-    rotate(calc(var(--e-rot, 0deg) + var(--w-rot, 0deg)))
-    translate3d(
-      calc(var(--e-x, 0px) + var(--w-x, 0px)),
-      calc(var(--e-y, 0px) + var(--w-y, 0px)),
-      0
-    );
-  transform-origin: 50% 50%;
-  will-change: transform;
+  opacity: var(--e-op, var(--p-lamp, 1));
   background-color: rgba(232, 223, 212, var(--e-paper, 1)) !important;
 }
 
-/* logo wrap is a petal too — no primary object */
-.splash-wrap {
-  transform:
-    rotate(calc(var(--e-rot, 0deg) + var(--w-rot, 0deg)))
-    translate3d(
-      calc(var(--e-x, 0px) + var(--w-x, 0px)),
-      calc(var(--e-y, 0px) + var(--w-y, 0px)),
-      0
-    );
-  transform-origin: 50% 50%;
-  will-change: transform;
+/* type projections: softer optics, still legible */
+p.f00-proj, li.f00-proj, h1.f00-proj, h2.f00-proj, h3.f00-proj, h4.f00-proj,
+label.f00-proj, .lede.f00-proj, .blurb.f00-proj, .brand-mark.f00-proj,
+.brand-sub.f00-proj, .nav a.f00-proj, .section-head h2.f00-proj,
+.card-meta.f00-proj, .btn.f00-proj, .foot.f00-proj, .foot a.f00-proj {
+  letter-spacing: calc(var(--f00-tracking-body, 0.02em) + var(--e-t-track, 0em));
+  word-spacing: var(--e-t-word, 0em);
+  /* blur already on .f00-proj; keep tiny */
 }
-.btn {
-  transform:
-    rotate(calc(var(--e-rot, 0deg) + var(--w-rot, 0deg)))
-    translate3d(
-      calc(var(--e-x, 0px) + var(--w-x, 0px)),
-      calc(var(--e-y, 0px) + var(--w-y, 0px)),
-      0
-    );
+
+.splash-wrap.f00-proj {
+  /* plate projection: same stack as every other object */
+  z-index: 6;
 }
 
 /* type specimen — tracking/word/baseline iota; still legible */

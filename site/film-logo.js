@@ -352,14 +352,15 @@
      * Logo plate = its own projection (own seed), not a phase of shared wind.
      * Prefer seed derived for this canvas element when F00Projection exists.
      */
+    /* this plate is its own projection — private seed, private optics */
     const throwSeed =
       (window.F00Projection &&
         canvas &&
         window.F00Projection.seedFor(canvas, "plate:splash")) ||
-      (window.F00Projection && window.F00Projection.seed) ||
       ((Math.random() * 0xffffffff) >>> 0);
     const dyn = createDynamics(throwSeed);
     const rPlate = makeRng(throwSeed ^ 0x85ebca6b);
+    /* if shell registered optics for wrap, keep seed independent still */
 
     /*
      * Specimen for THIS projection — never persisted.
