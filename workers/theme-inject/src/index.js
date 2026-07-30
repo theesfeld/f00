@@ -9,7 +9,7 @@
  * are injected. Project CSS stays layout-only.
  */
 const THEME_HREF = "https://f00.sh/theme/f00-theme.css";
-const ENTROPY_HREF = "https://f00.sh/theme/f00-entropy.js?v=22";
+const ENTROPY_HREF = "https://f00.sh/theme/f00-entropy.js?v=23";
 
 const THEME_LINK = `<link rel="stylesheet" href="${THEME_HREF}" data-f00-theme="1" />`;
 const ENTROPY_SCRIPT =

@@ -412,10 +412,10 @@ html.logo-docked .splash-wrap.is-film .splash,
   max-width: var(--max);
   margin: 0 auto;
   padding: 1.1rem var(--pad) 2rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem 1rem;
   font-size: 0.78rem;
   letter-spacing: 0.14em;
   text-transform: none;
@@ -423,7 +423,17 @@ html.logo-docked .splash-wrap.is-film .splash,
   z-index: 1;
   border-top: 0 !important;
 }
+.foot-left {
+  justify-self: start;
+  text-align: left;
+}
+.foot-center {
+  justify-self: center;
+  text-align: center;
+  white-space: nowrap;
+}
 .foot-stars {
+  justify-self: end;
   text-decoration: none;
   font-family: var(--font-chip, ui-monospace, monospace);
   letter-spacing: 0.12em;
@@ -440,11 +450,17 @@ html.logo-docked .splash-wrap.is-film .splash,
   color: #e4e8ed;
   border-bottom-color: rgba(208, 213, 219, 0.45);
 }
-.foot-links {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.65rem 1.1rem;
-  align-items: baseline;
+@media (max-width: 520px) {
+  .foot {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .foot-left,
+  .foot-center,
+  .foot-stars {
+    justify-self: center;
+  }
 }
 
 /* ── visual mantra page ──

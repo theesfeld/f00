@@ -443,11 +443,11 @@ article.card h3 {
   padding-bottom: 0.2rem;
   margin-bottom: 0.15rem;
 }
-/* universal rule host — works on cream cards + chrome */
+/* universal rule host — same 8px band as header/footer (path not squashed) */
 .card .e-rule-host > .e-rule,
 article.card .e-rule-host > .e-rule,
 .panel .e-rule-host > .e-rule {
-  height: 6px;
+  height: 8px;
 }
 .card h3.e-rule-host,
 article.card h3.e-rule-host,

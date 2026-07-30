@@ -92,12 +92,12 @@
       role,
       seed,
       R,
-      gateX: R.signed(1.65 * pose),
-      gateY: R.signed(1.35 * pose),
-      tiltX: R.signed(0.75 * persp),
-      tiltY: R.signed(0.6 * persp),
-      buckle: R.signed(0.018 * pose),
-      rotZ: R.signed(0.55 * pose),
+      gateX: R.signed(1.85 * pose),
+      gateY: R.signed(1.55 * pose),
+      tiltX: R.signed(0.85 * persp),
+      tiltY: R.signed(0.7 * persp),
+      buckle: R.signed(0.022 * pose),
+      rotZ: R.signed(0.7 * pose),
       /* border weights — never equal on all four sides */
       edgeT: R.range(1.15, 3.1),
       edgeR: R.range(1.15, 3.1),
@@ -109,18 +109,18 @@
       baseY: R.signed(0.65),
       defocus0: R.range(0.04, 0.22) * blur,
       emul: R.range(0.7, 1.35),
-      /* slight pad / content drift — cards stop looking cloned */
-      padT: R.range(0.95, 1.12),
-      padR: R.range(0.94, 1.1),
-      padB: R.range(0.96, 1.14),
-      padL: R.range(0.94, 1.1),
+      /* pad drift — barely-noticeable layout variance between cards */
+      padT: R.range(0.92, 1.14),
+      padR: R.range(0.91, 1.13),
+      padB: R.range(0.93, 1.16),
+      padL: R.range(0.91, 1.13),
       phi: R.range(0, Math.PI * 2),
       /* slow rates — flow, not twitch */
       omega: R.range(0.12, 0.42),
-      ampGate: R.range(0.15, 0.55) * pose,
-      ampTilt: R.range(0.03, 0.12) * persp,
+      ampGate: R.range(0.18, 0.62) * pose,
+      ampTilt: R.range(0.04, 0.14) * persp,
       ampDef: R.range(0.02, 0.08) * blur,
-      ampRot: R.range(0.015, 0.06) * pose,
+      ampRot: R.range(0.02, 0.08) * pose,
       liveGateX: 0,
       liveGateY: 0,
       liveTiltX: 0,
@@ -361,12 +361,12 @@
     if (role === "type") organicizeText(el);
   };
 
-  /* ── emulsion RULE: universal — never a CAD hairline ── */
+  /* ── emulsion RULE: ONE path language — chrome + cards share it ── */
   const rulePath = (R) => {
-    /* pretty-straight emulsion path — same language as header/footer */
-    const n = 10 + Math.floor(R.rnd() * 8);
+    /* pretty-straight emulsion path — header, footer, and in-card rules */
+    const n = 11 + Math.floor(R.rnd() * 9);
     const mid = 4;
-    const amp = 0.45 + R.range(0, 0.55); /* visible, not wild */
+    const amp = 0.5 + R.range(0, 0.65); /* same band everywhere */
     let y = mid + R.signed(amp * 0.6);
     let d = `M 0 ${y.toFixed(3)}`;
     for (let i = 1; i <= n; i++) {
@@ -374,8 +374,8 @@
       y += R.signed(amp * 0.55);
       y = mid + (y - mid) * 0.72 + R.signed(amp * 0.25);
       y = Math.max(1.2, Math.min(6.8, y));
-      const cx = x - 50 / n + R.signed(0.35);
-      const cy = y + R.signed(amp * 0.35);
+      const cx = x - 50 / n + R.signed(0.4);
+      const cy = y + R.signed(amp * 0.38);
       d += ` Q ${cx.toFixed(3)} ${cy.toFixed(3)} ${x.toFixed(3)} ${y.toFixed(3)}`;
     }
     return d;
@@ -383,14 +383,14 @@
 
   /**
    * Nearly-straight frame — pretty straight, never CAD-perfect.
-   * viewBox 0 0 100 100. Micro wander only (~0.1–0.25 units).
+   * Barely-noticeable wander (still reads as a box, not a scribble).
    */
   const framePath = (R) => {
-    const inset = 0.55 + R.range(0, 0.25);
-    /* max deviation from a true straight edge */
-    const amp = 0.05 + R.range(0, 0.08); /* ~pretty straight */
+    const inset = 0.5 + R.range(0, 0.35);
+    /* max deviation from a true straight edge — subtle but readable */
+    const amp = 0.12 + R.range(0, 0.16);
     const j = (m) => R.signed(m);
-    const n = 3; /* few samples — smooth almost-lines, not scribbles */
+    const n = 4; /* a few samples — soft bows, not CAD edges */
     const pts = [];
 
     const edge = (count, at) => {
@@ -403,16 +403,16 @@
 
     /* top L→R */
     edge(n, (t, end) => [
-      inset + t * (100 - 2 * inset) + j(end ? 0.04 : 0.06),
-      inset + (end ? j(0.04) : j(amp)),
+      inset + t * (100 - 2 * inset) + j(end ? 0.06 : 0.1),
+      inset + (end ? j(0.06) : j(amp)),
     ]);
     /* right T→B (skip first = shared corner) */
     for (let i = 1; i <= n; i++) {
       const t = i / n;
       const end = i === n;
       pts.push([
-        100 - inset + (end ? j(0.04) : j(amp)),
-        inset + t * (100 - 2 * inset) + j(end ? 0.04 : 0.06),
+        100 - inset + (end ? j(0.06) : j(amp)),
+        inset + t * (100 - 2 * inset) + j(end ? 0.06 : 0.1),
       ]);
     }
     /* bottom R→L */
@@ -420,8 +420,8 @@
       const t = i / n;
       const end = i === n;
       pts.push([
-        100 - inset - t * (100 - 2 * inset) + j(end ? 0.04 : 0.06),
-        100 - inset + (end ? j(0.04) : j(amp)),
+        100 - inset - t * (100 - 2 * inset) + j(end ? 0.06 : 0.1),
+        100 - inset + (end ? j(0.06) : j(amp)),
       ]);
     }
     /* left B→T (skip last corner — close to start) */
@@ -429,7 +429,7 @@
       const t = i / n;
       pts.push([
         inset + j(amp),
-        100 - inset - t * (100 - 2 * inset) + j(0.06),
+        100 - inset - t * (100 - 2 * inset) + j(0.1),
       ]);
     }
 
@@ -439,8 +439,8 @@
       /* light control points — almost collinear, tiny bow */
       const a = pts[i - 1];
       const b = pts[i];
-      const mx = (a[0] + b[0]) / 2 + j(amp * 0.35);
-      const my = (a[1] + b[1]) / 2 + j(amp * 0.35);
+      const mx = (a[0] + b[0]) / 2 + j(amp * 0.45);
+      const my = (a[1] + b[1]) / 2 + j(amp * 0.45);
       d += ` Q ${mx.toFixed(3)} ${my.toFixed(3)} ${fmt(b)}`;
     }
     d += " Z";
@@ -477,21 +477,23 @@
     const inCard = !!el.closest?.(
       ".card, article.card, .panel, .box, .f00-box, .feature-card"
     );
-    /* chrome rules = cool silver; in-card rules = warm poppy metal */
-    let r, g, b, a, sw;
+    /*
+     * Same path + stroke weight language as header/footer.
+     * Only pigment shifts: cool silver chrome vs warm poppy metal on cream.
+     */
+    let r, g, b, a;
     if (inCard) {
       r = Math.round(R.range(180, 212));
       g = Math.round(R.range(70, 110));
       b = Math.round(R.range(40, 70));
-      a = R.range(0.38, 0.62);
-      sw = R.range(0.95, 1.45);
+      a = R.range(0.48, 0.78);
     } else {
       r = Math.round(R.range(188, 218));
       g = Math.round(R.range(196, 222));
       b = Math.round(R.range(204, 228));
       a = R.range(0.48, 0.82);
-      sw = R.range(1.05, 1.85);
     }
+    const sw = R.range(1.05, 1.85); /* unified with chrome */
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-rule");
     svg.setAttribute("aria-hidden", "true");
@@ -708,8 +710,8 @@
 
   const gainsFor = (role) => {
     if (role === "plate") return { pose: 0.9, blur: 0.9, persp: 0.7 };
-    /* solid cards: almost still — micro pose only (frames own the edge) */
-    if (role === "solid") return { pose: 0.35, blur: 0.25, persp: 0.2 };
+    /* solid cards: micro pose + frame wander — barely off, not drunk */
+    if (role === "solid") return { pose: 0.52, blur: 0.28, persp: 0.28 };
     /* body type: enough to feel projected, still readable */
     if (role === "type") return { pose: 0.55, blur: 0.35, persp: 0.22 };
     if (role === "chrome") return { pose: 0.45, blur: 0.28, persp: 0.32 };
