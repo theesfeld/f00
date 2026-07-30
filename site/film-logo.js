@@ -354,8 +354,8 @@
      */
     const throwSeed =
       (window.F00Projection &&
-        filmCanvas &&
-        window.F00Projection.seedFor(filmCanvas, "plate:splash")) ||
+        canvas &&
+        window.F00Projection.seedFor(canvas, "plate:splash")) ||
       (window.F00Projection && window.F00Projection.seed) ||
       ((Math.random() * 0xffffffff) >>> 0);
     const dyn = createDynamics(throwSeed);
