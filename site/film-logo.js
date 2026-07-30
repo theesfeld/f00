@@ -53,37 +53,44 @@
     }
 
     /*
-     * Softness only where emulsion / focus *locally* fails — never a uniform radius.
-     * Uniform blur is mathematics applied as manufacture; nature has no flat focus field.
-     * Low-frequency focus map + high-frequency emulsion: each edge cell different.
+     * ORDER IN DISORDER on the edge:
+     * Some stretches stay nearly straight / sharp (core ink wins).
+     * Some bleed (local smear). Never all soft, never all hard —
+     * that would be uniform, and uniformity only lives in math.
      */
     float sampleInkSoft(vec2 uv, float optics) {
-      /* spatial focus residual — varies across the plate, not one global blur */
-      float focusMap = fbm2(uv * 3.2 + vec2(u_wave * 0.15, u_energy * 0.4));
-      float focusMap2 = fbm2(uv * 7.5 - vec2(u_energy, u_wave * 0.2));
-      float emul = fbm2(uv * 18.0 + vec2(u_energy * 0.5, u_wave));
-      float emul2 = fbm2(uv * 31.0 + 4.0);
-      /* some regions nearly sharp, some bleed — never same width all around */
-      float local = mix(0.15, 1.0, focusMap) * mix(0.5, 1.35, emul);
-      local *= mix(0.7, 1.25, focusMap2);
-      float spread = (u_edgeFloor * 0.35 + optics * 0.25) * local;
-      /* anisotropic: gate vs lens, different every texel neighborhood */
-      vec2 aniso = vec2(
-        mix(0.55, 1.45, emul),
-        mix(0.5, 1.4, emul2)
-      );
+      float core = 0.0;
+      if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) {
+        core = texture2D(u_tex, uv).a;
+      }
+
+      /* islands of clarity vs patches of failure — low frequency */
+      float clarity = fbm2(uv * 2.4 + vec2(u_wave * 0.1, u_energy * 0.3));
+      float clarity2 = fbm2(uv * 5.1 - vec2(u_energy * 0.2, u_wave));
+      /* 0 = this place stays straight/sharp; 1 = this place may dissolve */
+      float fail = smoothstep(0.42, 0.78, clarity) * smoothstep(0.35, 0.8, clarity2);
+
+      /* most of the mark: return core alone — allow straightness to exist */
+      if (fail < 0.08) {
+        return core;
+      }
+
+      float emul = fbm2(uv * 19.0 + vec2(u_energy * 0.4, u_wave));
+      float emul2 = fbm2(uv * 33.0 + 5.0);
+      float local = mix(0.2, 1.4, emul) * mix(0.35, 1.2, fail);
+      float spread = (u_edgeFloor * 0.2 + optics * 0.2) * local * fail;
+      vec2 aniso = vec2(mix(0.5, 1.5, emul), mix(0.45, 1.45, emul2));
       vec2 px = aniso * spread / u_res;
 
       float acc = 0.0;
       float wsum = 0.0;
       for (int y = -3; y <= 3; y++) {
         for (int x = -3; x <= 3; x++) {
-          float wx = float(x) * (0.6 + emul);
-          float wy = float(y) * (0.6 + emul2);
+          float wx = float(x) * (0.55 + emul);
+          float wy = float(y) * (0.55 + emul2);
           float dist = wx * wx + wy * wy;
-          float w = exp(-0.35 * dist);
-          /* break kernel symmetry — no perfect Gaussian */
-          w *= 0.55 + 0.9 * noise(uv * 55.0 + vec2(float(x) * 1.7, float(y) * 2.1));
+          float w = exp(-0.4 * dist);
+          w *= 0.5 + 1.0 * noise(uv * 60.0 + vec2(float(x) * 2.0, float(y) * 1.6));
           vec2 suv = uv + vec2(float(x), float(y)) * px;
           float a = 0.0;
           if (suv.x > -0.05 && suv.x < 1.05 && suv.y > -0.05 && suv.y < 1.05) {
@@ -94,13 +101,8 @@
         }
       }
       float soft = acc / max(wsum, 0.001);
-      float core = 0.0;
-      if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) {
-        core = texture2D(u_tex, uv).a;
-      }
-      /* where focusMap is high, hold core; where low, let edge dissolve unevenly */
-      float hold = mix(0.25, 0.75, focusMap);
-      return core * hold + soft * (1.0 - hold * 0.85);
+      /* blend only by local failure — sharp islands stay sharp */
+      return mix(core, soft, fail * 0.85);
     }
 
     /*
