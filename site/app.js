@@ -17,6 +17,7 @@
   const pin = document.querySelector(".hero-pin");
   const stage = document.querySelector(".hero-stage");
   const splash = document.querySelector(".splash");
+  const header = document.querySelector(".top");
   if (splash) {
     splash.style.fontSize = "";
     splash.style.width = "";
@@ -24,16 +25,46 @@
     splash.style.transform = "";
   }
 
-  /* —— Scroll progress: full-screen film logo → catalog size —— */
+  /* —— Scroll: max screen logo → shrink up to rest → normal scroll-away —— */
   const prefersReduced = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
+
+  const measureHeader = () => {
+    if (!header) return;
+    const h = Math.ceil(header.getBoundingClientRect().height);
+    if (h > 0) root.style.setProperty("--header-h", `${h}px`);
+  };
+
+  /** Fit logo as large as possible on this device without clipping (origin top). */
+  const measureMaxScale = () => {
+    if (!splash || prefersReduced) return;
+    const frame = document.querySelector(".splash-frame");
+    const prevP = root.style.getPropertyValue("--p");
+    const prevT = frame ? frame.style.transform : "";
+    /* measure unscaled glyph box */
+    root.style.setProperty("--p", "1");
+    if (frame) frame.style.transform = "none";
+    void splash.offsetWidth;
+    const endW = Math.max(1, splash.offsetWidth);
+    const endH = Math.max(1, splash.offsetHeight);
+    if (frame) frame.style.transform = prevT;
+    const headerH =
+      parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
+    /* at p=0 CSS uses padding-top ≈ header + 38dvh; scale grows downward from there */
+    const padTop = headerH + window.innerHeight * 0.38;
+    const maxW = window.innerWidth * 0.92;
+    const maxH = Math.max(100, window.innerHeight - padTop - 28);
+    const scale = Math.max(1.2, Math.min(maxW / endW, maxH / endH));
+    root.style.setProperty("--splash-scale-max", scale.toFixed(3));
+    root.style.setProperty("--p", prevP || "0");
+  };
 
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
     root.style.setProperty("--p", v.toFixed(4));
     if (stage) {
-      stage.classList.toggle("is-done", v > 0.92);
+      stage.classList.toggle("is-done", v > 0.97);
       stage.classList.add("is-live");
     }
   };
@@ -43,8 +74,12 @@
       setProgress(prefersReduced ? 1 : 0);
       return;
     }
+    /* progress completes when pin has been scrolled by (pinH - viewportH) */
     const total = Math.max(1, pin.offsetHeight - window.innerHeight);
-    const scrolled = Math.min(total, Math.max(0, -pin.getBoundingClientRect().top));
+    const scrolled = Math.min(
+      total,
+      Math.max(0, -pin.getBoundingClientRect().top)
+    );
     setProgress(scrolled / total);
   };
 
@@ -58,9 +93,23 @@
         ticking = false;
       });
     };
+    const onResize = () => {
+      measureHeader();
+      measureMaxScale();
+      updateHeroScroll();
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
+    measureHeader();
+    measureMaxScale();
     updateHeroScroll();
+    /* fonts may load late — remeasure scale */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        measureMaxScale();
+        updateHeroScroll();
+      });
+    }
   }
 
   const escapeHtml = (s) =>
