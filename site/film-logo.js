@@ -1,11 +1,12 @@
 /* f00 — continuous film PROJECTOR (entropy, no neutral state)
  *
- * Dream: light → imperfect film plate → lens → screen.
- * Not a font. Not a scheduled effect. Never a rest pose.
- * Patterns + chaos: continuous dynamical state drives optics forever.
+ * DOCTRINE: whenever this surface is projected onto the display
+ * (never “page load”), treat it as a new organic thing — a unique throw
+ * of light through plate → lens → screen. No exact duplicate projections.
+ * No rest pose. No timers. Brand identity fixed; optics always unique.
  *
- * Experts: no timers/events; floors always nonzero; soft alpha bleed;
- * whole-plate projection math only; SVG rejected for the seen plate.
+ * Dream: light → imperfect film plate → lens → screen.
+ * Not a font. Patterns + chaos drive optics forever.
  */
 (() => {
   const VERT = `
@@ -31,6 +32,8 @@
     uniform float u_breath;
     uniform float u_wave;
     uniform float u_energy; /* soft emergent amplitude from dynamics */
+    uniform float u_edgeFloor; /* soft-edge floor px — unique per projection */
+    uniform float u_lamp; /* lamp falloff strength — unique per projection */
 
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -52,9 +55,10 @@
     /*
      * Soft projected edge: multi-tap alpha ALWAYS blurred.
      * Floor prevents CAD-perfect silhouettes. Anisotropic = horizontal gate.
+     * u_edgeFloor is unique per projection (specimen bleed).
      */
     float sampleInkSoft(vec2 uv, float defocusPx) {
-      float floorPx = 0.85; /* never razor */
+      float floorPx = u_edgeFloor; /* never razor; varies per throw */
       float spread = floorPx + defocusPx;
       vec2 px = vec2(1.2, 0.88) * spread / u_res;
       float acc = 0.0;
@@ -132,9 +136,9 @@
       vec2 uv = projectUV(v_uv, u_time, defocus);
       float a = sampleInkSoft(uv, defocus);
 
-      /* soft lamp falloff — throw never evenly lit */
+      /* soft lamp falloff — throw never evenly lit (strength per projection) */
       vec2 q = v_uv - 0.5;
-      a *= clamp(1.0 - 0.07 * dot(q, q) * 4.0, 0.86, 1.0);
+      a *= clamp(1.0 - u_lamp * dot(q, q) * 4.0, 0.84, 1.0);
 
       /* flat black ink, imperfect edge already in alpha */
       vec3 col = vec3(0.045);
@@ -254,6 +258,8 @@
   function mountFilmLogo(opts) {
     const canvas = opts.canvas;
     if (!canvas) return null;
+    /* each mount = a new projection onto the display (never reuse a specimen) */
+    const staticOnly = !!opts.staticOnly;
     const gl =
       canvas.getContext("webgl", {
         alpha: true,
@@ -294,6 +300,8 @@
       breath: gl.getUniformLocation(prog, "u_breath"),
       wave: gl.getUniformLocation(prog, "u_wave"),
       energy: gl.getUniformLocation(prog, "u_energy"),
+      edgeFloor: gl.getUniformLocation(prog, "u_edgeFloor"),
+      lamp: gl.getUniformLocation(prog, "u_lamp"),
     };
 
     const tex = gl.createTexture();
@@ -313,8 +321,15 @@
     let lastNow = t0;
     const dyn = createDynamics();
 
-    /* instance entropy — this plate will never equal another load */
+    /*
+     * Specimen entropy for THIS projection onto the display.
+     * Never persisted — no sessionStorage. Fresh organic thing every throw.
+     */
     const instanceSeed = Math.random() * 1000;
+    const edgeFloor = 0.7 + Math.random() * 0.55; /* px soft edge */
+    const lampAmt = 0.055 + Math.random() * 0.04;
+    const padScale = 0.9 + Math.random() * 0.25;
+    const inkBlur = 0.01 + Math.random() * 0.012;
 
     const fontFamily =
       opts.fontFamily || '"Onyx", "Times New Roman", Times, serif';
@@ -327,8 +342,8 @@
       const sb = el
         ? el.getBoundingClientRect()
         : { width: fontPx * 1.55, height: fontPx * 0.86 };
-      const padX = Math.max(24, sb.width * 0.22);
-      const padY = Math.max(24, sb.height * 0.28);
+      const padX = Math.max(24, sb.width * 0.22 * padScale);
+      const padY = Math.max(24, sb.height * 0.28 * padScale);
       const w = Math.ceil(sb.width + padX * 2);
       const h = Math.ceil(sb.height + padY * 2);
       off.width = Math.max(2, Math.floor(w * dpr));
@@ -339,9 +354,9 @@
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
       ctx.fillStyle = ink;
-      /* slight soft ink already on the plate (pre-lens) */
+      /* soft ink already on the plate (pre-lens) — unique bleed per throw */
       ctx.shadowColor = "rgba(9,9,9,0.35)";
-      ctx.shadowBlur = Math.max(2, fontPx * 0.014);
+      ctx.shadowBlur = Math.max(2, fontPx * inkBlur);
       ctx.fillText(text, w / 2, h / 2 + fontPx * 0.02);
 
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -358,26 +373,8 @@
       lastDpr = dpr;
     };
 
-    const frame = (ts) => {
-      if (!running) return;
-      raf = requestAnimationFrame(frame);
-      const fontPx = opts.getFontPx();
-      if (!fontPx || fontPx < 8) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      if (Math.abs(fontPx - lastFont) > 0.5 || dpr !== lastDpr) {
-        paintTexture(fontPx);
-      }
-
-      const nowMs = ts || performance.now();
-      const dt = Math.min(0.05, Math.max(0, (nowMs - lastNow) / 1000));
-      lastNow = nowMs;
-      const now = (nowMs - t0) / 1000 + instanceSeed * 0.01;
-
-      const st = dyn.update(dt);
-      const p = opts.getP ? opts.getP() : 0;
-      const op = opts.getOpacity ? opts.getOpacity() : 1;
+    const drawOnce = (st, now, p, op) => {
       canvas.style.opacity = String(Math.max(0, Math.min(1, op)));
-
       gl.useProgram(prog);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.enableVertexAttribArray(locPos);
@@ -394,7 +391,8 @@
       gl.uniform1f(u.breath, st.breath);
       gl.uniform1f(u.wave, st.wave);
       gl.uniform1f(u.energy, st.energy);
-
+      gl.uniform1f(u.edgeFloor, edgeFloor);
+      gl.uniform1f(u.lamp, lampAmt);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.clearColor(0, 0, 0, 0);
@@ -402,11 +400,39 @@
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
+    const frame = (ts) => {
+      if (!running) return;
+      if (!staticOnly) raf = requestAnimationFrame(frame);
+      const fontPx = opts.getFontPx();
+      if (!fontPx || fontPx < 8) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (Math.abs(fontPx - lastFont) > 0.5 || dpr !== lastDpr) {
+        paintTexture(fontPx);
+      }
+
+      const nowMs = ts || performance.now();
+      const dt = staticOnly
+        ? 0
+        : Math.min(0.05, Math.max(0, (nowMs - lastNow) / 1000));
+      lastNow = nowMs;
+      const now = (nowMs - t0) / 1000 + instanceSeed * 0.01;
+
+      const st = dyn.update(staticOnly ? 0.016 : dt);
+      const p = opts.getP ? opts.getP() : 0;
+      const op = opts.getOpacity ? opts.getOpacity() : 1;
+      drawOnce(st, now, p, op);
+    };
+
     const start = () => {
       paintTexture(opts.getFontPx() || 120);
       running = true;
       lastNow = performance.now();
-      raf = requestAnimationFrame(frame);
+      if (staticOnly) {
+        /* unique soft specimen, frozen — still not a CAD clone */
+        frame(lastNow);
+      } else {
+        raf = requestAnimationFrame(frame);
+      }
     };
     if (document.fonts && document.fonts.load) {
       document.fonts

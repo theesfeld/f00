@@ -331,9 +331,9 @@
   });
 
   /*
-   * Technicolor film plate — real WebGL shaders (film-logo.js).
-   * Warp / dye-transfer CA / bloom / grain / gate — not CSS font overlays.
-   * Falls back to static ink mark if WebGL missing or reduced motion.
+   * Film PROJECTOR plate (film-logo.js).
+   * Each time this surface is projected onto the display → unique organic
+   * specimen (no session persistence). Reduced-motion still unique, frozen.
    */
   const splashWrap = document.querySelector(".splash-wrap");
   const filmCanvas = document.querySelector("canvas.splash-film");
@@ -341,7 +341,6 @@
     filmCanvas &&
     splashWrap &&
     splash &&
-    !prefersReduced &&
     window.F00FilmLogo &&
     typeof window.F00FilmLogo.mount === "function"
   ) {
@@ -351,6 +350,7 @@
       text: "f00",
       ink: "#090909",
       fontFamily: '"Onyx", "Times New Roman", Times, serif',
+      staticOnly: prefersReduced,
       getFontPx: () => {
         const fs = parseFloat(getComputedStyle(splash).fontSize);
         return Number.isFinite(fs) ? fs : splashMaxPx || 120;
