@@ -14,10 +14,10 @@
   ];
 
   const root = document.documentElement;
-  const pin = document.querySelector(".hero-pin");
-  const stage = document.querySelector(".hero-stage");
+  const hero = document.querySelector(".hero");
   const splash = document.querySelector(".splash");
   const header = document.querySelector(".top");
+  const headerInner = document.querySelector(".top-inner");
   if (splash) {
     splash.style.fontSize = "";
     splash.style.width = "";
@@ -25,65 +25,137 @@
     splash.style.transform = "";
   }
 
-  /* —— Scroll: max screen logo → shrink up to rest → normal scroll-away —— */
+  /*
+   * Fixed-logo dock + constant-slot:
+   *  - logo is position:fixed under the header (rule never bisects it)
+   *  - in-flow slot height = measured max logo height + --logo-gap (constant)
+   *  - p = scrollY / (maxH − restH) so logo height drop ≈ scroll → projects
+   *    stay a fixed visual gap under the mark while it shrinks UP
+   *  - p≥1: logo docks at rest under header; further scroll sends body
+   *    under the dock / frosted header (header line is the cutoff)
+   */
   const prefersReduced = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
 
+  let splashMaxPx = 0;
+  let splashRestPx = 0;
+  let splashMaxH = 0;
+  let splashRestH = 0;
+  let logoGapPx = 28;
+  let shrinkRange = 1;
+
   const measureHeader = () => {
-    if (!header) return;
-    const h = Math.ceil(header.getBoundingClientRect().height);
+    const el = headerInner || header;
+    if (!el) return;
+    const h = Math.ceil(el.getBoundingClientRect().height);
     if (h > 0) root.style.setProperty("--header-h", `${h}px`);
   };
 
-  /** Fit logo as large as possible on this device without clipping (origin top). */
-  const measureMaxScale = () => {
-    if (!splash || prefersReduced) return;
-    const frame = document.querySelector(".splash-frame");
-    const prevP = root.style.getPropertyValue("--p");
-    const prevT = frame ? frame.style.transform : "";
-    /* measure unscaled glyph box */
-    root.style.setProperty("--p", "1");
-    if (frame) frame.style.transform = "none";
-    void splash.offsetWidth;
-    const endW = Math.max(1, splash.offsetWidth);
-    const endH = Math.max(1, splash.offsetHeight);
-    if (frame) frame.style.transform = prevT;
+  const readLogoGap = () => {
+    const raw = getComputedStyle(root).getPropertyValue("--logo-gap").trim();
+    const n = parseFloat(raw);
+    if (!Number.isFinite(n)) return 28;
+    if (raw.endsWith("rem")) {
+      const fs = parseFloat(getComputedStyle(document.body).fontSize) || 16;
+      return n * fs;
+    }
+    return n;
+  };
+
+  /** Force font-size (!important CSS), measure glyph box. */
+  const measureAtFont = (px) => {
+    splash.style.setProperty("font-size", `${px}px`, "important");
+    void splash.offsetHeight;
+    const h = splash.getBoundingClientRect().height;
+    splash.style.removeProperty("font-size");
+    return h;
+  };
+
+  const measureSplashSizes = () => {
+    if (!splash) return;
     const headerH =
       parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 54;
-    /* at p=0 CSS uses padding-top ≈ header + 38dvh; scale grows downward from there */
-    const padTop = headerH + window.innerHeight * 0.38;
-    const maxW = window.innerWidth * 0.92;
-    const maxH = Math.max(100, window.innerHeight - padTop - 28);
-    const scale = Math.max(1.2, Math.min(maxW / endW, maxH / endH));
-    root.style.setProperty("--splash-scale-max", scale.toFixed(3));
-    root.style.setProperty("--p", prevP || "0");
+    const availH = Math.max(160, window.innerHeight - headerH - 56);
+    const availW = window.innerWidth * 0.9;
+    /* rest: catalog-scale mark under header */
+    splashRestPx = Math.min(112, Math.max(52, window.innerWidth * 0.085));
+    /* max: fill device under header (Onyx ~0.55em wide × 3 ≈ 1.5em) */
+    const byH = availH / 0.92;
+    const byW = availW / 1.55;
+    splashMaxPx = Math.min(byH, byW);
+    splashMaxPx = Math.max(splashRestPx * 1.45, splashMaxPx);
+
+    root.style.setProperty("--splash-max", `${splashMaxPx.toFixed(1)}px`);
+    root.style.setProperty("--splash-rest", `${splashRestPx.toFixed(1)}px`);
+
+    /* measure real painted heights at max/rest (Onyx metrics ≠ CSS math) */
+    const pWas = root.style.getPropertyValue("--p");
+    root.style.setProperty("--p", "0");
+    splashMaxH = measureAtFont(splashMaxPx) || splashMaxPx * 0.86;
+    root.style.setProperty("--p", "1");
+    splashRestH = measureAtFont(splashRestPx) || splashRestPx * 0.86;
+    root.style.setProperty("--p", pWas || "0");
+
+    logoGapPx = readLogoGap();
+    /*
+     * Slot = max logo height + gap. splash-frame also has 0.35rem top pad —
+     * include so projects sit --logo-gap under the painted mark, not the frame.
+     */
+    const framePad = 0.35 * (parseFloat(getComputedStyle(document.body).fontSize) || 16);
+    const slotH = Math.ceil(framePad + splashMaxH + logoGapPx);
+    root.style.setProperty("--splash-slot-h", `${slotH}px`);
+
+    /*
+     * Scroll distance for p 0→1 must equal height delta so:
+     *   projects_vp ≈ header + framePad + maxH + gap − scrollY
+     *   logo_bottom ≈ header + framePad + (maxH − scrollY)  [while p<1]
+     *   gap_visual  ≈ logoGap  (constant)
+     */
+    shrinkRange = Math.max(64, splashMaxH - splashRestH);
   };
 
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
     root.style.setProperty("--p", v.toFixed(4));
-    if (stage) {
-      stage.classList.toggle("is-done", v > 0.97);
-      stage.classList.add("is-live");
+    if (hero) {
+      hero.classList.toggle("is-done", v > 0.98);
+      hero.classList.add("is-live");
     }
+  };
+
+  const setDock = (yPx, op) => {
+    root.style.setProperty("--dock-y", `${yPx.toFixed(1)}px`);
+    root.style.setProperty("--dock-op", Math.max(0, Math.min(1, op)).toFixed(3));
   };
 
   const updateHeroScroll = () => {
-    if (!pin || prefersReduced) {
+    if (!splash || prefersReduced) {
       setProgress(prefersReduced ? 1 : 0);
+      setDock(0, prefersReduced ? 0 : 1);
       return;
     }
-    /* progress completes when pin has been scrolled by (pinH - viewportH) */
-    const total = Math.max(1, pin.offsetHeight - window.innerHeight);
-    const scrolled = Math.min(
-      total,
-      Math.max(0, -pin.getBoundingClientRect().top)
-    );
-    setProgress(scrolled / total);
+    const y = window.scrollY;
+    if (y <= shrinkRange) {
+      /* phase 1: shrink UP under header; body gap constant */
+      setProgress(y / shrinkRange);
+      setDock(0, 1);
+      return;
+    }
+    /*
+     * phase 2: dock at rest under header, then dissolve in place.
+     * Do NOT translate up through the header rule (that re-creates the
+     * “line through the logo”). Header frost is the scroll cutoff —
+     * body continues under it once the mark has faded.
+     */
+    setProgress(1);
+    const over = y - shrinkRange;
+    const fadeDist = Math.max(72, splashRestH * 0.95);
+    const op = Math.max(0, 1 - over / fadeDist);
+    setDock(0, op);
   };
 
-  if (pin) {
+  if (splash) {
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
@@ -95,18 +167,17 @@
     };
     const onResize = () => {
       measureHeader();
-      measureMaxScale();
+      measureSplashSizes();
       updateHeroScroll();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
     measureHeader();
-    measureMaxScale();
+    measureSplashSizes();
     updateHeroScroll();
-    /* fonts may load late — remeasure scale */
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => {
-        measureMaxScale();
+        measureSplashSizes();
         updateHeroScroll();
       });
     }
