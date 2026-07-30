@@ -96,10 +96,10 @@ void main() {
   float sx = (uv.x - 0.5) * 2.0;
   float sy = (uv.y - 0.5) * 2.0;
 
-  /* screen undulation — living, never flat, still readable */
+  /* screen undulation — living, never flat; keep glyph inside pad */
   float und = u_und * live;
-  sx += (fbm(vec2(uv.x * 4.0 + t * 0.11, uv.y * 4.0)) - 0.5) * und * 1.35;
-  sy += (fbm(vec2(uv.x * 3.6, uv.y * 3.6 + t * 0.09)) - 0.5) * und * 1.2;
+  sx += (fbm(vec2(uv.x * 4.0 + t * 0.11, uv.y * 4.0)) - 0.5) * und * 1.05;
+  sy += (fbm(vec2(uv.x * 3.6, uv.y * 3.6 + t * 0.09)) - 0.5) * und * 0.9;
 
   /* film keystone + gate — continuous drift */
   float kx = u_tilt.y * live * 0.85;

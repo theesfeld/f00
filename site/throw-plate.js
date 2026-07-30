@@ -134,9 +134,12 @@ export function mountThrowPlate(opts) {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const layoutW = maxPx * 1.35;
       const layoutH = maxPx * 0.88;
-      /* tight pad — film fringe only; big pad was throwing dock air off */
-      const padX = Math.max(14, layoutW * 0.06);
-      const padY = Math.max(12, layoutH * 0.06);
+      /*
+       * Generous film pad — optical warp/buckle samples outside the glyph.
+       * Too-tight pad = clipped flourishes (f top / o sides look cut off).
+       */
+      const padX = Math.max(36, layoutW * 0.14);
+      const padY = Math.max(40, layoutH * 0.16);
       const cssW = Math.ceil(layoutW + padX * 2);
       const cssH = Math.ceil(layoutH + padY * 2);
 
@@ -192,8 +195,9 @@ export function mountThrowPlate(opts) {
         inkTopFrac = 0.03;
         inkHeightFrac = 0.78;
       } else {
-        inkTopFrac = Math.max(0, inkTop / h - 0.008);
-        inkHeightFrac = Math.max(0.4, (inkBot - inkTop + 1) / h);
+        /* keep a little air above highest ink so warp can't kiss the header */
+      inkTopFrac = Math.max(0, inkTop / h - 0.02);
+      inkHeightFrac = Math.max(0.4, (inkBot - inkTop + 1) / h);
       }
       baseCssH = cssH;
       /*

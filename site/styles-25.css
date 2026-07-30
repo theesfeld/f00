@@ -9,7 +9,7 @@
   --splash-slot-h: 70vh;
   /* same air when docked; --logo-hero-top adds room under header at full size */
   --logo-gap: 1.5rem;
-  --logo-hero-top: 1.15rem;
+  --logo-hero-top: 1.65rem;
   --p: 0;
   --dock-y: 0px;
   --dock-op: 1;
@@ -176,7 +176,9 @@ main {
   mix-blend-mode: normal;
   will-change: transform, opacity;
   backface-visibility: hidden;
-  contain: layout style;
+  /* never clip warped film fringe — pad lives inside the bitmap */
+  overflow: visible !important;
+  contain: none;
 }
 .splash-wrap.is-film .splash-film {
   display: block;
