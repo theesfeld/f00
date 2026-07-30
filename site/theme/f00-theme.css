@@ -1,7 +1,7 @@
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
-   Live: https://f00.sh/theme/f00-theme-24.css
+   Live: https://f00.sh/theme/f00-theme-23.css
 
-   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-24.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-23.css" />
 
    Heartbox v0.2.1 (Heart-Shaped Box video)
    Website shell: fixed unscaled technicolor poppy photo + light silver chrome
@@ -9,6 +9,8 @@
    Project CSS = layout/structure only.
 
    Textures: https://f00.sh/theme/textures/
+   build-s10-critical full-cover + header scroll + code black
+
    build-s8
 
 */
@@ -145,9 +147,7 @@
 
 /* ════════ WEBSITE SHELL (all f00 project sites) ════════ */
 html { color-scheme: dark; }
-html, body { min-height: 100%; }
-
-body {
+html, body {
   margin: 0 !important;
   font-family: var(--f00-font-zine) !important;
   font-size: var(--f00-size-body) !important;
@@ -155,16 +155,16 @@ body {
   letter-spacing: var(--f00-tracking-body);
   color: #D0D5DB !important;
   background-color: #2096ee !important;
-  /* Fixed technicolor poppy photo — natural pixels, no scale-to-fit */
+  /* FULL-VIEWPORT fixed hero — cover the screen */
   background-image:
-    linear-gradient(180deg, rgba(10, 92, 173, 0.1) 0%, transparent 45%, rgba(6, 58, 110, 0.25) 100%),
+    linear-gradient(180deg, rgba(10, 92, 173, 0.12) 0%, transparent 42%, rgba(6, 58, 110, 0.28) 100%),
     var(--tex-paper),
     var(--tex-hero),
     linear-gradient(168deg, #4aadf5 0%, #2096ee 40%, #0a5cad 78%, #063a6e 100%) !important;
   background-size:
     auto,
     220px 220px,
-    auto,
+    cover,
     auto !important;
   background-position:
     center,
@@ -236,8 +236,12 @@ h1.splash, .splash, .splash .glyph,
   text-transform: none !important;
 }
 
-/* Header / nav — white */
+/* Header/nav — scrolls away with page */
+/* Header/nav — scrolls away with page (not sticky/fixed) */
 header, .site-header, .top, .nav-shell, .header-inner {
+  position: relative !important;
+  top: auto !important;
+  z-index: 20 !important;
   background: transparent !important;
   color: #D0D5DB !important;
   border-color: rgba(208, 213, 219, 0.65) !important;
@@ -246,6 +250,10 @@ header, .site-header, .top, .nav-shell, .header-inner {
 }
 .site-header, .top {
   border-bottom: 1px solid rgba(208, 213, 219, 0.65) !important;
+}
+main, #main, .main, .content, .page, .site-main, .shell {
+  position: relative !important;
+  z-index: 1 !important;
 }
 .nav, .nav a, .site-nav, .site-nav a, header a, .site-header a, .top a {
   color: rgba(208, 213, 219, 0.88) !important;
@@ -538,21 +546,6 @@ input:focus, textarea:focus, select:focus {
   border-color: #D0D5DB !important;
 }
 
-pre, pre code {
-  background: var(--f00-code-bg) !important;
-  color: var(--f00-fg) !important;
-  border: 2px solid rgba(208, 213, 219, 0.65) !important;
-  border-radius: 0 !important;
-}
-code, kbd {
-  background: rgba(9, 9, 9, 0.35) !important;
-  color: #E4E8ED !important;
-  border-radius: 0 !important;
-}
-.card code, .panel code {
-  background: rgba(9, 9, 9, 0.12) !important;
-  color: #090909 !important;
-}
 
 table { border-collapse: collapse; width: 100%; }
 th, td {
@@ -589,3 +582,88 @@ hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.45); }
   color: #D0D5DB !important;
 }
 a.brand { text-decoration: none !important; }
+
+
+/* kill sticky headers on project sites */
+header, .site-header, .top, .nav-shell, .header-inner {
+  position: relative !important;
+  top: auto !important;
+}
+
+
+/* CODE — black panels, mono, cream (never inherit card black-ink) */
+pre, pre code, .code, .code-block, .highlight, .hljs,
+.panel pre, .card pre, .box pre, .docs-list pre, .howto pre {
+  background: #050404 !important;
+  color: #EDE6DE !important;
+  border: 2px solid #B8BEC2 !important;
+  border-radius: 0 !important;
+  font-family: var(--f00-font-mono) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+  padding: 0.85rem 1rem !important;
+  overflow-x: auto !important;
+  text-shadow: none !important;
+  font-weight: 400 !important;
+}
+pre code, .card pre code, .panel pre code {
+  background: transparent !important;
+  color: #EDE6DE !important;
+  border: 0 !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+}
+code:not(pre code), kbd {
+  background: rgba(9, 9, 9, 0.55) !important;
+  color: #EDE6DE !important;
+  border-radius: 0 !important;
+  font-family: var(--f00-font-mono) !important;
+  padding: 0.1em 0.35em !important;
+  text-shadow: none !important;
+}
+.card code:not(pre code), .panel code:not(pre code), .box code:not(pre code) {
+  background: rgba(9, 9, 9, 0.2) !important;
+  color: #090909 !important;
+}
+.card pre, .panel pre, .box pre,
+.card pre code, .panel pre code, .box pre code {
+  background: #050404 !important;
+  color: #EDE6DE !important;
+  text-shadow: none !important;
+}
+
+
+/* product release banners above header — off */
+.announcement { display: none !important; }
+
+
+/* project-page readability */
+.hero h1, .hero-copy, .hero .lede, .lede, .hint, .eyebrow {
+  color: #D0D5DB !important;
+  text-shadow: 0 1px 2px rgba(6, 40, 80, 0.45);
+}
+.hero h1 {
+  font-family: var(--f00-font-brand) !important;
+  color: #E4E8ED !important;
+}
+/* local dark overlays fight the shared sky */
+.field, .crt, .scanlines {
+  display: none !important;
+}
+.vignette, .tint {
+  opacity: 0.12 !important;
+  mix-blend-mode: soft-light !important;
+  pointer-events: none !important;
+}
+.panel .swatch .name, .panel .feel-list,
+.panel li, .panel p {
+  color: #090909 !important;
+}
+.panel .muted, .panel .hint {
+  color: rgba(9, 9, 9, 0.72) !important;
+}
+.panel .panel-head h2, .panel-head h2 {
+  font-family: var(--f00-font-brand) !important;
+  color: #EDE6DE !important;
+  text-shadow: 0 1px 0 rgba(9,9,9,0.5), 0 2px 6px rgba(9,9,9,0.3) !important;
+}
