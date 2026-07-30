@@ -31,7 +31,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
    - **No manufactured perfection:** no rest pose that is pure identity; no exact-duplicate throws; no razor CAD edges as the aesthetic goal; no timer choreography that feels like a metronome. Nature = pattern + chaos + entropy.
    - **What stays fixed:** brand tokens (theme, palette, type roles), structure, copy intent, product identity — so it still reads as f00.
    - **What lives:** optics and material presence — soft edges, continuous organic motion where motion exists, specimen uniqueness when a surface is first projected, hospital-flower light not UI chrome polish.
-   - **Implementation:** shared `https://f00.sh/theme/f00-theme-34.css` + `https://f00.sh/theme/f00-entropy.js` (Worker injects on `*.f00.sh`). **throw** (`$PROJECTS/throw`, wip) is the develop→project engine — not blur filters. Hub mark uses `site/throw/` + `throw-plate.js`.
+   - **Implementation:** live SSOT `https://f00.sh/theme/f00-theme.css` + `https://f00.sh/theme/f00-entropy.js` (Worker `f00-theme-inject` rewrites every `*.f00.sh` HTML). Pin sources with `scripts/pin-theme-all-projects.py`; enroll with `scripts/enroll-project.py`. **throw** (`$PROJECTS/throw`, wip) is the develop→project engine — not blur filters. Hub mark uses `site/throw/` + `throw-plate.js`.
    - **Art law:** digital is the frame; the picture is imperfect organic reality (medical models, poppies, foil, dye, innards). Do not ship static boilerplate text-on-flat as the emotional register of a scene.
 
 ## Layout
@@ -80,7 +80,7 @@ That regenerates hub product cards, this table, and README projects.
 | Field | URL / path |
 |-------|------------|
 | Catalog | `site/catalog.json` → https://f00.sh/catalog.json |
-| Theme CSS | `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme-34.css |
+| Theme CSS | `site/theme/f00-theme.css` → https://f00.sh/theme/f00-theme.css |
 | Org | github.com/f00-sh |
 
 `$PROJECTS` is the developer machines' projects root (here: `/home/glenda/Projects`).

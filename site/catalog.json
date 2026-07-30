@@ -10,9 +10,12 @@
     "code_of_conduct": "https://f00.sh/CODE_OF_CONDUCT.md"
   },
   "theme": {
-    "css": "https://f00.sh/theme/f00-theme-34.css",
-    "css_canonical": "https://f00.sh/theme/f00-theme-34.css",
+    "css_live": "https://f00.sh/theme/f00-theme.css",
+    "css": "https://f00.sh/theme/f00-theme.css",
+    "css_canonical": "https://f00.sh/theme/f00-theme.css",
+    "css_snapshot_url": "https://f00.sh/theme/f00-theme-34.css",
     "css_path": "site/theme/f00-theme.css",
+    "entropy": "https://f00.sh/theme/f00-entropy.js?v=21",
     "source": "heartbox",
     "source_name": "Heartbox",
     "source_url": "https://heartbox.f00.sh/",
@@ -27,7 +30,7 @@
     "accent": "#D44A18",
     "metal": "#B8BEC2",
     "sky": "#1E78C8",
-    "rule": "ONE shared CSS https://f00.sh/theme/f00-theme-34.css for hub + every *.f00.sh project site. Organic poppy-xray field, cool silver chrome, hospital cream boxes with poppy type. Project CSS is layout-only.",
+    "rule": "ONE shared live CSS https://f00.sh/theme/f00-theme.css for hub + every *.f00.sh project site (Worker pins it). Organic poppy-xray field, cool silver chrome, hospital cream boxes with poppy type. Project CSS is layout-only. New projects: enroll-project.py or pin-theme-all-projects.py.",
     "layout": "bleach",
     "contrast": "heart-shaped-box",
     "css_snapshot": "site/theme/f00-theme-34.css",

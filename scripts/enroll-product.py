@@ -27,10 +27,22 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "site" / "catalog.json"
-THEME_HREF = "https://f00.sh/theme/f00-theme.css"
 COC_CANONICAL = "https://f00.sh/CODE_OF_CONDUCT.md"
 COC_LOCAL = ROOT / "site" / "CODE_OF_CONDUCT.md"
 ORG = "f00-sh"
+DEFAULT_THEME = "https://f00.sh/theme/f00-theme.css"
+DEFAULT_ENTROPY = "https://f00.sh/theme/f00-entropy.js?v=21"
+
+
+def theme_urls() -> tuple[str, str]:
+    data = json.loads(CATALOG.read_text(encoding="utf-8"))
+    t = data.get("theme") or {}
+    css = t.get("css_live") or t.get("css") or t.get("css_canonical") or DEFAULT_THEME
+    # prefer unversioned live file so hub updates hit all sites
+    if re.search(r"f00-theme-\d+\.css", css):
+        css = DEFAULT_THEME
+    entropy = t.get("entropy") or DEFAULT_ENTROPY
+    return css, entropy
 
 
 def load() -> dict:
@@ -84,49 +96,56 @@ def ensure_project(data: dict, args: argparse.Namespace) -> dict:
 
 
 def inject_theme_link(repo: Path) -> list[str]:
+    """Pin project HTML to central theme + entropy (catalog SSOT)."""
+    theme_href, entropy_href = theme_urls()
     changed: list[str] = []
     candidates = [
         repo / "site" / "index.html",
         repo / "index.html",
+        repo / "dist" / "index.html",
     ]
     for html_path in candidates:
         if not html_path.is_file():
             continue
         text = html_path.read_text(encoding="utf-8")
-        # normalize any prior theme URL to current standard
-        import re as _re
-        text2 = _re.sub(
-            r"https://f00\.sh/theme/f00-theme[^\"']*",
-            THEME_HREF,
+        orig = text
+        text = re.sub(
+            r"https://f00\.sh/theme/f00-theme[^\"'\s>]*",
+            theme_href,
             text,
         )
-        if text2 != text:
-            text = text2
+        text = re.sub(
+            r"https://f00\.sh/theme/f00-entropy\.js(?:\?v=[^\"'\s>]*)?",
+            entropy_href,
+            text,
+        )
+        if theme_href not in text:
+            link = f'  <link rel="stylesheet" href="{theme_href}" data-f00-theme="1" />\n'
+            if re.search(r'<link[^>]+rel=["\']stylesheet["\']', text, re.I):
+                text = re.sub(
+                    r'(<link[^>]+rel=["\']stylesheet["\'][^>]*>)',
+                    link + r"\1",
+                    text,
+                    count=1,
+                    flags=re.I,
+                )
+            elif re.search(r"</head>", text, re.I):
+                text = re.sub(r"(</head>)", link + r"\1", text, count=1, flags=re.I)
+        if "data-f00-entropy-script" not in text:
+            tag = (
+                f'  <script src="{entropy_href}" data-f00-entropy-script defer>'
+                f"</script>\n"
+            )
+            if re.search(r"</body>", text, re.I):
+                text = re.sub(r"(</body>)", tag + r"\1", text, count=1, flags=re.I)
+            elif re.search(r"</head>", text, re.I):
+                text = re.sub(r"(</head>)", tag + r"\1", text, count=1, flags=re.I)
+        if text != orig:
             html_path.write_text(text, encoding="utf-8")
             changed.append(str(html_path))
-            print(f"normalized theme URL in {html_path}")
-        if "f00-theme" in text and THEME_HREF in text:
-            print(f"theme already linked: {html_path}")
-            continue
-        # Prefer insert before first local stylesheet or before </head>
-        link = f'  <link rel="stylesheet" href="{THEME_HREF}" />\n'
-        if re.search(r'<link[^>]+rel=["\']stylesheet["\']', text, re.I):
-            text2 = re.sub(
-                r'(<link[^>]+rel=["\']stylesheet["\'][^>]*>)',
-                link + r"\1",
-                text,
-                count=1,
-                flags=re.I,
-            )
-        elif "</head>" in text.lower():
-            text2 = re.sub(r"(</head>)", link + r"\1", text, count=1, flags=re.I)
+            print(f"pinned theme+entropy: {html_path}")
         else:
-            print(f"skip theme inject (no head/stylesheet): {html_path}", file=sys.stderr)
-            continue
-        if text2 != text:
-            html_path.write_text(text2, encoding="utf-8")
-            changed.append(str(html_path))
-            print(f"linked theme in {html_path}")
+            print(f"theme already pinned: {html_path}")
     return changed
 
 
@@ -147,11 +166,13 @@ def patch_agents_note(repo: Path) -> None:
     text = agents.read_text(encoding="utf-8")
     if "f00.sh/theme/f00-theme.css" in text and "catalog.json" in text:
         return
+    theme_href, _entropy = theme_urls()
     block = (
         "\n## f00 membership\n\n"
         "- Org: `f00-sh`\n"
         "- Catalog SSOT: https://f00.sh/catalog.json (`f00` repo `site/catalog.json`)\n"
-        f"- Theme: {THEME_HREF} (Heartbox palette — do not redefine brand colors/fonts)\n"
+        f"- Theme (live SSOT): {theme_href} — do not redefine brand colors/fonts; "
+        "project CSS is layout-only. Edge Worker pins this on all `*.f00.sh`.\n"
         f"- Code of Conduct: {COC_CANONICAL} (pull via f00 `scripts/pull-code-of-conduct.sh`)\n"
         "- Card on hub only when catalog `status=released` after a real release\n"
     )
