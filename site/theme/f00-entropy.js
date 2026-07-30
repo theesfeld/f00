@@ -243,7 +243,7 @@
   const framePath = (R) => {
     const inset = 0.55 + R.range(0, 0.25);
     /* max deviation from a true straight edge */
-    const amp = 0.08 + R.range(0, 0.12);
+    const amp = 0.05 + R.range(0, 0.08); /* ~pretty straight */
     const j = (m) => R.signed(m);
     const n = 3; /* few samples — smooth almost-lines, not scribbles */
     const pts = [];
@@ -436,8 +436,8 @@
 
   const gainsFor = (role) => {
     if (role === "plate") return { pose: 0.9, blur: 0.9, persp: 0.7 };
-    /* solid cards: readable organic — not wild, not factory grid */
-    if (role === "solid") return { pose: 1.25, blur: 0.4, persp: 0.95 };
+    /* solid cards: almost still — micro pose only (frames own the edge) */
+    if (role === "solid") return { pose: 0.35, blur: 0.25, persp: 0.2 };
     if (role === "type") return { pose: 0.35, blur: 0.3, persp: 0.18 };
     if (role === "chrome") return { pose: 0.45, blur: 0.28, persp: 0.32 };
     return { pose: 0.7, blur: 0.4, persp: 0.5 };
