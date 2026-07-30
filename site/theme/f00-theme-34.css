@@ -18,11 +18,17 @@
 
 */
 
+/* Root-relative: same host as this stylesheet.
+   Local: http://127.0.0.1:…/assets/fonts/…
+   Prod / inject (CSS from f00.sh): https://f00.sh/assets/fonts/…
+   Absolute https://f00.sh broke localhost (cross-origin + bad ACAO). */
 @font-face {
   font-family: "Onyx";
   src:
-    url("https://f00.sh/assets/fonts/Onyx.woff2") format("woff2"),
-    url("https://f00.sh/assets/fonts/Onyx.otf") format("opentype");
+    url("/assets/fonts/Onyx.woff2") format("woff2"),
+    url("/theme/fonts/Onyx.woff2") format("woff2"),
+    url("/assets/fonts/Onyx.otf") format("opentype"),
+    url("/theme/fonts/Onyx.otf") format("opentype");
   font-weight: 400 700;
   font-style: normal;
   font-display: swap;

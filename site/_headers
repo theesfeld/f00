@@ -33,14 +33,14 @@
   Content-Type: text/css; charset=utf-8
   Cache-Control: public, max-age=60, must-revalidate
 
+/* ONE ACAO only — multiple matching rules become "*, *" and browsers reject fonts */
 /theme/fonts/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
-  CDN-Cache-Control: max-age=300
 
 /assets/fonts/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
 
@@ -304,25 +304,18 @@
   X-Content-Type-Options: nosniff
   CDN-Cache-Control: max-age=60
 
+/* content-type only — ACAO lives on /assets/fonts/* and /theme/fonts/* above */
 /assets/fonts/Onyx.otf
   Content-Type: font/otf
-  Cache-Control: public, max-age=31536000, immutable
-  Access-Control-Allow-Origin: *
 
 /assets/fonts/Onyx.woff2
   Content-Type: font/woff2
-  Cache-Control: public, max-age=31536000, immutable
-  Access-Control-Allow-Origin: *
 
 /theme/fonts/Onyx.otf
   Content-Type: font/otf
-  Cache-Control: public, max-age=31536000, immutable
-  Access-Control-Allow-Origin: *
 
 /theme/fonts/Onyx.woff2
   Content-Type: font/woff2
-  Cache-Control: public, max-age=31536000, immutable
-  Access-Control-Allow-Origin: *
 
 
 /theme/brand/*
@@ -507,3 +500,16 @@
   Content-Type: image/png
   Cache-Control: public, max-age=86400
   Access-Control-Allow-Origin: *
+
+/theme/f00-theme-34.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  CDN-Cache-Control: max-age=60
+
+/theme/f00-entropy.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
