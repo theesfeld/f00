@@ -227,6 +227,17 @@
   X-Content-Type-Options: nosniff
 
 /theme/textures/*
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/theme/textures/*.webp
+  Content-Type: image/webp
+  Cache-Control: public, max-age=86400, immutable
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/theme/textures/*.png
   Content-Type: image/png
   Cache-Control: public, max-age=86400, immutable
   Access-Control-Allow-Origin: *
