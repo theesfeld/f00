@@ -348,8 +348,14 @@
     let raf = 0;
     const t0 = performance.now();
     let lastNow = t0;
-    /* share throw seed with shell — logo is a petal on the same tray */
+    /*
+     * Logo plate = its own projection (own seed), not a phase of shared wind.
+     * Prefer seed derived for this canvas element when F00Projection exists.
+     */
     const throwSeed =
+      (window.F00Projection &&
+        filmCanvas &&
+        window.F00Projection.seedFor(filmCanvas, "plate:splash")) ||
       (window.F00Projection && window.F00Projection.seed) ||
       ((Math.random() * 0xffffffff) >>> 0);
     const dyn = createDynamics(throwSeed);

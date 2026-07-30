@@ -1,11 +1,8 @@
-/* f00 — Projection Specimen Engine (org-wide, all objects equal)
+/* f00 — Projection Specimen Engine
  *
- * Tray of petals: every projection lays out a unique set of petals
- * (specimen). Wind moves them — same petals, view changes slightly.
- * Nothing underlying is rebuilt on each frame. No object is primary.
- *
- * Species = f00. Specimen = this throw. Wind = continuous air.
- * Zen band: always usable.
+ * Each object is its own projection: own seed, own entropic rules, own air.
+ * Not one global wind with phase offsets — independent throws that coexist.
+ * Species = f00 form. Specimen = this object’s throw. Zen band: usable.
  */
 (() => {
   if (typeof document === "undefined") return;
@@ -15,8 +12,8 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const root = document.documentElement;
 
-  /* ── one seed for THIS projection onto the display ── */
-  const seed = (() => {
+  /* throw-level salt only — objects derive private seeds from identity + salt */
+  const throwSalt = (() => {
     try {
       const a = new Uint32Array(2);
       crypto.getRandomValues(a);
@@ -26,59 +23,148 @@
     }
   })();
 
-  let s = seed || 1;
-  const rnd = () => {
-    s |= 0;
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  const hashStr = (str) => {
+    let h = 2166136261 >>> 0;
+    const s = String(str);
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h ^ throwSalt) >>> 0;
   };
-  const range = (a, b) => a + (b - a) * rnd();
-  const signed = (m) => range(-m, m);
-  const set = (k, v) => root.style.setProperty(k, v);
 
-  /* public: logo plate and others share this throw */
+  const mulberry = (seed) => {
+    let s = seed >>> 0 || 1;
+    return () => {
+      s |= 0;
+      s = (s + 0x6d2b79f5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  const makeBag = (rnd) => {
+    const range = (a, b) => a + (b - a) * rnd();
+    const signed = (m) => range(-m, m);
+    return { rnd, range, signed };
+  };
+
+  /* public API: per-object projection registry */
+  const objects = new Map(); /* el -> state */
   window.F00Projection = {
-    seed,
+    throwSalt,
+    seed: throwSalt, /* back-compat for logo */
     reduced,
-    rnd: () => rnd(),
-    range,
-    signed,
-    /* 0..1 wind phase readouts (updated every frame when wind runs) */
-    wind: { x: 0, y: 0, rot: 0, t: 0 },
+    objects,
+    /** stable object seed for any el */
+    seedFor(el, role) {
+      const id =
+        el.getAttribute?.("data-project") ||
+        el.id ||
+        el.className ||
+        el.tagName ||
+        "node";
+      const path = role + "|" + id + "|" + (el.textContent || "").slice(0, 48);
+      return hashStr(path);
+    },
   };
 
-  const chromeA = (lo, hi) => range(lo, hi);
-  const chromeRGB = () => [
-    Math.round(range(200, 220)),
-    Math.round(range(208, 222)),
-    Math.round(range(214, 228)),
-  ];
+  const setRoot = (k, v) => root.style.setProperty(k, v);
 
-  /* ── field petal seat ── */
-  const bgX = 50 + signed(4.5);
-  const bgY = 50 + signed(3.8);
-  set("--e-bg-x", `${bgX.toFixed(3)}%`);
-  set("--e-bg-y", `${bgY.toFixed(3)}%`);
-  set("--e-track", `${signed(0.014).toFixed(4)}em`);
-  set("--e-word", `${signed(0.02).toFixed(4)}em`);
-  set("--e-paper", range(0.965, 1).toFixed(4));
-  set("--e-chrome-op", chromeA(0.48, 0.7).toFixed(3));
-  set("--e-chrome-op-b", chromeA(0.44, 0.68).toFixed(3));
-  set("--e-line-t", `${range(0.75, 1.3).toFixed(3)}px`);
-  set("--e-line-b", `${range(0.75, 1.3).toFixed(3)}px`);
-  set("--w-x", "0px");
-  set("--w-y", "0px");
-  set("--w-rot", "0deg");
+  /* ── field is one projection among many ── */
+  {
+    const R = makeBag(mulberry(throwSalt ^ 0x91eb63f));
+    const bgX = 50 + R.signed(4.5);
+    const bgY = 50 + R.signed(3.8);
+    setRoot("--e-bg-x", `${bgX.toFixed(3)}%`);
+    setRoot("--e-bg-y", `${bgY.toFixed(3)}%`);
+    setRoot("--e-track", `${R.signed(0.014).toFixed(4)}em`);
+    setRoot("--e-word", `${R.signed(0.02).toFixed(4)}em`);
+    setRoot("--e-paper", R.range(0.965, 1).toFixed(4));
+    setRoot("--e-chrome-op", R.range(0.48, 0.7).toFixed(3));
+    setRoot("--e-chrome-op-b", R.range(0.44, 0.68).toFixed(3));
+    objects.set(root, {
+      role: "field",
+      seed: throwSalt ^ 0x91eb63f,
+      bgX,
+      bgY,
+      p1: R.range(0.04, 0.11),
+      p2: R.range(0.05, 0.14),
+      p3: R.range(0.03, 0.09),
+      a1: R.range(0.35, 1.0),
+      a2: R.range(0.25, 0.8),
+      bx: bgX,
+      by: bgY,
+    });
+  }
 
-  /* ── emulsion rule (path is the petal’s edge; wind can nudge later) ── */
-  const rulePath = () => {
-    const n = 7 + Math.floor(rnd() * 7);
-    const mid = 1.2 + signed(0.15);
-    let d = `M 0 ${(mid + signed(0.55)).toFixed(3)}`;
+  /* ── each object: private seed → private rules + private dynamics ── */
+  const createObjectState = (el, role) => {
+    const seed = window.F00Projection.seedFor(el, role);
+    const R = makeBag(mulberry(seed));
+    const st = {
+      el,
+      role,
+      seed,
+      /* specimen (fixed for this throw) */
+      rot: R.signed(0.34),
+      x: R.signed(2.1),
+      y: R.signed(1.8),
+      bwT: R.range(1.35, 2.65),
+      bwR: R.range(1.35, 2.65),
+      bwB: R.range(1.35, 2.65),
+      bwL: R.range(1.35, 2.65),
+      op: R.range(0.97, 1),
+      track: R.signed(0.018),
+      word: R.signed(0.03),
+      tY: R.signed(0.4),
+      tOp: R.range(0.93, 1),
+      /* private continuous dynamics (own air — not shared wind) */
+      phi: R.range(0, Math.PI * 2),
+      omega: R.range(0.35, 1.25),
+      ampX: R.range(0.25, 1.1),
+      ampY: R.range(0.2, 0.95),
+      ampR: R.range(0.02, 0.09),
+      driftX: R.signed(0.15),
+      driftY: R.signed(0.15),
+      /* live wind readouts for this object only */
+      wx: 0,
+      wy: 0,
+      wr: 0,
+    };
+    return st;
+  };
+
+  const applySolidSpecimen = (st) => {
+    const el = st.el;
+    el.style.setProperty("--e-rot", `${st.rot.toFixed(3)}deg`);
+    el.style.setProperty("--e-x", `${st.x.toFixed(2)}px`);
+    el.style.setProperty("--e-y", `${st.y.toFixed(2)}px`);
+    el.style.setProperty("--e-bw-t", `${st.bwT.toFixed(2)}px`);
+    el.style.setProperty("--e-bw-r", `${st.bwR.toFixed(2)}px`);
+    el.style.setProperty("--e-bw-b", `${st.bwB.toFixed(2)}px`);
+    el.style.setProperty("--e-bw-l", `${st.bwL.toFixed(2)}px`);
+    el.style.setProperty("--e-op", st.op.toFixed(4));
+    el.style.setProperty("--w-x", "0px");
+    el.style.setProperty("--w-y", "0px");
+    el.style.setProperty("--w-rot", "0deg");
+  };
+
+  const applyTypeSpecimen = (st) => {
+    const el = st.el;
+    el.style.setProperty("--e-t-track", `${st.track.toFixed(4)}em`);
+    el.style.setProperty("--e-t-word", `${st.word.toFixed(4)}em`);
+    el.style.setProperty("--e-t-y", `${st.tY.toFixed(2)}px`);
+    el.style.setProperty("--e-t-op", st.tOp.toFixed(4));
+  };
+
+  const rulePath = (R) => {
+    const n = 7 + Math.floor(R.rnd() * 7);
+    const mid = 1.2 + R.signed(0.15);
+    let d = `M 0 ${(mid + R.signed(0.55)).toFixed(3)}`;
     for (let i = 1; i <= n; i++) {
-      d += ` L ${((i / n) * 100).toFixed(3)} ${(mid + signed(0.65)).toFixed(3)}`;
+      d += ` L ${((i / n) * 100).toFixed(3)} ${(mid + R.signed(0.65)).toFixed(3)}`;
     }
     return d;
   };
@@ -94,24 +180,23 @@
       el.style.borderTopColor = "transparent";
       el.style.borderTopWidth = "0";
     }
-    const [r, g, b] = chromeRGB();
-    const a = chromeA(0.45, 0.72);
+    const seed = window.F00Projection.seedFor(el, "rule:" + side);
+    const R = makeBag(mulberry(seed));
+    const r = Math.round(R.range(200, 220));
+    const g = Math.round(R.range(208, 222));
+    const b = Math.round(R.range(214, 228));
+    const a = R.range(0.45, 0.72);
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "e-rule");
     svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("preserveAspectRatio", "none");
     svg.setAttribute("viewBox", "0 0 100 2.5");
-    svg.innerHTML = `<path d="${rulePath()}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${range(0.9, 1.45).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+    svg.innerHTML = `<path d="${rulePath(R)}" fill="none" stroke="rgba(${r},${g},${b},${a.toFixed(3)})" stroke-width="${R.range(0.85, 1.5).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
     el.appendChild(svg);
+    /* rule is its own projection — store mild dynamics for path nudge optional */
+    objects.set(el, createObjectState(el, "rule"));
   };
 
-  const ruleHosts = () => {
-    document.querySelectorAll(".top-inner").forEach((el) => attachRule(el, "bottom"));
-    document.querySelectorAll(".foot, footer, .site-footer").forEach((el) => attachRule(el, "top"));
-    document.querySelectorAll(".section-head").forEach((el) => attachRule(el, "bottom"));
-  };
-
-  /* ── every solid object is a petal on the tray ── */
   const solidSel = [
     ".card",
     ".panel",
@@ -156,56 +241,36 @@
     "pre",
   ].join(",");
 
-  const paintSolid = (scope) => {
-    scope.querySelectorAll(solidSel).forEach((el) => {
-      if (el.dataset.f00Petal === "1") return;
-      el.dataset.f00Petal = "1";
-      /* fixed petal geometry for this throw — wind adds --w-* later */
-      el.style.setProperty("--e-rot", `${signed(0.32).toFixed(3)}deg`);
-      el.style.setProperty("--e-x", `${signed(2.0).toFixed(2)}px`);
-      el.style.setProperty("--e-y", `${signed(1.7).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-t", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-r", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-b", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-bw-l", `${range(1.4, 2.6).toFixed(2)}px`);
-      el.style.setProperty("--e-op", range(0.97, 1).toFixed(4));
-      /* per-petal phase so wind moves them differently (same wind field) */
-      el.style.setProperty("--e-phase", range(0, Math.PI * 2).toFixed(4));
-      el.style.setProperty("--e-gain", range(0.55, 1.15).toFixed(3));
-    });
+  const registerSolid = (el) => {
+    if (objects.has(el)) return;
+    const st = createObjectState(el, "solid");
+    objects.set(el, st);
+    el.dataset.f00Petal = "1";
+    applySolidSpecimen(st);
   };
 
-  const paintType = (scope) => {
-    scope.querySelectorAll(typeSel).forEach((el) => {
-      if (el.dataset.f00PetalType === "1") return;
-      if (el.closest && el.closest(".splash-wrap.is-film .splash")) return;
-      if (el.classList && el.classList.contains("glyph")) return;
-      el.dataset.f00PetalType = "1";
-      el.style.setProperty("--e-t-track", `${signed(0.016).toFixed(4)}em`);
-      el.style.setProperty("--e-t-word", `${signed(0.028).toFixed(4)}em`);
-      el.style.setProperty("--e-t-y", `${signed(0.35).toFixed(2)}px`);
-      el.style.setProperty("--e-t-op", range(0.94, 1).toFixed(4));
-      el.style.setProperty("--e-phase", range(0, Math.PI * 2).toFixed(4));
-      el.style.setProperty("--e-gain", range(0.4, 1.0).toFixed(3));
-    });
-  };
-
-  const paintChrome = (scope) => {
-    scope.querySelectorAll(".brand, .nav, .top-inner, .foot").forEach((el) => {
-      if (el.dataset.f00PetalChrome === "1") return;
-      el.dataset.f00PetalChrome = "1";
-      el.style.setProperty("--e-ch-y", `${signed(0.4).toFixed(2)}px`);
-      el.style.setProperty("--e-ch-track", `${signed(0.02).toFixed(4)}em`);
-      el.style.setProperty("--e-phase", range(0, Math.PI * 2).toFixed(4));
-      el.style.setProperty("--e-gain", range(0.3, 0.9).toFixed(3));
-    });
+  const registerType = (el) => {
+    if (objects.has(el)) return;
+    if (el.closest?.(".splash-wrap.is-film .splash")) return;
+    if (el.classList?.contains("glyph")) return;
+    const st = createObjectState(el, "type");
+    objects.set(el, st);
+    el.dataset.f00PetalType = "1";
+    applyTypeSpecimen(st);
   };
 
   const paintAll = (scope) => {
     const sc = scope || document;
-    paintSolid(sc);
-    paintType(sc);
-    paintChrome(sc);
+    sc.querySelectorAll(solidSel).forEach(registerSolid);
+    sc.querySelectorAll(typeSel).forEach(registerType);
+  };
+
+  const ruleHosts = () => {
+    document.querySelectorAll(".top-inner").forEach((el) => attachRule(el, "bottom"));
+    document.querySelectorAll(".foot, footer, .site-footer").forEach((el) =>
+      attachRule(el, "top")
+    );
+    document.querySelectorAll(".section-head").forEach((el) => attachRule(el, "bottom"));
   };
 
   ruleHosts();
@@ -227,63 +292,74 @@
   });
   mo.observe(document.documentElement, { childList: true, subtree: true });
 
-  /*
-   * Wind on the tray: continuous shared field.
-   * Petals keep fixed specimen vars; wind offsets move the whole tray slightly.
-   * Same petals — view changes. Usability: tiny amplitudes.
-   */
+  /* ── each object integrates its own air ── */
   if (!reduced) {
     let t0 = performance.now();
     let last = t0;
-    const p1 = range(0.04, 0.1);
-    const p2 = range(0.06, 0.13);
-    const p3 = range(0.03, 0.08);
-    const a1 = range(0.4, 1.0);
-    const a2 = range(0.3, 0.8);
-    let bx = bgX;
-    let by = bgY;
 
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const t = (now - t0) / 1000;
-      window.F00Projection.wind.t = t;
 
-      /* field air */
-      const tx = bgX + Math.sin(t * p1) * a1 + Math.sin(t * p3 * 1.7) * a2 * 0.4;
-      const ty = bgY + Math.cos(t * p2) * a2 + Math.sin(t * p1 * 0.6) * a1 * 0.35;
-      bx += (tx - bx) * Math.min(1, dt * 0.35);
-      by += (ty - by) * Math.min(1, dt * 0.35);
-      set("--e-bg-x", `${bx.toFixed(3)}%`);
-      set("--e-bg-y", `${by.toFixed(3)}%`);
+      /* field projection (independent) */
+      const field = objects.get(root);
+      if (field && field.role === "field") {
+        const tx =
+          field.bgX +
+          Math.sin(t * field.p1) * field.a1 +
+          Math.sin(t * field.p3 * 1.7) * field.a2 * 0.4;
+        const ty =
+          field.bgY +
+          Math.cos(t * field.p2) * field.a2 +
+          Math.sin(t * field.p1 * 0.6) * field.a1 * 0.35;
+        field.bx += (tx - field.bx) * Math.min(1, dt * 0.35);
+        field.by += (ty - field.by) * Math.min(1, dt * 0.35);
+        setRoot("--e-bg-x", `${field.bx.toFixed(3)}%`);
+        setRoot("--e-bg-y", `${field.by.toFixed(3)}%`);
+      }
 
-      /* shared wind readouts (CSS + logo) */
-      const wx = Math.sin(t * p1 * 0.9) * 0.55 + Math.sin(t * p3) * 0.25;
-      const wy = Math.cos(t * p2 * 0.85) * 0.45 + Math.sin(t * p1 * 0.5) * 0.2;
-      const wr = Math.sin(t * p2 * 0.4 + p3) * 0.06;
-      window.F00Projection.wind.x = wx;
-      window.F00Projection.wind.y = wy;
-      window.F00Projection.wind.rot = wr;
-      set("--w-x", `${wx.toFixed(3)}px`);
-      set("--w-y", `${wy.toFixed(3)}px`);
-      set("--w-rot", `${wr.toFixed(4)}deg`);
+      objects.forEach((st) => {
+        if (st.role === "field") return;
+        /* private oscillator + drift — this object’s own entropy rules */
+        st.phi += dt * st.omega;
+        st.driftX += dt * (-0.08 * st.driftX) + (Math.random() - 0.5) * 0.02 * Math.sqrt(dt);
+        st.driftY += dt * (-0.08 * st.driftY) + (Math.random() - 0.5) * 0.02 * Math.sqrt(dt);
+        st.wx = Math.sin(st.phi) * st.ampX + st.driftX;
+        st.wy = Math.cos(st.phi * 0.91) * st.ampY + st.driftY;
+        st.wr = Math.sin(st.phi * 0.37) * st.ampR;
 
-      /* per-petal phase offset: same wind, different response (tray of petals) */
-      document.querySelectorAll("[data-f00-petal='1']").forEach((el) => {
-        const ph = parseFloat(el.style.getPropertyValue("--e-phase")) || 0;
-        const g = parseFloat(el.style.getPropertyValue("--e-gain")) || 1;
-        const lx = wx * g * Math.cos(ph * 0.3) + wy * g * 0.15 * Math.sin(ph);
-        const ly = wy * g * Math.sin(ph * 0.25) + wx * g * 0.12 * Math.cos(ph);
-        const lr = wr * g * (0.7 + 0.3 * Math.sin(ph));
-        el.style.setProperty("--w-x", `${lx.toFixed(3)}px`);
-        el.style.setProperty("--w-y", `${ly.toFixed(3)}px`);
-        el.style.setProperty("--w-rot", `${lr.toFixed(4)}deg`);
+        if (st.role === "solid" || st.role === "rule") {
+          st.el.style.setProperty("--w-x", `${st.wx.toFixed(3)}px`);
+          st.el.style.setProperty("--w-y", `${st.wy.toFixed(3)}px`);
+          st.el.style.setProperty("--w-rot", `${st.wr.toFixed(4)}deg`);
+        }
+        if (st.role === "type") {
+          /* type: only micro baseline breathe — keep copy readable */
+          st.el.style.setProperty(
+            "--e-t-y",
+            `${(st.tY + st.wy * 0.15).toFixed(2)}px`
+          );
+        }
       });
+
+      /* expose logo’s sibling plate state if present */
+      const wrap = document.querySelector(".splash-wrap");
+      if (wrap && objects.has(wrap)) {
+        const st = objects.get(wrap);
+        window.F00Projection.wind = {
+          x: st.wx,
+          y: st.wy,
+          rot: st.wr,
+          t,
+          seed: st.seed,
+        };
+      }
 
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }
 
-  root.dataset.f00Projection = seed.toString(16);
+  root.dataset.f00Projection = throwSalt.toString(16);
 })();
