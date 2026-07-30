@@ -241,7 +241,7 @@ main {
 }
 .section-head {
   margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(208, 213, 219, 0.55);
+  border-bottom: 0 !important; /* SVG emulsion rule via f00-entropy */
   padding-bottom: 0.45rem;
 }
 .section-head h2 {
