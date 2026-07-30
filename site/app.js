@@ -323,79 +323,87 @@
     paintStaticCards();
   });
 
-// —— Film glitches: technicolor plate misregistration + emulsion flash ——
+  /*
+   * Dye-transfer / Technicolor plate misregistration on the MARK only.
+   * No full-viewport FX here — edge flash was the rectangular film stack.
+   * Hold longer, fire rarer; sky/poppy/cream plates (Oz · HSB · medical cel).
+   */
   const glyphs = document.querySelectorAll(".splash .glyph");
 
   if (glyphs.length && !prefersReduced) {
-    const pickColor = () =>
-      THEME_COLORS[Math.floor(Math.random() * THEME_COLORS.length)];
-
-    const pNow = () => parseFloat(getComputedStyle(root).getPropertyValue("--p")) || 0;
+    /* photo-locked dye plates only — not the whole palette strobe */
+    const PLATES = ["#1E78C8", "#D44A18", "#E86022", "#EDE6DE", "#C47A72"];
+    const pickPlate = () => PLATES[Math.floor(Math.random() * PLATES.length)];
+    const pNow = () =>
+      parseFloat(getComputedStyle(root).getPropertyValue("--p")) || 0;
+    const sign = () => (Math.random() < 0.5 ? -1 : 1);
 
     const fireGlitch = () => {
       const p = pNow();
-      /* stronger / wider when logo is large (full hero) */
-      const amp = 1.2 + (1 - p) * 4.5;
+      /* amp in px on the glyph — never screen-edge scale */
+      const amp = 0.8 + (1 - p) * 3.2;
       const g = glyphs[Math.floor(Math.random() * glyphs.length)];
-      const color = pickColor();
-      const ox = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * amp);
-      const oy = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * amp * 0.55);
-      g.style.setProperty("--glitch-color", color);
-      g.style.setProperty("--glitch-x", `${ox.toFixed(2)}px`);
-      g.style.setProperty("--glitch-y", `${oy.toFixed(2)}px`);
+      g.style.setProperty("--glitch-color", pickPlate());
+      g.style.setProperty("--glitch-x", `${(sign() * (0.6 + Math.random() * amp)).toFixed(2)}px`);
+      g.style.setProperty("--glitch-y", `${(sign() * Math.random() * amp * 0.45).toFixed(2)}px`);
       g.style.setProperty(
         "--rgb-cx",
-        `${((Math.random() < 0.5 ? -1 : 1) * (1 + Math.random() * amp * 0.7)).toFixed(2)}px`
+        `${(sign() * (0.5 + Math.random() * amp * 0.65)).toFixed(2)}px`
       );
       g.style.setProperty(
         "--rgb-cy",
-        `${((Math.random() < 0.5 ? -1 : 1) * Math.random() * amp * 0.4).toFixed(2)}px`
+        `${(sign() * Math.random() * amp * 0.35).toFixed(2)}px`
       );
       g.classList.add("is-glitching");
 
-      /* occasional multi-plate flash (dye transfer tear) */
-      if (Math.random() < 0.4 + (1 - p) * 0.25) {
+      /* occasional second plate (dye tear on another glyph) */
+      if (Math.random() < 0.35 + (1 - p) * 0.2) {
         const g2 = glyphs[Math.floor(Math.random() * glyphs.length)];
-        g2.style.setProperty("--glitch-color", pickColor());
+        g2.style.setProperty("--glitch-color", pickPlate());
         g2.style.setProperty(
           "--glitch-x",
-          `${((Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * amp)).toFixed(2)}px`
+          `${(sign() * (1 + Math.random() * amp)).toFixed(2)}px`
         );
         g2.style.setProperty(
           "--glitch-y",
-          `${((Math.random() < 0.5 ? -1 : 1) * Math.random() * amp * 0.5).toFixed(2)}px`
+          `${(sign() * Math.random() * amp * 0.4).toFixed(2)}px`
         );
         g2.classList.add("is-glitching");
         window.setTimeout(
           () => g2.classList.remove("is-glitching"),
-          70 + Math.random() * 140
+          90 + Math.random() * 160
         );
       }
 
-      /* rare full-word flash */
-      if (Math.random() < 0.12 * (1.2 - p)) {
+      /* rare full-word registration slip (whole mark) */
+      if (Math.random() < 0.08 * (1.15 - p)) {
+        const plate = pickPlate();
         glyphs.forEach((el) => {
-          el.style.setProperty("--glitch-color", pickColor());
+          el.style.setProperty("--glitch-color", plate);
+          el.style.setProperty(
+            "--glitch-x",
+            `${(sign() * (1 + Math.random() * amp * 0.8)).toFixed(2)}px`
+          );
           el.classList.add("is-glitching");
         });
         window.setTimeout(() => {
           glyphs.forEach((el) => el.classList.remove("is-glitching"));
-        }, 40 + Math.random() * 60);
+        }, 70 + Math.random() * 90);
       }
 
       window.setTimeout(
         () => g.classList.remove("is-glitching"),
-        55 + Math.random() * (90 + (1 - p) * 80)
+        80 + Math.random() * (120 + (1 - p) * 100)
       );
     };
 
     const scheduleGlitch = () => {
       fireGlitch();
       const p = pNow();
-      /* denser glitches while full-screen */
-      const next = 220 + Math.random() * (900 + p * 1600);
+      /* rarer holds — film hitch, not club strobe */
+      const next = 700 + Math.random() * (1400 + p * 2200);
       window.setTimeout(scheduleGlitch, next);
     };
-    window.setTimeout(scheduleGlitch, 400);
+    window.setTimeout(scheduleGlitch, 600);
   }
 })();
