@@ -99,9 +99,20 @@ header.top::before,
   gap: 0.25rem;
   text-decoration: none;
   cursor: pointer;
+  /* keep hit target; text yields to film mark when docked */
+  z-index: 2;
 }
 .brand-mark { font-size: 1.45rem; letter-spacing: 0.14em; }
 .brand-sub { letter-spacing: 0.14em; font-size: 0.8rem; }
+/* text brand fades as film logo parks in header center */
+.brand-mark,
+.brand-sub {
+  opacity: calc(1 - var(--p, 0));
+  transition: opacity 0.15s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark, .brand-sub { transition: none; }
+}
 .nav { display: flex; gap: 1.15rem; font-size: 0.82rem; letter-spacing: 0.14em; }
 .nav a {
   text-decoration: none;
@@ -126,43 +137,42 @@ main {
   pointer-events: none;
 }
 
-/* fixed under header — equal air when docked; extra top air at full hero size */
+/*
+ * Film logo frame:
+ *  p=0 → below header, hero air, large mark
+ *  p=1 → rises into header center as compact brand (above chrome text)
+ */
 .splash-frame {
   position: fixed;
-  top: var(--header-h);
   left: 0;
   right: 0;
-  z-index: 6;
+  /* ride from under-header up into the bar */
+  top: calc(var(--header-h) * (1 - var(--p, 0)));
+  z-index: 55; /* above .top so the docked mark is the center brand */
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
   margin: 0;
-  /*
-   * p=0 (full): logo-gap + hero-top-air under the header rule
-   * p=1 (dock): just logo-gap (compact mark stays under chrome)
-   */
+  /* hero: padded under header · dock: fill header height, center the mark */
+  min-height: calc(var(--p, 0) * var(--header-h));
   padding:
-    calc(var(--logo-gap) + (1 - var(--p, 0)) * var(--logo-hero-top, 1.15rem))
-    var(--pad) 0;
-  /* do not let the max-size wrap box cover the whole viewport when docked */
+    calc(
+      (1 - var(--p, 0)) *
+        (var(--logo-gap) + var(--logo-hero-top, 1.15rem))
+    )
+    var(--pad)
+    0;
   height: auto;
   max-height: none;
   pointer-events: none;
   transform: translateY(var(--dock-y, 0px));
   opacity: var(--dock-op, 1);
-  will-change: transform, opacity;
+  will-change: top, padding, min-height, opacity;
   overflow: visible;
 }
-/* when docked, collapse the invisible max-size layout box so only the mark shows */
 .splash-wrap.is-film {
-  /* height still from max splash for hero measure; clip visual overflow of empty box */
   max-width: min(100%, 92vw);
-}
-html:has(.hero.is-done) .splash-wrap.is-film .splash {
-  /* keep a11y metrics but shrink layout footprint when docked */
-  font-size: var(--splash-rest) !important;
-  line-height: 0.86 !important;
 }
 .splash-frame::before { content: none !important; display: none !important; }
 
@@ -196,13 +206,16 @@ html:has(.hero.is-done) .splash-wrap.is-film .splash {
 .splash-wrap.is-film .splash-film {
   display: block;
 }
-/* film plate: lock layout at MAX — no font-size reflow on scroll (jank killer) */
+/* film plate: layout tracks --p so wrap collapses into the header when docked */
 .splash-wrap.is-film {
   transform: none !important; /* never fight plate with entropy pose */
   will-change: auto;
 }
 .splash-wrap.is-film .splash {
-  font-size: var(--splash-max) !important;
+  /* same rest↔max curve as hero measure; canvas still CSS-scales the film */
+  font-size: calc(
+    var(--splash-rest) + (var(--splash-max) - var(--splash-rest)) * (1 - var(--p, 0))
+  ) !important;
   color: transparent !important;
   text-shadow: none !important;
   animation: none !important;
@@ -279,6 +292,15 @@ html:has(.hero.is-done) .splash-wrap.is-film .splash {
   margin-bottom: 1rem;
   border-bottom: 0 !important; /* SVG emulsion rule via f00-entropy */
   padding-bottom: 0.45rem;
+  /* dissolve projects rule/label as logo parks in the header */
+  opacity: calc(1 - var(--p, 0));
+  max-height: calc((1 - var(--p, 0)) * 3.5rem);
+  margin-top: 0;
+  margin-bottom: calc((1 - var(--p, 0)) * 1rem);
+  padding-bottom: calc((1 - var(--p, 0)) * 0.45rem);
+  overflow: hidden;
+  pointer-events: none;
+  transition: none;
 }
 .section-head h2 {
   margin: 0;
@@ -286,6 +308,11 @@ html:has(.hero.is-done) .splash-wrap.is-film .splash {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-weight: 700;
+}
+/* fully docked: no projects line — nav already has projects */
+.hero.is-done ~ .projects .section-head,
+html:has(.hero.is-done) .projects .section-head {
+  display: none;
 }
 .grid {
   display: grid;

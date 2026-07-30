@@ -99,10 +99,11 @@ export function mountThrowPlate(opts) {
     const f = follow ?? 1;
     dispScale += (targetScale - dispScale) * f;
     /*
-     * At full size leave film-pad air under the header (don't yank ink flush).
-     * As we dock (p→1), cancel top pad so ink sits on the logo-gap line.
+     * Always scale from top-center of the plate bitmap.
+     * (Center origin on a max-size canvas leaves the mark mid-viewport when docked.)
+     * Frame flex centers the rest-sized wrap into the header bar.
      */
-    const padCancel = pp * pp; /* ease in — almost none at hero */
+    const padCancel = pp * pp;
     const yShift = -inkTopFrac * (baseCssH || 0) * dispScale * padCancel;
     canvas.style.transformOrigin = "50% 0%";
     canvas.style.transform = [
@@ -201,12 +202,16 @@ export function mountThrowPlate(opts) {
        * restScale → compact docked mark (~brand height under header).
        * Was targeting ~restPx (too large) so the dock sat on top of cards.
        */
-      const targetInkH = Math.max(34, Math.min(48, restPx * 0.9));
+      /* fit comfortably inside header chrome (~header-h − a few px) */
+      const headerBudget = Math.max(28, (parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--header-h")
+      ) || 54) * 0.72);
+      const targetInkH = Math.max(28, Math.min(headerBudget, restPx * 0.85));
       const fullInkH = inkHeightFrac * cssH;
       restScale =
         fullInkH > 1
-          ? Math.max(0.06, Math.min(0.22, targetInkH / fullInkH))
-          : Math.min(0.2, restPx / Math.max(maxPx, 1));
+          ? Math.max(0.05, Math.min(0.2, targetInkH / fullInkH))
+          : Math.min(0.18, restPx / Math.max(maxPx, 1));
 
       thrownMaxPx = maxPx;
       canvas.style.width = `${cssW}px`;

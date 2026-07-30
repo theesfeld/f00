@@ -155,8 +155,10 @@
   const setProgress = (p) => {
     const v = Math.max(0, Math.min(1, p));
     root.style.setProperty("--p", v.toFixed(5));
+    const docked = v > 0.92;
+    root.classList.toggle("logo-docked", docked);
     if (hero) {
-      hero.classList.toggle("is-done", v > 0.98);
+      hero.classList.toggle("is-done", docked);
       hero.classList.add("is-live");
     }
   };
