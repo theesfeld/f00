@@ -192,3 +192,11 @@
 /styles-18.css
   Content-Type: text/css; charset=utf-8
   Cache-Control: public, max-age=60, must-revalidate
+
+/styles-19.css
+  Content-Type: text/css; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+
+/assets/textures/*
+  Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: *

@@ -1,25 +1,21 @@
-# DONE — Night ship complete (Heartbox 0.2.1)
+# DONE — projects shell + naming
 
-You left for the night. Autonomous work finished.
+## Design on ALL sites
+Shared `https://f00.sh/theme/f00-theme.css` now includes the full **website shell**:
+- organic verse-sky background
+- white header/footer text
+- white Bleach boxes with poppy red text
+- black splash logo (hub)
 
-## Notification
-- **GitHub issue:** https://github.com/f00-sh/f00/issues/1
-- Email to tj@f00.sh: not possible (CF Email Sending API unauthorized for agent OAuth)
-- This file also at: `~/Projects/DONE-NIGHT-SHIP.md` and `f00/docs/notices/2026-07-29-night-ship.md`
+Applies to: f00.sh, coreutils, clun, trn, cel, heartbox (+ inject Worker for new `*.f00.sh`).
 
-## What you asked for — status
-
-| Requirement | Status |
-|-------------|--------|
-| Visual style of HSB **video** for websites | Done — frames vision-QA'd; verse sky field, blood red, charcoal night |
-| Single CSS for all sites / auto on subdomains | Done — `https://f00.sh/theme/f00-theme.css` + Worker inject on `*.f00.sh` |
-| Heartbox matches video + applied across board | Done — 0.2.1 palette; all ports regenerated |
+## Naming
+User-facing term is **projects** (not products).
+- catalog key: `projects[]`
+- hub nav/section: projects
+- README / AGENTS updated
 
 ## Live
-- https://f00.sh/
+- https://f00.sh/ (projects section)
 - https://f00.sh/theme/f00-theme.css
-- https://heartbox.f00.sh/
-- Issue: https://github.com/f00-sh/f00/issues/1
-
-## Local themes
-Copy from `~/Projects/heartbox/themes/` (ghostty, zed, yazi, noctalia, kitty, neovim, …)
+- project sites load shared theme + theme-color `#2096EE`
