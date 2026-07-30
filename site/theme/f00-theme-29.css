@@ -1,4 +1,5 @@
-/* form-field-fix-v1 */
+/* theme-30 surface system + form-field-fix */
+/* form-field-fix-v1 + surface-v30 */
 /* no-grid-photo-only-v3 silver-lite-1px */
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
    Live: https://f00.sh/theme/f00-theme-26.css
@@ -700,6 +701,80 @@ input[type="url"], input[type="text"], input[type="password"], textarea {
 .panel pre *, .card pre * { color: #EDE6DE !important; }
 
 
-/* f00-theme-21.css form-field-fix-v1 */
+/* f00-theme-21.css form-field-fix-v1 + surface-v30 */
+
+/* f00-theme-29.css */
+
+
+/* ═══ SURFACE SYSTEM (v30) — clun-grade UX on shared shell ═══ */
+:root {
+  --surf-sky-fg: #E8ECF0;
+  --surf-poppy: #C50A1B;
+  --surf-ink: #090909;
+  --surf-cream: #EDE6DE;
+  --surf-night: #050404;
+  --surf-metal: #C8CED4;
+  --surf-sky: #2096EE;
+}
+
+/* port / chip tiles on poppy cards — cream + ink, always */
+a.port, .port, .port-chip, .chip-tile,
+.panel a.port, .card a.port, .poppy-card a.port {
+  display: block !important;
+  background: var(--surf-cream) !important;
+  color: var(--surf-ink) !important;
+  border: 1px solid rgba(9, 9, 9, 0.35) !important;
+  font-family: var(--f00-font-mono) !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  padding: 0.5rem 0.6rem !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+  line-height: 1.25 !important;
+}
+a.port:hover, .port:hover {
+  background: #F5F1EA !important;
+  color: var(--surf-ink) !important;
+  border-color: var(--surf-ink) !important;
+}
+
+/* night panels (install / terminal) */
+.night-panel, .install-block, .install-card, .score-night {
+  background: var(--surf-night) !important;
+  color: var(--surf-cream) !important;
+  border: 1px solid var(--surf-metal) !important;
+}
+.night-panel *, .install-block *:not(a) {
+  color: var(--surf-cream) !important;
+  text-shadow: none !important;
+}
+.night-panel a, .install-block a { color: #4AADF5 !important; }
+
+/* code always night cream */
+pre, pre code {
+  background: var(--surf-night) !important;
+  color: var(--surf-cream) !important;
+}
+
+/* form fields on poppy — cream wells */
+.panel label.field, .card label.field, label.field {
+  display: flex !important;
+  color: var(--surf-ink) !important;
+}
+.panel input, .card input, .panel textarea, .card textarea,
+label.field input, label.field textarea {
+  background: #F2F4F6 !important;
+  color: var(--surf-ink) !important;
+  border: 1px solid var(--surf-metal) !important;
+}
+
+/* ban black-on-black text on poppy cards (generic content) */
+.panel p, .panel li, .panel .hint, .panel .feel-list,
+.card p, .card li, .card .hint {
+  color: var(--surf-ink) !important;
+}
+.panel .panel-head h2, .card h2, .card h3 {
+  color: var(--surf-cream) !important;
+}
 
 /* f00-theme-29.css */
