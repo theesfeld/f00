@@ -120,9 +120,9 @@
   --site-poppy: var(--f00-accent);
   --site-ink: #090909;
   --site-box-text: #090909;
-  --tex-paper: url("https://f00.sh/assets/textures/watercolor-paper.png");
-  --tex-petals: url("https://f00.sh/assets/textures/poppy-petals.png");
-  --tex-foil: url("https://f00.sh/assets/textures/foil-tile.png");
+  --tex-paper: url("https://f00.sh/assets/textures/wc-paper-v2.png");
+  --tex-petals: url("https://f00.sh/assets/textures/petals-v2.png");
+  --tex-foil: url("https://f00.sh/assets/textures/foil-v2.png");
 }
 
 /* ════════ WEBSITE SHELL (all f00 project sites) ════════ */
