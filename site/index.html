@@ -18,8 +18,9 @@
   <link rel="preload" href="/assets/fonts/Onyx.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/assets/fonts/Onyx.otf" as="font" type="font/otf" crossorigin />
   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" data-f00-theme="1" />
-  <link rel="stylesheet" href="styles-25.css?v=26i" />
-  <script src="/theme/f00-entropy.js?v=25" data-f00-entropy-script defer></script>
+  <link rel="stylesheet" href="styles-25.css?v=28" />
+  <script src="/theme/f00-entropy.js?v=26" data-f00-entropy-script defer></script>
+  <script src="/theme/f00-chrome.js?v=4" data-f00-chrome-script defer></script>
   <script type="module" src="throw-plate.js?v=23"></script>
 </head>
 <body>
@@ -30,20 +31,7 @@
     <div class="vignette"></div>
   </div>
 
-  <header class="top">
-    <div class="top-inner">
-      <a class="brand" href="https://f00.sh/" aria-label="f00 home">
-        <span class="brand-mark">f00</span>
-        <span class="brand-sub">.sh</span>
-      </a>
-      <nav class="nav" aria-label="Primary">
-        <a href="#projects">projects</a>
-        <a href="/who">who</a>
-        <a class="nav-donate" data-f00-donate href="https://f00.sh/donate">donate</a>
-        <a href="https://github.com/f00-sh" rel="noopener">github</a>
-      </nav>
-    </div>
-  </header>
+  <div data-f00-chrome="header" data-page="index" data-mode="hub"></div>
 
   <!-- film frame is a direct body child so position:fixed can't be trapped -->
   <div class="splash-frame" id="splash-frame">
@@ -169,12 +157,7 @@
     </section>
   </main>
 
-  <!-- footer-lowercase-f00 sat-r6 build-s9 -->
-  <footer class="foot">
-    <span class="foot-left">© f00 · collective · for love · MIT</span>
-    <a class="foot-center" href="/who">who</a>
-    <a class="foot-stars" href="https://github.com/f00-sh" rel="noopener" data-f00-stars-total>★ …</a>
-  </footer>
+  <div data-f00-chrome="footer" data-page="index" data-mode="hub"></div>
 
   <script src="app.js?v=46" defer></script>
   <script data-f00-stars-script>

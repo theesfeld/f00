@@ -430,7 +430,31 @@ html.logo-docked .splash-wrap.is-film .splash,
 .foot-center {
   justify-self: center;
   text-align: center;
-  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.45rem;
+  white-space: normal;
+  letter-spacing: 0.12em;
+}
+.foot-center .foot-sep {
+  opacity: 0.55;
+  user-select: none;
+}
+.foot-center a[aria-current="page"] {
+  color: #e4e8ed;
+  border-bottom-color: rgba(208, 213, 219, 0.45);
+}
+/* plan page numbered sequence */
+.plan-steps {
+  margin: 0.65rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.plan-steps li {
+  margin: 0.45rem 0;
 }
 .foot-stars {
   justify-self: end;
@@ -441,6 +465,21 @@ html.logo-docked .splash-wrap.is-film .splash,
   color: rgba(208, 213, 219, 0.92) !important;
 }
 .foot-stars:hover { color: #e4e8ed !important; }
+.foot-contact {
+  grid-column: 1 / -1;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.45rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+.foot-contact .foot-sep {
+  opacity: 0.55;
+  user-select: none;
+}
 /* quiet collective give — header nav (hub + every project site) */
 .nav .nav-donate,
 .nav a[data-f00-donate],

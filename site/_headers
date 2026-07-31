@@ -522,6 +522,12 @@
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
 
+/theme/f00-chrome.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: public, max-age=60, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
 # Org-wide Code of Conduct (SSOT for all f00-sh repos).
 /CODE_OF_CONDUCT.md
   Content-Type: text/markdown; charset=utf-8

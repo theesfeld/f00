@@ -243,6 +243,8 @@
    */
   const organicizeText = (el) => {
     if (!el || el.dataset.f00Words === "1") return;
+    /* assessment / form UIs opt out — glyph entropy must not wreck usability */
+    if (el.closest?.("[data-f00-no-press], .f00-no-press")) return;
     if (el.closest?.("code, pre, .btn, a.btn, script, style, .e-rule, .e-frame"))
       return;
     if (el.matches?.("code, pre, .btn, a.btn")) return;
@@ -734,6 +736,7 @@
     });
     eachMatch(sc, typeSel, (el) => {
       if (el.closest?.(".splash-wrap.is-film .splash")) return;
+      if (el.closest?.("[data-f00-no-press], .f00-no-press")) return;
       if (el.classList?.contains("glyph")) return;
       register(el, "type", gainsFor("type"));
     });

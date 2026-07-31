@@ -18,26 +18,14 @@
   <link rel="preload" href="/assets/fonts/Onyx.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/assets/fonts/Onyx.otf" as="font" type="font/otf" crossorigin />
   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" data-f00-theme="1" />
-  <link rel="stylesheet" href="styles-25.css?v=26i" />
-  <script src="/theme/f00-entropy.js?v=25" data-f00-entropy-script defer></script>
+  <link rel="stylesheet" href="styles-25.css?v=28" />
+  <script src="/theme/f00-entropy.js?v=26" data-f00-entropy-script defer></script>
+  <script src="/theme/f00-chrome.js?v=4" data-f00-chrome-script defer></script>
 </head>
 <body class="page-mantra page-who">
   <a class="skip" href="#main">Skip to content</a>
 
-  <header class="top">
-    <div class="top-inner">
-      <a class="brand" href="https://f00.sh/" aria-label="f00 home">
-        <span class="brand-mark">f00</span>
-        <span class="brand-sub">.sh</span>
-      </a>
-      <nav class="nav" aria-label="Primary">
-        <a href="https://f00.sh/#projects">projects</a>
-        <a href="/who" aria-current="page">who</a>
-        <a class="nav-donate" data-f00-donate href="https://f00.sh/donate">donate</a>
-        <a href="https://github.com/f00-sh" rel="noopener">github</a>
-      </nav>
-    </div>
-  </header>
+  <div data-f00-chrome="header" data-page="who" data-mode="hub"></div>
 
   <main id="main" class="mantra">
     <header class="mantra-head section-head">
@@ -47,7 +35,11 @@
         We are a collective of people who build with machines and with
         hands — code, print, sound, film, whatever cuts. Not a company.
         Not a page that loads. A throw of light through imperfect things
-        onto a surface that was never flat. Come unfinished.
+        onto a surface that was never flat. Come unfinished. The full
+        bond — methodology, mindset, how we decide — lives in the
+        <a href="/constitution">constitution</a>.
+        The path toward a formal public-benefit shell is the
+        <a href="/plan">plan</a>.
       </p>
     </header>
 
@@ -222,8 +214,9 @@
           <a href="/ledger">open ledger</a>
           — no payroll, no private books. We are not a registered
           non-profit yet; we are working toward a formal public-benefit
-          shell and will not claim that status until it is true. Until
-          then, and after, the work stands on love alone.
+          shell and will not claim that status until it is true (see the
+          <a href="/plan">plan</a>).
+          Until then, and after, the work stands on love alone.
         </p>
       </article>
 
@@ -261,11 +254,7 @@
     </div>
   </main>
 
-  <footer class="foot">
-    <span class="foot-left"><a href="https://f00.sh/">← f00</a> · who</span>
-    <a class="foot-center" href="/who">who</a>
-    <a class="foot-stars" href="https://github.com/f00-sh" rel="noopener" data-f00-stars-total>★ …</a>
-  </footer>
+  <div data-f00-chrome="footer" data-page="who" data-mode="hub"></div>
 
   <script data-f00-stars-script>
 /* f00 GitHub stars — hub + project footers (also SPA-safe) */

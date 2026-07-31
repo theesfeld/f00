@@ -15,7 +15,8 @@
     "css_canonical": "https://f00.sh/theme/f00-theme.css",
     "css_snapshot_url": "https://f00.sh/theme/f00-theme-34.css",
     "css_path": "site/theme/f00-theme.css",
-    "entropy": "https://f00.sh/theme/f00-entropy.js?v=25",
+    "entropy": "https://f00.sh/theme/f00-entropy.js?v=26",
+    "chrome": "https://f00.sh/theme/f00-chrome.js?v=4",
     "source": "heartbox",
     "source_name": "Heartbox",
     "source_url": "https://heartbox.f00.sh/",
@@ -44,7 +45,9 @@
     "release_to_card": "Only projects with status=released get a hub card. Add/update the project entry here when you ship a release.",
     "license": "Every f00 project is MIT, open source, free to the world — no paywalls, no ownership cosplay. Stewards only.",
     "donate": "https://f00.sh/donate — one collective pool, even split; never per-project. No begging.",
-    "ledger": "https://f00.sh/ledger — fully open books (ledger.json). No payroll. Every movement public."
+    "ledger": "https://f00.sh/ledger — fully open books (ledger.json). No payroll. Every movement public.",
+    "constitution": "https://f00.sh/constitution — living bond: mindset, methodology, stewards, votes, open work (not 'rules').",
+    "plan": "https://f00.sh/plan — public path toward a formal public-benefit shell. Not a registered charity until true."
   },
   "infra": [
     {

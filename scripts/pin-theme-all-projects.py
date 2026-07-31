@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Pin every catalog project's site HTML to the central f00 theme + entropy.
+"""Pin every catalog project's site HTML to central theme + entropy + chrome.
 
-SSOT: site/catalog.json → theme.css / theme.css_canonical
+SSOT: site/catalog.json → theme.css / theme.entropy / theme.chrome
 Live edge also rewrites via workers/theme-inject (*.f00.sh).
 
 Usage (from f00 repo):
@@ -23,7 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "site" / "catalog.json"
 
 DEFAULT_THEME = "https://f00.sh/theme/f00-theme.css"
-DEFAULT_ENTROPY = "https://f00.sh/theme/f00-entropy.js?v=25"
+DEFAULT_ENTROPY = "https://f00.sh/theme/f00-entropy.js?v=26"
+DEFAULT_CHROME = "https://f00.sh/theme/f00-chrome.js?v=1"
 
 THEME_HREF_RE = re.compile(
     r"https?://f00\.sh/theme/f00-theme(?:-\d+)?\.css(?:\?[^\"'\s>]*)?"
@@ -34,13 +35,17 @@ ENTROPY_HREF_RE = re.compile(
     r"https?://f00\.sh/theme/f00-entropy\.js(?:\?v=[^\"'\s>]*)?",
     re.I,
 )
+CHROME_HREF_RE = re.compile(
+    r"https?://f00\.sh/theme/f00-chrome\.js(?:\?v=[^\"'\s>]*)?",
+    re.I,
+)
 HB_SHELL_RE = re.compile(
     r"https?://f00\.sh/theme/(?:pack/|textures/)?hb-shell[^\"'\s>]*\.css",
     re.I,
 )
 
 
-def load_theme_urls() -> tuple[str, str]:
+def load_theme_urls() -> tuple[str, str, str]:
     data = json.loads(CATALOG.read_text(encoding="utf-8"))
     theme = data.get("theme") or {}
     # Prefer unversioned live URL so hub file updates propagate without re-pinning
@@ -55,7 +60,8 @@ def load_theme_urls() -> tuple[str, str]:
         # still ship unversioned live as SSOT; snapshot remains on hub for history
         css = "https://f00.sh/theme/f00-theme.css"
     entropy = theme.get("entropy") or DEFAULT_ENTROPY
-    return css, entropy
+    chrome = theme.get("chrome") or DEFAULT_CHROME
+    return css, entropy, chrome
 
 
 def find_html(repo: Path) -> list[Path]:
@@ -67,13 +73,38 @@ def find_html(repo: Path) -> list[Path]:
     return out
 
 
-def pin_html(path: Path, theme: str, entropy: str, dry: bool) -> bool:
+def _ensure_script(
+    text: str, *, marker: str, tag: str
+) -> str:
+    if marker in text:
+        return text
+    if re.search(r"</body>", text, re.I):
+        return re.sub(
+            r"</body>",
+            f"  {tag}\n</body>",
+            text,
+            count=1,
+            flags=re.I,
+        )
+    if re.search(r"</head>", text, re.I):
+        return re.sub(
+            r"</head>",
+            f"  {tag}\n</head>",
+            text,
+            count=1,
+            flags=re.I,
+        )
+    return text + "\n" + tag + "\n"
+
+
+def pin_html(path: Path, theme: str, entropy: str, chrome: str, dry: bool) -> bool:
     text = path.read_text(encoding="utf-8")
     orig = text
 
     text = THEME_HREF_RE.sub(theme, text)
     text = HB_SHELL_RE.sub(theme, text)
     text = ENTROPY_HREF_RE.sub(entropy, text)
+    text = CHROME_HREF_RE.sub(chrome, text)
 
     theme_link = f'<link rel="stylesheet" href="{theme}" data-f00-theme="1" />'
     if theme not in text and "data-f00-theme" not in text:
@@ -99,25 +130,16 @@ def pin_html(path: Path, theme: str, entropy: str, dry: bool) -> bool:
     entropy_tag = (
         f'<script src="{entropy}" data-f00-entropy-script defer></script>'
     )
-    if "data-f00-entropy-script" not in text:
-        if re.search(r"</body>", text, re.I):
-            text = re.sub(
-                r"</body>",
-                f"  {entropy_tag}\n</body>",
-                text,
-                count=1,
-                flags=re.I,
-            )
-        elif re.search(r"</head>", text, re.I):
-            text = re.sub(
-                r"</head>",
-                f"  {entropy_tag}\n</head>",
-                text,
-                count=1,
-                flags=re.I,
-            )
-        else:
-            text += "\n" + entropy_tag + "\n"
+    text = _ensure_script(
+        text, marker="data-f00-entropy-script", tag=entropy_tag
+    )
+
+    chrome_tag = (
+        f'<script src="{chrome}" data-f00-chrome-script defer></script>'
+    )
+    text = _ensure_script(
+        text, marker="data-f00-chrome-script", tag=chrome_tag
+    )
 
     if text == orig:
         return False
@@ -136,13 +158,14 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    theme, entropy = load_theme_urls()
+    theme, entropy, chrome = load_theme_urls()
     data = json.loads(CATALOG.read_text(encoding="utf-8"))
     projects = data.get("projects") or data.get("products") or []
     root = Path(args.projects_root).expanduser().resolve()
 
     print(f"theme SSOT:   {theme}")
     print(f"entropy SSOT: {entropy}")
+    print(f"chrome SSOT:  {chrome}")
     print(f"projects root: {root}")
 
     changed = 0
@@ -161,7 +184,7 @@ def main() -> int:
             print(f"  skip no html: {repo}")
             continue
         for html in htmls:
-            if pin_html(html, theme, entropy, args.dry_run):
+            if pin_html(html, theme, entropy, chrome, args.dry_run):
                 print(f"  {'would pin' if args.dry_run else 'pinned'}: {html}")
                 changed += 1
             else:
