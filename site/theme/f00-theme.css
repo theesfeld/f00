@@ -1269,3 +1269,135 @@ article.card h3 .e-glyph {
     /* still a unique specimen pose; freeze live optics */
   }
 }
+
+/* ═══ ORGANIC-THROW LAWS (A + E) — analog plate, not digital UI ═══
+ * Digital is the frame only. Hard metal edges. Hospital paper tooth.
+ * Per-domain field seat = different throw of the same organic.
+ */
+
+/* A: kill soft digital cosplay org-wide */
+button, .btn, a.btn, input, textarea, select,
+.card, .panel, .box, .code-window, .term, .install-block,
+pre, code, kbd, .badge, .chip, .tag, .pill,
+[class*="rounded"], .rounded-full, .rounded-xl, .rounded-2xl {
+  border-radius: 0 !important;
+}
+button, .btn, a.btn, .card, .panel {
+  box-shadow: none !important;
+}
+
+/* Paper tooth — multiply fiber on cream plates only */
+.card, article.card, .panel, .box, .feature-card, .doc-card,
+.install-card, .benchmark-card, .tool-card, .release-card {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+}
+.card::after, article.card::after, .panel::after, .box::after,
+.feature-card::after, .doc-card::after {
+  content: "" !important;
+  display: block !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  opacity: 0.09 !important;
+  mix-blend-mode: multiply !important;
+  background-image: var(--tex-wc-a, none) !important;
+  background-size: 280px 280px !important;
+  background-repeat: repeat !important;
+}
+
+/* C: film gate — no IDE title bar furniture */
+.code-window-bar,
+.code-window > .code-window-bar {
+  display: none !important;
+}
+.code-window {
+  background: #050404 !important;
+  border: 1px solid #C8CED4 !important;
+  border-radius: 0 !important;
+}
+/* nested pre inside install-block: no double frame */
+.install-block {
+  background: #050404 !important;
+  border: 1px solid #C8CED4 !important;
+  padding: 0.85rem 1rem !important;
+}
+.install-block pre {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0.35rem 0 !important;
+  margin: 0.25rem 0 !important;
+}
+.install-block > p {
+  color: #8A7874 !important;
+  margin: 0.55rem 0 0.15rem !important;
+  font-family: var(--f00-font-mono) !important;
+  font-size: 0.78rem !important;
+}
+
+/* E: per-domain field seat — same organic, different throw */
+html[data-f00-domain] body {
+  background-position: var(--f00-field-x, 50%) var(--f00-field-y, 50%) !important;
+  background-size: var(--f00-field-size, cover) !important;
+}
+/* lamp falloff — irregular seat, not flat CSS blur filter */
+html[data-f00-domain] body::after {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  opacity: var(--f00-lamp-op, 0.42) !important;
+  mix-blend-mode: multiply !important;
+  background:
+    radial-gradient(
+      ellipse 85% 70% at var(--f00-lamp-x, 48%) var(--f00-lamp-y, 36%),
+      transparent 0%,
+      transparent 38%,
+      rgba(9, 9, 9, 0.22) 62%,
+      rgba(9, 9, 9, 0.55) 100%
+    ) !important;
+}
+
+html[data-f00-domain="hub"] {
+  --f00-field-x: 50%; --f00-field-y: 46%; --f00-field-size: cover;
+  --f00-lamp-x: 48%; --f00-lamp-y: 34%; --f00-lamp-op: 0.38;
+}
+html[data-f00-domain="cel"] {
+  --f00-field-x: 68%; --f00-field-y: 28%; --f00-field-size: 118% auto;
+  --f00-lamp-x: 72%; --f00-lamp-y: 22%; --f00-lamp-op: 0.52;
+}
+html[data-f00-domain="clun"] {
+  --f00-field-x: 32%; --f00-field-y: 58%; --f00-field-size: 112% auto;
+  --f00-lamp-x: 28%; --f00-lamp-y: 62%; --f00-lamp-op: 0.48;
+}
+html[data-f00-domain="f00tils"],
+html[data-f00-domain="coreutils"] {
+  --f00-field-x: 42%; --f00-field-y: 40%; --f00-field-size: 108% auto;
+  --f00-lamp-x: 40%; --f00-lamp-y: 36%; --f00-lamp-op: 0.44;
+}
+html[data-f00-domain="trn"] {
+  --f00-field-x: 58%; --f00-field-y: 62%; --f00-field-size: 115% auto;
+  --f00-lamp-x: 60%; --f00-lamp-y: 68%; --f00-lamp-op: 0.46;
+}
+html[data-f00-domain="heartbox"] {
+  --f00-field-x: 55%; --f00-field-y: 35%; --f00-field-size: cover;
+  --f00-lamp-x: 52%; --f00-lamp-y: 30%; --f00-lamp-op: 0.36;
+}
+html[data-f00-domain="joule"] {
+  --f00-field-x: 25%; --f00-field-y: 48%; --f00-field-size: 120% auto;
+  --f00-lamp-x: 22%; --f00-lamp-y: 50%; --f00-lamp-op: 0.55;
+}
+html[data-f00-domain="throw"] {
+  --f00-field-x: 70%; --f00-field-y: 70%; --f00-field-size: 125% auto;
+  --f00-lamp-x: 75%; --f00-lamp-y: 72%; --f00-lamp-op: 0.5;
+}
+
+/* keep body children above lamp */
+html[data-f00-domain] body > * {
+  position: relative;
+  z-index: 1;
+}

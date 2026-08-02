@@ -40,7 +40,7 @@
   const CONTACT_MAILTO = "mailto:tj@f00.sh";
   const CONTACT_PHONE_DISPLAY = "USA (973) 382-9681";
   const CONTACT_TEL = "tel:+19733829681";
-  const CHROME_HREF = "https://f00.sh/theme/f00-chrome.js?v=4";
+  const CHROME_HREF = "https://f00.sh/theme/f00-chrome.js?v=5";
   const CHROME_MARKER = "data-f00-chrome-script";
 
   /** hostname → project chrome (from catalog domains; Worker has no catalog at parse time) */
@@ -470,9 +470,35 @@
     });
   }
 
+  /**
+   * Per-domain field seat (organic-throw E). Theme CSS keys on html[data-f00-domain].
+   */
+  function applyDomainThrow(doc, loc) {
+    const rootEl =
+      (doc && doc.documentElement) ||
+      (typeof document !== "undefined" ? document.documentElement : null);
+    if (!rootEl || !rootEl.setAttribute) return;
+    const host = String(
+      (loc && loc.hostname) ||
+        (typeof location !== "undefined" ? location.hostname : "") ||
+        ""
+    )
+      .toLowerCase()
+      .replace(/\.$/, "");
+    let domain = "hub";
+    if (host === "f00.sh" || host === "www.f00.sh" || host === "") {
+      domain = "hub";
+    } else if (host.endsWith(".f00.sh")) {
+      domain = host.slice(0, -".f00.sh".length) || "hub";
+      if (domain === "coreutils") domain = "f00tils";
+    }
+    rootEl.setAttribute("data-f00-domain", domain);
+  }
+
   function bootstrap(doc) {
     const root = doc || (typeof document !== "undefined" ? document : null);
     if (!root) return;
+    applyDomainThrow(root);
     if (root.querySelector && root.querySelector("[data-f00-chrome]")) {
       mountAll(root);
     }
@@ -536,6 +562,7 @@
     ensureContactHtml,
     replaceSiteChrome,
     chromeIsHealthy,
+    applyDomainThrow,
     bootstrap,
     watchSpa,
     mountAll,

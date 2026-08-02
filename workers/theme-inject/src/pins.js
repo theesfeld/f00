@@ -3,7 +3,7 @@
  */
 export const THEME_HREF = "https://f00.sh/theme/f00-theme.css";
 export const ENTROPY_HREF = "https://f00.sh/theme/f00-entropy.js?v=26";
-export const CHROME_HREF = "https://f00.sh/theme/f00-chrome.js?v=4";
+export const CHROME_HREF = "https://f00.sh/theme/f00-chrome.js?v=5";
 export const CHROME_MARKER = "data-f00-chrome-script";
 
 const THEME_LINK = `<link rel="stylesheet" href="${THEME_HREF}" data-f00-theme="1" />`;
