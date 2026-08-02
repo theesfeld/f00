@@ -1337,63 +1337,155 @@ button, .btn, a.btn, .card, .panel {
   font-size: 0.78rem !important;
 }
 
-/* E: per-domain field seat — same organic, different throw */
-html[data-f00-domain] body {
-  background-position: var(--f00-field-x, 50%) var(--f00-field-y, 50%) !important;
+/* E: field throws
+ *   hub     = poppy x-ray still (photographic specimen)
+ *   projects = Technicolor bloom blue (textured dye sky — not the wallpaper)
+ */
+html[data-f00-domain] {
+  --f00-lamp-x: 48%;
+  --f00-lamp-y: 34%;
+  --f00-lamp-op: 0.4;
+  --f00-blue-deep: #062a5c;
+  --f00-blue-mid: #0d4a96;
+  --f00-blue-sky: #1e78c8;
+  --f00-blue-hot: #2a7fd4;
+  --tex-fiber: url("https://f00.sh/theme/textures/paper-fiber-v1.webp");
+  --tex-wash-blue: url("https://f00.sh/theme/textures/hb-wash-a-q9.webp");
+}
+
+/* hub: keep photo field + seat */
+html[data-f00-domain="hub"] body {
+  background-position: var(--f00-field-x, 50%) var(--f00-field-y, 46%) !important;
   background-size: var(--f00-field-size, cover) !important;
 }
-/* lamp falloff — irregular seat, not flat CSS blur filter */
-html[data-f00-domain] body::after {
+html[data-f00-domain="hub"] {
+  --f00-field-x: 50%;
+  --f00-field-y: 46%;
+  --f00-field-size: cover;
+  --f00-lamp-x: 48%;
+  --f00-lamp-y: 34%;
+  --f00-lamp-op: 0.38;
+}
+html[data-f00-domain="hub"] body::after {
   content: "" !important;
   display: block !important;
   position: fixed !important;
   inset: 0 !important;
   z-index: 0 !important;
   pointer-events: none !important;
-  opacity: var(--f00-lamp-op, 0.42) !important;
+  opacity: var(--f00-lamp-op, 0.38) !important;
   mix-blend-mode: multiply !important;
-  background:
-    radial-gradient(
-      ellipse 85% 70% at var(--f00-lamp-x, 48%) var(--f00-lamp-y, 36%),
-      transparent 0%,
-      transparent 38%,
-      rgba(9, 9, 9, 0.22) 62%,
-      rgba(9, 9, 9, 0.55) 100%
-    ) !important;
+  background: radial-gradient(
+    ellipse 85% 70% at var(--f00-lamp-x, 48%) var(--f00-lamp-y, 36%),
+    transparent 0%,
+    transparent 38%,
+    rgba(9, 9, 9, 0.22) 62%,
+    rgba(9, 9, 9, 0.55) 100%
+  ) !important;
 }
 
-html[data-f00-domain="hub"] {
-  --f00-field-x: 50%; --f00-field-y: 46%; --f00-field-size: cover;
-  --f00-lamp-x: 48%; --f00-lamp-y: 34%; --f00-lamp-op: 0.38;
+/* projects: NO poppy wallpaper — saturated bloomed Technicolor cobalt */
+html[data-f00-domain]:not([data-f00-domain="hub"]) body {
+  background-color: var(--f00-blue-deep) !important;
+  background-image:
+    radial-gradient(
+      ellipse 110% 85% at var(--f00-lamp-x, 42%) var(--f00-lamp-y, 28%),
+      rgba(120, 190, 255, 0.72) 0%,
+      rgba(45, 130, 220, 0.38) 32%,
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at 88% 78%,
+      rgba(15, 55, 130, 0.95) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 12% 88%,
+      rgba(200, 90, 40, 0.12) 0%,
+      transparent 50%
+    ),
+    linear-gradient(
+      158deg,
+      var(--f00-blue-hot) 0%,
+      var(--f00-blue-sky) 28%,
+      var(--f00-blue-mid) 58%,
+      var(--f00-blue-deep) 100%
+    ),
+    var(--tex-fiber),
+    var(--tex-wash-blue) !important;
+  background-size:
+    cover,
+    cover,
+    cover,
+    cover,
+    420px 420px,
+    680px 680px !important;
+  background-position:
+    var(--f00-lamp-x, 42%) var(--f00-lamp-y, 28%),
+    88% 78%,
+    12% 88%,
+    center,
+    0 0,
+    20% 30% !important;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat !important;
+  background-attachment: fixed !important;
+  background-blend-mode: screen, multiply, soft-light, normal, soft-light, overlay !important;
 }
+
+/* project lamp — bloom, not black crush */
+html[data-f00-domain]:not([data-f00-domain="hub"]) body::after {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  opacity: var(--f00-lamp-op, 0.4) !important;
+  mix-blend-mode: soft-light !important;
+  background: radial-gradient(
+    ellipse 90% 75% at var(--f00-lamp-x, 42%) var(--f00-lamp-y, 28%),
+    rgba(180, 220, 255, 0.35) 0%,
+    transparent 45%,
+    rgba(5, 25, 60, 0.45) 100%
+  ) !important;
+}
+
+/* per-project lamp seats (same blue species, different specimen) */
 html[data-f00-domain="cel"] {
-  --f00-field-x: 68%; --f00-field-y: 28%; --f00-field-size: 118% auto;
-  --f00-lamp-x: 72%; --f00-lamp-y: 22%; --f00-lamp-op: 0.52;
+  --f00-lamp-x: 72%;
+  --f00-lamp-y: 22%;
+  --f00-lamp-op: 0.48;
 }
 html[data-f00-domain="clun"] {
-  --f00-field-x: 32%; --f00-field-y: 58%; --f00-field-size: 112% auto;
-  --f00-lamp-x: 28%; --f00-lamp-y: 62%; --f00-lamp-op: 0.48;
+  --f00-lamp-x: 28%;
+  --f00-lamp-y: 62%;
+  --f00-lamp-op: 0.44;
 }
 html[data-f00-domain="f00tils"],
 html[data-f00-domain="coreutils"] {
-  --f00-field-x: 42%; --f00-field-y: 40%; --f00-field-size: 108% auto;
-  --f00-lamp-x: 40%; --f00-lamp-y: 36%; --f00-lamp-op: 0.44;
+  --f00-lamp-x: 40%;
+  --f00-lamp-y: 36%;
+  --f00-lamp-op: 0.42;
 }
 html[data-f00-domain="trn"] {
-  --f00-field-x: 58%; --f00-field-y: 62%; --f00-field-size: 115% auto;
-  --f00-lamp-x: 60%; --f00-lamp-y: 68%; --f00-lamp-op: 0.46;
+  --f00-lamp-x: 60%;
+  --f00-lamp-y: 68%;
+  --f00-lamp-op: 0.45;
 }
 html[data-f00-domain="heartbox"] {
-  --f00-field-x: 55%; --f00-field-y: 35%; --f00-field-size: cover;
-  --f00-lamp-x: 52%; --f00-lamp-y: 30%; --f00-lamp-op: 0.36;
+  --f00-lamp-x: 52%;
+  --f00-lamp-y: 30%;
+  --f00-lamp-op: 0.36;
 }
 html[data-f00-domain="joule"] {
-  --f00-field-x: 25%; --f00-field-y: 48%; --f00-field-size: 120% auto;
-  --f00-lamp-x: 22%; --f00-lamp-y: 50%; --f00-lamp-op: 0.55;
+  --f00-lamp-x: 22%;
+  --f00-lamp-y: 50%;
+  --f00-lamp-op: 0.5;
 }
 html[data-f00-domain="throw"] {
-  --f00-field-x: 70%; --f00-field-y: 70%; --f00-field-size: 125% auto;
-  --f00-lamp-x: 75%; --f00-lamp-y: 72%; --f00-lamp-op: 0.5;
+  --f00-lamp-x: 75%;
+  --f00-lamp-y: 72%;
+  --f00-lamp-op: 0.47;
 }
 
 /* keep body children above lamp */
