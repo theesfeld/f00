@@ -685,45 +685,144 @@ header, .site-header, .top, .nav-shell, .header-inner {
 }
 
 
-/* CODE — black panels, mono, cream (never inherit card black-ink) */
-pre, pre code, .code, .code-block, .highlight, .hljs,
-.panel pre, .card pre, .box pre, .docs-list pre, .howto pre {
-  background: #050404 !important;
-  color: #EDE6DE !important;
+/*
+ * CODE BLOCKS — night film gate, Heartbox dye on the emulsion.
+ * Surface: pure black #050404 · cream light #EDE6DE · metal edge.
+ * Syntax: Heartbox palette (sky / poppy / ochre / pink / stem / dust) —
+ * not greyscale IDE chrome. Tokens are dye, not “highlight colors.”
+ */
+:root {
+  --f00-syn-fg: #EDE6DE;
+  --f00-syn-comment: #8A7874;
+  --f00-syn-keyword: #C47A72;
+  --f00-syn-string: #C49A3C;
+  --f00-syn-number: #C45A20;
+  --f00-syn-fn: #1E78C8;
+  --f00-syn-fn-bright: #3A94D8;
+  --f00-syn-type: #3A94D8;
+  --f00-syn-const: #454B93;
+  --f00-syn-prop: #3D8A48;
+  --f00-syn-punct: #B8BEC2;
+  --f00-syn-accent: #D44A18;
+  --f00-syn-title: #8A2810;
+}
+
+pre, pre.code, pre.cmd, pre.install-cmd,
+.code, .code-block, .highlight, .hljs,
+.install-block, .install-block pre,
+.panel pre, .card pre, .box pre,
+.docs-list pre, .howto pre,
+[class*="install"] pre, pre[class*="cmd"] {
+  background: var(--f00-code-bg, #050404) !important;
+  color: var(--f00-syn-fg) !important;
   border: 1px solid #C8CED4 !important;
   border-radius: 0 !important;
   font-family: var(--f00-font-mono) !important;
   font-size: 0.88rem !important;
-  line-height: 1.5 !important;
+  line-height: 1.55 !important;
   padding: 0.85rem 1rem !important;
   overflow-x: auto !important;
   text-shadow: none !important;
   font-weight: 400 !important;
+  white-space: pre !important;
 }
-pre code, .card pre code, .panel pre code {
+
+/* nested <code> inside a night block — transparent well, inherits dye */
+pre code, .code-block code, .highlight code, .hljs code,
+.card pre code, .panel pre code, .box pre code,
+.install-block pre code, pre.cmd code, pre.install-cmd code {
   background: transparent !important;
-  color: #EDE6DE !important;
+  color: inherit !important;
   border: 0 !important;
   padding: 0 !important;
   font-family: inherit !important;
+  white-space: inherit !important;
 }
-code:not(pre code), kbd {
+
+/* inline code on sky / outside cream cards */
+code:not(pre code), kbd, samp {
   background: rgba(9, 9, 9, 0.55) !important;
-  color: #EDE6DE !important;
+  color: var(--f00-syn-fg) !important;
   border-radius: 0 !important;
   font-family: var(--f00-font-mono) !important;
   padding: 0.1em 0.35em !important;
   text-shadow: none !important;
 }
-.card code:not(pre code), .panel code:not(pre code), .box code:not(pre code) {
+
+/* inline code on hospital cream paper — poppy ink, not night chip */
+.card code:not(pre code),
+.panel code:not(pre code),
+.box code:not(pre code),
+.howto code:not(pre code) {
   background: rgba(212, 74, 24, 0.12) !important;
-  color: #8A2810 !important;
+  color: var(--f00-syn-title) !important;
 }
-.card pre, .panel pre, .box pre,
-.card pre code, .panel pre code, .box pre code {
-  background: #050404 !important;
-  color: #EDE6DE !important;
+
+/* ── Heartbox syntax dye (token spans inside night blocks) ── */
+pre .tok-key, pre .tok-keyword, .tok-key, .tok-keyword,
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section,
+.hljs-link, .language-javascript .hljs-keyword {
+  color: var(--f00-syn-keyword) !important;
+}
+pre .tok-str, pre .tok-string, .tok-str, .tok-string,
+.hljs-string, .hljs-doctag, .hljs-regexp, .hljs-template-tag {
+  color: var(--f00-syn-string) !important;
+}
+pre .tok-num, pre .tok-number, .tok-num, .tok-number,
+.hljs-number, .hljs-bullet {
+  color: var(--f00-syn-number) !important;
+}
+pre .tok-type, pre .tok-class, .tok-type, .tok-class,
+.hljs-type, .hljs-class .hljs-title, .hljs-title.class_ {
+  color: var(--f00-syn-type) !important;
+}
+pre .tok-fn, pre .tok-function, .tok-fn, .tok-function,
+.hljs-title, .hljs-title.function_, .hljs-function {
+  color: var(--f00-syn-fn) !important;
+}
+pre .tok-prop, pre .tok-attr, .tok-prop, .tok-attr,
+.hljs-attr, .hljs-attribute, .hljs-property, .hljs-variable {
+  color: var(--f00-syn-prop) !important;
+}
+pre .tok-const, pre .tok-builtin, .tok-const, .tok-builtin,
+.hljs-built_in, .hljs-params {
+  color: var(--f00-syn-const) !important;
+}
+pre .tok-comment, .tok-comment, .hljs-comment, .hljs-quote, .hljs-meta {
+  color: var(--f00-syn-comment) !important;
+  font-style: italic;
+}
+pre .tok-punct, .tok-punct, .hljs-punctuation, .hljs-operator {
+  color: var(--f00-syn-punct) !important;
+}
+/* install / path accents — verse sky */
+.install-block code:not(pre code),
+.install-block a code,
+pre .tok-path, .tok-path {
+  color: var(--f00-syn-fn-bright) !important;
+  background: transparent !important;
+}
+
+/* f00tils terminal sample dye (map ANSI toys → Heartbox) */
+.term-body .c, .term-body .comment { color: var(--f00-syn-comment) !important; }
+.term-body .w, .term-body .fg { color: var(--f00-syn-fg) !important; }
+.term-body .d, .term-body .dim { color: var(--f00-syn-punct) !important; }
+.term-body .y, .term-body .string { color: var(--f00-syn-string) !important; }
+.term-body .x, .term-body .num { color: var(--f00-syn-number) !important; }
+.term-body .g, .term-body .ok { color: var(--f00-syn-prop) !important; }
+.term-body .m, .term-body .kw { color: var(--f00-syn-keyword) !important; }
+.term-body .cy, .term-body .fn { color: var(--f00-syn-fn) !important; }
+.term-body .jk, .term-body .const { color: var(--f00-syn-const) !important; }
+.term-body .js, .term-body .accent { color: var(--f00-syn-accent) !important; }
+.term-body .jn { color: var(--f00-syn-fn-bright) !important; }
+
+/* night wells never paint pure white */
+pre *, .code-block *, .install-block *, .hljs * {
   text-shadow: none !important;
+}
+/* default untokenized text inside pre stays cream; tokens override above */
+pre, .code-block, .install-block {
+  color: var(--f00-syn-fg) !important;
 }
 
 
@@ -818,12 +917,12 @@ input[type="url"], input[type="text"], input[type="password"], textarea {
 .panel .box, .card .box, .panel .nested, .panel > div:not(.panel-head) {
   color: #D44A18 !important;
 }
-/* black install/code surfaces keep cream text */
+/* black install/code surfaces — night gate; syntax dye allowed on tokens */
 .panel pre, .card pre, .install-block, .code-block, [class*="install"] pre {
-  background: #050404 !important;
-  color: #EDE6DE !important;
+  background: var(--f00-code-bg, #050404) !important;
+  color: var(--f00-syn-fg, #EDE6DE) !important;
 }
-.panel pre *, .card pre * { color: #EDE6DE !important; }
+/* do NOT flatten token colors with pre * { cream } — Heartbox dye must show */
 
 
 /* f00-theme-21.css form-field-fix-v1 + surface-v30 */
