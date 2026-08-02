@@ -35,7 +35,7 @@
     "layout": "bleach",
     "contrast": "heart-shaped-box",
     "css_snapshot": "site/theme/f00-theme-34.css",
-    "palette_version": "0.3.1"
+    "palette_version": "0.4.0"
   },
   "domains": {
     "hub": "f00.sh",
@@ -43,11 +43,11 @@
   },
   "laws": {
     "release_to_card": "Only projects with status=released get a hub card. Add/update the project entry here when you ship a release.",
-    "license": "Every f00 project is MIT, open source, free to the world — no paywalls, no ownership cosplay. Stewards only.",
-    "donate": "https://f00.sh/donate — one collective pool, even split; never per-project. No begging.",
-    "ledger": "https://f00.sh/ledger — fully open books (ledger.json). No payroll. Every movement public.",
-    "constitution": "https://f00.sh/constitution — living bond: mindset, methodology, stewards, votes, open work (not 'rules').",
-    "plan": "https://f00.sh/plan — public path toward a formal public-benefit shell. Not a registered charity until true."
+    "license": "Every f00 project is MIT, open source, free to the world \u2014 no paywalls, no ownership cosplay. Stewards only.",
+    "donate": "https://f00.sh/donate \u2014 one collective pool, even split; never per-project. No begging.",
+    "ledger": "https://f00.sh/ledger \u2014 fully open books (ledger.json). No payroll. Every movement public.",
+    "constitution": "https://f00.sh/constitution \u2014 living bond: mindset, methodology, stewards, votes, open work (not 'rules').",
+    "plan": "https://f00.sh/plan \u2014 public path toward a formal public-benefit shell. Not a registered charity until true."
   },
   "infra": [
     {
@@ -205,9 +205,9 @@
       "packages": null,
       "local": "joule",
       "license": "MIT",
-      "one_liner": "Distributed GPU cluster — idle cards into open-weight AI inference",
+      "one_liner": "Distributed GPU cluster \u2014 idle cards into open-weight AI inference",
       "docs": "https://joule.f00.sh/",
-      "blurb": "Pool idle GPUs into a volunteer supercomputer for open-weight inference (Kimi-class). Donate compute, earn millijoules, burn them for API access. Live capacity dashboard. Public pool is free — pay in cycles, not cash.",
+      "blurb": "Pool idle GPUs into a volunteer supercomputer for open-weight inference (Kimi-class). Donate compute, earn millijoules, burn them for API access. Live capacity dashboard. Public pool is free \u2014 pay in cycles, not cash.",
       "facts": [
         "native agent \u00b7 millijoule economy",
         "OpenAI-compatible gateway \u00b7 MIT"
