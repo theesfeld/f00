@@ -2,7 +2,7 @@
  * Pure HTML pin helpers for f00-theme-inject (unit-testable, no fetch).
  */
 export const THEME_HREF = "https://f00.sh/theme/f00-theme.css";
-export const ENTROPY_HREF = "https://f00.sh/theme/f00-entropy.js?v=26";
+export const ENTROPY_HREF = "https://f00.sh/theme/f00-entropy.js?v=27";
 export const CHROME_HREF = "https://f00.sh/theme/f00-chrome.js?v=5";
 export const CHROME_MARKER = "data-f00-chrome-script";
 
@@ -11,6 +11,32 @@ const ENTROPY_SCRIPT =
   `<script src="${ENTROPY_HREF}" data-f00-entropy-script defer></` + `script>`;
 const CHROME_SCRIPT =
   `<script src="${CHROME_HREF}" data-f00-chrome-script defer></` + `script>`;
+
+/**
+ * Stamp data-f00-domain on <html> so project-readable CSS applies without FOUC.
+ * hub: f00.sh / www.f00.sh · project: every other *.f00.sh subdomain.
+ * @param {string} html
+ * @param {string} [hostname]
+ */
+export function pinDomain(html, hostname) {
+  if (typeof html !== "string") return html;
+  if (/data-f00-domain\s*=/.test(html)) return html;
+  const host = String(hostname || "")
+    .toLowerCase()
+    .replace(/\.$/, "");
+  let domain = "hub";
+  if (host === "f00.sh" || host === "www.f00.sh" || host === "") {
+    domain = "hub";
+  } else if (host.endsWith(".f00.sh")) {
+    domain = host.slice(0, -".f00.sh".length) || "hub";
+    if (domain === "coreutils") domain = "f00tils";
+  }
+  if (!/<html\b/i.test(html)) return html;
+  return html.replace(/<html\b([^>]*)>/i, (m, attrs) => {
+    if (/data-f00-domain\s*=/.test(attrs || "")) return m;
+    return `<html${attrs || ""} data-f00-domain="${domain}">`;
+  });
+}
 
 export function pinTheme(html) {
   html = html.replace(

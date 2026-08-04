@@ -14,7 +14,7 @@ const root = join(__dirname, "..");
 const require = createRequire(import.meta.url);
 
 const chrome = require(join(root, "site/theme/f00-chrome.js"));
-const { pinChrome, CHROME_HREF, CHROME_MARKER } = await import(
+const { pinChrome, pinDomain, CHROME_HREF, CHROME_MARKER } = await import(
   join(root, "workers/theme-inject/src/pins.js")
 );
 
@@ -134,6 +134,18 @@ test("hub and project footers never claim copyright", () => {
   assert.doesNotMatch(proj, /©|copyright/i);
   assert.match(hub, /collective · for love · MIT/);
   assert.match(proj, /← f00/);
+});
+
+test("pinDomain stamps hub vs project data-f00-domain without FOUC", () => {
+  const bare = "<!doctype html><html lang=\"en\"><head></head><body></body></html>";
+  const hub = pinDomain(bare, "f00.sh");
+  assert.match(hub, /data-f00-domain="hub"/);
+  const proj = pinDomain(bare, "coreutils.f00.sh");
+  assert.match(proj, /data-f00-domain="f00tils"/);
+  const clun = pinDomain(bare, "clun.f00.sh");
+  assert.match(clun, /data-f00-domain="clun"/);
+  // idempotent
+  assert.equal(pinDomain(hub, "f00.sh"), hub);
 });
 
 test("pinChrome injects once; no duplicate when marker present", () => {

@@ -1,14 +1,14 @@
-/* theme-34 poppy-xray field · cream hospital boxes · cool silver · photo-locked palette */
+/* theme-35 hub organic cream · project readable night plates · photo/blue field */
 /* form-field-fix-v1 + surface-v30 */
 /* no-grid-photo-only-v3 silver-lite-1px */
 /* f00 SHARED THEME — ONE CSS for ALL *.f00.sh websites
-   Live: https://f00.sh/theme/f00-theme-34.css
+   Live: https://f00.sh/theme/f00-theme.css
 
-   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme-34.css" />
+   <link rel="stylesheet" href="https://f00.sh/theme/f00-theme.css" />
 
-   Heartbox v0.3.1 (poppy-xray organics · hospital cream · photo-locked tokens)
-   Website shell: organic poppy-xray photo field + cool silver chrome
-   Project cards: hospital cream paper · poppy Onyx type · 2px metal
+   Heartbox palette (poppy · sky · cream · metal)
+   Hub (data-f00-domain=hub): organic cream hospital boxes + photo field
+   Projects (*.f00.sh): blue field + solid night plates (readable, no cream paper)
    Project CSS = layout/structure only.
 
    Textures: https://f00.sh/theme/textures/
@@ -1493,4 +1493,347 @@ html[data-f00-domain="throw"] {
 html[data-f00-domain] body > * {
   position: relative;
   z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PROJECT SURFACES (readable) — hub stays organic cream 100%
+   Scoped: html[data-f00-domain]:not([data-f00-domain="hub"])
+   Blue field + palette stay. Cards/panels/chips drop cream paper,
+   watercolor wash, organic frames. Solid night plates + cream type.
+   ═══════════════════════════════════════════════════════════════ */
+html[data-f00-domain]:not([data-f00-domain="hub"]) {
+  --proj-plate: #0A1528;
+  --proj-plate-elev: #121E36;
+  --proj-ink: #EDE6DE;
+  --proj-ink-dim: rgba(237, 230, 222, 0.82);
+  --proj-metal: #C5CCD4;
+  --proj-link: #7EC8F8;
+  --proj-poppy: #E03818;
+}
+
+/* solid plates — no hospital cream, no watercolor tooth */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .f00-box,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .feature-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .doc-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .install-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .benchmark-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .tool-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .release-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .score-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .result-card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .howto,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .docs-list,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .announcement,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .status,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .field-group,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .shell > .panel,
+html[data-f00-domain]:not([data-f00-domain="hub"]) section.panel {
+  background: var(--proj-plate) !important;
+  background-color: var(--proj-plate) !important;
+  background-image: none !important;
+  color: var(--proj-ink) !important;
+  border: 1px solid var(--proj-metal) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  text-shadow: none !important;
+  font-weight: 500 !important;
+  filter: none !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  opacity: 1 !important;
+}
+
+/* kill cream wash / fiber layers on project plates */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card::after,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card::after,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel::after,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box::after,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .f00-box::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .f00-box::after,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .feature-card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .feature-card::after,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .doc-card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .doc-card::after,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .install-card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .benchmark-card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .tool-card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .release-card::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .announcement::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-frame-host::before,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-frame-host::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+/* organic SVG cream frames — gone on project plates */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-frame,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-frame-host > .e-frame {
+  display: none !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-frame-host,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card.e-frame-host,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card.e-frame-host,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel.e-frame-host,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box.e-frame-host,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .f00-box.e-frame-host {
+  background: var(--proj-plate) !important;
+  background-color: var(--proj-plate) !important;
+  background-image: none !important;
+  border: 1px solid var(--proj-metal) !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  filter: none !important;
+}
+
+/* beat entropy specimen cream tint on .f00-proj plates */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .f00-box.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .feature-card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .doc-card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .install-card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .benchmark-card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .tool-card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .release-card.f00-proj,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .announcement.f00-proj {
+  background: var(--proj-plate) !important;
+  background-color: var(--proj-plate) !important;
+  opacity: 1 !important;
+}
+
+/* plate type — cream on night, no poppy-on-cream, no soft cream shadow */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .f00-box,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card {
+  color: var(--proj-ink) !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card p,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel p,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box p,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card li,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel li,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .mono,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .mono,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card-meta,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .facts,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .facts li,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card strong,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel strong,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card span,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel span,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .hint,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .feel-list,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .hint,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel label,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card label,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box label,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .toggle,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .howto,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .howto,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .docs-list,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .docs-list,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .muted,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .muted {
+  color: var(--proj-ink) !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card-meta,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .muted,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .hint,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .hint {
+  color: var(--proj-ink-dim) !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card h1,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card h2,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card h3,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card h4,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel h1,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel h2,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel h3,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel h4,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box h1,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box h2,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box h3,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card h3,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .panel-head h2 {
+  color: var(--proj-ink) !important;
+  text-shadow: none !important;
+  border-bottom: 1px solid rgba(197, 204, 212, 0.45) !important;
+  padding-bottom: 0.45rem;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card a:not(.btn):not(.port),
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel a:not(.btn):not(.port),
+html[data-f00-domain]:not([data-f00-domain="hub"]) .docs-list a {
+  color: var(--proj-link) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600 !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .facts li::before {
+  color: var(--proj-metal) !important;
+}
+
+/* inline code on dark plates */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card code:not(pre code),
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel code:not(pre code),
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box code:not(pre code) {
+  background: rgba(237, 230, 222, 0.1) !important;
+  color: #F0C8A0 !important;
+  text-shadow: none !important;
+}
+
+/* buttons — always readable (never light-on-light / hover-only ink) */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn,
+html[data-f00-domain]:not([data-f00-domain="hub"]) button.btn,
+html[data-f00-domain]:not([data-f00-domain="hub"]) a.btn,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn-primary,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn-ghost,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn-sm,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .copy-btn {
+  color: var(--proj-ink) !important;
+  background: var(--proj-plate-elev) !important;
+  border: 1px solid var(--proj-metal) !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn:hover,
+html[data-f00-domain]:not([data-f00-domain="hub"]) a.btn:hover,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .copy-btn:hover {
+  background: rgba(30, 138, 232, 0.45) !important;
+  border-color: #EDE6DE !important;
+  color: #FFFFFF !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn.primary,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn-primary,
+html[data-f00-domain]:not([data-f00-domain="hub"]) a.btn.primary {
+  background: var(--proj-poppy) !important;
+  border-color: var(--proj-poppy) !important;
+  color: #EDE6DE !important;
+  font-weight: 700 !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn.primary:hover,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .btn-primary:hover {
+  background: #F05028 !important;
+  border-color: #F05028 !important;
+  color: #FFFFFF !important;
+}
+/* buttons on plates — same solid contrast, not silver wash */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .btn,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .btn,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .box .btn,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card .btn {
+  border: 1px solid var(--proj-metal) !important;
+  color: var(--proj-ink) !important;
+  background: var(--proj-plate-elev) !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .btn.primary,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .btn.primary,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .btn-primary,
+html[data-f00-domain]:not([data-f00-domain="hub"]) article.card .btn.primary {
+  background: var(--proj-poppy) !important;
+  color: #EDE6DE !important;
+  border-color: var(--proj-poppy) !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .btn:hover,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel .btn:hover {
+  background: rgba(30, 138, 232, 0.45) !important;
+  color: #FFFFFF !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card .btn.primary:hover {
+  background: #F05028 !important;
+  color: #FFFFFF !important;
+}
+
+/* little square chips / ports / tiles — never cream-on-cream */
+html[data-f00-domain]:not([data-f00-domain="hub"]) a.port,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .port,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .port-chip,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .chip-tile,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel a.port,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card a.port,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .poppy-card a.port,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .hero-pkg-tile {
+  display: block !important;
+  background: var(--proj-plate-elev) !important;
+  color: var(--proj-ink) !important;
+  border: 1px solid var(--proj-metal) !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) a.port:hover,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .port:hover,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .hero-pkg-tile:hover {
+  background: rgba(30, 138, 232, 0.4) !important;
+  color: #FFFFFF !important;
+  border-color: #EDE6DE !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .hero-pkg-name,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .hero-pkg-meta {
+  color: var(--proj-ink-dim) !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .hero-pkg-wall {
+  color: var(--proj-poppy) !important;
+}
+
+/* form fields on dark plates — light wells, dark ink */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel input,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card input,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .panel textarea,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .card textarea,
+html[data-f00-domain]:not([data-f00-domain="hub"]) label.field input,
+html[data-f00-domain]:not([data-f00-domain="hub"]) label.field textarea,
+html[data-f00-domain]:not([data-f00-domain="hub"]) input,
+html[data-f00-domain]:not([data-f00-domain="hub"]) textarea,
+html[data-f00-domain]:not([data-f00-domain="hub"]) select {
+  background: #EDE6DE !important;
+  color: #090909 !important;
+  border: 1px solid var(--proj-metal) !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) input::placeholder,
+html[data-f00-domain]:not([data-f00-domain="hub"]) textarea::placeholder {
+  color: rgba(9, 9, 9, 0.45) !important;
+}
+
+/* letterpress glyph entropy — flat readable type on projects */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-glyph,
+html[data-f00-domain]:not([data-f00-domain="hub"]) span.e-glyph,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-word,
+html[data-f00-domain]:not([data-f00-domain="hub"]) span.e-word {
+  transform: none !important;
+  opacity: 1 !important;
+  letter-spacing: inherit !important;
+}
+html[data-f00-domain]:not([data-f00-domain="hub"]) .e-text {
+  letter-spacing: var(--f00-tracking-body, 0.02em) !important;
+  word-spacing: normal !important;
+  line-height: 1.55 !important;
+}
+
+/* install / code stay night cream (already correct species) */
+html[data-f00-domain]:not([data-f00-domain="hub"]) .install-block,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .night-panel,
+html[data-f00-domain]:not([data-f00-domain="hub"]) pre,
+html[data-f00-domain]:not([data-f00-domain="hub"]) .code-window {
+  background: #0A101C !important;
+  color: #EDE6DE !important;
+  border-color: var(--proj-metal) !important;
 }

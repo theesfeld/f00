@@ -14,6 +14,35 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const root = document.documentElement;
 
+  /**
+   * Hub keeps full organic cream frames + letterpress.
+   * Project subdomains (*.f00.sh) get readable plates only — no cream frames.
+   */
+  const host = String(location.hostname || "")
+    .toLowerCase()
+    .replace(/\.$/, "");
+  const isHubHost =
+    host === "f00.sh" ||
+    host === "www.f00.sh" ||
+    host === "" ||
+    host === "localhost" ||
+    host === "127.0.0.1";
+  const isProjectHost = host.endsWith(".f00.sh") && host !== "www.f00.sh";
+  /* ensure theme CSS can key before chrome runs */
+  if (!root.getAttribute("data-f00-domain")) {
+    if (isProjectHost) {
+      let domain = host.slice(0, -".f00.sh".length) || "project";
+      if (domain === "coreutils") domain = "f00tils";
+      root.setAttribute("data-f00-domain", domain);
+    } else if (isHubHost) {
+      root.setAttribute("data-f00-domain", "hub");
+    }
+  }
+  const isProject =
+    isProjectHost ||
+    (root.getAttribute("data-f00-domain") &&
+      root.getAttribute("data-f00-domain") !== "hub");
+
   const throwSalt = (() => {
     try {
       const a = new Uint32Array(2);
@@ -243,6 +272,8 @@
    */
   const organicizeText = (el) => {
     if (!el || el.dataset.f00Words === "1") return;
+    /* project docs: keep type readable — no letterpress glyph splits */
+    if (isProject) return;
     /* assessment / form UIs opt out — glyph entropy must not wreck usability */
     if (el.closest?.("[data-f00-no-press], .f00-no-press")) return;
     if (el.closest?.("code, pre, .btn, a.btn, script, style, .e-rule, .e-frame"))
@@ -505,6 +536,8 @@
   };
 
   const attachFrame = (el) => {
+    /* project sites: no organic cream SVG plates — CSS solid plates only */
+    if (isProject) return;
     if (!el || el.dataset.f00Frame === "1") return;
     el.dataset.f00Frame = "1";
     el.classList.add("e-frame-host");
@@ -711,6 +744,13 @@
 
   const gainsFor = (role) => {
     if (role === "plate") return { pose: 0.9, blur: 0.9, persp: 0.7 };
+    /* project: minimal micro-motion so docs stay usable */
+    if (isProject) {
+      if (role === "solid") return { pose: 0.12, blur: 0.08, persp: 0.06 };
+      if (role === "type") return { pose: 0.08, blur: 0.05, persp: 0.04 };
+      if (role === "chrome") return { pose: 0.18, blur: 0.1, persp: 0.1 };
+      return { pose: 0.15, blur: 0.1, persp: 0.08 };
+    }
     /* solid cards: nearly still — frame owns the organic edge */
     if (role === "solid") return { pose: 0.38, blur: 0.22, persp: 0.2 };
     /* body type: enough to feel projected, still readable */

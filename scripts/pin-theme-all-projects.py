@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "site" / "catalog.json"
 
 DEFAULT_THEME = "https://f00.sh/theme/f00-theme.css"
-DEFAULT_ENTROPY = "https://f00.sh/theme/f00-entropy.js?v=26"
+DEFAULT_ENTROPY = "https://f00.sh/theme/f00-entropy.js?v=27"
 DEFAULT_CHROME = "https://f00.sh/theme/f00-chrome.js?v=1"
 
 THEME_HREF_RE = re.compile(

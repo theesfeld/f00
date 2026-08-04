@@ -31,7 +31,7 @@ COC_CANONICAL = "https://f00.sh/CODE_OF_CONDUCT.md"
 COC_LOCAL = ROOT / "site" / "CODE_OF_CONDUCT.md"
 ORG = "f00-sh"
 DEFAULT_THEME = "https://f00.sh/theme/f00-theme.css"
-DEFAULT_ENTROPY = "https://f00.sh/theme/f00-entropy.js?v=26"
+DEFAULT_ENTROPY = "https://f00.sh/theme/f00-entropy.js?v=27"
 
 
 def theme_urls() -> tuple[str, str]:
