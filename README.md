@@ -13,8 +13,8 @@
 | **clun** | [clun.f00.sh](https://clun.f00.sh/) | [f00-sh/clun](https://github.com/f00-sh/clun) | JS/TS toolkit in pure Common Lisp |
 | **Cel Index** | [cel.f00.sh](https://cel.f00.sh/) | [f00-sh/cel](https://github.com/f00-sh/cel) | Femcel / Incel self-assessment (formal project model) |
 | **TRN** | [trn.f00.sh](https://trn.f00.sh/) | [f00-sh/trn](https://github.com/f00-sh/trn) | Enhanced Tabular Recipe Notation converter (eTRN) |
-| **Heartbox** | [heartbox.f00.sh](https://heartbox.f00.sh/) | [f00-sh/heartbox](https://github.com/f00-sh/heartbox) | Hand-tinted Technicolor dark theme — f00 default brand palette |
 | **joule** | [joule.f00.sh](https://joule.f00.sh/) | [f00-sh/joule](https://github.com/f00-sh/joule) | Distributed GPU cluster — idle cards into open-weight AI inference |
+| **Somata** | [somata.f00.sh](https://somata.f00.sh/) | [f00-sh/somata](https://github.com/f00-sh/somata) | Anatomical teaching-model theme (dark + light) for 100+ apps |
 
 _After editing `catalog.json`, run `python3 scripts/sync-from-catalog.py`._
 
@@ -29,4 +29,4 @@ Layout: splash + project cards only. Installers live on each project site.
 
 ## License
 
-MIT for this site. Project licenses are per-repo (f00tils, clun, heartbox MIT; others as published).
+MIT for this site. Project licenses are per-repo (f00tils, clun, somata MIT; others as published).

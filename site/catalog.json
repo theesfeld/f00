@@ -154,26 +154,6 @@
       "docs": "https://trn.f00.sh/#docs"
     },
     {
-      "id": "heartbox",
-      "name": "Heartbox",
-      "status": "released",
-      "domain": "heartbox.f00.sh",
-      "site": "https://heartbox.f00.sh/",
-      "repo": "https://github.com/f00-sh/heartbox",
-      "repo_slug": "f00-sh/heartbox",
-      "pages_project": "f00-heartbox",
-      "packages": null,
-      "local": "heartbox",
-      "license": "MIT",
-      "one_liner": "Hand-tinted Technicolor dark theme \u2014 f00 default brand palette",
-      "blurb": "Hand-tinted Technicolor dark theme: poppy red, verse-sky blue, hospital gloom, cream light, and cool silver metal. One palette, ports for terminals, editors, and tools. <strong>Default f00 brand theme</strong> for the hub and every project site.",
-      "facts": [
-        "canonical palette \u00b7 50+ app ports",
-        "f00 default theme \u00b7 MIT"
-      ],
-      "docs": "https://heartbox.f00.sh/#install"
-    },
-    {
       "id": "throw",
       "name": "throw",
       "status": "wip",
@@ -212,6 +192,23 @@
         "native agent \u00b7 millijoule economy",
         "OpenAI-compatible gateway \u00b7 MIT"
       ]
+    },
+    {
+      "id": "somata",
+      "name": "Somata",
+      "status": "released",
+      "domain": "somata.f00.sh",
+      "site": "https://somata.f00.sh/",
+      "repo": "https://github.com/f00-sh/somata",
+      "repo_slug": "f00-sh/somata",
+      "pages_project": "f00-somata",
+      "packages": null,
+      "local": "somata",
+      "license": "MIT",
+      "one_liner": "Anatomical teaching-model theme (dark + light) for 100+ apps",
+      "docs": "https://somata.f00.sh/",
+      "blurb": "Color theme drawn from 1970s\u201380s anatomical teaching models \u2014 clear styrene shell, enamel arterial red and venous blue, matte organ pink, nerve straw, adipose enamel yellow, ivory bone, black pedestal. Dual dark/light, 100+ app ports, system installers. Educational specimen, not gore.",
+      "facts": []
     }
   ]
 }
