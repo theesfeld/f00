@@ -22,7 +22,7 @@ Install UX lives on product sites.
 | Sky | `#5EC8E8` | Secondary / links |
 
 - Theme CSS: https://f00.sh/theme/f00-theme-13.css
-- Canonical palette: [f00-sh/heartbox](https://github.com/f00-sh/heartbox) `palette/heartbox.json`
+- Canonical palette: [f00-sh/heartbox](https://github.com/f00-sh/somata) `palette/somata-dark.json`
 - Product showcase: https://heartbox.f00.sh
 
 Fonts (unchanged roles): **Onyx** logo only · **zine mono** body · **chip mono** chrome.

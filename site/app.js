@@ -6,7 +6,7 @@
     "https://f00.sh/catalog.json",
   ];
 
-  /* photo-locked Heartbox — no pure white / LED primaries */
+  /* Somata cavity brand — no pure white / LED primaries */
   const THEME_COLORS = [
     "#D44A18", "#1E78C8", "#EDE6DE", "#B8BEC2", "#C47A72",
     "#C49A3C", "#3D8A48", "#454B93", "#C45A20",

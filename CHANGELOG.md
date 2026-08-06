@@ -3,6 +3,14 @@
 ## Unreleased
 
 ### Changed
+- **Default brand theme is Somata** (cavity pedestal, arterial enamel, venous blue, shell cream, pin metal, enamel yellow). CSS `f00-theme-35` / live `f00-theme.css`.
+- Catalog `theme.source` → Somata (`f00-sh/somata`, somata.f00.sh).
+- Hub product card: Somata released; Heartbox product removed from catalog.
+
+
+## Unreleased
+
+### Changed
 
 - Heartbox **0.2.0** video-sampled palette → shared `f00-theme.css`; hub verse-sky + white boxes / poppy text.
 - **ONE shared org CSS:** all products load `https://f00.sh/theme/f00-theme.css` (hub domain). Versioned `f00-theme-N.css` are snapshots only.

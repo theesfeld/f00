@@ -542,10 +542,10 @@ a.nav-donate[data-f00-donate] {
 .ledger-bal {
   margin: 0;
   padding: 0.5rem 0;
-  color: #EDE6DE !important;
+  color: #E8E0D2 !important;
 }
 .ledger-bal li {
-  color: #EDE6DE !important;
+  color: #E8E0D2 !important;
   font-weight: 600;
 }
 .ledger-wrap {
@@ -585,7 +585,7 @@ a.nav-donate[data-f00-donate] {
   letter-spacing: 0.06em;
   color: rgba(237, 230, 222, 0.8);
 }
-.ledger-source a { color: #EDE6DE; }
+.ledger-source a { color: #E8E0D2; }
 .ledger-empty { color: rgba(237, 230, 222, 0.85); }
 
 /* ── mantra / join pages ──
@@ -624,7 +624,7 @@ a.nav-donate[data-f00-donate] {
   font-size: clamp(2rem, 6vw, 3.1rem);
   line-height: 1.05;
   letter-spacing: 0.02em;
-  color: #EDE6DE !important;
+  color: #E8E0D2 !important;
   text-transform: none;
   text-shadow:
     0 1px 0 rgba(9, 9, 9, 0.28),
@@ -637,7 +637,7 @@ a.nav-donate[data-f00-donate] {
   margin: 0;
   font-size: 1.05rem;
   line-height: 1.55;
-  color: #EDE6DE !important;
+  color: #E8E0D2 !important;
   max-width: 36rem;
   text-shadow: 0 1px 2px rgba(9, 9, 9, 0.32);
 }
