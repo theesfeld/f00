@@ -74,6 +74,26 @@
   ],
   "projects": [
     {
+      "id": "metis",
+      "name": "Metis",
+      "status": "released",
+      "domain": "metis.f00.sh",
+      "site": "https://metis.f00.sh/",
+      "repo": "https://github.com/f00-sh/metis",
+      "repo_slug": "f00-sh/metis",
+      "pages_project": "f00-metis",
+      "packages": null,
+      "local": "metis",
+      "license": "MIT",
+      "one_liner": "Pure CL hybrid mind with dual-facet sealed knowledge symbols",
+      "docs": "https://metis.f00.sh/#docs",
+      "blurb": "Empty Common Lisp cognitive runtime. Load dual-facet sealed symbols (math process+knowledge, language use+about) on demand \u2014 not a kitchen-sink model. MIT.",
+      "facts": [
+        "dual-facet math \u00b7 language \u00b7 slang-ready",
+        "sealed open/private \u00b7 pure CL \u00b7 MIT"
+      ]
+    },
+    {
       "id": "f00tils",
       "name": "f00tils",
       "status": "released",

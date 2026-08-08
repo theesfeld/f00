@@ -20,7 +20,7 @@ Shell is allowed only for bootstrap, install stubs, and packaging helpers.
 2. **Release → card.** Set `status: "released"` on the product in `site/catalog.json` and run `scripts/sync-from-catalog.py`. No card until released. Update catalog blurb/facts/links when the project ships again.
 3. **One set of links.** Cards are the only project navigation (site + repo). Do not duplicate with hero buttons or other chrome.
 4. **Public copy is user-facing only.** Never put agent process, org plans, DNS wiring, or internal preferences on the site or public README (house rule `10-user-facing-language.md`).
-5. **Domains (ops, not site copy):** `f00.sh` hub · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `joule.f00.sh` joule · `somata.f00.sh` Somata · `dist.f00.sh` R2 packages.
+5. **Domains (ops, not site copy):** `f00.sh` hub · `metis.f00.sh` Metis · `coreutils.f00.sh` f00tils · `clun.f00.sh` clun · `cel.f00.sh` Cel Index · `trn.f00.sh` TRN · `joule.f00.sh` joule · `somata.f00.sh` Somata · `dist.f00.sh` R2 packages.
 6. **Aesthetic (STANDARD THEME) — ONE shared CSS.** Every f00 project loads `https://f00.sh/theme/f00-theme.css` from the hub domain first (no per-project brand CSS). Heart-Shaped Box contrasts + Bleach boxes. Path `site/theme/f00-theme.css`. Source palette: https://somata.f00.sh/. Three fonts: **Onyx** logo only · **zine mono** body · **chip mono** chrome. Project CSS is layout-only; never invent brand hex or soft radii.
 7. **No secrets** in repo. DNS keys stay out of git.
 8. **Projection Specimen Engine (org-wide goal).** f00 is an organic experience projected onto the display — not pages that “load.” **Every object is a projection:** field, boxes, header/footer rules, body type, chrome, splash plate. Scope is **everything** — hub + all project sites + all scenes.
@@ -87,6 +87,7 @@ That regenerates hub product cards, this table, and README projects.
 
 | Project | Status | Path (local) | Site | Packages |
 |---------|--------|--------------|------|----------|
+| Metis | `released` | `$PROJECTS/metis` | https://metis.f00.sh/ | n/a (Pages `f00-metis`) |
 | f00tils | `released` | `$PROJECTS/f00tils` | https://coreutils.f00.sh/ | https://dist.f00.sh/f00tils/current/ |
 | clun | `released` | `$PROJECTS/clun` | https://clun.f00.sh/ | https://dist.f00.sh/clun/current/ |
 | Cel Index | `released` | `$PROJECTS/cel` | https://cel.f00.sh/ | n/a (Pages `f00-cel`) |
