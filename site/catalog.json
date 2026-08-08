@@ -82,7 +82,12 @@
       "repo": "https://github.com/f00-sh/metis",
       "repo_slug": "f00-sh/metis",
       "pages_project": "f00-metis",
-      "packages": null,
+      "packages": {
+        "curl": "https://metis.f00.sh/install.sh",
+        "homebrew": "f00-sh/tap/metis",
+        "aur": "https://github.com/f00-sh/aur-metis",
+        "version": "4.5.0"
+      },
       "local": "metis",
       "license": "MIT",
       "one_liner": "Pure CL hybrid mind with dual-facet sealed knowledge symbols",

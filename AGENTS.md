@@ -87,7 +87,7 @@ That regenerates hub product cards, this table, and README projects.
 
 | Project | Status | Path (local) | Site | Packages |
 |---------|--------|--------------|------|----------|
-| Metis | `released` | `$PROJECTS/metis` | https://metis.f00.sh/ | n/a (Pages `f00-metis`) |
+| Metis | `released` | `$PROJECTS/metis` | https://metis.f00.sh/ | {'curl': 'https://metis.f00.sh/install.sh', 'homebrew': 'f00-sh/tap/metis', 'aur': 'https://github.com/f00-sh/aur-metis', 'version': '4.5.0'} |
 | f00tils | `released` | `$PROJECTS/f00tils` | https://coreutils.f00.sh/ | https://dist.f00.sh/f00tils/current/ |
 | clun | `released` | `$PROJECTS/clun` | https://clun.f00.sh/ | https://dist.f00.sh/clun/current/ |
 | Cel Index | `released` | `$PROJECTS/cel` | https://cel.f00.sh/ | n/a (Pages `f00-cel`) |
